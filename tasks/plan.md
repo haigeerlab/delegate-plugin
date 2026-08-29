@@ -30,13 +30,13 @@ Spec：[`../SPEC-channel.md`](../SPEC-channel.md) · 能力图：[`../capability
 ## Task List
 
 ### Phase 1: 骨架
-- [ ] T1 仓库骨架与校验器
-- [ ] T2 codex 桩与断言套骨架
+- [x] T1 仓库骨架与校验器
+- [x] T2 codex 桩与断言套骨架
 
 **Checkpoint A**：`validate.sh` 通过；空断言套能跑出「总计 0 通过 / 0 失败」；桩可被环境变量驱动。
 
 ### Phase 2: 只读通道（核心竖切）
-- [ ] T3 最小可用调用：四要素 + 日志隔离 + preamble
+- [x] T3 最小可用调用：四要素 + 日志隔离 + preamble
 - [ ] T4 失败路径要响
 
 **Checkpoint B**（最重要）：只读委托端到端可用；桩吐 100KB 时调用方 stdout 不含之；四种失败各自退出非 0 且 stderr 有下一步。
@@ -60,6 +60,7 @@ Spec：[`../SPEC-channel.md`](../SPEC-channel.md) · 能力图：[`../capability
 | 桩与真 `codex` 行为漂移，断言测的是空气 | **High** | 桩只模拟契约点不模拟模型；T8 `--live` 冒烟每次发版前必跑；spec 记了基线版本 0.150.1 |
 | Codex CLI 破坏性变更（flag 改名/移除） | Med | `--live` 会红。已知先例：`experimental_instructions_file` 在 0.150.1 已消失 |
 | bash 3.2 不兼容（`${VAR}`、空数组展开） | Med | 一律 `/bin/bash` 跑测试；`validate.sh` 接静态检查 |
+| 断言套后台起进程持有套件 stderr，导致 `suite \| grep` 永不结束 | Med | 持有者用有界 sleep + `2>/dev/null`；实测挂 >10 分钟才发现 |
 | 测试在 zsh 下跑会得出相反结论（MULTIOS 拼接输入重定向） | Med | 断言套一律 `/bin/bash` 执行；已写进 T3 验收 |
 | 过程日志目录无限增长 | Low | Open Question，Checkpoint C 之后定 |
 | 写模式在非 git 目录伪造验收 | Med | T6 的反向用例专门盯它 |
