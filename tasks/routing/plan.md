@@ -29,10 +29,10 @@ Spec：[`../../SPEC-routing.md`](../../SPEC-routing.md) · 能力图：[`../../c
 ## Task List
 
 ### Phase 1: 注入与闸门
-- [ ] R1 `route.sh`：读 detection 缓存，可用才注入；不可用零注入
-- [ ] R2 `SKILL.md`：分流表 + 三条纪律 + 「不许自动派」的明文
+- [x] R1 `route.sh`：读 detection 缓存，可用才注入；不可用零注入
+- [x] R2 `SKILL.md`：分流表 + 三条纪律 + 「不许自动派」的明文
 
-**Checkpoint H**：8 条确定性断言全绿；Codex 不可用时零注入；注入内容不含越闸措辞。
+**Checkpoint H**：9 条确定性断言全绿；Codex 不可用时零注入；注入内容不含越闸措辞。
 
 ### Phase 2: 行为验证
 - [ ] R3 `evals/_preflight.sh` + `propose-not-auto`（判「提议而不自动跑」）
