@@ -44,7 +44,14 @@ for ARG in "${@}"; do
 done
 
 if [ -n "${OUTPUT_FILE}" ]; then
+  if [ "${STUB_SLEEP_SECONDS:-0}" != "0" ]; then
+    sleep "${STUB_SLEEP_SECONDS}"
+  fi
   printf '%s' "${STUB_ANSWER:-}" > "${OUTPUT_FILE}"
+fi
+
+if [ -n "${STUB_CHMOD_DIRECTORY_AFTER_ANSWER:-}" ]; then
+  chmod 500 "${STUB_CHMOD_DIRECTORY_AFTER_ANSWER}"
 fi
 
 exit "${STUB_EXIT:-0}"

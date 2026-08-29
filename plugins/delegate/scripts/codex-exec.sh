@@ -75,6 +75,10 @@ fi
 
 TMP_ROOT="${TMPDIR:-/tmp}/delegate"
 mkdir -p "${TMP_ROOT}" || exit 1
+DELEGATE_TIMEOUT_SECONDS="${DELEGATE_TIMEOUT_SECONDS:-900}"
+case "${DELEGATE_TIMEOUT_SECONDS}" in
+  *[!0-9]*|'') DELEGATE_TIMEOUT_SECONDS=900 ;;
+esac
 STAMP="$(date '+%Y%m%d%H%M%S')"
 RUN_ID="${STAMP}.$$"
 ANSWER="${TMP_ROOT}/${RUN_ID}.answer"
@@ -101,13 +105,65 @@ if [ -n "${EFFORT}" ]; then
   EXTRA+=(-c "model_reasoning_effort=\"${EFFORT}\"")
 fi
 
+cleanup_process_logs() {
+  python3 - "${TMP_ROOT}" <<'PY' >/dev/null 2>&1
+import os
+import sys
+
+directory = sys.argv[1]
+try:
+    logs = []
+    for entry in os.scandir(directory):
+        if entry.name.endswith('.log'):
+            try:
+                logs.append((entry.stat().st_mtime, entry.path))
+            except OSError:
+                pass
+    logs.sort(reverse=True)
+    for _, log in logs[50:]:
+        try:
+            os.unlink(log)
+        except OSError:
+            continue
+        answer = log[:-4] + '.answer'
+        try:
+            os.unlink(answer)
+        except OSError:
+            pass
+except OSError:
+    pass
+PY
+}
+
 env -u OPENAI_API_KEY codex exec \
   ${EXTRA[@]+"${EXTRA[@]}"} \
   --ephemeral --sandbox "${SANDBOX}" --color never \
   -o "${ANSWER}" -- "${PREAMBLE}
 
-${TASK}" >"${LOG}" 2>&1 </dev/null
+${TASK}" >"${LOG}" 2>&1 </dev/null &
+CODEX_PID=$!
+START_SECONDS=${SECONDS}
+TIMED_OUT=0
+
+while kill -0 "${CODEX_PID}" 2>/dev/null; do
+  if [ $((SECONDS - START_SECONDS)) -ge "${DELEGATE_TIMEOUT_SECONDS}" ]; then
+    kill "${CODEX_PID}" 2>/dev/null || true
+    wait "${CODEX_PID}" 2>/dev/null || true
+    TIMED_OUT=1
+    break
+  fi
+  sleep 0.25
+done
+
+if [ "${TIMED_OUT}" -eq 1 ]; then
+  cleanup_process_logs
+  printf 'delegate: codex 超过 %s 秒被中止。完整过程日志：%s\n' "${DELEGATE_TIMEOUT_SECONDS}" "${LOG}" >&2
+  exit 124
+fi
+
+wait "${CODEX_PID}"
 CODEX_STATUS=$?
+cleanup_process_logs
 
 if [ "${CODEX_STATUS}" -ne 0 ]; then
   printf 'delegate: codex 执行失败（退出 %s）。过程日志末尾（最后 40 行）：\n' "${CODEX_STATUS}" >&2

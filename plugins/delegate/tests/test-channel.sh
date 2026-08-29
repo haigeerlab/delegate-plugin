@@ -342,6 +342,93 @@ else
   fail '14：写模式验收块未正确报告跑前未提交变更数'
 fi
 
+# C20/C21：过程目录只保留最近 50 份日志，按时间戳决定保留对象。
+CLEANUP_TMPDIR="${TEST_TMPDIR}/cleanup-tmp"
+CLEANUP_DIR="${CLEANUP_TMPDIR}/delegate"
+CLEANUP_EXPECTED="${TEST_TMPDIR}/cleanup-expected.log"
+mkdir -p "${CLEANUP_DIR}"
+python3 - "${CLEANUP_DIR}" "${CLEANUP_EXPECTED}" <<'PY'
+import os
+import sys
+import time
+
+directory, expected = sys.argv[1:]
+base = time.time() - 600
+logs = []
+for index in range(60):
+    stem = "fake-%03d" % index
+    log = os.path.join(directory, stem + ".log")
+    answer = os.path.join(directory, stem + ".answer")
+    open(log, "w").close()
+    open(answer, "w").close()
+    timestamp = base + index
+    os.utime(log, (timestamp, timestamp))
+    os.utime(answer, (timestamp, timestamp))
+    logs.append(log)
+
+with open(expected, "w") as output:
+    for log in sorted(logs, key=os.path.getmtime, reverse=True)[:49]:
+        output.write(log + "\n")
+PY
+CALL_LOG="${TEST_TMPDIR}/c20.argv"
+TMPDIR="${CLEANUP_TMPDIR}" STUB_CALL_LOG="${CALL_LOG}" STUB_ANSWER='答复' \
+  "${EXEC_SCRIPT}" '检查过程日志清理' >"${TEST_TMPDIR}/c20.stdout" 2>"${TEST_TMPDIR}/c20.stderr"
+STATUS=$?
+CLEANUP_LOG_COUNT="$(find "${CLEANUP_DIR}" -type f -name '*.log' | wc -l | tr -d ' ')"
+if [ "${STATUS}" -eq 0 ] && [ "${CLEANUP_LOG_COUNT}" -le 50 ]; then
+  pass 'C20：过程日志目录最多保留最近 50 个 .log'
+else
+  fail "C20：退出 ${STATUS}，剩余 ${CLEANUP_LOG_COUNT} 个 .log"
+fi
+
+if python3 - "${CLEANUP_EXPECTED}" <<'PY'
+import os
+import sys
+
+with open(sys.argv[1]) as expected:
+    missing = [line.strip() for line in expected if line.strip() and not os.path.exists(line.strip())]
+sys.exit(bool(missing))
+PY
+then
+  pass 'C21：按修改时间最新的过程日志仍被保留'
+else
+  fail 'C21：按修改时间最新的过程日志被错误删除'
+fi
+
+# C22：清理过程不可写时，已经完成的委托仍应成功。
+C22_TMPDIR="${TEST_TMPDIR}/c22-tmp"
+C22_DIR="${C22_TMPDIR}/delegate"
+mkdir -p "${C22_DIR}"
+CALL_LOG="${TEST_TMPDIR}/c22.argv"
+TMPDIR="${C22_TMPDIR}" STUB_CALL_LOG="${CALL_LOG}" STUB_ANSWER='答复' \
+  STUB_CHMOD_DIRECTORY_AFTER_ANSWER="${C22_DIR}" "${EXEC_SCRIPT}" '检查清理失败忽略' \
+  >"${TEST_TMPDIR}/c22.stdout" 2>"${TEST_TMPDIR}/c22.stderr"
+STATUS=$?
+chmod 700 "${C22_DIR}"
+assert_status 0 "${STATUS}" 'C22：日志目录不可写不影响委托成功'
+
+# C23：超时必须中止子进程，且不能等桩的完整睡眠周期。
+CALL_LOG="${TEST_TMPDIR}/c23.argv"
+STDERR_FILE="${TEST_TMPDIR}/c23.stderr"
+START_SECONDS=${SECONDS}
+DELEGATE_TIMEOUT_SECONDS=2 STUB_CALL_LOG="${CALL_LOG}" STUB_ANSWER='不应写出' STUB_SLEEP_SECONDS=10 \
+  "${EXEC_SCRIPT}" '检查硬超时' >"${TEST_TMPDIR}/c23.stdout" 2>"${STDERR_FILE}"
+STATUS=$?
+ELAPSED_SECONDS=$((SECONDS - START_SECONDS))
+if [ "${STATUS}" -ne 0 ] && [ "${ELAPSED_SECONDS}" -lt 10 ] && \
+  grep -F -- '超过 2 秒被中止' "${STDERR_FILE}" >/dev/null && \
+  grep -F -- '完整过程日志：' "${STDERR_FILE}" >/dev/null; then
+  pass 'C23：2 秒超时中止并报告完整日志路径'
+else
+  fail "C23：退出 ${STATUS}，耗时 ${ELAPSED_SECONDS} 秒，或 stderr 缺少超时/日志路径说明"
+fi
+
+# C24：未超时的普通调用保持原有成功行为。
+CALL_LOG="${TEST_TMPDIR}/c24.argv"
+DELEGATE_TIMEOUT_SECONDS=30 STUB_CALL_LOG="${CALL_LOG}" STUB_ANSWER='答复' \
+  "${EXEC_SCRIPT}" '检查超时正常路径' >"${TEST_TMPDIR}/c24.stdout" 2>"${TEST_TMPDIR}/c24.stderr"
+assert_status 0 "$?" 'C24：30 秒超时上限不影响正常调用'
+
 if [ "${LIVE_MODE}" -eq 0 ]; then
   printf 'LIVE：已跳过（跳过不代表通过）；使用 --live 才会调用真实 codex。\n'
 else
