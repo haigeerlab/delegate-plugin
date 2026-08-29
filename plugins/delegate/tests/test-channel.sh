@@ -4,6 +4,18 @@ set -u
 
 SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 EXEC_SCRIPT="${SCRIPT_DIR}/../scripts/codex-exec.sh"
+ORIGINAL_PATH="${PATH}"
+LIVE_MODE=0
+
+if [ "$#" -gt 1 ] || { [ "$#" -eq 1 ] && [ "${1}" != '--live' ]; }; then
+  printf '用法：%s [--live]\n' "${0}" >&2
+  exit 64
+fi
+
+if [ "$#" -eq 1 ]; then
+  LIVE_MODE=1
+fi
+
 TEST_TMPDIR="$(mktemp -d "${TMPDIR:-/tmp}/delegate-channel-test.XXXXXX")"
 trap 'rm -rf "${TEST_TMPDIR}"' EXIT
 TEST_BIN="${TEST_TMPDIR}/bin"
@@ -322,6 +334,58 @@ if [ "${STATUS}" -eq 0 ] && grep -F -- '跑之前工作区已有 2 个未提交�
   pass '14：写模式验收块报告跑前 2 个未提交变更'
 else
   fail '14：写模式验收块未正确报告跑前未提交变更数'
+fi
+
+if [ "${LIVE_MODE}" -eq 0 ]; then
+  printf 'LIVE：已跳过（跳过不代表通过）；使用 --live 才会调用真实 codex。\n'
+else
+  LIVE_AUTH_FILE="${CODEX_AUTH_FILE:-${HOME}/.codex/auth.json}"
+  if [ ! -s "${LIVE_AUTH_FILE}" ]; then
+    printf 'LIVE：没跑起来（不是不通过）：认证文件不存在或为空：%s\n' "${LIVE_AUTH_FILE}" >&2
+    exit 2
+  fi
+
+  if ! PATH="${ORIGINAL_PATH}" codex --version >/dev/null 2>&1; then
+    printf 'LIVE：没跑起来（不是不通过）：原始 PATH 中的 codex --version 无法运行。\n' >&2
+    exit 2
+  fi
+
+  LIVE_TMPDIR="${TEST_TMPDIR}/live-tmp"
+  LIVE_RESULT="${TEST_TMPDIR}/live.stdout"
+  mkdir "${LIVE_TMPDIR}"
+  TMPDIR="${LIVE_TMPDIR}" PATH="${ORIGINAL_PATH}" "${EXEC_SCRIPT}" '只回复“好”。不要执行其他操作。' \
+    >"${LIVE_RESULT}" 2>"${TEST_TMPDIR}/live.stderr"
+  LIVE_STATUS=$?
+  LIVE_LOG=''
+  LIVE_ANSWER=''
+  for LIVE_CANDIDATE in "${LIVE_TMPDIR}/delegate/"*.log; do
+    if [ -f "${LIVE_CANDIDATE}" ]; then
+      LIVE_LOG="${LIVE_CANDIDATE}"
+    fi
+  done
+  for LIVE_CANDIDATE in "${LIVE_TMPDIR}/delegate/"*.answer; do
+    if [ -f "${LIVE_CANDIDATE}" ]; then
+      LIVE_ANSWER="${LIVE_CANDIDATE}"
+    fi
+  done
+
+  if [ "${LIVE_STATUS}" -eq 0 ] && [ -s "${LIVE_ANSWER}" ]; then
+    pass 'LIVE：真实只读委托答复非空'
+  else
+    fail "LIVE：真实只读委托没有非空答复（退出 ${LIVE_STATUS}）"
+  fi
+
+  if [ -n "${LIVE_LOG}" ] && [ -s "${LIVE_ANSWER}" ]; then
+    LIVE_LOG_BYTES="$(wc -c < "${LIVE_LOG}" | tr -d ' ')"
+    LIVE_ANSWER_BYTES="$(wc -c < "${LIVE_ANSWER}" | tr -d ' ')"
+    if [ "${LIVE_LOG_BYTES}" -ge $((LIVE_ANSWER_BYTES * 40)) ]; then
+      pass 'LIVE：过程日志字节数至少为最终答复的 40 倍'
+    else
+      fail "LIVE：过程日志 ${LIVE_LOG_BYTES} 字节，不足答复 ${LIVE_ANSWER_BYTES} 字节的 40 倍"
+    fi
+  else
+    fail 'LIVE：找不到过程日志或最终答复，无法检查 40 倍体量比'
+  fi
 fi
 
 printf '  总计 %s 通过 / %s 失败\n' "${PASS_COUNT}" "${FAIL_COUNT}"

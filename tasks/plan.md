@@ -48,8 +48,8 @@ Spec：[`../SPEC-channel.md`](../SPEC-channel.md) · 能力图：[`../capability
 **Checkpoint C**：19 条断言全绿；`/bin/bash scripts/validate.sh` 通过。
 
 ### Phase 4: 接线与真跑
-- [ ] T7 `/delegate` 命令与插件清单接线
-- [ ] T8 `--live` 真跑冒烟
+- [x] T7 `/delegate` 命令与插件清单接线
+- [x] T8 `--live` 真跑冒烟
 
 **Checkpoint D**：装进 user scope 后 `/delegate` 可用；`--live` 通过，日志/答复体量比 ≥ 40×。
 
