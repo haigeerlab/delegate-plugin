@@ -142,7 +142,7 @@ ${TASK}" >"${LOG}" 2>&1 </dev/null
 
 ## Success Criteria
 
-1. 17 条断言全绿，`validate.sh` 通过
+1. 19 条断言全绿，`validate.sh` 通过
 2. 单次委托回到调用方 stdout 的体量 **≤ 过程日志的 1/40**（今日实测区间 63×–340×）
 3. 从 Claude Code 的 Bash 工具里调用**不挂起**
 4. 只读模式下 Codex 无法写入 cwd；写模式下无法写入 cwd 之外（实测已验证沙箱边界）

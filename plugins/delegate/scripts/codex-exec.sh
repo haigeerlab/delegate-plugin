@@ -3,7 +3,7 @@
 set -u
 
 usage() {
-  printf '用法：%s [--] <任务>\n' "${0}" >&2
+  printf '用法：%s [--write] [--] <任务>\n' "${0}" >&2
 }
 
 TASK=''
@@ -12,6 +12,7 @@ OPTIONS_ENDED=0
 MODEL=''
 EFFORT=''
 EXTRA=()
+WRITE_MODE=0
 
 while [ "$#" -gt 0 ]; do
   ARG="${1}"
@@ -24,6 +25,10 @@ while [ "$#" -gt 0 ]; do
 
   if [ "${OPTIONS_ENDED}" -eq 0 ]; then
     case "${ARG}" in
+      --write)
+        WRITE_MODE=1
+        continue
+        ;;
       --model)
         if [ "$#" -eq 0 ]; then
           usage
@@ -75,6 +80,19 @@ RUN_ID="${STAMP}.$$"
 ANSWER="${TMP_ROOT}/${RUN_ID}.answer"
 LOG="${TMP_ROOT}/${RUN_ID}.log"
 PREAMBLE='【非交互委托】没有人能回答你的提问或确认请求，也不会有后续轮次。不要先出方案等确认，直接做到底，并把完整结论写进最终答复。沙箱是只读的：不要修改文件、不要提交、不要启动服务、不要做任务之外的网络访问。'
+SANDBOX='read-only'
+GIT_ACCEPTANCE=0
+GIT_BASELINE_HEAD=''
+GIT_BASELINE_CHANGES=''
+
+if [ "${WRITE_MODE}" -eq 1 ]; then
+  SANDBOX='workspace-write'
+  PREAMBLE='【非交互委托】没有人能回答你的提问或确认请求，也不会有后续轮次。不要先出方案等确认，直接做到底，并把完整结论写进最终答复。沙箱允许写入当前工作目录：可以修改文件，但不要提交、不要推送、不要做任务之外的网络访问。'
+  if GIT_BASELINE_HEAD="$(git rev-parse HEAD 2>/dev/null)"; then
+    GIT_BASELINE_CHANGES="$(git status --porcelain | wc -l | tr -d ' ')"
+    GIT_ACCEPTANCE=1
+  fi
+fi
 
 if [ -n "${MODEL}" ]; then
   EXTRA+=(-m "${MODEL}")
@@ -85,7 +103,7 @@ fi
 
 env -u OPENAI_API_KEY codex exec \
   ${EXTRA[@]+"${EXTRA[@]}"} \
-  --ephemeral --sandbox read-only --color never \
+  --ephemeral --sandbox "${SANDBOX}" --color never \
   -o "${ANSWER}" -- "${PREAMBLE}
 
 ${TASK}" >"${LOG}" 2>&1 </dev/null
@@ -107,5 +125,18 @@ ANSWER_BYTES="$(wc -c < "${ANSWER}" | tr -d ' ')"
 LOG_BYTES="$(wc -c < "${LOG}" | tr -d ' ')"
 cat "${ANSWER}"
 printf '\n---\n'
+if [ "${WRITE_MODE}" -eq 1 ]; then
+  if [ "${GIT_ACCEPTANCE}" -eq 1 ]; then
+    printf 'git 验收（Claude 必须看这一段，不要只信自述）：\n'
+    printf '基线 HEAD：%s\n' "${GIT_BASELINE_HEAD}"
+    printf '跑之前工作区已有 %s 个未提交变更\n' "${GIT_BASELINE_CHANGES}"
+    printf 'git status --short：\n'
+    git status --short
+    printf 'git diff --stat：\n'
+    git diff --stat
+  else
+    printf 'git 验收：当前目录不是 git 仓库，拿不到 diff；只能依据 Codex 自述，请谨慎采信。\n'
+  fi
+fi
 printf '模型：%s / 推理档：%s\n' "${MODEL:-配置默认}" "${EFFORT:-配置默认}"
 printf '过程日志（未进入本会话上下文）：%s（%s 字节；最终答复 %s 字节）\n' "${LOG}" "${LOG_BYTES}" "${ANSWER_BYTES}"

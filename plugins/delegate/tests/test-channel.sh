@@ -25,6 +25,25 @@ fail() {
   printf 'FAIL: %s\n' "${1}" >&2
 }
 
+# 桩用 printf %q 记 argv，而 bash 3.2 的 %q 会把 UTF-8 打成 $'\346\262\231' 这种
+# 八进制转义 —— **在 argv 日志里直接 grep 中文永远匹配不上**，写成
+# `! grep 中文` 就是一条恒真的空断言（2026-08-29 实测：一个本该被抓的变异存活）。
+# 要查参数内容一律走这里：eval 还原回原始字节，再用 case 比对。
+LAST_CALL_ARGS=()
+load_last_call_args() {
+  LOAD_LINE="$(tail -n 1 "${1}")"
+  eval "set -- ${LOAD_LINE#argv:}"
+  LAST_CALL_ARGS=(${@+"${@}"})
+}
+
+last_arg_of() {
+  load_last_call_args "${1}"
+  LAST_ARG_VALUE=''
+  for LOAD_ARG in ${LAST_CALL_ARGS[@]+"${LAST_CALL_ARGS[@]}"}; do
+    LAST_ARG_VALUE="${LOAD_ARG}"
+  done
+}
+
 assert_status() {
   EXPECTED_STATUS="${1}"
   ACTUAL_STATUS="${2}"
@@ -232,6 +251,78 @@ fi
 STUB_CALL_LOG="${TEST_TMPDIR}/nine-b.argv" "${EXEC_SCRIPT}" --model \
   >"${TEST_TMPDIR}/nine-b.stdout" 2>"${TEST_TMPDIR}/nine-b.stderr"
 assert_status 64 "$?" '9b：--model 缺少值退出 64'
+
+# 11：--write 必须显式切换到 workspace-write，且写模式 preamble 不得声称只读。
+CALL_LOG="${TEST_TMPDIR}/eleven.argv"
+STUB_CALL_LOG="${CALL_LOG}" STUB_ANSWER='答复' "${EXEC_SCRIPT}" --write '检查写沙箱' \
+  >"${TEST_TMPDIR}/eleven.stdout" 2>"${TEST_TMPDIR}/eleven.stderr"
+STATUS=$?
+last_arg_of "${CALL_LOG}"
+case "${LAST_ARG_VALUE}" in
+  *沙箱是只读的*) READONLY_CLAIMED=1 ;;
+  *)              READONLY_CLAIMED=0 ;;
+esac
+if [ "${STATUS}" -eq 0 ] && grep -F -- ' --sandbox workspace-write' "${CALL_LOG}" >/dev/null && [ "${READONLY_CLAIMED}" -eq 0 ]; then
+  pass '11：--write 使用 workspace-write，且任务不含只读 preamble'
+else
+  fail '11：--write 未使用 workspace-write，或任务仍含只读 preamble'
+fi
+
+# 12：git 仓库里的写调用必须输出可核验的基线、status 与 diff 段。
+GIT_REPO="${TEST_TMPDIR}/twelve-repo"
+mkdir "${GIT_REPO}"
+(
+  cd "${GIT_REPO}" || exit 1
+  git init >/dev/null 2>&1
+  printf '初始内容\n' > tracked.txt
+  git add tracked.txt
+  git -c user.email=t@t -c user.name=t commit -m init >/dev/null 2>&1
+)
+BASELINE_HEAD="$(cd "${GIT_REPO}" && git rev-parse HEAD)"
+(
+  cd "${GIT_REPO}" || exit 1
+  STUB_CALL_LOG="${TEST_TMPDIR}/twelve.argv" STUB_ANSWER='答复' "${EXEC_SCRIPT}" --write '检查 git 验收块'
+) >"${TEST_TMPDIR}/twelve.stdout" 2>"${TEST_TMPDIR}/twelve.stderr"
+STATUS=$?
+if [ "${STATUS}" -eq 0 ] && grep -F -- "${BASELINE_HEAD}" "${TEST_TMPDIR}/twelve.stdout" >/dev/null && grep -F -- 'git status --short' "${TEST_TMPDIR}/twelve.stdout" >/dev/null && grep -F -- 'git diff --stat' "${TEST_TMPDIR}/twelve.stdout" >/dev/null; then
+  pass '12：git 仓库输出基线 HEAD、status 与 diff 验收段'
+else
+  fail '12：git 仓库缺少基线 HEAD、status 或 diff 验收段'
+fi
+
+# 13：非 git 目录必须说明无法验收，且不得伪造基线 HEAD。
+NON_GIT_DIR="${TEST_TMPDIR}/thirteen-non-git"
+mkdir "${NON_GIT_DIR}"
+(
+  cd "${NON_GIT_DIR}" || exit 1
+  STUB_CALL_LOG="${TEST_TMPDIR}/thirteen.argv" STUB_ANSWER='答复' "${EXEC_SCRIPT}" --write '检查非 git 说明'
+) >"${TEST_TMPDIR}/thirteen.stdout" 2>"${TEST_TMPDIR}/thirteen.stderr"
+STATUS=$?
+if [ "${STATUS}" -eq 0 ] && grep -F -- '不是 git 仓库' "${TEST_TMPDIR}/thirteen.stdout" >/dev/null && ! grep -F -- '基线 HEAD' "${TEST_TMPDIR}/thirteen.stdout" >/dev/null; then
+  pass '13：非 git 目录说明拿不到 diff，且不伪造验收块'
+else
+  fail '13：非 git 目录缺少说明，或伪造了验收块'
+fi
+
+# 14：验收块必须报告调用前已有的未提交变更数。
+GIT_REPO="${TEST_TMPDIR}/fourteen-repo"
+mkdir "${GIT_REPO}"
+(
+  cd "${GIT_REPO}" || exit 1
+  git init >/dev/null 2>&1
+  printf '初始内容\n' > tracked.txt
+  git add tracked.txt
+  git -c user.email=t@t -c user.name=t commit -m init >/dev/null 2>&1
+  printf '已修改\n' > tracked.txt
+  printf '未跟踪\n' > untracked.txt
+  STUB_CALL_LOG="${TEST_TMPDIR}/fourteen.argv" STUB_ANSWER='答复' "${EXEC_SCRIPT}" --write '检查未提交变更计数'
+) >"${TEST_TMPDIR}/fourteen.stdout" 2>"${TEST_TMPDIR}/fourteen.stderr"
+STATUS=$?
+if [ "${STATUS}" -eq 0 ] && grep -F -- '跑之前工作区已有 2 个未提交变更' "${TEST_TMPDIR}/fourteen.stdout" >/dev/null; then
+  pass '14：写模式验收块报告跑前 2 个未提交变更'
+else
+  fail '14：写模式验收块未正确报告跑前未提交变更数'
+fi
 
 printf '  总计 %s 通过 / %s 失败\n' "${PASS_COUNT}" "${FAIL_COUNT}"
 
