@@ -96,4 +96,4 @@
 ## Checkpoints
 
 - [x] **H（R1–R2）** 9 条确定性断言全绿；不可用时零注入；注入不含越闸措辞
-- [ ] **I（R3–R4）** 两个 eval 的免费部分通过并接进 validate；真跑一次 `propose-not-auto` 通过
+- [x] **I（R3–R4）** 两个 eval 的免费部分通过并接进 validate；真跑一次 `propose-not-auto` 通过

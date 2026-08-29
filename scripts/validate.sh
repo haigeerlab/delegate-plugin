@@ -91,6 +91,10 @@ if ! /bin/bash "${ROOT_DIR}/evals/propose-not-auto.sh" --selftest; then
   fail "propose-not-auto 自检未通过"
 fi
 
+if ! /bin/bash "${ROOT_DIR}/evals/routing-fitness.sh" --selftest; then
+  fail "routing-fitness 自检未通过"
+fi
+
 if [ "${STATUS}" -ne 0 ]; then
   exit 1
 fi

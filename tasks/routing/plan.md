@@ -36,7 +36,7 @@ Spec：[`../../SPEC-routing.md`](../../SPEC-routing.md) · 能力图：[`../../c
 
 ### Phase 2: 行为验证
 - [x] R3 `evals/_preflight.sh` + `propose-not-auto`（判「不自动跑」；「提议了没有」降为观察项）
-- [ ] R4 `evals/routing-fitness`（差分：该派的派、不该派的不派）
+- [x] R4 `evals/routing-fitness`（差分：该派的派、不该派的不派）
 
 **Checkpoint I**：两个 eval 的 `--scaffold-only` 与 `--selftest` 免费通过；真跑一次 `propose-not-auto` 通过。
 
@@ -51,6 +51,8 @@ Spec：[`../../SPEC-routing.md`](../../SPEC-routing.md) · 能力图：[`../../c
 | **`claude -p` 单轮，判不了「提议并等确认」** | **High** | 已降级为观察项并写进 spec；这半个卖点目前没有自动化验证 |
 | eval 测的是脚手架不是产品 | Med | 对照组充当脚手架自检；`_preflight.sh` 核对装着的插件 == 仓库内容 |
 | skill 根本没被加载 | Med | 参照 spec-guard：注入里放一句显式触发指令；eval 里判 skill 是否加载 |
+| **关键词判决器被条件句骗过** | **High** | 改成解析固定格式首行；真跑实测被骗过一次 |
+| **脚手架规模让尺寸闸门抢先触发，差分变量串了** | **High** | 放大到 30 文件 / 120 函数；两次真跑各撞一次 |
 | 对照组例子选得不好，测的是例子 | Med | 写进 Open Questions，先用一个明显的取舍类任务，跑完复盘 |
 
 ## Open Questions
