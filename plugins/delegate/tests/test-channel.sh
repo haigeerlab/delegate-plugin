@@ -18,6 +18,12 @@ fi
 
 TEST_TMPDIR="$(mktemp -d "${TMPDIR:-/tmp}/delegate-channel-test.XXXXXX")"
 trap 'rm -rf "${TEST_TMPDIR}"' EXIT
+
+# 套件一律在自己的 TMPDIR 下跑：codex-exec.sh 与 detect.sh 都往 ${TMPDIR}/delegate/
+# 写日志和缓存。不隔离的话每跑一次就往真实 ${TMPDIR} 里塞十几个文件 ——
+# 实测积到 1310 个 / 9.3MB 才被发现。和「测试不许碰真实 ~/.codex/」是同一类问题。
+TMPDIR="${TEST_TMPDIR}"
+export TMPDIR
 TEST_BIN="${TEST_TMPDIR}/bin"
 mkdir "${TEST_BIN}"
 ln -s "${SCRIPT_DIR}/stub-codex" "${TEST_BIN}/codex"

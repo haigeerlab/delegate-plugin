@@ -113,5 +113,5 @@
 ## Checkpoints
 
 - [x] **E（D1–D2）** 没装 Codex 时零输出退 0；三级阶梯每级可单独复现，尤其「`command -v` 为真但 `--version` 失败」
-- [ ] **F（D3–D4）** 缓存命中不再调 codex；损坏缓存与内部失败点下仍退 0 且输出可被 `json.load` 解析
+- [x] **F（D3–D4）** 缓存命中不再调 codex；损坏缓存与内部失败点下仍退 0 且输出可被 `json.load` 解析
 - [ ] **G（D5）** 15 条断言全绿；doctor 对含「等确认」的 AGENTS.md 报风险、对干净的不报

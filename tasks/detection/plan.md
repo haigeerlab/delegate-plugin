@@ -35,8 +35,8 @@ Spec：[`../../SPEC-detection.md`](../../SPEC-detection.md) · 能力图：[`../
 **Checkpoint E**：没装 Codex 的机器上 hook 零输出退 0；三级阶梯每一级可单独复现地测到，尤其「`command -v` 为真但 `--version` 失败」。
 
 ### Phase 2: 缓存与健壮性
-- [ ] D3 缓存：写、读、过期、损坏
-- [ ] D4 输出契约：要么为空、要么合法 JSON；内部出错也不破坏这条
+- [x] D3 缓存：写、读、过期、损坏
+- [x] D4 输出契约：要么为空、要么合法 JSON；内部出错也不破坏这条
 
 **Checkpoint F**：缓存命中时不再调用 codex（调用日志为证）；喂进损坏缓存、构造内部失败点，hook 仍退 0 且输出可被 `json.load` 解析。
 
@@ -52,6 +52,7 @@ Spec：[`../../SPEC-detection.md`](../../SPEC-detection.md) · 能力图：[`../
 | hook 输出非 JSON → 宿主拒绝，**且失败静默** | **High** | 断言 11 把 stdout 喂给 `json.load`；D4 专门做这条契约 |
 | 探测本身出错却报成「链路有问题」（假警报） | **High** | 性质 2；断言 12 构造内部失败点，验仍退 0 且无噪音 |
 | 测试污染用户真实 `~/.codex/` | Med | 一律用 `CODEX_AUTH_FILE` 与临时 HOME，断言里明确断言没碰真实路径 |
+| 测试污染真实 `${TMPDIR}/delegate/` | Med | 两个套件都把 TMPDIR 指向自己的临时目录；实测积到 1310 个文件 / 9.3MB 才发现 |
 | 每轮路径变慢 | Med | 缓存命中只读一个文件；AGENTS.md 扫描隔离在 doctor |
 | `auth.json` 存在但 token 已过期 | Low | 已知缺口，写在 spec 的 Open Questions 里，不假装能测 |
 
