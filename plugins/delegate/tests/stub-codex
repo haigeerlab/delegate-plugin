@@ -1,0 +1,46 @@
+#!/bin/bash
+
+set -u
+
+: "${STUB_CALL_LOG:?STUB_CALL_LOG must be set}"
+
+{
+  printf 'argv:'
+  for ARG in "${@}"; do
+    printf ' %q' "${ARG}"
+  done
+  printf '\n'
+} >> "${STUB_CALL_LOG}"
+
+if [ "${STUB_READ_STDIN:-0}" = "1" ]; then
+  /bin/cat >/dev/null
+fi
+
+if [ "${STUB_STDOUT_BYTES:-0}" -gt 0 ]; then
+  python3 -c 'import sys; sys.stdout.write("x" * int(sys.argv[1]))' "${STUB_STDOUT_BYTES}"
+fi
+
+if [ "${1:-}" = "--version" ]; then
+  printf 'codex stub 0.1.0\n'
+  exit "${STUB_EXIT:-0}"
+fi
+
+OUTPUT_FILE=""
+EXPECT_OUTPUT_FILE=0
+for ARG in "${@}"; do
+  if [ "${EXPECT_OUTPUT_FILE}" -eq 1 ]; then
+    OUTPUT_FILE="${ARG}"
+    EXPECT_OUTPUT_FILE=0
+    continue
+  fi
+
+  if [ "${ARG}" = "-o" ]; then
+    EXPECT_OUTPUT_FILE=1
+  fi
+done
+
+if [ -n "${OUTPUT_FILE}" ]; then
+  printf '%s' "${STUB_ANSWER:-}" > "${OUTPUT_FILE}"
+fi
+
+exit "${STUB_EXIT:-0}"

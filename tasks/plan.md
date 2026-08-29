@@ -10,7 +10,7 @@ Spec：[`../SPEC-channel.md`](../SPEC-channel.md) · 能力图：[`../capability
 
 ## Architecture Decisions
 
-1. **测试默认打桩，不打网络。** 16 条断言里 15 条走 `stub-codex`，只有 `--live`
+1. **测试默认打桩，不打网络。** 17 条断言里 16 条走 `stub-codex`，只有 `--live`
    那组真调。理由：真跑一次 13–75 秒且花额度，而我们要验的是**调用形态**，
    不是模型质量。桩只模拟我们真正依赖的契约点（stdin 行为、stdout/`-o` 分流、
    退出码、收到了哪些 flag），**不模拟模型输出**。
@@ -45,7 +45,7 @@ Spec：[`../SPEC-channel.md`](../SPEC-channel.md) · 能力图：[`../capability
 - [ ] T5 模型与推理档透传
 - [ ] T6 `--write` 与 git 验收块
 
-**Checkpoint C**：16 条断言全绿；`/bin/bash scripts/validate.sh` 通过。
+**Checkpoint C**：17 条断言全绿；`/bin/bash scripts/validate.sh` 通过。
 
 ### Phase 4: 接线与真跑
 - [ ] T7 `/delegate` 命令与插件清单接线
@@ -60,6 +60,7 @@ Spec：[`../SPEC-channel.md`](../SPEC-channel.md) · 能力图：[`../capability
 | 桩与真 `codex` 行为漂移，断言测的是空气 | **High** | 桩只模拟契约点不模拟模型；T8 `--live` 冒烟每次发版前必跑；spec 记了基线版本 0.150.1 |
 | Codex CLI 破坏性变更（flag 改名/移除） | Med | `--live` 会红。已知先例：`experimental_instructions_file` 在 0.150.1 已消失 |
 | bash 3.2 不兼容（`${VAR}`、空数组展开） | Med | 一律 `/bin/bash` 跑测试；`validate.sh` 接静态检查 |
+| 测试在 zsh 下跑会得出相反结论（MULTIOS 拼接输入重定向） | Med | 断言套一律 `/bin/bash` 执行；已写进 T3 验收 |
 | 过程日志目录无限增长 | Low | Open Question，Checkpoint C 之后定 |
 | 写模式在非 git 目录伪造验收 | Med | T6 的反向用例专门盯它 |
 

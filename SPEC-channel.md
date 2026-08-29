@@ -89,7 +89,7 @@ ${TASK}" >"${LOG}" 2>&1 </dev/null
 
 ## Testing Strategy
 
-`bash` 断言套，与 spec-guard 同构（PASS/FAIL 计数 + 末行总计）。
+`bash` 断言套（**必须 `/bin/bash` 跑** —— zsh 的 MULTIOS 会把多个输入重定向拼接而不是后者覆盖，在 zsh 下写断言 2 会得出相反结论），与 spec-guard 同构（PASS/FAIL 计数 + 末行总计）。
 
 **默认全部走 `stub-codex` 桩** —— 免费、确定性、不打网络。桩通过环境变量控制行为：
 返回什么最终答复、退出码几、是否在 stdout 吐大量过程文本。
@@ -104,7 +104,8 @@ ${TASK}" >"${LOG}" 2>&1 </dev/null
 | # | 用例 | 期望 |
 |---|---|---|
 | 1 | 桩在 stdout 吐 100KB | 调用方拿到的 stdout **不含**那 100KB |
-| 2 | 桩不消费 stdin 且父进程 stdin 非 TTY | 不挂起，正常返回 |
+| 2a | `STUB_READ_STDIN=1`、stdin 是永不关闭的管道、**不加** `</dev/null` | **阻塞**（先证明测法能复现真故障） |
+| 2b | 同上但**加** `</dev/null` | 限时内完成 |
 | 3 | `codex` 存在但 `--version` 失败 | 退出 **127** + 给出修复命令 |
 | 4 | `codex` 不在 PATH | 退出 127 |
 | 5 | 桩退出非 0 | 脚本退出非 0，日志尾部回显 |
@@ -141,7 +142,7 @@ ${TASK}" >"${LOG}" 2>&1 </dev/null
 
 ## Success Criteria
 
-1. 16 条断言全绿，`validate.sh` 通过
+1. 17 条断言全绿，`validate.sh` 通过
 2. 单次委托回到调用方 stdout 的体量 **≤ 过程日志的 1/40**（今日实测区间 63×–340×）
 3. 从 Claude Code 的 Bash 工具里调用**不挂起**
 4. 只读模式下 Codex 无法写入 cwd；写模式下无法写入 cwd 之外（实测已验证沙箱边界）

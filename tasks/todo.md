@@ -50,14 +50,18 @@
 **Acceptance criteria:**
 - [ ] 调用含全部四要素：`env -u OPENAI_API_KEY`、`</dev/null`、`-o` + stdout 重定向、非交互 preamble
 - [ ] 断言 1：桩吐 100KB 到 stdout → 调用方拿到的 stdout **不含**那 100KB
-- [ ] 断言 2：父进程 stdin 非 TTY 且桩不消费 stdin → 不挂起
+- [ ] 断言 2a（**反**）：`STUB_READ_STDIN=1` + stdin 是永不关闭的管道 + **不加** `</dev/null` → 桩阻塞
+      —— 这条先证明「测法能复现真故障」，否则 2b 是空断言
+- [ ] 断言 2b（**正**）：同样条件**加上** `</dev/null` → 桩在限时内完成
 - [ ] 断言 10：桩收到 `--sandbox read-only`
 - [ ] 断言 15/16：空任务或未知选项退出 **64**；以 `-` 开头的任务不被当成选项
 - [ ] 输出末尾回报日志路径与「过程 N 字节 / 答复 M 字节」
 
 **Verification:**
-- [ ] `test-channel.sh` 新增 6 条断言全绿
-- [ ] 断言 2 必须带超时上限，挂起要判失败而不是卡住套件
+- [ ] `test-channel.sh` 新增 7 条断言全绿
+- [ ] 断言 2a/2b 必须带超时上限，挂起要判失败而不是卡住套件
+- [ ] **断言必须在 `/bin/bash` 下跑**：zsh 的 MULTIOS 会把多个输入重定向**拼接**
+      而不是后者覆盖，在 zsh 里写这条会得出完全相反的结论（2026-08-29 实测踩到）
 
 **Dependencies:** T2
 **Files:** `plugins/delegate/scripts/codex-exec.sh`, `plugins/delegate/tests/test-channel.sh`
@@ -118,7 +122,7 @@
 - [ ] 默认仍是只读；`--write` 必须显式
 
 **Verification:**
-- [ ] `test-channel.sh` 新增 4 条断言全绿，**16 条全绿**
+- [ ] `test-channel.sh` 新增 4 条断言全绿，**17 条全绿**
 - [ ] `/bin/bash scripts/validate.sh` 通过
 
 **Dependencies:** T5
@@ -171,5 +175,5 @@
 
 - [ ] **A（T1–T2）** `validate.sh` 通过；空套跑出总计行；桩可被环境变量驱动
 - [ ] **B（T3–T4）** 只读委托端到端可用；100KB 过程输出不进 stdout；四种失败各自退非 0 且 stderr 有下一步 ← **最重要**
-- [ ] **C（T5–T6）** 16 条断言全绿；`validate.sh` 通过
+- [ ] **C（T5–T6）** 17 条断言全绿；`validate.sh` 通过
 - [ ] **D（T7–T8）** `/delegate` 可用；`--live` 通过，体量比 ≥ 40×

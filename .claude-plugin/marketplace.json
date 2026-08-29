@@ -1,0 +1,13 @@
+{
+  "name": "delegate-marketplace",
+  "version": "0.1.0",
+  "description": "Marketplace for the delegate executor-routing delegation channel.",
+  "plugins": [
+    {
+      "name": "delegate",
+      "source": "./plugins/delegate",
+      "description": "Delegation channel for executor routing; the current backend is the Codex CLI.",
+      "version": "0.1.0"
+    }
+  ]
+}
