@@ -1,6 +1,9 @@
 {
   "name": "delegate-marketplace",
-  "owner": { "name": "yizhongkaimail-collab", "url": "https://github.com/yizhongkaimail-collab/delegate-plugin" },
+  "owner": {
+    "name": "yizhongkaimail-collab",
+    "url": "https://github.com/yizhongkaimail-collab/delegate-plugin"
+  },
   "plugins": [
     {
       "name": "delegate",
