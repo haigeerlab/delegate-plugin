@@ -41,9 +41,9 @@ Spec：[`../../SPEC-detection.md`](../../SPEC-detection.md) · 能力图：[`../
 **Checkpoint F**：缓存命中时不再调用 codex（调用日志为证）；喂进损坏缓存、构造内部失败点，hook 仍退 0 且输出可被 `json.load` 解析。
 
 ### Phase 3: 接入体检
-- [ ] D5 `doctor.sh` + `/delegate:doctor`：安装/登录/AGENTS.md 流程编排规则
+- [x] D5 `doctor.sh` + `/delegate:doctor`：安装/登录/AGENTS.md 流程编排规则
 
-**Checkpoint G**：15 条断言全绿；`doctor` 对含「等确认」的 AGENTS.md 报风险、对干净的不报。
+**Checkpoint G**：19 条断言全绿；`doctor` 对含「等确认」的 AGENTS.md 报风险、对干净的不报。
 
 ## Risks and Mitigations
 
@@ -54,6 +54,7 @@ Spec：[`../../SPEC-detection.md`](../../SPEC-detection.md) · 能力图：[`../
 | 测试污染用户真实 `~/.codex/` | Med | 一律用 `CODEX_AUTH_FILE` 与临时 HOME，断言里明确断言没碰真实路径 |
 | 测试污染真实 `${TMPDIR}/delegate/` | Med | 两个套件都把 TMPDIR 指向自己的临时目录；实测积到 1310 个文件 / 9.3MB 才发现 |
 | 每轮路径变慢 | Med | 缓存命中只读一个文件；AGENTS.md 扫描隔离在 doctor |
+| doctor 在**已经修好**的 AGENTS.md 上报假警报 | **High** | 认「已声明非交互豁免」；断言 13b；真实文件上实测过 |
 | `auth.json` 存在但 token 已过期 | Low | 已知缺口，写在 spec 的 Open Questions 里，不假装能测 |
 
 ## Open Questions

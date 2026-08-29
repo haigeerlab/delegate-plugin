@@ -228,6 +228,69 @@ else
   fail "12b：缓存目录建不出来时状态 ${STATUS} 或 stdout 非法"
 fi
 
+# 13：流程编排规则会让非交互委托停在确认请求，doctor 必须报告风险和固定修法。
+DOCTOR_SCRIPT="${SCRIPT_DIR}/../hooks/doctor.sh"
+RISK_AGENTS_FILE="${TEST_TMPDIR}/risk-AGENTS.md"
+printf '不要直接开始改代码\n' > "${RISK_AGENTS_FILE}"
+OUTPUT="$(CODEX_AGENTS_FILE="${RISK_AGENTS_FILE}" "${DOCTOR_SCRIPT}" 2>"${TEST_TMPDIR}/thirteen.stderr")"
+case "${OUTPUT}" in
+  *风险*仅适用于交互式会话*)
+    pass '13：流程编排规则报告风险并给出非交互修法'
+    ;;
+  *)
+    fail "13：没有报告风险或固定修法（输出：${OUTPUT}）"
+    ;;
+esac
+
+# 13b（**反向**）：有流程编排规则、但已经声明了非交互豁免 → 不许报风险。
+# 断言 14 只覆盖「完全没有规则」，覆盖不到「有规则但已修好」——
+# 2026-08-29 在作者本人已经修好的 ~/.codex/AGENTS.md 上实测到了这个假警报，
+# 而当时 18 条断言全绿。假警报比不报危害大。
+EXEMPTED_AGENTS_FILE="${TEST_TMPDIR}/exempted-AGENTS.md"
+printf '本节仅适用于交互式会话；非交互调用（codex exec）时整节跳过。\n复杂任务开场时，先按下面顺序启动，不要直接开始改代码：\n' > "${EXEMPTED_AGENTS_FILE}"
+OUTPUT="$(CODEX_AGENTS_FILE="${EXEMPTED_AGENTS_FILE}" "${DOCTOR_SCRIPT}" 2>"${TEST_TMPDIR}/thirteen-b.stderr")"
+STATUS=$?
+if [ "${STATUS}" -ne 0 ]; then
+  fail "13b：已豁免的 AGENTS.md 时 doctor 退出 ${STATUS}"
+else
+  case "${OUTPUT}" in
+    *风险*) fail "13b：已声明非交互豁免却仍报风险（假警报）" ;;
+    *已声明非交互豁免*) pass '13b：已豁免的流程编排规则不报风险' ;;
+    *) fail "13b：既没报风险也没识别出豁免（输出：${OUTPUT}）" ;;
+  esac
+fi
+
+# 14：干净的 AGENTS.md 不得产生假警报。
+CLEAN_AGENTS_FILE="${TEST_TMPDIR}/clean-AGENTS.md"
+printf '用中文回答\n' > "${CLEAN_AGENTS_FILE}"
+OUTPUT="$(CODEX_AGENTS_FILE="${CLEAN_AGENTS_FILE}" "${DOCTOR_SCRIPT}" 2>"${TEST_TMPDIR}/fourteen.stderr")"
+STATUS=$?
+if [ "${STATUS}" -ne 0 ]; then
+  fail "14：干净 AGENTS.md 时 doctor 退出 ${STATUS}"
+else
+  case "${OUTPUT}" in
+    *风险*) fail "14：干净 AGENTS.md 产生风险报告（输出：${OUTPUT}）" ;;
+    *) pass '14：干净 AGENTS.md 不报告风险' ;;
+  esac
+fi
+
+# 15：没有 AGENTS.md 不是问题 —— 既要退 0，**也不许报成风险**。
+# 只验退出码是不够的：doctor 永远退 0，把「没有 AGENTS.md」记成问题时
+# 退出码一模一样（实测：那个变异存活过）。
+MISSING_AGENTS_FILE="${TEST_TMPDIR}/no-such-AGENTS.md"
+rm -f "${MISSING_AGENTS_FILE}"
+OUTPUT="$(CODEX_AGENTS_FILE="${MISSING_AGENTS_FILE}" "${DOCTOR_SCRIPT}" 2>"${TEST_TMPDIR}/fifteen.stderr")"
+STATUS=$?
+if [ "${STATUS}" -ne 0 ]; then
+  fail "15：AGENTS.md 不存在时 doctor 退出 ${STATUS}"
+else
+  case "${OUTPUT}" in
+    *风险*)     fail "15：AGENTS.md 不存在被报成了风险（假警报）" ;;
+    *未发现问题*) pass '15：AGENTS.md 不存在时退出 0 且不报问题' ;;
+    *)          fail "15：小结没说通过（输出：${OUTPUT}）" ;;
+  esac
+fi
+
 printf '  总计 %s 通过 / %s 失败\n' "${PASS_COUNT}" "${FAIL_COUNT}"
 
 if [ "${FAIL_COUNT}" -ne 0 ]; then
