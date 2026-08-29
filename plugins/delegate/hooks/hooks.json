@@ -1,0 +1,24 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f \"${CLAUDE_PLUGIN_ROOT}/hooks/detect.sh\" ]; then /bin/bash \"${CLAUDE_PLUGIN_ROOT}/hooks/detect.sh\" --session-start 2>/dev/null; fi"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f \"${CLAUDE_PLUGIN_ROOT}/hooks/detect.sh\" ]; then /bin/bash \"${CLAUDE_PLUGIN_ROOT}/hooks/detect.sh\" 2>/dev/null; fi"
+          }
+        ]
+      }
+    ]
+  }
+}

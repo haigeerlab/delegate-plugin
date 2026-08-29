@@ -29,8 +29,8 @@ Spec：[`../../SPEC-detection.md`](../../SPEC-detection.md) · 能力图：[`../
 ## Task List
 
 ### Phase 1: 性质先行
-- [ ] D1 hook 骨架与「零足迹」：没装 Codex 时静默退 0、零输出
-- [ ] D2 三级探测阶梯 + 每一级的原因
+- [x] D1 hook 骨架与「零足迹」：没装 Codex 时静默退 0、零输出
+- [x] D2 三级探测阶梯 + 每一级的原因
 
 **Checkpoint E**：没装 Codex 的机器上 hook 零输出退 0；三级阶梯每一级可单独复现地测到，尤其「`command -v` 为真但 `--version` 失败」。
 

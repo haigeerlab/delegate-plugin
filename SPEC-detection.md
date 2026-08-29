@@ -105,6 +105,7 @@ bash 3.2 的 `printf %q` 把 UTF-8 打成八进制转义，直接 grep 是恒真
 | 8 | 缓存超过 8 小时 | 重探（调用日志有一次） |
 | 9 | 缓存文件是非法 JSON | 重探，不崩 |
 | 10 | 没有 codex 的机器上跑 hook | **退出 0、零输出**（性质 1） |
+| 10b | SessionStart 模式（`--session-start`）即使后端可用 | **零输出** —— 两个事件共用一个脚本，而 `hookEventName` 必须与实际事件一致；SessionStart 的输出契约没有可核对依据，**不猜**，那一路只探测 |
 | 11 | 任何情况下 hook 的 stdout | 要么为空，要么是能被 `json.load` 解析的合法 JSON |
 | 12 | 探测脚本内部出错（构造一个失败点） | 仍退出 0，不注入噪音（性质 2） |
 | 13 | doctor：`~/.codex/AGENTS.md` 含「等确认 / 不要直接开始改代码」 | 报告该风险并给出修法 |
@@ -137,7 +138,7 @@ bash 3.2 的 `printf %q` 把 UTF-8 打成八进制转义，直接 grep 是恒真
 
 ## Success Criteria
 
-1. 15 条断言全绿，`validate.sh` 通过
+1. 16 条断言全绿，`validate.sh` 通过
 2. 缓存命中时每轮开销 **< 5ms**；冷探测 **< 200ms**（实测 `codex --version` 40–90ms）
 3. 没装 Codex 的机器上：hook 静默退 0、零输出、零报错
 4. 探测脚本任何内部错误都不产生非零退出、也不产生非 JSON 输出
