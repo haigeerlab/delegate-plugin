@@ -62,6 +62,7 @@ Spec：[`../SPEC-channel.md`](../SPEC-channel.md) · 能力图：[`../capability
 | bash 3.2 不兼容（`${VAR}`、空数组展开） | Med | 一律 `/bin/bash` 跑测试；`validate.sh` 接静态检查 |
 | 在桩的 argv 日志里 grep 中文 → 恒真的空断言（bash 3.2 的 `printf %q` 把 UTF-8 打成八进制转义） | **High** | 查参数内容一律先 `eval` 还原再 `case` 比对；已在 test-channel.sh 里做成 `last_arg_of` 辅助函数并写了注释 |
 | 断言套后台起进程持有套件 stderr，导致 `suite \| grep` 永不结束 | Med | 持有者用有界 sleep + `2>/dev/null`；实测挂 >10 分钟才发现 |
+| 清单语法合法但装不上（缺必填字段） | Med | `scripts/check-manifests.py`，三条反向用例；实测就是这样撞上的 |
 | 测试在 zsh 下跑会得出相反结论（MULTIOS 拼接输入重定向） | Med | 断言套一律 `/bin/bash` 执行；已写进 T3 验收 |
 | 过程日志目录无限增长 | Low | Open Question，Checkpoint C 之后定 |
 | 写模式在非 git 目录伪造验收 | Med | T6 的反向用例专门盯它 |

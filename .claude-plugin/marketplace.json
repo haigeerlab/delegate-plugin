@@ -1,13 +1,11 @@
 {
   "name": "delegate-marketplace",
-  "version": "0.1.0",
-  "description": "Marketplace for the delegate executor-routing delegation channel.",
+  "owner": { "name": "yizhongkaimail-collab", "url": "https://github.com/yizhongkaimail-collab/delegate-plugin" },
   "plugins": [
     {
       "name": "delegate",
       "source": "./plugins/delegate",
-      "description": "Delegation channel for executor routing; the current backend is the Codex CLI.",
-      "version": "0.1.0"
+      "description": "执行器路由的委托通道：把已经决策完毕的任务交给另一个额度池执行，只把结论带回来。当前后端是 Codex CLI。"
     }
   ]
 }

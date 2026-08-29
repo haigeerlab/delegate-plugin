@@ -34,6 +34,7 @@
 ```bash
 # 全量校验（结构 + 语法 + bash 3.2 兼容 + 各校验器自检）
 /bin/bash scripts/validate.sh
+scripts/check-manifests.py                  ← 清单必填字段（只查 JSON 语法会放行装不上的清单）
 
 # 本模块测试套（默认全部走 codex 桩，免费、确定性）
 /bin/bash plugins/delegate/tests/test-channel.sh

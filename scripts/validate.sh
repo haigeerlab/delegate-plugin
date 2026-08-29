@@ -74,6 +74,13 @@ while IFS= read -r -d '' CANDIDATE_FILE; do
   fi
 done < <(find "${ROOT_DIR}" -path "${ROOT_DIR}/.git" -prune -o -type f -print0)
 
+# 只查 JSON 语法是不够的：0.1.0 的 marketplace.json 语法完全合法、
+# 却因为缺 owner 字段而**装不上**（claude plugin marketplace add 报 Invalid schema）。
+# 一份装不上的清单通过了校验 —— 必填字段必须单独查。
+if ! python3 "${ROOT_DIR}/scripts/check-manifests.py" "${ROOT_DIR}"; then
+  fail "清单必填字段校验未通过"
+fi
+
 if [ "${STATUS}" -ne 0 ]; then
   exit 1
 fi
