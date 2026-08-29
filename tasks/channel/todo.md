@@ -1,6 +1,6 @@
 # Tasks: channel
 
-计划见 [`plan.md`](plan.md)。断言编号对应 [`../SPEC-channel.md`](../SPEC-channel.md) 的 Testing Strategy 表。
+计划见 [`plan.md`](plan.md)。断言编号对应 [`../../SPEC-channel.md`](../../SPEC-channel.md) 的 Testing Strategy 表。
 
 ---
 
