@@ -12,17 +12,21 @@ set -u
   printf '\n'
 } >> "${STUB_CALL_LOG}"
 
+if [ "${1:-}" = "--version" ]; then
+  printf 'codex stub 0.1.0\n'
+  exit "${STUB_VERSION_EXIT:-0}"
+fi
+
 if [ "${STUB_READ_STDIN:-0}" = "1" ]; then
   /bin/cat >/dev/null
 fi
 
-if [ "${STUB_STDOUT_BYTES:-0}" -gt 0 ]; then
-  python3 -c 'import sys; sys.stdout.write("x" * int(sys.argv[1]))' "${STUB_STDOUT_BYTES}"
+if [ -n "${STUB_STDOUT_TEXT:-}" ]; then
+  printf '%s\n' "${STUB_STDOUT_TEXT}"
 fi
 
-if [ "${1:-}" = "--version" ]; then
-  printf 'codex stub 0.1.0\n'
-  exit "${STUB_EXIT:-0}"
+if [ "${STUB_STDOUT_BYTES:-0}" -gt 0 ]; then
+  python3 -c 'import sys; sys.stdout.write("x" * int(sys.argv[1]))' "${STUB_STDOUT_BYTES}"
 fi
 
 OUTPUT_FILE=""

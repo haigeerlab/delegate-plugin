@@ -37,7 +37,7 @@ Spec：[`../SPEC-channel.md`](../SPEC-channel.md) · 能力图：[`../capability
 
 ### Phase 2: 只读通道（核心竖切）
 - [x] T3 最小可用调用：四要素 + 日志隔离 + preamble
-- [ ] T4 失败路径要响
+- [x] T4 失败路径要响
 
 **Checkpoint B**（最重要）：只读委托端到端可用；桩吐 100KB 时调用方 stdout 不含之；四种失败各自退出非 0 且 stderr 有下一步。
 

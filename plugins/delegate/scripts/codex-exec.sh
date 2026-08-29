@@ -34,6 +34,16 @@ if [ "${TASK_COUNT}" -ne 1 ] || [ -z "${TASK}" ]; then
   exit 64
 fi
 
+if ! command -v codex >/dev/null 2>&1; then
+  printf 'delegate: 找不到 codex；请安装 Codex CLI 后重试。\n' >&2
+  exit 127
+fi
+
+if ! codex --version >/dev/null 2>&1; then
+  printf 'delegate: codex 无法运行；请执行 npm install -g @openai/codex@latest 后重试。\n' >&2
+  exit 127
+fi
+
 TMP_ROOT="${TMPDIR:-/tmp}/delegate"
 mkdir -p "${TMP_ROOT}" || exit 1
 STAMP="$(date '+%Y%m%d%H%M%S')"
@@ -50,10 +60,14 @@ ${TASK}" >"${LOG}" 2>&1 </dev/null
 CODEX_STATUS=$?
 
 if [ "${CODEX_STATUS}" -ne 0 ]; then
+  printf 'delegate: codex 执行失败（退出 %s）。过程日志末尾（最后 40 行）：\n' "${CODEX_STATUS}" >&2
+  tail -n 40 "${LOG}" >&2
+  printf 'delegate: 完整过程日志：%s\n' "${LOG}" >&2
   exit "${CODEX_STATUS}"
 fi
 
 if [ ! -s "${ANSWER}" ]; then
+  printf 'delegate: 产出为空（答复文件缺失或为空）。完整过程日志：%s\n' "${LOG}" >&2
   exit 1
 fi
 

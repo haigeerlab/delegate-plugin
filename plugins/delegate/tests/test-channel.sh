@@ -116,7 +116,7 @@ CALL_LOG="${TEST_TMPDIR}/sixteen.argv"
 STUB_CALL_LOG="${CALL_LOG}" STUB_ANSWER='答复' "${EXEC_SCRIPT}" -- '-开头的任务' \
   >"${TEST_TMPDIR}/sixteen.stdout" 2>"${TEST_TMPDIR}/sixteen.stderr"
 STATUS=$?
-ARGV_LINE="$(< "${CALL_LOG}")"
+ARGV_LINE="$(tail -n 1 "${CALL_LOG}")"
 eval "set -- ${ARGV_LINE#argv:}"
 LAST_ARG=''
 for ARG in ${@+"${@}"}; do
@@ -130,6 +130,65 @@ if [ "${STATUS}" -eq 0 ] && [ "${LAST_ARG}" = "${EXPECTED_TASK}" ]; then
 else
   fail '16：-- 后以 - 开头的任务未正确传递'
 fi
+
+assert_status_and_stderr() {
+  EXPECTED_STATUS="${1}"
+  ACTUAL_STATUS="${2}"
+  STDERR_FILE="${3}"
+  PATTERN="${4}"
+  NAME="${5}"
+
+  if [ "${ACTUAL_STATUS}" -eq "${EXPECTED_STATUS}" ] && grep -F -- "${PATTERN}" "${STDERR_FILE}" >/dev/null; then
+    assert_status "${EXPECTED_STATUS}" "${ACTUAL_STATUS}" "${NAME}"
+  else
+    fail "${NAME}（退出 ${ACTUAL_STATUS}；stderr 未含 ${PATTERN}）"
+  fi
+}
+
+assert_nonzero_and_stderr() {
+  ACTUAL_STATUS="${1}"
+  STDERR_FILE="${2}"
+  PATTERN="${3}"
+  NAME="${4}"
+
+  if [ "${ACTUAL_STATUS}" -ne 0 ] && grep -F -- "${PATTERN}" "${STDERR_FILE}" >/dev/null; then
+    pass "${NAME}"
+  else
+    fail "${NAME}（退出 ${ACTUAL_STATUS}；stderr 未含 ${PATTERN}）"
+  fi
+}
+
+# 3：codex 在 PATH 但 --version 无法运行时，给出可执行的安装提示。
+CALL_LOG="${TEST_TMPDIR}/three.argv"
+STDERR_FILE="${TEST_TMPDIR}/three.stderr"
+STUB_CALL_LOG="${CALL_LOG}" STUB_VERSION_EXIT=1 STUB_ANSWER='答复' "${EXEC_SCRIPT}" '检查版本失败' \
+  >"${TEST_TMPDIR}/three.stdout" 2>"${STDERR_FILE}"
+assert_status_and_stderr 127 "$?" "${STDERR_FILE}" 'npm install -g @openai/codex@latest' '3：--version 失败退出 127 并提示安装命令'
+
+# 4：PATH 中没有 codex 时，wrapper 本身仍能由绝对路径启动并报错。
+STDERR_FILE="${TEST_TMPDIR}/four.stderr"
+PATH='/usr/bin:/bin' STUB_CALL_LOG="${TEST_TMPDIR}/four.argv" "${EXEC_SCRIPT}" '检查缺失命令' \
+  >"${TEST_TMPDIR}/four.stdout" 2>"${STDERR_FILE}"
+assert_status_and_stderr 127 "$?" "${STDERR_FILE}" '找不到 codex' '4：codex 不在 PATH 时退出 127 并说明原因'
+
+# 5：exec 失败时，stderr 必须回显过程日志尾部与完整日志路径。
+CALL_LOG="${TEST_TMPDIR}/five.argv"
+STDERR_FILE="${TEST_TMPDIR}/five.stderr"
+STUB_CALL_LOG="${CALL_LOG}" STUB_VERSION_EXIT=0 STUB_EXIT=3 STUB_STDOUT_TEXT='可识别的过程文本' \
+  "${EXEC_SCRIPT}" '检查 exec 失败' >"${TEST_TMPDIR}/five.stdout" 2>"${STDERR_FILE}"
+STATUS=$?
+if [ "${STATUS}" -eq 3 ] && grep -F -- '可识别的过程文本' "${STDERR_FILE}" >/dev/null && grep -F -- '过程日志：' "${STDERR_FILE}" >/dev/null; then
+  assert_status 3 "${STATUS}" '5：exec 失败退出原码并回显日志尾部和路径'
+else
+  fail "5：exec 失败退出 ${STATUS}，或 stderr 缺少过程文本/日志路径"
+fi
+
+# 6：exec 成功但答复为空仍必须失败，并说明产出为空。
+CALL_LOG="${TEST_TMPDIR}/six.argv"
+STDERR_FILE="${TEST_TMPDIR}/six.stderr"
+STUB_CALL_LOG="${CALL_LOG}" STUB_VERSION_EXIT=0 STUB_EXIT=0 STUB_ANSWER='' \
+  "${EXEC_SCRIPT}" '检查空答复' >"${TEST_TMPDIR}/six.stdout" 2>"${STDERR_FILE}"
+assert_nonzero_and_stderr "$?" "${STDERR_FILE}" '产出为空' '6：空答复退出非 0 并说明产出为空'
 
 printf '  总计 %s 通过 / %s 失败\n' "${PASS_COUNT}" "${FAIL_COUNT}"
 

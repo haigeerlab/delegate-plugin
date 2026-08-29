@@ -81,7 +81,9 @@
 
 **Verification:**
 - [ ] `test-channel.sh` 新增 4 条断言全绿
-- [ ] 每条都同时断言退出码和 stderr 内容，不只断言其一
+- [x] 每条都同时断言退出码和 stderr 内容，不只断言其一
+      —— 实测证明这条是必要的：删掉 `command -v` 检查后退出码**仍是 127**
+      （bash 找不到命令本就返回 127），只验退出码的话断言 4 是空的
 
 **Dependencies:** T3
 **Files:** `plugins/delegate/scripts/codex-exec.sh`, `plugins/delegate/tests/test-channel.sh`
@@ -174,6 +176,6 @@
 ## Checkpoints
 
 - [x] **A（T1–T2）** `validate.sh` 通过；空套跑出总计行；桩可被环境变量驱动
-- [ ] **B（T3–T4）** 只读委托端到端可用；100KB 过程输出不进 stdout；四种失败各自退非 0 且 stderr 有下一步 ← **最重要**
+- [x] **B（T3–T4）** 只读委托端到端可用；100KB 过程输出不进 stdout；四种失败各自退非 0 且 stderr 有下一步 ← **最重要**
 - [ ] **C（T5–T6）** 17 条断言全绿；`validate.sh` 通过
 - [ ] **D（T7–T8）** `/delegate` 可用；`--live` 通过，体量比 ≥ 40×
