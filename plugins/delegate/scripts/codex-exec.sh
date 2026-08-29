@@ -9,8 +9,14 @@ usage() {
 TASK=''
 TASK_COUNT=0
 OPTIONS_ENDED=0
+MODEL=''
+EFFORT=''
+EXTRA=()
 
-for ARG in ${@+"${@}"}; do
+while [ "$#" -gt 0 ]; do
+  ARG="${1}"
+  shift
+
   if [ "${OPTIONS_ENDED}" -eq 0 ] && [ "${ARG}" = '--' ]; then
     OPTIONS_ENDED=1
     continue
@@ -18,6 +24,24 @@ for ARG in ${@+"${@}"}; do
 
   if [ "${OPTIONS_ENDED}" -eq 0 ]; then
     case "${ARG}" in
+      --model)
+        if [ "$#" -eq 0 ]; then
+          usage
+          exit 64
+        fi
+        MODEL="${1}"
+        shift
+        continue
+        ;;
+      --effort)
+        if [ "$#" -eq 0 ]; then
+          usage
+          exit 64
+        fi
+        EFFORT="${1}"
+        shift
+        continue
+        ;;
       -*)
         usage
         exit 64
@@ -52,7 +76,15 @@ ANSWER="${TMP_ROOT}/${RUN_ID}.answer"
 LOG="${TMP_ROOT}/${RUN_ID}.log"
 PREAMBLE='【非交互委托】没有人能回答你的提问或确认请求，也不会有后续轮次。不要先出方案等确认，直接做到底，并把完整结论写进最终答复。沙箱是只读的：不要修改文件、不要提交、不要启动服务、不要做任务之外的网络访问。'
 
+if [ -n "${MODEL}" ]; then
+  EXTRA+=(-m "${MODEL}")
+fi
+if [ -n "${EFFORT}" ]; then
+  EXTRA+=(-c "model_reasoning_effort=\"${EFFORT}\"")
+fi
+
 env -u OPENAI_API_KEY codex exec \
+  ${EXTRA[@]+"${EXTRA[@]}"} \
   --ephemeral --sandbox read-only --color never \
   -o "${ANSWER}" -- "${PREAMBLE}
 
@@ -75,4 +107,5 @@ ANSWER_BYTES="$(wc -c < "${ANSWER}" | tr -d ' ')"
 LOG_BYTES="$(wc -c < "${LOG}" | tr -d ' ')"
 cat "${ANSWER}"
 printf '\n---\n'
+printf '模型：%s / 推理档：%s\n' "${MODEL:-配置默认}" "${EFFORT:-配置默认}"
 printf '过程日志（未进入本会话上下文）：%s（%s 字节；最终答复 %s 字节）\n' "${LOG}" "${LOG_BYTES}" "${ANSWER_BYTES}"

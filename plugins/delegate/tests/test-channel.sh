@@ -190,6 +190,49 @@ STUB_CALL_LOG="${CALL_LOG}" STUB_VERSION_EXIT=0 STUB_EXIT=0 STUB_ANSWER='' \
   "${EXEC_SCRIPT}" '检查空答复' >"${TEST_TMPDIR}/six.stdout" 2>"${STDERR_FILE}"
 assert_nonzero_and_stderr "$?" "${STDERR_FILE}" '产出为空' '6：空答复退出非 0 并说明产出为空'
 
+# 8：模型与推理档都必须原样透传给 exec。
+CALL_LOG="${TEST_TMPDIR}/eight.argv"
+STUB_CALL_LOG="${CALL_LOG}" STUB_ANSWER='答复' \
+  "${EXEC_SCRIPT}" --model gpt-x --effort high '检查模型与推理档透传' \
+  >"${TEST_TMPDIR}/eight.stdout" 2>"${TEST_TMPDIR}/eight.stderr"
+STATUS=$?
+EXEC_LINE="$(grep -F -- ' exec ' "${CALL_LOG}")"
+if [ "${STATUS}" -eq 0 ] && printf '%s\n' "${EXEC_LINE}" | grep -F -- ' -m gpt-x' >/dev/null && printf '%s\n' "${EXEC_LINE}" | grep -F -- 'model_reasoning_effort=\"high\"' >/dev/null; then
+  pass '8：--model 与 --effort 同时透传给 exec'
+else
+  fail '8：--model 或 --effort 未正确透传给 exec'
+fi
+
+# 9：未指定模型与推理档时，exec 不应显式覆盖配置默认值。
+CALL_LOG="${TEST_TMPDIR}/nine.argv"
+STUB_CALL_LOG="${CALL_LOG}" STUB_ANSWER='答复' "${EXEC_SCRIPT}" '检查配置默认值' \
+  >"${TEST_TMPDIR}/nine.stdout" 2>"${TEST_TMPDIR}/nine.stderr"
+STATUS=$?
+EXEC_LINE="$(grep -F -- ' exec ' "${CALL_LOG}")"
+if [ "${STATUS}" -eq 0 ] && ! printf '%s\n' "${EXEC_LINE}" | grep -F -- ' -m ' >/dev/null && ! printf '%s\n' "${EXEC_LINE}" | grep -F -- 'model_reasoning_effort=' >/dev/null; then
+  pass '9：未传模型与推理档时不覆盖配置默认值'
+else
+  fail '9：未传模型与推理档时仍覆盖了配置默认值'
+fi
+
+# 7：无效模型的 exec 失败必须原样失败，且不得删除 -m 后重试。
+CALL_LOG="${TEST_TMPDIR}/seven.argv"
+STUB_CALL_LOG="${CALL_LOG}" STUB_ANSWER='答复' STUB_EXIT=3 \
+  "${EXEC_SCRIPT}" --model invalid-slug '模拟无效模型' \
+  >"${TEST_TMPDIR}/seven.stdout" 2>"${TEST_TMPDIR}/seven.stderr"
+STATUS=$?
+EXEC_CALLS="$(grep -F -- ' exec ' "${CALL_LOG}" | wc -l | tr -d ' ')"
+if [ "${STATUS}" -ne 0 ] && [ "${EXEC_CALLS}" -eq 1 ]; then
+  pass '7：无效模型失败时不删除 -m 重试'
+else
+  fail "7：无效模型退出 ${STATUS}，exec 调用 ${EXEC_CALLS} 次"
+fi
+
+# 9b：--model 缺少值必须作为用法错误退出。
+STUB_CALL_LOG="${TEST_TMPDIR}/nine-b.argv" "${EXEC_SCRIPT}" --model \
+  >"${TEST_TMPDIR}/nine-b.stdout" 2>"${TEST_TMPDIR}/nine-b.stderr"
+assert_status 64 "$?" '9b：--model 缺少值退出 64'
+
 printf '  总计 %s 通过 / %s 失败\n' "${PASS_COUNT}" "${FAIL_COUNT}"
 
 if [ "${FAIL_COUNT}" -ne 0 ]; then

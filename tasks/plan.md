@@ -42,7 +42,7 @@ Spec：[`../SPEC-channel.md`](../SPEC-channel.md) · 能力图：[`../capability
 **Checkpoint B**（最重要）：只读委托端到端可用；桩吐 100KB 时调用方 stdout 不含之；四种失败各自退出非 0 且 stderr 有下一步。
 
 ### Phase 3: 通道能力补全
-- [ ] T5 模型与推理档透传
+- [x] T5 模型与推理档透传
 - [ ] T6 `--write` 与 git 验收块
 
 **Checkpoint C**：17 条断言全绿；`/bin/bash scripts/validate.sh` 通过。
