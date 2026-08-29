@@ -77,8 +77,18 @@ done < <(find "${ROOT_DIR}" -path "${ROOT_DIR}/.git" -prune -o -type f -print0)
 # 只查 JSON 语法是不够的：0.1.0 的 marketplace.json 语法完全合法、
 # 却因为缺 owner 字段而**装不上**（claude plugin marketplace add 报 Invalid schema）。
 # 一份装不上的清单通过了校验 —— 必填字段必须单独查。
+# eval 的判决器自己也要被测：首版 _preflight 的解析器把 Version 找丢了，
+# 恒报「没跑起来」—— 那是安全结局，不会吵到人，eval 会安静地一直没用。
+if ! /bin/bash "${ROOT_DIR}/evals/_preflight.sh" --selftest >/dev/null 2>&1; then
+  fail "_preflight 自检未通过"
+fi
+
 if ! python3 "${ROOT_DIR}/scripts/check-manifests.py" "${ROOT_DIR}"; then
   fail "清单必填字段校验未通过"
+fi
+
+if ! /bin/bash "${ROOT_DIR}/evals/propose-not-auto.sh" --selftest; then
+  fail "propose-not-auto 自检未通过"
 fi
 
 if [ "${STATUS}" -ne 0 ]; then
