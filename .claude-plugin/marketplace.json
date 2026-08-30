@@ -8,7 +8,7 @@
     {
       "name": "delegate",
       "source": "./plugins/delegate",
-      "description": "执行器路由的委托通道：把已经决策完毕的任务交给另一个额度池执行，只把结论带回来。当前后端是 Codex CLI。"
+      "description": "把已决策的执行与查证工作委托给 Codex CLI，只带回结论；默认只读、必须确认、绝不自动派。"
     }
   ]
 }
