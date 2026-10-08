@@ -19,6 +19,7 @@ Claude Code 插件。把范围、方案和验收目标已经明确的执行与�
 - [故障排查](#故障排查)
 - [架构与文档导航](#架构与文档导航)
 - [开发贡献与反馈](#开发贡献与反馈)
+- [报告 Bug](#报告-bug)
 - [许可](#许可)
 
 ## 使用场景与边界
@@ -248,7 +249,29 @@ UserPromptSubmit 使用一个串行入口。缓存有效期 8 小时，绑定 CL
 
 总入口包含语法、清单必填字段、判决器自检、3 个 shell 产品套及 2 个 Python 回归套。基线为 channel 24 条、detection 19 条、routing 9 条断言和 17 个 Python 回归测试。测试使用临时桩，不读取真实凭据或发起模型请求。
 
-开发约定、单独测试入口、付费 live 验证和双语维护规则见 [贡献指南](CONTRIBUTING.md)。问题和建议提交到 [GitHub Issues](https://github.com/haigeerlab/delegate-plugin/issues)；请提供版本、复现步骤、退出状态及必要的脱敏日志。
+开发约定、单独测试入口、付费 live 验证和双语维护规则见 [贡献指南](CONTRIBUTING.md)。问题和建议统一通过 [GitHub Issues](https://github.com/haigeerlab/delegate-plugin/issues) 反馈，Bug 提交步骤见下节。
+
+## 报告 Bug
+
+遇到插件异常时，请在本仓库的 GitHub Issues 中报告：
+
+1. 先[搜索已有问题](https://github.com/haigeerlab/delegate-plugin/issues)，看是否有相同现象或解决方法；已有相同问题时，可补充你的复现信息。
+2. 登录 GitHub，打开[新建 Issue](https://github.com/haigeerlab/delegate-plugin/issues/new)，用一句话概括故障作为标题。
+3. 复制下方清单，填写能复现问题的信息后提交。中文或英文均可。
+
+```text
+环境：操作系统、插件、Claude Code、Codex CLI、Python 和 Bash 版本
+安装方式：远程 marketplace / 本地路径 / --plugin-dir
+运行的命令：注明只读或 --write，移除任务中的私密内容
+复现步骤：从什么状态开始，依次执行了什么
+预期结果：应该发生什么
+实际结果：发生了什么，是否每次都能复现
+退出状态与错误：保留关键错误原文
+/delegate:doctor：相关诊断片段
+若涉及写入：Git 状态、是否有原有修改，以及失败后留下了哪些修改
+```
+
+版本可通过 `claude --version`、`codex --version` 等命令查看。提交前移除凭据、个人路径和业务源码；不要上传 `auth.json`、API key 或完整过程日志。更多说明见[贡献指南的报告问题章节](CONTRIBUTING.md#报告问题与提出建议)。
 
 ## 许可
 

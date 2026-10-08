@@ -19,6 +19,7 @@ Repository: [haigeerlab/delegate-plugin](https://github.com/haigeerlab/delegate-
 - [Troubleshooting](#troubleshooting)
 - [Architecture and documentation](#architecture-and-documentation)
 - [Development, contributions, and feedback](#development-contributions-and-feedback)
+- [Reporting a bug](#reporting-a-bug)
 - [License](#license)
 
 ## Use cases and boundaries
@@ -248,7 +249,29 @@ Run the free offline validation from the **repository root**:
 
 The entry point covers syntax, manifest required fields, evaluator self-tests, 3 shell product suites, and 2 Python regression suites. The baseline comprises 24 channel, 19 detection, and 9 routing assertions plus 17 Python regression tests. Tests use temporary stubs without reading real credentials or making model requests.
 
-See [Contributing](CONTRIBUTING.en.md) for development conventions, individual tests, paid live verification, and bilingual maintenance. Report issues and suggestions through [GitHub Issues](https://github.com/haigeerlab/delegate-plugin/issues), including versions, reproduction steps, exit status, and relevant sanitized log excerpts.
+See [Contributing](CONTRIBUTING.en.md) for development conventions, individual tests, paid live verification, and bilingual maintenance. Use [GitHub Issues](https://github.com/haigeerlab/delegate-plugin/issues) for problems and suggestions; follow the next section to report a bug.
+
+## Reporting a bug
+
+Report plugin failures through this repository's GitHub Issues:
+
+1. [Search existing issues](https://github.com/haigeerlab/delegate-plugin/issues) for the same symptoms or a solution. If a matching issue exists, add your reproduction details there.
+2. Sign in to GitHub, open [a new issue](https://github.com/haigeerlab/delegate-plugin/issues/new), and summarize the failure in a one-sentence title.
+3. Copy the checklist below, fill in enough information to reproduce the problem, and submit it. Reports in Chinese or English are welcome.
+
+```text
+Environment: OS, plugin, Claude Code, Codex CLI, Python, and Bash versions
+Installation: remote marketplace / local path / --plugin-dir
+Command: specify read-only or --write; remove private task content
+Reproduction steps: starting state and actions in order
+Expected result: what should happen
+Actual result: what happened and whether it happens every time
+Exit status and error: retain the relevant original error text
+/delegate:doctor: relevant diagnostic excerpts
+For writes: Git state, pre-existing edits, and changes remaining after failure
+```
+
+Commands such as `claude --version` and `codex --version` show versions. Remove credentials, personal paths, and proprietary source before submitting; do not upload `auth.json`, API keys, or full process logs. See [Contributing: reporting issues](CONTRIBUTING.en.md#reporting-issues-and-suggesting-changes) for more detail.
 
 ## License
 
