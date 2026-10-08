@@ -45,6 +45,13 @@ codex login status
 
 认证状态须显示 ChatGPT 登录。凭据可能在 `CODEX_HOME` 或系统钥匙串中，插件用 CLI 状态确认，不以 `auth.json` 存在为依据。API key 登录和未知认证状态会被拒绝；执行时还清除 `OPENAI_API_KEY`、`CODEX_API_KEY` 并指定 ChatGPT 认证与 OpenAI provider。[Codex 认证说明](https://learn.chatgpt.com/docs/auth)
 
+从 GitHub 安装：
+
+```bash
+claude plugin marketplace add haigeerlab/delegate-plugin
+claude plugin install delegate@delegate-marketplace
+```
+
 从插件源码目录进行本地安装：
 
 ```bash
@@ -52,7 +59,7 @@ claude plugin marketplace add "$PWD"
 claude plugin install delegate@delegate-marketplace
 ```
 
-也可以向 `marketplace add` 提供本仓库的 URL。安装后在业务 Git 项目中启动 Claude Code，运行 `/delegate:doctor`。
+仓库地址：[haigeerlab/delegate-plugin](https://github.com/haigeerlab/delegate-plugin)。安装后在业务 Git 项目中启动 Claude Code，运行 `/delegate:doctor`。
 
 修改源目录不会自动更新已安装缓存。用户决定更新时再运行：
 
@@ -60,7 +67,7 @@ claude plugin install delegate@delegate-marketplace
 claude plugin update delegate@delegate-marketplace
 ```
 
-当前清单版本为 0.4.0；正式发行以对应版本标签和发布记录为准。升级由用户主动执行。开发或评估源码时，在业务 Git 项目中显式加载：
+当前版本为 [0.4.0](https://github.com/haigeerlab/delegate-plugin/releases/tag/v0.4.0)；发行源码由 `v0.4.0` 标签固定。升级由用户主动执行。开发或评估源码时，在业务 Git 项目中显式加载：
 
 ```bash
 claude --plugin-dir /path/to/delegate-plugin/plugins/delegate

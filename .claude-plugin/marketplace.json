@@ -1,7 +1,8 @@
 {
   "name": "delegate-marketplace",
   "owner": {
-    "name": "yizhongkaimail-collab"
+    "name": "haigeerlab",
+    "url": "https://github.com/haigeerlab"
   },
   "plugins": [
     {
