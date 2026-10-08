@@ -1,4 +1,6 @@
-# Spec: routing（提议式执行器路由）
+# 规格：routing（提议式执行器路由）
+
+简体中文 | [English](docs/en/SPEC-routing.md)
 
 当前合同：2026-10-08。依赖 detection 与 channel；历史 `tasks/routing/` 不替代本合同。
 
@@ -23,6 +25,8 @@ UserPromptSubmit 仅注册一个 `prompt.sh` handler：先 `detect.sh --warm`，
 任务不扩展范围。成功后看最终答复，写模式看实际 Git diff 与测试；失败后仍看 Git 证据，不能假定没有修改。日志按路径读取相关少量行，避免全文重新灌入上下文。Bash timeout=600000，与 channel 540 秒执行期限协调。
 
 ## 确定性验证
+
+以下验证与评估命令从本仓库根目录运行：
 
 ```bash
 /bin/bash scripts/validate.sh
@@ -50,4 +54,4 @@ _preflight 检查 CLI 可运行、当前插件源目录原生清单校验；eval
 - routing-fitness 比较决策已定的批量任务与尚需架构选择的任务，只解析第一个非空行的完整“判断：委托/自己做”。条件句、前缀或正文示例不算判决，返回 NORUN。
 - 用户全局规则与已安装环境可能仍影响模型；显式加载源码不等于完全隔离评估。
 
-初轮只跑免费检查；后续真实行为 eval 的样本结果见 [验收记录](docs/releases/v0.4.0.md)。成功标准是确定性合同全绿、免费判决器拒绝假阳性、加载路径明确；“该提议时总会提议”仍未自动化验证。
+v0.4.0 的真实行为 eval 样本结果见 [验收记录](docs/releases/v0.4.0.md)。成功标准是确定性合同全绿、免费判决器拒绝假阳性、加载路径明确；“该提议时总会提议”仍未自动化验证。

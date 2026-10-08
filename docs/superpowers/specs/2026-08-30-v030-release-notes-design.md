@@ -1,5 +1,7 @@
 # v0.3.0 release notes design
 
+历史归档（2026-08-30）：保留当时的文档设计、计划及原始语言，未完成勾选不代表当前状态。本文中的执行步骤和约束仅属于该历史任务；当前使用与文档导航见 [README](../../../README.md) 和 [文档索引](../../README.md)。
+
 ## Goal
 
 Create a Chinese, repository-owned source document for the future GitHub Release

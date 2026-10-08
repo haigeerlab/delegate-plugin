@@ -1,5 +1,7 @@
 # 能力图：delegate
 
+简体中文 | [English](docs/en/capability-map.md)
+
 2026-10-08 修复合同，依据用户确认的范围；早期任务记录保留为历史证据。
 独立 marketplace，只支持 Codex CLI，不依赖 spec-guard 或 agent-skills。
 

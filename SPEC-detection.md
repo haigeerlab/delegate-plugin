@@ -1,4 +1,6 @@
-# Spec: detection（本地基础条件与诊断）
+# 规格：detection（本地基础条件与诊断）
+
+简体中文 | [English](docs/en/SPEC-detection.md)
 
 当前合同：2026-10-08。早期 `tasks/detection/` 记录保留为历史。
 
@@ -40,6 +42,8 @@ identity 包含：实际 CLI 路径、有效 Codex home、插件根目录、插�
 中文启发式寻找等待确认/先出方案等规则及非交互豁免；结果不覆盖英文、全部全局/项目规则，豁免出现也不证明覆盖所有章节。打印诊断范围与问题数量，始终退出 0。只写临时缓存，不修改业务文件或规则。
 
 ## 验证
+
+以下命令从本仓库根目录运行：
 
 ```bash
 /bin/bash scripts/validate.sh
