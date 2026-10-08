@@ -1,0 +1,53 @@
+{
+  "sourceCommit": "56c3ba76f1059f929bc908c0e45469abc623859a",
+  "records": [
+    {
+      "originalPath": "tasks/plan.md",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/plan.md.txt",
+      "sourceCommit": "56c3ba76f1059f929bc908c0e45469abc623859a",
+      "sha256": "46bb3c72b57ecc36e6bb1e39bcf32edde8d65cbbce7b2ef2d636ef027235169c"
+    },
+    {
+      "originalPath": "tasks/todo.md",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/todo.md.txt",
+      "sourceCommit": "56c3ba76f1059f929bc908c0e45469abc623859a",
+      "sha256": "8377e4f510153d3be63135fae148fc29c2f2ed4e76781953b9f3b1fd4cdbc4d7"
+    },
+    {
+      "originalPath": "tasks/channel/plan.md",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/plan.md.txt",
+      "sourceCommit": "56c3ba76f1059f929bc908c0e45469abc623859a",
+      "sha256": "567b776a7d55a7615396df70c7eae8ff5dbd6ae2934a2382fe20105a8d383b96"
+    },
+    {
+      "originalPath": "tasks/channel/todo.md",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceCommit": "56c3ba76f1059f929bc908c0e45469abc623859a",
+      "sha256": "7872b6be2631a17b72283984159221f91a1c4bbf1511a2ce1142ef558dbb19c8"
+    },
+    {
+      "originalPath": "tasks/detection/plan.md",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/detection/plan.md.txt",
+      "sourceCommit": "56c3ba76f1059f929bc908c0e45469abc623859a",
+      "sha256": "fb7f8325fa193aba04a9b5469c394e4b4ca25ab4764c1be1000547ac2beeed02"
+    },
+    {
+      "originalPath": "tasks/detection/todo.md",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/detection/todo.md.txt",
+      "sourceCommit": "56c3ba76f1059f929bc908c0e45469abc623859a",
+      "sha256": "af91033eee6569aae5f260b0c08b6588abdb38244d6eebea200e2d2a28b93fc4"
+    },
+    {
+      "originalPath": "tasks/routing/plan.md",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/routing/plan.md.txt",
+      "sourceCommit": "56c3ba76f1059f929bc908c0e45469abc623859a",
+      "sha256": "a29da9c24ba8fdf38754a25f7299cf6e900900726c675963867a564e7882c3b0"
+    },
+    {
+      "originalPath": "tasks/routing/todo.md",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/routing/todo.md.txt",
+      "sourceCommit": "56c3ba76f1059f929bc908c0e45469abc623859a",
+      "sha256": "c24c25f5e7e197fb4583d88a9175770b5e7f0022a757fef6589288481e187b91"
+    }
+  ]
+}

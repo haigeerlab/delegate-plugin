@@ -1,0 +1,65 @@
+{
+  "date": "2026-10-08",
+  "sourceCommit": "56c3ba76f1059f929bc908c0e45469abc623859a",
+  "sourceSnapshot": "uncommitted working tree; exactly approved detection-test fixture patch in product paths",
+  "authorization": "User replied 继续 after concrete request to apply the verified single-file F8 patch; no commit, delegation, installation, or publishing authorization.",
+  "patch": "docs/verification/doctor-isolation-proposal.patch.txt",
+  "patchSha256": "b0ee39e9d7fe3a5655ddc5e5fb802e3d26c45c8389d5dd82f64a08e40f51e3e1",
+  "testFile": "plugins/delegate/tests/test-detection.sh",
+  "testFileSha256": "9e98791e54586f76ad6ba321689d17b46ed429e9261532ba8fa5f39d6386980b",
+  "exactCandidateMatched": true,
+  "productPathChanges": [
+    "plugins/delegate/tests/test-detection.sh"
+  ],
+  "runtimeUnchanged": true,
+  "modelCalls": 0,
+  "cases": [
+    {
+      "id": "detection-no-outer-codex",
+      "command": [
+        "/bin/bash",
+        "plugins/delegate/tests/test-detection.sh"
+      ],
+      "exit": 0,
+      "passed": true,
+      "seconds": 40.609,
+      "output": "PASS: 10：无 codex 时 hook 退出 0 且 stdout 为空\nPASS: 1：三级全过时显示可用\nPASS: 2：wrapper 不可执行时原因指向 wrapper\nPASS: 3：codex 不在 PATH 时给出对应原因\nPASS: 4：codex 装坏时给出安装命令\nPASS: 5：认证文件不存在时提示登录\nPASS: 6：认证文件为空时提示登录\nPASS: 10b：SessionStart 模式即使可用也零输出\nPASS: 7：新鲜缓存命中时不再调用 codex\nPASS: 8：过期缓存会重探 codex\nPASS: 9：非法缓存 JSON 不崩且会重探\nPASS: 11：各场景 hook stdout 均为空或合法 JSON\nPASS: 7b：--session-start 即使缓存新鲜也实探\nPASS: 12a：缓存写失败时仍退出 0 且 stdout 合法\nPASS: 12b：缓存目录建不出来时仍退出 0 且 stdout 合法\nPASS: 13：流程编排规则报告风险并给出非交互修法\nPASS: 13b：已豁免的流程编排规则不报风险\nPASS: 14：干净 AGENTS.md 不报告风险\nPASS: 15：AGENTS.md 不存在时退出 0 且不报问题\n  总计 19 通过 / 0 失败\n2026-10-08 19:16:05.750 xcodebuild[89996:172837223]  DVTFilePathFSEvents: Failed to start fs event stream.\n2026-10-08 19:16:06.130 xcodebuild[89996:172837199] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 \"Input/output error\". Using NSCachesDirectory instead.\n",
+      "rawOutputSha256": "6326ca8b58b2d5d527dda31e19d38574221285f6048d909f7706465939960835",
+      "hashScope": "raw captured stdout+stderr before local-path replacement"
+    },
+    {
+      "id": "detection-outer-rejects-login",
+      "command": [
+        "/bin/bash",
+        "plugins/delegate/tests/test-detection.sh"
+      ],
+      "exit": 0,
+      "passed": true,
+      "seconds": 40.57,
+      "output": "PASS: 10：无 codex 时 hook 退出 0 且 stdout 为空\nPASS: 1：三级全过时显示可用\nPASS: 2：wrapper 不可执行时原因指向 wrapper\nPASS: 3：codex 不在 PATH 时给出对应原因\nPASS: 4：codex 装坏时给出安装命令\nPASS: 5：认证文件不存在时提示登录\nPASS: 6：认证文件为空时提示登录\nPASS: 10b：SessionStart 模式即使可用也零输出\nPASS: 7：新鲜缓存命中时不再调用 codex\nPASS: 8：过期缓存会重探 codex\nPASS: 9：非法缓存 JSON 不崩且会重探\nPASS: 11：各场景 hook stdout 均为空或合法 JSON\nPASS: 7b：--session-start 即使缓存新鲜也实探\nPASS: 12a：缓存写失败时仍退出 0 且 stdout 合法\nPASS: 12b：缓存目录建不出来时仍退出 0 且 stdout 合法\nPASS: 13：流程编排规则报告风险并给出非交互修法\nPASS: 13b：已豁免的流程编排规则不报风险\nPASS: 14：干净 AGENTS.md 不报告风险\nPASS: 15：AGENTS.md 不存在时退出 0 且不报问题\n  总计 19 通过 / 0 失败\n2026-10-08 19:16:05.718 xcodebuild[89984:172837203]  DVTFilePathFSEvents: Failed to start fs event stream.\n2026-10-08 19:16:06.117 xcodebuild[89984:172837181] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 \"Input/output error\". Using NSCachesDirectory instead.\n",
+      "rawOutputSha256": "83ec65b0081cb330664a99b6eb3c5f160cac1fa63be5c8584482496193b705f2",
+      "hashScope": "raw captured stdout+stderr before local-path replacement"
+    },
+    {
+      "id": "aggregate-no-outer-codex",
+      "command": [
+        "/bin/bash",
+        "scripts/validate.sh"
+      ],
+      "exit": 0,
+      "passed": true,
+      "seconds": 135.136,
+      "output": "PASS: 1 transcript 缺失\nPASS: 2 transcript 为空\nPASS: 3 调用日志缺失\nPASS: 4 真的 exec 调用算越闸\nPASS: 4b 仅 --version 不算越闸\nPASS: 5 含委托意向 → PASS 且观察项=是\nPASS: 6 不含委托意向 → 仍 PASS（观察项=否）\n  总计 7 通过 / 0 失败\nPASS: 1 处理组 transcript 缺失\nPASS: 2 处理组调用日志缺失\nPASS: 3 调用日志有 exec\nPASS: 4 两组都主张委托\nPASS: 3b 仅 --version 不算委托调用\nPASS: 5 处理组委托、对照组直接做\nPASS: 7 首行读不出判断 → 没跑起来\nPASS: 8 条件句里的「委托」不算主张委托\nPASS: 6 两组都自己直接做\nPASS: 9 正文格式示例不是首行判断\nPASS: 10 带条件前缀的判断不合格式\nPASS: 11 首个非空行合法\n  总计 12 通过 / 0 失败\nPASS: 1：100KB 过程输出未进入调用方 stdout\nPASS: 2a：直接调用桩在永不关闭 stdin 下未完成\nPASS: 2b：wrapper 在永不关闭 stdin 下限时内完成\nPASS: 10：桩收到 --sandbox read-only\nPASS: 15a：不给任务退出 64\nPASS: 15b：未知选项退出 64\nPASS: 16：-- 后以 - 开头的任务正常执行\nPASS: 3：--version 失败退出 127 并提示安装命令\nPASS: 4：codex 不在 PATH 时退出 127 并说明原因\nPASS: 5：exec 失败退出原码并回显日志尾部和路径\nPASS: 6：空答复退出非 0 并说明产出为空\nPASS: 8：--model 与 --effort 同时透传给 exec\nPASS: 9：未传模型与推理档时不覆盖配置默认值\nPASS: 7：无效模型失败时不删除 -m 重试\nPASS: 9b：--model 缺少值退出 64\nPASS: 11：--write 使用 workspace-write，且任务不含只读 preamble\nPASS: 12：git 仓库输出基线 HEAD、status 与 diff 验收段\nPASS: 13：非 Git 目录退出 64，且未调用 exec\nPASS: 14：写模式验收块报告跑前 2 个未提交变更\nPASS: C20：过程日志目录最多保留最近 50 个 .log\nPASS: C21：按修改时间最新的过程日志仍被保留\nPASS: C22：日志目录不可写不影响委托成功\nPASS: C23：2 秒超时中止并报告完整日志路径\nPASS: C24：30 秒超时上限不影响正常调用\nLIVE：已跳过（跳过不代表通过）；使用 --live 才会调用真实 codex。\n  总计 24 通过 / 0 失败\nPASS: 10：无 codex 时 hook 退出 0 且 stdout 为空\nPASS: 1：三级全过时显示可用\nPASS: 2：wrapper 不可执行时原因指向 wrapper\nPASS: 3：codex 不在 PATH 时给出对应原因\nPASS: 4：codex 装坏时给出安装命令\nPASS: 5：认证文件不存在时提示登录\nPASS: 6：认证文件为空时提示登录\nPASS: 10b：SessionStart 模式即使可用也零输出\nPASS: 7：新鲜缓存命中时不再调用 codex\nPASS: 8：过期缓存会重探 codex\nPASS: 9：非法缓存 JSON 不崩且会重探\nPASS: 11：各场景 hook stdout 均为空或合法 JSON\nPASS: 7b：--session-start 即使缓存新鲜也实探\nPASS: 12a：缓存写失败时仍退出 0 且 stdout 合法\nPASS: 12b：缓存目录建不出来时仍退出 0 且 stdout 合法\nPASS: 13：流程编排规则报告风险并给出非交互修法\nPASS: 13b：已豁免的流程编排规则不报风险\nPASS: 14：干净 AGENTS.md 不报告风险\nPASS: 15：AGENTS.md 不存在时退出 0 且不报问题\n  总计 19 通过 / 0 失败\nPASS: R1：不可用缓存时 route.sh 零输出且退出 0\nPASS: R2：缓存缺失时 route.sh 零输出且退出 0\nPASS: R3：可用新鲜缓存注入一行合法 JSON，且不重新探测\nPASS: R4：路由指针要求等用户确认，且不含越闸措辞\nPASS: R5：不可用、缺失、损坏、可用缓存的 stdout 均为空或合法 JSON\nPASS: R2b：过期缓存时零注入\nPASS: R6：非法缓存时退出 0、零输出、零噪音\nPASS: R7：SKILL.md 含分流表的六类活\nPASS: R8：SKILL.md 原样禁止自动派\n  总计 9 通过 / 0 失败\nvalidate: ok\n2026-10-08 19:15:54.995 xcodebuild[88485:172833678]  DVTFilePathFSEvents: Failed to start fs event stream.\n2026-10-08 19:15:55.274 xcodebuild[88485:172833659] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 \"Input/output error\". Using NSCachesDirectory instead.\n<repository>/plugins/delegate/tests/test-channel.sh: line 381: 88737 Done                    ( sleep 10 ) 2> /dev/null\n     88738 Terminated: 15          | STUB_CALL_LOG=\"${CALL_LOG}\" STUB_ANSWER='直接调用答复' STUB_READ_STDIN=1 codex exec -o \"${ANSWER}\" -- '读取 stdin' > \"${TEST_TMPDIR}/two-a.stdout\" 2> \"${TEST_TMPDIR}/two-a.stderr\"\n2026-10-08 19:16:37.912 xcodebuild[95082:172859424]  DVTFilePathFSEvents: Failed to start fs event stream.\n2026-10-08 19:16:38.193 xcodebuild[95082:172859361] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 \"Input/output error\". Using NSCachesDirectory instead.\n2026-10-08 19:16:53.480 xcodebuild[97077:172876987]  DVTFilePathFSEvents: Failed to start fs event stream.\n2026-10-08 19:16:53.783 xcodebuild[97077:172876924] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 \"Input/output error\". Using NSCachesDirectory instead.\n..........\n----------------------------------------------------------------------\nRan 10 tests in 33.292s\n\nOK\n.......\n----------------------------------------------------------------------\nRan 7 tests in 19.652s\n\nOK\n",
+      "rawOutputSha256": "eb7dc5d44eee6cf4ea0446726063fd44c58e5f470f4e39b531e322857b02068a",
+      "hashScope": "raw captured stdout+stderr before local-path replacement"
+    }
+  ],
+  "passed": 3,
+  "failed": 0,
+  "limits": [
+    "Local controlled tests only; does not establish real-host, sandbox, or model acceptance.",
+    "Historical completion and approvals remain unknown."
+  ],
+  "checkerArchive": "docs/verification/f8-applied-check.py.txt",
+  "checkerSha256": "8ab083c3906d53bcab024ebfd7045c706ac447efc2d56ce7adaeb43807f2914d"
+}

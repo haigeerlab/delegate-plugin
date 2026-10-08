@@ -44,4 +44,4 @@ stdin 从 `/dev/null` 输入；`-o` 最终答复和合并 stdout/stderr 过程�
 
 仅保留一个 Codex 后端，不提前抽象提供商层；无后台控制面、排队、断点恢复或自动重试。两种模式统一拒绝非 Git 目录，使可执行条件与验收方式一致。用户已有修改被保留，归属需通过 diff 人工判断。
 
-确定性合同以免费桩测试验证；真实沙箱、远端请求和交互模型行为需要用户决定进行 live 验证。eval 显式加载源码，PASS/FAIL/NORUN 分开；首行固定格式判决避免正文误报。[能力图](capability-map.md)和 [README](README.md)提供模块与使用入口。
+确定性合同以免费桩测试验证；真实沙箱、远端请求和交互模型行为需要用户决定进行 live 验证。eval 显式加载源码，PASS/FAIL/NORUN 分开；首行固定格式判决避免正文误报。[能力图](spec/CAPABILITY-MAP.md)和 [README](README.md)提供模块与使用入口。

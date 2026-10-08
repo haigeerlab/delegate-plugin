@@ -1,101 +1,67 @@
-# Tasks: routing
+# 当前维护核对：routing
 
-历史归档：本文保留早期实现时的方案与勾选状态，部分命令、认证判据、性能或测试约定已过时。当前合同见 [模块规格](../../SPEC-routing.md)，使用入口见 [README](../../README.md)。本文不作为当前任务清单。
+- [x] Task 9：执行已授权的当前真实处理/对照样本，分别保存 transcript、调用日志及判决。
 
-计划见 [`plan.md`](plan.md)。断言编号对应 [`../../SPEC-routing.md`](../../SPEC-routing.md) 的 Testing Strategy 表。
+Task 9 最新结果：另获具体整批批准并恢复认证后，B1 既有入口退出 0；处理组首行“判断：委托”，对照组“判断：自己做”，两组 exec 均 0；R4-A1/R4-A2/R4-V2 取得当前样本依据。先前 OAuth NORUN 和无重试的记录保留在[上一批证据](../../docs/verification/2026-10-08-live.md)，不被追改为通过。最新见[整批证据](../../docs/verification/2026-10-08-bulk.md)。
 
----
+日期：2026-10-08。计划：[plan.md](plan.md)。只跟踪本次接入，不替代历史产品验收。
 
-## Task R1: route.sh —— 注入与零足迹
+- [x] 当前规格、模块映射及中英文链接核对通过。
+- [x] 接入前 plan/todo 已按字节归档，SHA-256 与 `56c3ba7` 一致。
+- [x] 本轮插件结构、阶段及相关确定性验证通过，结果已记录。
 
-**Description:** 读 `detection` 写的缓存，可用才注入一行路由指针；不可用、缓存缺失或损坏一律**零注入**。**不做任何分类**。
+## 实际记录
 
-**Acceptance criteria:**
-- [ ] R1 断言：缓存说不可用 → 零注入
-- [ ] R2 断言：缓存缺失 → 零注入（不猜）
-- [ ] R3 断言：缓存说可用 → 一行合法 JSON
-- [ ] R4 断言：注入内容含「等用户确认」之意，**不含**「我这就派」这类越闸措辞
-- [ ] R5 断言：任何情况的 stdout 为空或可被 `json.load` 解析
-- [ ] R6 断言：缓存损坏/不可读 → 退出 0、零噪音
-- [ ] `route.sh` **不重新实现探测** —— 只读缓存（判据只能有一份实现）
-- [ ] `hooks.json` 增加 route.sh 的 UserPromptSubmit 注册，脚本缺失不报错
+归档：运行本轮归档核验，逐字节比较基准提交与存档，并验证 manifest 中 SHA-256；本模块两份原文均一致。
+本轮核对：Spec Guard 0.52.3 严格能力图解析成功，产物检查为 3 通过、0 警告、0 失败；完成项写入前阶段为 BUILDING。
+`PYTHONDONTWRITEBYTECODE=1 /bin/bash scripts/validate.sh` 退出 0；本模块 9 条 shell 断言通过；统一 backend 10 与 channel-regressions 7 个 Python 测试通过，eval 自检 7 + 12 通过。
+迁移规格正文与命令围栏核对一致（仅导航链接调整）；Markdown 文件链接和锚点核对通过。当前清单完成后的阶段另在最终报告核验。
+两项原生 `claude plugin validate` 通过。完整本轮记录见 [接入任务](../../docs/process/2026-10-08-adoption/todo.md)。
 
-**Verification:**
-- [ ] `/bin/bash plugins/delegate/tests/test-routing.sh` 退出 0
-- [ ] 变异：让不可用时也注入 → R1 必须变红
-- [ ] 变异：注入里加一句「我这就派给 Codex」→ R4 必须变红
+## 未验证项
 
-**Dependencies:** detection 的 D3（缓存）
-**Files:** `plugins/delegate/hooks/route.sh`, `plugins/delegate/hooks/hooks.json`, `plugins/delegate/tests/test-routing.sh`
-**Scope:** S
+历史人工批准、旧清单各项当时的验收、真实交互行为及远端交付未核实。
+这些事实不因本轮归档、桩验证或阶段 `DONE` 被改成完成。
 
----
+## 内容补全任务（2026-10-08）
 
-## Task R2: SKILL.md —— 判据与纪律
+- [x] Task 4：双语规格的开发约束齐备，原行为合同保留。
+  - 描述：按增补计划补齐中英文规格的开发约束，不改变原功能合同。
+  - 验收：六个核心领域完整；双语编号/命令/代码示例一致。
+  - 验证：标题、源代码片段、原正文保留核对。
+  - 依赖：初轮维护 1–3；涉及文件：本模块中英文 Spec；规模 S（2 文件）。
+  - 结果：文档内容检查退出 0；六领域/三级边界存在；两版新命令及源代码片段一致；原中英文行为正文完整保留。
+- [x] Task 5：条款到已有测试与缺口的映射齐备。
+  - 描述：把现有产品条款对应到测试和源码，明确尚未充分覆盖的条件。
+  - 验收：全部条款有映射行，测试引用存在，覆盖限制明确，plan 含逐任务字段。
+  - 验证：条款编号、源码与测试断言定向核对。
+  - 依赖：Task 4；涉及文件：本模块 plan、共享验证映射；规模 S（2 文件）。
+  - 结果：4 个 RT 条款与映射逐项对应；全表 13 行，16 个明确 Python 用例引用存在；缺口保持部分覆盖。plan Task 4–6 的六字段已核对。
+- [x] Task 6：本轮内容验收及实际证据已记录。
+  - 描述：核验本次文档及其证据，完成维护记录而不关闭历史未知。
+  - 验收：本轮完成项有证据，历史未知及产品覆盖缺口保持开放。
+  - 验证：文档链接/字段、插件结构/阶段、归档哈希、产品范围比较。
+  - 依赖：Task 5；涉及文件：本模块 todo；规模 S（1 文件）。
+  - 结果：文件链接/锚点、8 份归档和 30 份证据哈希均通过；verify-artifacts 为 3 通过/0 警告/0 失败；diff 空白及产品范围检查通过。新增 task 完成前阶段为 BUILDING；完成后的阶段由最终报告记入。既有产品测试沿用首轮真实离线结果，本次未重复运行。
 
-**Description:** 分流表落成 skill。**判断的依据是「这活里还有没有没定的决策」**，不是「难不难」。
+- [x] Task 7：本模块历史裁决及免费补验记录齐备。
+  - 描述：逐条区分当前证据、合同替代和未验证，不回填历史勾选。
+  - 验收：全部原条目有来源/理由/证据；历史批准保持未知；样本限制明确。
+  - 验证：行号/文本/哈希、定向结果和产品范围核对。
+  - 依赖：Task 4–6；涉及文件：本模块 todo；规模 S（1 文件）。
+  - 结果：31 条：21 项当前证据支持、2 项合同替代、8 项仍待验证，逐项记录见[裁决](../../docs/verification/2026-10-08-historical-reconciliation.md)；SUP-25/26 的免费 scaffold 样本通过，详见[定向补验](../../docs/verification/2026-10-08-supplemental.md)。历史完成/批准均未知；临时夹具不等于永久回归或完整宿主验收。
 
-**Acceptance criteria:**
-- [ ] R7 断言：SKILL.md 含分流表的六类活（审查 / 摸结构 / 定位 / 单 task 实现 / 批量机械改动 / 不该派的）
-- [ ] R8 断言：含「不许自动派」的明文
-- [ ] 三条回来之后的纪律写明：不 `cat` 整个日志、`--write` 必看 git 验收块、`--write` 需用户当轮明确要求
-- [ ] frontmatter 的 description 写得能被匹配到（参照 spec-guard 的经验：措辞决定会不会被加载）
+- [x] Task 8：免费反向条件证据与当前裁决更新。
+  - 描述：临时副本变异/还原与定向记录，不改产品。
+  - 验收：指定断言抓住故意错误、还原通过；历史未知保留。
+  - 验证：本批正常/变异/还原、归档哈希和产品范围。
+  - 依赖：Task 7；涉及文件：本模块 todo；规模 S（1 文件）。
+  - 结果：MUT-07–09 的不可用注入/越闸措辞/删除自动派禁令均被指定断言抓住，还原套通过。真实宿主/模型条件仍未验证。见[本批证据](../../docs/verification/2026-10-08-mutation.md)。历史完成/批准保持未知，产品未改。
 
-**Verification:**
-- [ ] 2 条断言全绿
-- [ ] 变异：删掉「不许自动派」那句 → R8 必须变红
+- [x] Task 10：实际 skill 加载与交互主动提议验收。
+  - 已取得：原生 TTY 自然提示实际调用 Skill(delegate:delegate-routing)，给出委托选项并等待确认，exec 为 0，业务前后内容哈希相同；routing:R2-A4 取得当前样本支持。
+  - 上一批未完成：首选仍是自己做，选项还自行指定模型；不将其升级为主动推荐或完整互动纪律验收。routing:R3-V3 保持未验证。本批四个 Claude 会话已用完，不自动重试。见[整批证据](../../docs/verification/2026-10-08-bulk.md)。
 
-**Dependencies:** R1
-**Files:** `plugins/delegate/skills/delegate-routing/SKILL.md`, `plugins/delegate/tests/test-routing.sh`
-**Scope:** S
+  - 后续免费准备快照：较大合成案例 64 文件/16,640 行/512 函数已就绪，语法与确认指针通过，保存内容前置快照；模型调用 0。新单会话范围待具体授权，Task 10 不勾选，裁决 105/13/1 不变。见[方案](../../docs/verification/2026-10-08-proposal-plan.md)。
 
----
-
-## Task R3: eval propose-not-auto
-
-**Description:** **最重要的一条**：喂一个明显该派的任务，验模型**说了要委托什么**、且**没有自己调**。
-
-**Acceptance criteria:**
-- [ ] 三种结局：通过 / 不通过 / **没跑起来**（退出码 0 / 1 / 2）
-- [ ] `--scaffold-only` 免费建脚手架并自检 hook 是否激活
-- [ ] `--selftest` 喂已知输入给判决器自己（免费，进 `validate.sh`）
-- [ ] `evals/_preflight.sh` 核对「装着的插件内容 == 仓库内容」，不一致就拒跑
-- [ ] 「没有自动调」判**桩的调用日志**（文件系统）；「提议了」判 transcript ——
-      这个不对称要在脚本注释里写明理由
-
-**Verification:**
-- [ ] `--selftest` 通过并接进 `validate.sh`
-- [ ] `--scaffold-only` 通过
-- [ ] 真跑一次通过
-
-**Dependencies:** R2
-**Files:** `evals/_preflight.sh`, `evals/propose-not-auto.sh`, `scripts/validate.sh`
-**Scope:** M
-
----
-
-## Task R4: eval routing-fitness
-
-**Description:** 差分。两组只差一个变量：任务里还有没有没定的决策。
-
-**Acceptance criteria:**
-- [ ] 处理组（决策已定、只剩执行）→ 应当提议
-- [ ] 对照组（还需取舍，比如「这两个方案选哪个」）→ **不应当**提议
-- [ ] **对照组同时充当脚手架自检**：它要是也提议了，处理组的结果无从归因，
-      这时给「没跑起来」而不是结论
-- [ ] `--selftest` + `--scaffold-only`（免费）
-
-**Verification:**
-- [ ] `--selftest` 通过并接进 `validate.sh`
-- [ ] 真跑一次，两组结果分开
-
-**Dependencies:** R3
-**Files:** `evals/routing-fitness.sh`, `scripts/validate.sh`
-**Scope:** M
-
----
-
-## Checkpoints
-
-- [x] **H（R1–R2）** 9 条确定性断言全绿；不可用时零注入；注入不含越闸措辞
-- [x] **I（R3–R4）** 两个 eval 的免费部分通过并接进 validate；真跑一次 `propose-not-auto` 通过
+  - Task 10 最终结果：另获单会话具体批准后，64模块原生案例实际加载 Skill，推荐具体只读委托、沿用配置默认模型并等待确认，桩 exec=0、真实 Codex=0；业务全部内容哈希相同。routing:R3-V3 取得当前样本支持。未实际委托、未执行完整审核；假设超时的重派措辞及完整互动纪律缺口保留，历史批准未知。见[最终样本](../../docs/verification/2026-10-08-proposal.md)。

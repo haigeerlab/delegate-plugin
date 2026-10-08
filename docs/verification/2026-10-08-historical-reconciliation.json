@@ -1,0 +1,2329 @@
+{
+  "currentTestSnapshot": {
+    "path": "plugins/delegate/tests/test-detection.sh",
+    "sha256": "9e98791e54586f76ad6ba321689d17b46ed429e9261532ba8fa5f39d6386980b",
+    "uncommitted": true,
+    "scope": "F8 test-fixture patch only; runtime unchanged; prior mutation results are pre-fix"
+  },
+  "date": "2026-10-08",
+  "archiveSourceCommit": "56c3ba76f1059f929bc908c0e45469abc623859a",
+  "currentSourceCommit": "56c3ba76f1059f929bc908c0e45469abc623859a",
+  "scope": "119 originally unchecked archived entries; current evidence reconciliation, not historical completion or approval",
+  "statusDefinitions": {
+    "supported_current": "当前证据满足（仅所列场景/静态事实或有限真实样本）",
+    "superseded": "已被现行合同或产物形态替代；旧字面不补勾",
+    "unverified": "仍待验证/确认；历史样本与当前完整验收分开"
+  },
+  "counts": {
+    "superseded": 13,
+    "supported_current": 106,
+    "unverified": 0
+  },
+  "moduleCounts": {
+    "channel": {
+      "superseded": 8,
+      "supported_current": 44
+    },
+    "detection": {
+      "supported_current": 33,
+      "superseded": 3
+    },
+    "routing": {
+      "supported_current": 29,
+      "superseded": 2
+    }
+  },
+  "evidence": {
+    "VAL": {
+      "path": "docs/process/2026-10-08-adoption/report.md",
+      "line": 20,
+      "description": "首轮接入实际总验证：52 Shell、17 Python、判决器自检。",
+      "sha256": "7f879c629df0873d914e119d0f1f98fa8fb9208db45ca2886b3db08986b174f1"
+    },
+    "MAN": {
+      "path": "scripts/check-manifests.py",
+      "line": 34,
+      "description": "现行清单结构与必填字段；原生清单核验见首轮报告。",
+      "sha256": "f45e4f6f5f31a4a48785ba026b45d80874eb82d02ffc78be7f9a6cb48e917ced"
+    },
+    "MP": {
+      "path": ".claude-plugin/marketplace.json",
+      "line": 2,
+      "description": "marketplace 清单采用 name/owner/plugins/source；没有根 version 字段。",
+      "sha256": "aab72eedd7cc3196b6980581ba53cc99c91c0e36d11c9a88b500b8c3fe7c6990"
+    },
+    "PM": {
+      "path": "plugins/delegate/.claude-plugin/plugin.json",
+      "line": 2,
+      "description": "插件 version 0.4.0；命令自动发现而非清单 commands 声明。",
+      "sha256": "f17b6c5be85f264b6a6e55e0acb16780fed0a42f214e6580f9b47e17547137f4"
+    },
+    "STUB": {
+      "path": "plugins/delegate/tests/stub-codex",
+      "line": 3,
+      "description": "argv 日志及 STUB_* 行为；不含模型调用。",
+      "sha256": "8dc61a9b8b3a10cba2d8cf6515d67f3d01ade152a169b16c5b212bd66b3d6975"
+    },
+    "CH": {
+      "path": "plugins/delegate/tests/test-channel.sh",
+      "line": 71,
+      "description": "当前通道断言套；具体断言编号在逐项理由中。",
+      "sha256": "c9eaaf272e118ceedd3b350d71f7b7c98acace81a48651038619bdbc1e566f02"
+    },
+    "REG": {
+      "path": "plugins/delegate/tests/test-channel-regressions.py",
+      "line": 66,
+      "description": "生命周期/Git/错误回显回归。",
+      "sha256": "9ad02c3e8a6e53866cbecab3773b2dcd954bbcc83088e91fdf0e43efd1cc9005"
+    },
+    "BACK": {
+      "path": "plugins/delegate/tests/test-backend.py",
+      "line": 43,
+      "description": "认证、缓存身份、冷启动及 live harness 的桩回归。",
+      "sha256": "a981949d849e31835fddf3c965133dfb70f933891d70c3234b0b4c522dce7f04"
+    },
+    "WRAP": {
+      "path": "plugins/delegate/scripts/codex-exec.sh",
+      "line": 5,
+      "description": "现行参数、执行形态、日志与 Git 输出实现。",
+      "sha256": "cdc0392b917ef7815abfc243f9ce987a7a67fa2512336bcd09db116754a46dec"
+    },
+    "VALIDATOR": {
+      "path": "scripts/validate.sh",
+      "line": 20,
+      "description": "语法、模式、清单、eval 与产品套总入口。",
+      "sha256": "dcfcaee6a2208ee763c1f46ab6f6e64856856dd13cebfd2b315999283d3d169f"
+    },
+    "DET": {
+      "path": "plugins/delegate/tests/test-detection.sh",
+      "line": 34,
+      "description": "当前 19 条检测断言；旧 auth.json 标签仅用于测试桩。",
+      "sha256": "9e98791e54586f76ad6ba321689d17b46ed429e9261532ba8fa5f39d6386980b"
+    },
+    "DETPY": {
+      "path": "plugins/delegate/hooks/detect.py",
+      "line": 17,
+      "description": "CLI 身份、TTL、原子缓存及事实输出。",
+      "sha256": "18d2436079e01dca7af4f06b39c38ee2f03bf1ecc91b90898acb6128a54ab0e9"
+    },
+    "BEPY": {
+      "path": "plugins/delegate/scripts/backend.py",
+      "line": 22,
+      "description": "当前以 CLI ChatGPT 登录为判据，不直接读取 auth.json。",
+      "sha256": "5862704d46bf565dcb4be7f3e1d6959a3a46c9ad3052d0854722ae9a7ac036db"
+    },
+    "HOOK": {
+      "path": "plugins/delegate/hooks/hooks.json",
+      "line": 3,
+      "description": "两个事件；UserPromptSubmit 只注册串行 prompt.sh。",
+      "sha256": "822d1fed0b4febdfcc46ac17db2c832ba38d48e842aad69a32db7ecf78ab7483"
+    },
+    "PROMPT": {
+      "path": "plugins/delegate/hooks/prompt.sh",
+      "line": 5,
+      "description": "先 warm，后 route 的串行编排。",
+      "sha256": "0740361f811c048dcd6ed715920deb5c63b24577718fc3b01b91a5009fcf6027"
+    },
+    "DOCMD": {
+      "path": "plugins/delegate/commands/doctor.md",
+      "line": 3,
+      "description": "doctor 命令的宿主脚本路径和工具声明。",
+      "sha256": "d05026b0ee276eb2d1a3406d5798f8ed778d584d2ae4195c3e3df696e05fdd0e"
+    },
+    "DOCTOR": {
+      "path": "plugins/delegate/hooks/doctor.sh",
+      "line": 19,
+      "description": "规则诊断路径覆盖、中文启发式和不修改规则。",
+      "sha256": "ab206f2ad5bbe1e6e3ee31638d9d0eb2f58c6469c321e4892be2d16eda179bf5"
+    },
+    "CMD": {
+      "path": "plugins/delegate/commands/delegate.md",
+      "line": 4,
+      "description": "现行委托命令声明、确认、timeout 和返回纪律。",
+      "sha256": "a5b36f9942e65c891901cdd26da729590461cd4bd89cca1aeee5b9ddd63144ba"
+    },
+    "RT": {
+      "path": "plugins/delegate/tests/test-routing.sh",
+      "line": 64,
+      "description": "当前 9 条路由断言。",
+      "sha256": "0e7ff4b2d51615d726c73d2f6f67ae3fd1c2dff739112e3d9dda863876653eef"
+    },
+    "ROUTE": {
+      "path": "plugins/delegate/hooks/route.sh",
+      "line": 10,
+      "description": "只读共用缓存、单行 JSON、确认指针。",
+      "sha256": "518911694a0d308090387e5c5d76472841849fe519468463235190faa12101f5"
+    },
+    "SKILL": {
+      "path": "plugins/delegate/skills/delegate-routing/SKILL.md",
+      "line": 3,
+      "description": "分流表、提议纪律、description 和回来后规则。",
+      "sha256": "3b47cec2483dbeece36d78f530db32c3e09dfa6d67c12b69c63de34cc6d12bf2"
+    },
+    "PREF": {
+      "path": "evals/_preflight.sh",
+      "line": 7,
+      "description": "显式源码加载及原生校验，已不比较安装缓存内容。",
+      "sha256": "3a32e7ac8caf9370aa5b1b0526201299ea39fb2542c38634ef3b41318a406187"
+    },
+    "PROP": {
+      "path": "evals/propose-not-auto.sh",
+      "line": 28,
+      "description": "判决器硬条件为无自动 exec；提议只是观察项。",
+      "sha256": "ba9f5251aec405a721bceb7f245a551cd2b9db248ce2bd516b22580e15279446"
+    },
+    "FIT": {
+      "path": "evals/routing-fitness.sh",
+      "line": 44,
+      "description": "处理/对照组完整首行判决及 NORUN 条件。",
+      "sha256": "aa90ba85060e2f7122dd8b25db2534352b491ee2f5023bf2a475a4a40b343ac0"
+    },
+    "REL": {
+      "path": "docs/releases/v0.4.0.md",
+      "line": 17,
+      "description": "0.4.0 已记录认证、串行 hook、模型样本及体量比变更。",
+      "sha256": "cc14adfbc3c78bc6c94dfbffa93d80a603bb7654f89b7cc355d9ce290e423f07"
+    },
+    "HIST": {
+      "path": "docs/verification/historical-evidence.json",
+      "line": 2,
+      "description": "精确本地证据提交 f961e...；先前样本的源码归属限制见历史摘要。",
+      "sha256": "d53661fea6391fc25fbaf611a6f5a5e3a616c5ab94c66231672e0a6adbd626da"
+    },
+    "SUP": {
+      "path": "docs/verification/2026-10-08-supplemental-results.json",
+      "line": 6,
+      "description": "本批 26 个受控离线样本，含两个免费 scaffold；不是永久回归或真实宿主验收。",
+      "sha256": "5fad7cc726a89e6f0b8706bb9174d681dcf847a307adb97a78626127117b306b"
+    },
+    "MUT": {
+      "path": "docs/verification/2026-10-08-mutation-results.json",
+      "line": 6,
+      "description": "本批 9 个特定变异覆盖 10 条原条件及零足迹样本；含工具声明引入提交与首轮外层 CLI 依赖记录。",
+      "sha256": "17384cb9a6dc4d3a9440c6951688037ef64becae42149a347ebd5bb34f605e2d"
+    },
+    "F8": {
+      "path": "docs/verification/2026-10-08-f8-applied-results.json",
+      "line": 16,
+      "description": "批准单文件测试隔离修复后，当前仓库两个探测反例和无外层 CLI 总验证通过，工作区尚未提交。",
+      "sha256": "c08137b77bca1da175108a09197c13b9489ddd5e67cc4f6bc131e730180763b1"
+    },
+    "LIVE": {
+      "path": "docs/verification/2026-10-08-live-results.json",
+      "line": 41,
+      "description": "当前通道真实只读样本通过；Claude 路由两组认证 NORUN，未验收路由决策。",
+      "sha256": "d4e5d107a6309f1a5b6897c24f2a448131342258707c268fe9539e21138c08ac"
+    },
+    "ADR": {
+      "path": "docs/decisions/ADR-001-command-tool-scope.md",
+      "line": 5,
+      "description": "本次具体批准的当前工具取舍，不追认历史批准。",
+      "sha256": "b2688e7e91d96e5cf7416719b26a7a434f430c505eec12234ca018d24425d586"
+    },
+    "BULK": {
+      "path": "docs/verification/2026-10-08-bulk-results.json",
+      "line": 19,
+      "description": "四个 Claude 会话/一次真实 Codex；差分、原生 Skill/斜杠与快照证据；主动推荐保持未验证。",
+      "sha256": "1d5b7cc062225200ef952bd88a4563814dbe27331c770e51237b510e764ad85a"
+    },
+    "PROPOSE": {
+      "path": "docs/verification/2026-10-08-proposal-results.json",
+      "line": 3,
+      "description": "具体批准的较大原生单会话：实际加载、推荐、默认模型、等待、零exec及内容快照；完整互动限制另保留。",
+      "sha256": "4ed8f2c3b5d2cc520d78cf4caae7b8a3f2c6c7123138e9a50d5226e3c3ffcd3a"
+    }
+  },
+  "records": [
+    {
+      "id": "channel:1-A1",
+      "module": "channel",
+      "originalTask": "1",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 14,
+      "originalText": "`.claude-plugin/marketplace.json` 与 `plugins/delegate/.claude-plugin/plugin.json` 均为合法 JSON，含 `version`",
+      "currentDisposition": "superseded",
+      "reason": "插件清单 version 已有；marketplace 本身采用现行 name/owner/plugins 格式，无根 version。两项原生校验通过，旧要求不能按原字面补勾。",
+      "evidenceIds": [
+        "MAN",
+        "MP",
+        "PM",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "channel:1-A2",
+      "module": "channel",
+      "originalTask": "1",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 15,
+      "originalText": "`validate.sh` 检查：JSON 语法、所有 `.sh` 的 `bash -n`、可执行位、`${VAR}` 写法（不许 `$VAR` 紧跟多字节）、不许 `cmd | grep -q`",
+      "currentDisposition": "supported_current",
+      "reason": "现行 validate 的 JSON/Bash/可执行位和危险模式检查在源码可定位，首轮总验证退出 0。",
+      "evidenceIds": [
+        "VALIDATOR",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "channel:1-A3",
+      "module": "channel",
+      "originalTask": "1",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 16,
+      "originalText": "喂一个已知坏输入（故意写 `$VAR中文`）时 `validate.sh` 非零退出",
+      "currentDisposition": "supported_current",
+      "reason": "MUT-01-multibyte-variable：F8 修复前临时产品副本的特定故意错误触发指定断言失败，无变异基线和还原后套通过；仅证明此反向样本，历史完成/批准仍未知。",
+      "evidenceIds": [
+        "MUT"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "channel:1-V1",
+      "module": "channel",
+      "originalTask": "1",
+      "kind": "verification",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 19,
+      "originalText": "`/bin/bash scripts/validate.sh` 退出 0",
+      "currentDisposition": "supported_current",
+      "reason": "首轮接入实际 /bin/bash scripts/validate.sh 退出 0；产品源码未改，不把它写成历史时点的执行。",
+      "evidenceIds": [
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "channel:1-V2",
+      "module": "channel",
+      "originalTask": "1",
+      "kind": "verification",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 20,
+      "originalText": "手工注入坏输入后退出非 0，还原后回到 0",
+      "currentDisposition": "supported_current",
+      "reason": "MUT-01-multibyte-variable：F8 修复前临时产品副本的特定故意错误触发指定断言失败，无变异基线和还原后套通过；仅证明此反向样本，历史完成/批准仍未知。",
+      "evidenceIds": [
+        "MUT"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "channel:2-A1",
+      "module": "channel",
+      "originalTask": "2",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 33,
+      "originalText": "桩把收到的完整 argv 写进一个可断言的调用日志",
+      "currentDisposition": "supported_current",
+      "reason": "stub-codex 用 printf %q 写完整 argv；当前断言套读取该调用日志检验参数。",
+      "evidenceIds": [
+        "STUB",
+        "CH"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "channel:2-A2",
+      "module": "channel",
+      "originalTask": "2",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 34,
+      "originalText": "桩支持：`STUB_ANSWER` / `STUB_EXIT` / `STUB_STDOUT_BYTES` / `STUB_READ_STDIN`",
+      "currentDisposition": "supported_current",
+      "reason": "STUB_ANSWER/EXIT/STDOUT_BYTES/READ_STDIN 在桩中存在，通道正反断言实际覆盖对应行为。",
+      "evidenceIds": [
+        "STUB",
+        "CH",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "channel:2-A3",
+      "module": "channel",
+      "originalTask": "2",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 35,
+      "originalText": "断言套能把 `PATH` 指向桩，且**不触网**",
+      "currentDisposition": "supported_current",
+      "reason": "测试套将 PATH 置桩并以临时认证响应运行；首轮运行免费产品套，无模型请求。",
+      "evidenceIds": [
+        "CH",
+        "STUB",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "channel:2-A4",
+      "module": "channel",
+      "originalTask": "2",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 36,
+      "originalText": "空套跑出「总计 0 通过 / 0 失败」并退出 0",
+      "currentDisposition": "superseded",
+      "reason": "这是初建空骨架时的阶段条件；当前非空套为 24 条，不能从现有套回推空骨架当时运行。",
+      "evidenceIds": [
+        "CH",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "channel:2-V1",
+      "module": "channel",
+      "originalTask": "2",
+      "kind": "verification",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 39,
+      "originalText": "`/bin/bash plugins/delegate/tests/test-channel.sh` 退出 0",
+      "currentDisposition": "supported_current",
+      "reason": "首轮通道产品套 24 通过、0 失败。",
+      "evidenceIds": [
+        "VAL",
+        "CH"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "channel:2-V2",
+      "module": "channel",
+      "originalTask": "2",
+      "kind": "verification",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 40,
+      "originalText": "手工让桩 `STUB_EXIT=3`，确认调用日志里记下了 argv",
+      "currentDisposition": "supported_current",
+      "reason": "现行 test-channel.sh 的失败调用设置 STUB_EXIT=3，并校验状态及 stderr；桩每次先记录 argv。",
+      "evidenceIds": [
+        "STUB",
+        "CH",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "channel:3-A1",
+      "module": "channel",
+      "originalTask": "3",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 53,
+      "originalText": "调用含全部四要素：`env -u OPENAI_API_KEY`、`</dev/null`、`-o` + stdout 重定向、非交互 preamble",
+      "currentDisposition": "supported_current",
+      "reason": "wrapper 仍具 env -u 两类 key、stdin=/dev/null、-o/日志重定向和非交互 preamble，backend 回归检验认证配置。",
+      "evidenceIds": [
+        "WRAP",
+        "BACK",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "channel:3-A2",
+      "module": "channel",
+      "originalTask": "3",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 54,
+      "originalText": "断言 1：桩吐 100KB 到 stdout → 调用方拿到的 stdout **不含**那 100KB",
+      "currentDisposition": "supported_current",
+      "reason": "通道断言 1 以 100KB 桩过程输出核验 stdout 隔离；首轮通过。",
+      "evidenceIds": [
+        "CH",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "channel:3-A3",
+      "module": "channel",
+      "originalTask": "3",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 55,
+      "originalText": "断言 2a（**反**）：`STUB_READ_STDIN=1` + stdin 是永不关闭的管道 + **不加** `</dev/null` → 桩阻塞\n      —— 这条先证明「测法能复现真故障」，否则 2b 是空断言",
+      "currentDisposition": "supported_current",
+      "reason": "通道 2a/2b 为限时正反成对断言：直接读未关闭 stdin 阻塞，wrapper 关闭 stdin 后完成；首轮通过。",
+      "evidenceIds": [
+        "CH",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "channel:3-A4",
+      "module": "channel",
+      "originalTask": "3",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 57,
+      "originalText": "断言 2b（**正**）：同样条件**加上** `</dev/null` → 桩在限时内完成",
+      "currentDisposition": "supported_current",
+      "reason": "通道 2a/2b 为限时正反成对断言：直接读未关闭 stdin 阻塞，wrapper 关闭 stdin 后完成；首轮通过。",
+      "evidenceIds": [
+        "CH",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "channel:3-A5",
+      "module": "channel",
+      "originalTask": "3",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 58,
+      "originalText": "断言 10：桩收到 `--sandbox read-only`",
+      "currentDisposition": "supported_current",
+      "reason": "通道断言 10 读取桩参数并校验 read-only；不扩展为真实权限证明。",
+      "evidenceIds": [
+        "CH",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "channel:3-A6",
+      "module": "channel",
+      "originalTask": "3",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 59,
+      "originalText": "断言 15/16：空任务或未知选项退出 **64**；以 `-` 开头的任务不被当成选项",
+      "currentDisposition": "supported_current",
+      "reason": "通道 15a/15b/16 覆盖无任务、未知选项和 -- 后以 - 开头的任务；首轮通过。",
+      "evidenceIds": [
+        "CH",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "channel:3-A7",
+      "module": "channel",
+      "originalTask": "3",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 60,
+      "originalText": "输出末尾回报日志路径与「过程 N 字节 / 答复 M 字节」",
+      "currentDisposition": "supported_current",
+      "reason": "wrapper 成功尾部输出模型/推理、过程与答复体量和日志路径；过程正文不进入 stdout。",
+      "evidenceIds": [
+        "WRAP",
+        "CH",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "channel:3-V1",
+      "module": "channel",
+      "originalTask": "3",
+      "kind": "verification",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 63,
+      "originalText": "`test-channel.sh` 新增 7 条断言全绿",
+      "currentDisposition": "supported_current",
+      "reason": "对应的 1/2a/2b/10/15a/15b/16 七个当前断言都在 24 条通过结果中，不解释为过去新增时的结果。",
+      "evidenceIds": [
+        "CH",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "channel:3-V2",
+      "module": "channel",
+      "originalTask": "3",
+      "kind": "verification",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 64,
+      "originalText": "断言 2a/2b 必须带超时上限，挂起要判失败而不是卡住套件",
+      "currentDisposition": "supported_current",
+      "reason": "2a/2b 的持有者和外层观察有界；首轮 suite 已完成，未以无限挂起代替失败判断。",
+      "evidenceIds": [
+        "CH",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "channel:3-V3",
+      "module": "channel",
+      "originalTask": "3",
+      "kind": "verification",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 65,
+      "originalText": "**断言必须在 `/bin/bash` 下跑**：zsh 的 MULTIOS 会把多个输入重定向**拼接**\n      而不是后者覆盖，在 zsh 里写这条会得出完全相反的结论（2026-08-29 实测踩到）",
+      "currentDisposition": "supported_current",
+      "reason": "首轮真实运行使用 /bin/bash 总入口，模块 Shell 套也由 /bin/bash 调用。",
+      "evidenceIds": [
+        "VALIDATOR",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "channel:4-A1",
+      "module": "channel",
+      "originalTask": "4",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 79,
+      "originalText": "断言 3：`codex` 存在但 `--version` 失败 → 退出 **127** + 提示 `npm install -g @openai/codex@latest`",
+      "currentDisposition": "supported_current",
+      "reason": "通道断言 3 同时检验 127 和安装提示；首轮通过。",
+      "evidenceIds": [
+        "CH",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "channel:4-A2",
+      "module": "channel",
+      "originalTask": "4",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 80,
+      "originalText": "断言 4：`codex` 不在 PATH → 退出 127",
+      "currentDisposition": "supported_current",
+      "reason": "通道断言 4 检验 CLI 缺失的 127；当前回归还验证 help 无 CLI 可用。",
+      "evidenceIds": [
+        "CH",
+        "REG",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "channel:4-A3",
+      "module": "channel",
+      "originalTask": "4",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 81,
+      "originalText": "断言 5：桩退出非 0 → 脚本退出非 0，stderr 回显日志尾部与完整日志路径",
+      "currentDisposition": "supported_current",
+      "reason": "通道断言 5 检验非零原码、尾部和日志路径；另有 100KB 单行错误上限回归。",
+      "evidenceIds": [
+        "CH",
+        "REG",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "channel:4-A4",
+      "module": "channel",
+      "originalTask": "4",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 82,
+      "originalText": "断言 6：桩退出 0 但答复文件为空 → **退出非 0**（不许把空当成功）",
+      "currentDisposition": "supported_current",
+      "reason": "通道断言 6 检验空答复非零；写失败回归含 empty 场景。",
+      "evidenceIds": [
+        "CH",
+        "REG",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "channel:4-V1",
+      "module": "channel",
+      "originalTask": "4",
+      "kind": "verification",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 85,
+      "originalText": "`test-channel.sh` 新增 4 条断言全绿",
+      "currentDisposition": "supported_current",
+      "reason": "原 3/4/5/6 对应的当前四个失败场景在通道 24 通过结果中。",
+      "evidenceIds": [
+        "CH",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "channel:5-A1",
+      "module": "channel",
+      "originalTask": "5",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 101,
+      "originalText": "断言 8：`--model X --effort high` → 桩收到 `-m X` 和 `-c model_reasoning_effort=\"high\"`",
+      "currentDisposition": "supported_current",
+      "reason": "通道断言 8 验证 -m 和 model_reasoning_effort 透传，当前参数与原任务目的相同。",
+      "evidenceIds": [
+        "CH",
+        "WRAP",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "channel:5-A2",
+      "module": "channel",
+      "originalTask": "5",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 102,
+      "originalText": "断言 9：不传 → 桩**没有**收到 `-m`",
+      "currentDisposition": "supported_current",
+      "reason": "通道断言 9 验证不传模型时无 -m，尊重配置默认。",
+      "evidenceIds": [
+        "CH",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "channel:5-A3",
+      "module": "channel",
+      "originalTask": "5",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 103,
+      "originalText": "断言 7：桩模拟无效 slug 的 400 → 脚本退出非 0",
+      "currentDisposition": "supported_current",
+      "reason": "断言 7 用受控非零桩验证不删 -m 重试；不声称真正请求了网络 400。",
+      "evidenceIds": [
+        "CH",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "channel:5-A4",
+      "module": "channel",
+      "originalTask": "5",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 104,
+      "originalText": "输出末尾回报实际使用的模型与推理档（不传时显示「配置默认」）",
+      "currentDisposition": "supported_current",
+      "reason": "wrapper printf 在成功尾部显示实际传入模型/推理或配置默认；有源码依据。",
+      "evidenceIds": [
+        "WRAP"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "channel:5-A5",
+      "module": "channel",
+      "originalTask": "5",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 105,
+      "originalText": "空数组展开写成 `${ARR[@]+\"${ARR[@]}\"}`（bash 3.2）",
+      "currentDisposition": "supported_current",
+      "reason": "EXTRA 展开采用 Bash 3.2 空数组守卫，已通过首轮 /bin/bash 检查。",
+      "evidenceIds": [
+        "WRAP",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "channel:5-V1",
+      "module": "channel",
+      "originalTask": "5",
+      "kind": "verification",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 108,
+      "originalText": "`test-channel.sh` 新增 3 条断言全绿",
+      "currentDisposition": "supported_current",
+      "reason": "当前 7/8/9 三个模型参数断言存在且在首轮通道通过结果中。",
+      "evidenceIds": [
+        "CH",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "channel:5-V2",
+      "module": "channel",
+      "originalTask": "5",
+      "kind": "verification",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 109,
+      "originalText": "`/bin/bash scripts/validate.sh` 通过（bash 3.2 静态检查）",
+      "currentDisposition": "supported_current",
+      "reason": "首轮真实总入口退出 0，包含 Bash 模式、清单与模块验证；不倒推历史完成时间。",
+      "evidenceIds": [
+        "VALIDATOR",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "channel:6-A1",
+      "module": "channel",
+      "originalTask": "6",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 122,
+      "originalText": "断言 11：`--write` → 桩收到 `--sandbox workspace-write`",
+      "currentDisposition": "supported_current",
+      "reason": "通道断言 11 验证 --write 对应 workspace-write；只是传参证明。",
+      "evidenceIds": [
+        "CH",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "channel:6-A2",
+      "module": "channel",
+      "originalTask": "6",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 123,
+      "originalText": "断言 12：git 仓库里 → 输出含基线 HEAD + `git status --short` + `git diff --stat`",
+      "currentDisposition": "supported_current",
+      "reason": "通道断言 12 与失败/Git 回归检验 baseline/status/diff；本批 SUP-06 还验证无 HEAD 输出。",
+      "evidenceIds": [
+        "CH",
+        "REG",
+        "SUP",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "channel:6-A3",
+      "module": "channel",
+      "originalTask": "6",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 124,
+      "originalText": "断言 13：**非** git 目录 → 明说拿不到 diff，**不伪造验收块**",
+      "currentDisposition": "superseded",
+      "reason": "当前非 Git 在执行前退出 64，不执行 Codex；旧的继续运行但说明无 diff 条件已由更严格合同替代。",
+      "evidenceIds": [
+        "WRAP",
+        "REG",
+        "REL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "channel:6-A4",
+      "module": "channel",
+      "originalTask": "6",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 125,
+      "originalText": "断言 14：跑前已有 N 个未提交变更 → 验收块把 N 报出来",
+      "currentDisposition": "supported_current",
+      "reason": "通道断言 14 验证已有 2 个修改的基线计数；源码不自动回滚。",
+      "evidenceIds": [
+        "CH",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "channel:6-A5",
+      "module": "channel",
+      "originalTask": "6",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 126,
+      "originalText": "默认仍是只读；`--write` 必须显式",
+      "currentDisposition": "supported_current",
+      "reason": "默认 read-only，仅显式 --write 改 sandbox，断言 10/11 通过；授权是行为规则而非不可绕过锁。",
+      "evidenceIds": [
+        "WRAP",
+        "CH",
+        "CMD",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "channel:6-V1",
+      "module": "channel",
+      "originalTask": "6",
+      "kind": "verification",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 129,
+      "originalText": "`test-channel.sh` 新增 4 条断言全绿，**19 条全绿**",
+      "currentDisposition": "superseded",
+      "reason": "当前通道套为 24 条并加 7 个 Python 生命周期回归，旧 19 条固定总数已过时；对应四场景有当前证据。",
+      "evidenceIds": [
+        "CH",
+        "REG",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "channel:6-V2",
+      "module": "channel",
+      "originalTask": "6",
+      "kind": "verification",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 130,
+      "originalText": "`/bin/bash scripts/validate.sh` 通过",
+      "currentDisposition": "supported_current",
+      "reason": "首轮真实总入口退出 0，包含 Bash 模式、清单与模块验证；不倒推历史完成时间。",
+      "evidenceIds": [
+        "VALIDATOR",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "channel:7-A1",
+      "module": "channel",
+      "originalTask": "7",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 143,
+      "originalText": "`commands/delegate.md` 的 `allowed-tools` 只放 `Bash(<脚本路径> *)`",
+      "currentDisposition": "superseded",
+      "reason": "用户具体批准当前保留 Bash 的取舍，双语 ADR Accepted；旧固定脚本路径条件被当前合同替代，未满足旧字面。当前批准不追认原历史批准。",
+      "evidenceIds": [
+        "CMD",
+        "MUT",
+        "ADR"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "channel:7-A2",
+      "module": "channel",
+      "originalTask": "7",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 144,
+      "originalText": "文档写明：Bash timeout 设 600000；`--write` 必看验收块；**不要 `cat` 整个日志**",
+      "currentDisposition": "supported_current",
+      "reason": "主命令明确 timeout 600000、写模式查看实际 Git diff 和按片段读取日志；这是文本证据，不是宿主行为验收。",
+      "evidenceIds": [
+        "CMD"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "channel:7-A3",
+      "module": "channel",
+      "originalTask": "7",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 145,
+      "originalText": "文档写明 `--write` 需用户当轮明确要求，Claude 不得自行升级",
+      "currentDisposition": "supported_current",
+      "reason": "主命令和 skill 明确当轮授权才可加 --write、模型不得升级。",
+      "evidenceIds": [
+        "CMD",
+        "SKILL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "channel:7-A4",
+      "module": "channel",
+      "originalTask": "7",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 146,
+      "originalText": "`plugin.json` 正确声明 commands",
+      "currentDisposition": "superseded",
+      "reason": "当前 plugin.json 无 commands 字段，命令在标准 commands/ 目录发现；两项原生清单校验通过，旧显式声明要求不再是当前清单方式。",
+      "evidenceIds": [
+        "PM",
+        "CMD",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "channel:7-V1",
+      "module": "channel",
+      "originalTask": "7",
+      "kind": "verification",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 149,
+      "originalText": "`/bin/bash scripts/validate.sh` 通过（含清单一致性）",
+      "currentDisposition": "supported_current",
+      "reason": "首轮真实总入口退出 0，包含 Bash 模式、清单与模块验证；不倒推历史完成时间。",
+      "evidenceIds": [
+        "VALIDATOR",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "channel:7-V2",
+      "module": "channel",
+      "originalTask": "7",
+      "kind": "verification",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 150,
+      "originalText": "装进 user scope 后 `/delegate` 能跑通一次真实委托",
+      "currentDisposition": "supported_current",
+      "reason": "B3：原生交互 user-scope /delegate:delegate 实际解析，无 --plugin-dir；Bash timeout 600000，唯一真实 read-only exec 成功答复18字节，业务全部内容哈希不变；一次样本，历史批准未知。",
+      "evidenceIds": [
+        "CMD",
+        "BULK"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "channel:8-A1",
+      "module": "channel",
+      "originalTask": "8",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 163,
+      "originalText": "`--live` 真调一次只读委托，答复非空",
+      "currentDisposition": "supported_current",
+      "reason": "当前快照 test-channel.sh --live 实际退出 0，25 条通过、真实只读答复非空（3 字节）；源码哈希一致。原临时日志随套件清理，保存的是入口输出及快照，不伪造日志/answer 完整哈希或历史批准。",
+      "evidenceIds": [
+        "CH",
+        "LIVE"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "channel:8-A2",
+      "module": "channel",
+      "originalTask": "8",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 164,
+      "originalText": "断言日志/答复体量比 **≥ 40×**",
+      "currentDisposition": "superseded",
+      "reason": "0.4.0 明确体量比只作观察，取消固定 40 倍门槛；不可拿单个高比例样本恢复旧保证。",
+      "evidenceIds": [
+        "REL",
+        "CH"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "channel:8-A3",
+      "module": "channel",
+      "originalTask": "8",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 165,
+      "originalText": "不带 `--live` 时这组被跳过且在输出里说明「跳过不代表通过」",
+      "currentDisposition": "supported_current",
+      "reason": "免费 test-channel.sh 输出 LIVE 已跳过（跳过不代表通过）；首轮免费套通过。",
+      "evidenceIds": [
+        "CH",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "channel:8-A4",
+      "module": "channel",
+      "originalTask": "8",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 166,
+      "originalText": "前置检查 `codex --version` 与 `auth.json`，缺任一则报「**没跑起来**」而不是「不通过」",
+      "currentDisposition": "superseded",
+      "reason": "当前 live/执行以 CLI ChatGPT 登录为准，不要求 auth.json；backend 回归证明无 auth.json 的桩状态可用。",
+      "evidenceIds": [
+        "BEPY",
+        "BACK",
+        "REL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "channel:8-V1",
+      "module": "channel",
+      "originalTask": "8",
+      "kind": "verification",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 169,
+      "originalText": "`/bin/bash plugins/delegate/tests/test-channel.sh --live` 通过",
+      "currentDisposition": "supported_current",
+      "reason": "当前快照 --live 入口实际退出 0，原有桩断言和真实只读非空答复检查通过；一次样本，不证明全部沙箱配置或历史当时完成。",
+      "evidenceIds": [
+        "CH",
+        "LIVE"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "channel:8-V2",
+      "module": "channel",
+      "originalTask": "8",
+      "kind": "verification",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/channel/todo.md.txt",
+      "sourceLine": 170,
+      "originalText": "不带 flag 时套件仍全绿且明确标出跳过",
+      "currentDisposition": "supported_current",
+      "reason": "免费 test-channel.sh 输出 LIVE 已跳过（跳过不代表通过）；首轮免费套通过。",
+      "evidenceIds": [
+        "CH",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "detection:D1-A1",
+      "module": "detection",
+      "originalTask": "D1",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/detection/todo.md.txt",
+      "sourceLine": 14,
+      "originalText": "`detect.sh` 支持 `--print`（人看的）与 hook 模式（输出 JSON 或什么都不输出）",
+      "currentDisposition": "supported_current",
+      "reason": "detect.sh 转发 --print 或 hook 默认模式；对应打印和空/JSON 断言已通过。",
+      "evidenceIds": [
+        "DET",
+        "DETPY",
+        "VAL",
+        "F8"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "detection:D1-A2",
+      "module": "detection",
+      "originalTask": "D1",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/detection/todo.md.txt",
+      "sourceLine": 15,
+      "originalText": "断言 10：`PATH` 里没有 codex → hook 模式**退出 0 且 stdout 完全为空**",
+      "currentDisposition": "supported_current",
+      "reason": "检测断言 10 校验无 CLI 时退出 0 且 stdout 为空；首轮通过。",
+      "evidenceIds": [
+        "DET",
+        "VAL",
+        "F8"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "detection:D1-A3",
+      "module": "detection",
+      "originalTask": "D1",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/detection/todo.md.txt",
+      "sourceLine": 16,
+      "originalText": "`hooks.json` 注册 SessionStart 与 UserPromptSubmit，路径用 `${CLAUDE_PLUGIN_ROOT}`",
+      "currentDisposition": "supported_current",
+      "reason": "hooks.json 同时注册 SessionStart/UserPromptSubmit，路径引用 CLAUDE_PLUGIN_ROOT；当前 prompt 串行结构另见 D1-A4/R1-A8。",
+      "evidenceIds": [
+        "HOOK",
+        "PROMPT",
+        "BACK",
+        "F8"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "detection:D1-A4",
+      "module": "detection",
+      "originalTask": "D1",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/detection/todo.md.txt",
+      "sourceLine": 17,
+      "originalText": "`hooks.json` 里的命令即使脚本缺失也不报错（照 spec-guard 的写法留兜底）",
+      "currentDisposition": "supported_current",
+      "reason": "注册命令使用 if [ -f ] 和 stderr 重定向，缺文件不调用；静态结构证据，不冒称所有宿主处理都已实测。",
+      "evidenceIds": [
+        "HOOK",
+        "F8"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "detection:D1-V1",
+      "module": "detection",
+      "originalTask": "D1",
+      "kind": "verification",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/detection/todo.md.txt",
+      "sourceLine": 20,
+      "originalText": "`/bin/bash scripts/validate.sh` 退出 0",
+      "currentDisposition": "supported_current",
+      "reason": "首轮总验证退出 0，产品源码与该基准不变。",
+      "evidenceIds": [
+        "VAL",
+        "F8"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "detection:D1-V2",
+      "module": "detection",
+      "originalTask": "D1",
+      "kind": "verification",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/detection/todo.md.txt",
+      "sourceLine": 21,
+      "originalText": "`/bin/bash plugins/delegate/tests/test-detection.sh` 退出 0",
+      "currentDisposition": "supported_current",
+      "reason": "首轮检测产品套 19 通过、0 失败。",
+      "evidenceIds": [
+        "DET",
+        "VAL",
+        "F8"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "detection:D1-V3",
+      "module": "detection",
+      "originalTask": "D1",
+      "kind": "verification",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/detection/todo.md.txt",
+      "sourceLine": 22,
+      "originalText": "变异：把「零输出」那条去掉 → 断言 10 必须变红",
+      "currentDisposition": "supported_current",
+      "reason": "MUT-02-unavailable-detection-output：F8 修复前临时产品副本的特定故意错误触发指定断言失败，无变异基线和还原后套通过；仅证明此反向样本，历史完成/批准仍未知。",
+      "evidenceIds": [
+        "MUT",
+        "F8"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "detection:D2-A1",
+      "module": "detection",
+      "originalTask": "D2",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/detection/todo.md.txt",
+      "sourceLine": 35,
+      "originalText": "断言 1：三级全过 → 可用",
+      "currentDisposition": "supported_current",
+      "reason": "检测断言 1 校验当前 CLI 基础条件可用；不声称远端/额度可用。",
+      "evidenceIds": [
+        "DET",
+        "BEPY",
+        "VAL",
+        "F8"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "detection:D2-A2",
+      "module": "detection",
+      "originalTask": "D2",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/detection/todo.md.txt",
+      "sourceLine": 36,
+      "originalText": "断言 2：wrapper 不可执行 → 不可用，原因指向 wrapper",
+      "currentDisposition": "supported_current",
+      "reason": "检测断言 2 校验 wrapper 不可执行的原因。",
+      "evidenceIds": [
+        "DET",
+        "VAL",
+        "F8"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "detection:D2-A3",
+      "module": "detection",
+      "originalTask": "D2",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/detection/todo.md.txt",
+      "sourceLine": 37,
+      "originalText": "断言 3：`codex` 不在 PATH → 不可用",
+      "currentDisposition": "supported_current",
+      "reason": "检测断言 3 校验 PATH 无 Codex 的安全原因。",
+      "evidenceIds": [
+        "DET",
+        "VAL",
+        "F8"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "detection:D2-A4",
+      "module": "detection",
+      "originalTask": "D2",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/detection/todo.md.txt",
+      "sourceLine": 38,
+      "originalText": "断言 4：`codex` 在 PATH 但 `--version` 失败 → 不可用，提示含 `npm install -g @openai/codex@latest`",
+      "currentDisposition": "supported_current",
+      "reason": "检测断言 4 校验版本命令失败的安装提示；首轮通过。",
+      "evidenceIds": [
+        "DET",
+        "BEPY",
+        "VAL",
+        "F8"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "detection:D2-A5",
+      "module": "detection",
+      "originalTask": "D2",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/detection/todo.md.txt",
+      "sourceLine": 39,
+      "originalText": "断言 5/6：`auth.json` 不存在 / 存在但为空 → 不可用，提示去登录",
+      "currentDisposition": "superseded",
+      "reason": "生产代码不读取/覆盖 auth.json，CODEX_AUTH_FILE 仅留在旧桩模拟 CLI 状态；当前改用 CLI/keychain/CODEX_HOME 认证合同。",
+      "evidenceIds": [
+        "BEPY",
+        "STUB",
+        "BACK",
+        "REL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "detection:D2-A6",
+      "module": "detection",
+      "originalTask": "D2",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/detection/todo.md.txt",
+      "sourceLine": 40,
+      "originalText": "`auth.json` 路径可用 `CODEX_AUTH_FILE` 覆盖（**测试绝不碰真实 `~/.codex/`**）",
+      "currentDisposition": "superseded",
+      "reason": "生产代码不读取/覆盖 auth.json，CODEX_AUTH_FILE 仅留在旧桩模拟 CLI 状态；当前改用 CLI/keychain/CODEX_HOME 认证合同。",
+      "evidenceIds": [
+        "BEPY",
+        "STUB",
+        "BACK",
+        "REL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "detection:D2-V1",
+      "module": "detection",
+      "originalTask": "D2",
+      "kind": "verification",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/detection/todo.md.txt",
+      "sourceLine": 43,
+      "originalText": "6 条断言全绿",
+      "currentDisposition": "superseded",
+      "reason": "1–6 旧标签仍在套里，但其中 auth.json 判据已经改为 CLI 状态；不能以标签数量证明旧认证合同成立。",
+      "evidenceIds": [
+        "DET",
+        "BEPY",
+        "REL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "detection:D2-V2",
+      "module": "detection",
+      "originalTask": "D2",
+      "kind": "verification",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/detection/todo.md.txt",
+      "sourceLine": 44,
+      "originalText": "变异：把第 2 级换成只查 `command -v` → 断言 4 必须变红（这是真实故障的形状）",
+      "currentDisposition": "supported_current",
+      "reason": "MUT-03-skip-version-probe：F8 修复前临时产品副本的特定故意错误触发指定断言失败，无变异基线和还原后套通过；仅证明此反向样本，历史完成/批准仍未知。",
+      "evidenceIds": [
+        "MUT",
+        "F8"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "detection:D3-A1",
+      "module": "detection",
+      "originalTask": "D3",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/detection/todo.md.txt",
+      "sourceLine": 57,
+      "originalText": "断言 7：缓存新鲜 → **不再调用 codex**（用 `stub-codex` 的调用日志为空来证明）",
+      "currentDisposition": "supported_current",
+      "reason": "检测断言 7 通过桩调用日志验证新鲜缓存不调用 CLI；首轮通过。",
+      "evidenceIds": [
+        "DET",
+        "DETPY",
+        "VAL",
+        "F8"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "detection:D3-A2",
+      "module": "detection",
+      "originalTask": "D3",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/detection/todo.md.txt",
+      "sourceLine": 58,
+      "originalText": "断言 8：缓存 `checkedAt` 超过 8 小时 → 重探（调用日志有一次）",
+      "currentDisposition": "supported_current",
+      "reason": "检测断言 8 与本批 SUP-17 验证过期重新判断，不复用过期缓存。",
+      "evidenceIds": [
+        "DET",
+        "SUP",
+        "VAL",
+        "F8"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "detection:D3-A3",
+      "module": "detection",
+      "originalTask": "D3",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/detection/todo.md.txt",
+      "sourceLine": 59,
+      "originalText": "断言 9：缓存文件是非法 JSON → 重探，不崩，退出 0",
+      "currentDisposition": "supported_current",
+      "reason": "检测断言 9 验证坏 JSON 静默重探；首轮通过。",
+      "evidenceIds": [
+        "DET",
+        "VAL",
+        "F8"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "detection:D3-A4",
+      "module": "detection",
+      "originalTask": "D3",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/detection/todo.md.txt",
+      "sourceLine": 60,
+      "originalText": "缓存文件写在 `${TMPDIR}` 下，**不写进任何项目目录**",
+      "currentDisposition": "supported_current",
+      "reason": "CACHE_FILE 从 TMPDIR 派生；生产 hook 不向业务项目写缓存。源码依据和本批隔离夹具一致。",
+      "evidenceIds": [
+        "DETPY",
+        "SUP",
+        "F8"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "detection:D3-V1",
+      "module": "detection",
+      "originalTask": "D3",
+      "kind": "verification",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/detection/todo.md.txt",
+      "sourceLine": 63,
+      "originalText": "3 条断言全绿",
+      "currentDisposition": "supported_current",
+      "reason": "当前 7/8/9 三个缓存断言存在且首轮通过。",
+      "evidenceIds": [
+        "DET",
+        "VAL",
+        "F8"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "detection:D3-V2",
+      "module": "detection",
+      "originalTask": "D3",
+      "kind": "verification",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/detection/todo.md.txt",
+      "sourceLine": 64,
+      "originalText": "变异：让缓存永不过期 → 断言 8 必须变红",
+      "currentDisposition": "supported_current",
+      "reason": "MUT-04-never-expire-cache：F8 修复前临时产品副本的特定故意错误触发指定断言失败，无变异基线和还原后套通过；仅证明此反向样本，历史完成/批准仍未知。",
+      "evidenceIds": [
+        "MUT",
+        "F8"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "detection:D3-V3",
+      "module": "detection",
+      "originalTask": "D3",
+      "kind": "verification",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/detection/todo.md.txt",
+      "sourceLine": 65,
+      "originalText": "手工确认跑完之后项目目录里没有新增文件",
+      "currentDisposition": "supported_current",
+      "reason": "FOOTPRINT-01：在独立无 HEAD Git 业务夹具运行三个 hook，前后目录项/内容哈希/权限/修改时间（含 .git）相同，缓存位于外部 TMPDIR；单个受控样本，不证明一切业务环境。",
+      "evidenceIds": [
+        "DETPY",
+        "MUT",
+        "F8"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "detection:D4-A1",
+      "module": "detection",
+      "originalTask": "D4",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/detection/todo.md.txt",
+      "sourceLine": 78,
+      "originalText": "断言 11：把 hook 的 stdout 喂给 `python3 -c 'json.load(sys.stdin)'`，空则跳过，非空必须解析成功",
+      "currentDisposition": "supported_current",
+      "reason": "检测断言 11 将非空 stdout 做 JSON 解析，多场景均通过。",
+      "evidenceIds": [
+        "DET",
+        "VAL",
+        "F8"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "detection:D4-A2",
+      "module": "detection",
+      "originalTask": "D4",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/detection/todo.md.txt",
+      "sourceLine": 79,
+      "originalText": "断言 12：构造一个探测内部失败点（比如缓存目录不可写）→ 仍退出 0、不注入噪音",
+      "currentDisposition": "supported_current",
+      "reason": "12a/12b 断言覆盖缓存写失败和目录建不出的降级；首轮通过。",
+      "evidenceIds": [
+        "DET",
+        "VAL",
+        "F8"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "detection:D4-A3",
+      "module": "detection",
+      "originalTask": "D4",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/detection/todo.md.txt",
+      "sourceLine": 80,
+      "originalText": "JSON 结构与 spec-guard 一致：`hookSpecificOutput.hookEventName` / `additionalContext`",
+      "currentDisposition": "supported_current",
+      "reason": "detect/route 经 JSON serializer 输出 hookSpecificOutput 字段；JSON 断言及两个本批 scaffold 成功解析。",
+      "evidenceIds": [
+        "DETPY",
+        "ROUTE",
+        "SUP",
+        "VAL",
+        "F8"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "detection:D4-A4",
+      "module": "detection",
+      "originalTask": "D4",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/detection/todo.md.txt",
+      "sourceLine": 81,
+      "originalText": "注入的内容**只有事实**，不含「你应该派给 Codex」这类建议（那是 routing 的活）",
+      "currentDisposition": "supported_current",
+      "reason": "detect.py 自身注入只含基础条件事实；提议式路由措辞在 route.sh，组合 prompt 允许注入路由指针，职责没有混用。",
+      "evidenceIds": [
+        "DETPY",
+        "ROUTE",
+        "PROMPT",
+        "F8"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "detection:D4-V1",
+      "module": "detection",
+      "originalTask": "D4",
+      "kind": "verification",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/detection/todo.md.txt",
+      "sourceLine": 84,
+      "originalText": "2 条断言全绿",
+      "currentDisposition": "supported_current",
+      "reason": "当前 JSON/内部失败 11/12a/12b 场景首轮通过；旧“2 条”只对应场景组，不倒推早期运行。",
+      "evidenceIds": [
+        "DET",
+        "VAL",
+        "F8"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "detection:D4-V2",
+      "module": "detection",
+      "originalTask": "D4",
+      "kind": "verification",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/detection/todo.md.txt",
+      "sourceLine": 85,
+      "originalText": "变异：在输出前面多打一行普通文本 → 断言 11 必须变红",
+      "currentDisposition": "supported_current",
+      "reason": "MUT-05-extra-plain-text：F8 修复前临时产品副本的特定故意错误触发指定断言失败，无变异基线和还原后套通过；仅证明此反向样本，历史完成/批准仍未知。",
+      "evidenceIds": [
+        "MUT",
+        "F8"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "detection:D5-A1",
+      "module": "detection",
+      "originalTask": "D5",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/detection/todo.md.txt",
+      "sourceLine": 98,
+      "originalText": "`hooks/doctor.sh` + `commands/doctor.md`（`allowed-tools: Bash`，脚本按 `${CLAUDE_PLUGIN_ROOT}` 引用）",
+      "currentDisposition": "supported_current",
+      "reason": "doctor 文件、命令及 Bash 工具声明存在，脚本路径引用 CLAUDE_PLUGIN_ROOT。",
+      "evidenceIds": [
+        "DOCMD",
+        "DOCTOR",
+        "F8"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "detection:D5-A2",
+      "module": "detection",
+      "originalTask": "D5",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/detection/todo.md.txt",
+      "sourceLine": 99,
+      "originalText": "断言 13：AGENTS.md 含「等确认 / 先出方案 / 不要直接开始改代码」这类模式 → 报告风险并给出修法（加交互式条件）",
+      "currentDisposition": "supported_current",
+      "reason": "检测断言 13 校验规则风险与非交互修法，13b 还校验已豁免场景；首轮通过。",
+      "evidenceIds": [
+        "DET",
+        "DOCTOR",
+        "VAL",
+        "F8"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "detection:D5-A3",
+      "module": "detection",
+      "originalTask": "D5",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/detection/todo.md.txt",
+      "sourceLine": 100,
+      "originalText": "断言 14（**反向**）：AGENTS.md 干净 → **不报**",
+      "currentDisposition": "supported_current",
+      "reason": "检测断言 14 校验干净规则不报告风险；首轮通过。",
+      "evidenceIds": [
+        "DET",
+        "VAL",
+        "F8"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "detection:D5-A4",
+      "module": "detection",
+      "originalTask": "D5",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/detection/todo.md.txt",
+      "sourceLine": 101,
+      "originalText": "断言 15：没有 `~/.codex/AGENTS.md` → 不报错",
+      "currentDisposition": "supported_current",
+      "reason": "检测断言 15 校验无全局规则文件不报错；首轮通过。",
+      "evidenceIds": [
+        "DET",
+        "VAL",
+        "F8"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "detection:D5-A5",
+      "module": "detection",
+      "originalTask": "D5",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/detection/todo.md.txt",
+      "sourceLine": 102,
+      "originalText": "AGENTS.md 路径可覆盖，测试用临时文件，**绝不读用户真实的那份**",
+      "currentDisposition": "supported_current",
+      "reason": "doctor 支持 CODEX_AGENTS_FILE；检测套用临时规则文件，backend 测试隔离 HOME/CODEX_HOME。",
+      "evidenceIds": [
+        "DOCTOR",
+        "DET",
+        "BACK",
+        "F8"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "detection:D5-V1",
+      "module": "detection",
+      "originalTask": "D5",
+      "kind": "verification",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/detection/todo.md.txt",
+      "sourceLine": 105,
+      "originalText": "3 条断言全绿，**19 条全绿**",
+      "currentDisposition": "supported_current",
+      "reason": "13/14/15 的对应场景已通过，当前检测套总数为 19，不能证明历史三条新增时就已运行。",
+      "evidenceIds": [
+        "DET",
+        "VAL",
+        "F8"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "detection:D5-V2",
+      "module": "detection",
+      "originalTask": "D5",
+      "kind": "verification",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/detection/todo.md.txt",
+      "sourceLine": 106,
+      "originalText": "`/bin/bash scripts/validate.sh` 通过",
+      "currentDisposition": "supported_current",
+      "reason": "首轮总验证退出 0，产品源码与该基准不变。",
+      "evidenceIds": [
+        "VAL",
+        "F8"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "detection:D5-V3",
+      "module": "detection",
+      "originalTask": "D5",
+      "kind": "verification",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/detection/todo.md.txt",
+      "sourceLine": 107,
+      "originalText": "变异：把「干净就不报」改成「总是报」 → 断言 14 必须变红",
+      "currentDisposition": "supported_current",
+      "reason": "MUT-06-doctor-false-alarm：F8 修复前临时产品副本的特定故意错误触发指定断言失败，无变异基线和还原后套通过；仅证明此反向样本，历史完成/批准仍未知。",
+      "evidenceIds": [
+        "MUT",
+        "F8"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "routing:R1-A1",
+      "module": "routing",
+      "originalTask": "R1",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/routing/todo.md.txt",
+      "sourceLine": 14,
+      "originalText": "R1 断言：缓存说不可用 → 零注入",
+      "currentDisposition": "supported_current",
+      "reason": "当前路由 R1 校验不可用缓存零注入；首轮通过。",
+      "evidenceIds": [
+        "RT",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "routing:R1-A2",
+      "module": "routing",
+      "originalTask": "R1",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/routing/todo.md.txt",
+      "sourceLine": 15,
+      "originalText": "R2 断言：缓存缺失 → 零注入（不猜）",
+      "currentDisposition": "supported_current",
+      "reason": "当前路由 R2 校验缺失缓存零注入；首轮通过。",
+      "evidenceIds": [
+        "RT",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "routing:R1-A3",
+      "module": "routing",
+      "originalTask": "R1",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/routing/todo.md.txt",
+      "sourceLine": 16,
+      "originalText": "R3 断言：缓存说可用 → 一行合法 JSON",
+      "currentDisposition": "supported_current",
+      "reason": "当前 R3 校验有效缓存单行 JSON，且不重探；本批两个 scaffold 也实际解析通过。",
+      "evidenceIds": [
+        "RT",
+        "SUP",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "routing:R1-A4",
+      "module": "routing",
+      "originalTask": "R1",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/routing/todo.md.txt",
+      "sourceLine": 17,
+      "originalText": "R4 断言：注入内容含「等用户确认」之意，**不含**「我这就派」这类越闸措辞",
+      "currentDisposition": "supported_current",
+      "reason": "当前 R4 同时校验确认闸门措辞及禁止越闸词；这是指令文本证据。",
+      "evidenceIds": [
+        "RT",
+        "ROUTE",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "routing:R1-A5",
+      "module": "routing",
+      "originalTask": "R1",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/routing/todo.md.txt",
+      "sourceLine": 18,
+      "originalText": "R5 断言：任何情况的 stdout 为空或可被 `json.load` 解析",
+      "currentDisposition": "supported_current",
+      "reason": "当前 R5 多种缓存输出为空或合法 JSON；首轮通过，不延伸到一切未枚举环境。",
+      "evidenceIds": [
+        "RT",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "routing:R1-A6",
+      "module": "routing",
+      "originalTask": "R1",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/routing/todo.md.txt",
+      "sourceLine": 19,
+      "originalText": "R6 断言：缓存损坏/不可读 → 退出 0、零噪音",
+      "currentDisposition": "supported_current",
+      "reason": "当前 R6 校验坏缓存零输出/零噪音/退出 0；所有权限异常只由 try/except 静态兜底，不宣称穷举。",
+      "evidenceIds": [
+        "RT",
+        "ROUTE",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "routing:R1-A7",
+      "module": "routing",
+      "originalTask": "R1",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/routing/todo.md.txt",
+      "sourceLine": 20,
+      "originalText": "`route.sh` **不重新实现探测** —— 只读缓存（判据只能有一份实现）",
+      "currentDisposition": "supported_current",
+      "reason": "route 从 detect 导入 read_cache，未独立做 CLI 探测；R3 验证调用日志不增加。",
+      "evidenceIds": [
+        "ROUTE",
+        "RT",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "routing:R1-A8",
+      "module": "routing",
+      "originalTask": "R1",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/routing/todo.md.txt",
+      "sourceLine": 21,
+      "originalText": "`hooks.json` 增加 route.sh 的 UserPromptSubmit 注册，脚本缺失不报错",
+      "currentDisposition": "superseded",
+      "reason": "当前只注册 prompt.sh 串行 warm→route，取消独立并行 route handler；冷缓存/单 handler 回归通过，旧注册形态已替代。",
+      "evidenceIds": [
+        "HOOK",
+        "PROMPT",
+        "BACK",
+        "REL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "routing:R1-V1",
+      "module": "routing",
+      "originalTask": "R1",
+      "kind": "verification",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/routing/todo.md.txt",
+      "sourceLine": 24,
+      "originalText": "`/bin/bash plugins/delegate/tests/test-routing.sh` 退出 0",
+      "currentDisposition": "supported_current",
+      "reason": "首轮路由产品套 9 通过、0 失败。",
+      "evidenceIds": [
+        "RT",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "routing:R1-V2",
+      "module": "routing",
+      "originalTask": "R1",
+      "kind": "verification",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/routing/todo.md.txt",
+      "sourceLine": 25,
+      "originalText": "变异：让不可用时也注入 → R1 必须变红",
+      "currentDisposition": "supported_current",
+      "reason": "MUT-07-unavailable-routing-output：F8 修复前临时产品副本的特定故意错误触发指定断言失败，无变异基线和还原后套通过；仅证明此反向样本，历史完成/批准仍未知。",
+      "evidenceIds": [
+        "MUT"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "routing:R1-V3",
+      "module": "routing",
+      "originalTask": "R1",
+      "kind": "verification",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/routing/todo.md.txt",
+      "sourceLine": 26,
+      "originalText": "变异：注入里加一句「我这就派给 Codex」→ R4 必须变红",
+      "currentDisposition": "supported_current",
+      "reason": "MUT-08-cross-confirmation-gate：F8 修复前临时产品副本的特定故意错误触发指定断言失败，无变异基线和还原后套通过；仅证明此反向样本，历史完成/批准仍未知。",
+      "evidenceIds": [
+        "MUT"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "routing:R2-A1",
+      "module": "routing",
+      "originalTask": "R2",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/routing/todo.md.txt",
+      "sourceLine": 39,
+      "originalText": "R7 断言：SKILL.md 含分流表的六类活（审查 / 摸结构 / 定位 / 单 task 实现 / 批量机械改动 / 不该派的）",
+      "currentDisposition": "supported_current",
+      "reason": "R7 验证六类分流表可读；实际六类宿主决策不是此静态断言的结论。",
+      "evidenceIds": [
+        "RT",
+        "SKILL",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "routing:R2-A2",
+      "module": "routing",
+      "originalTask": "R2",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/routing/todo.md.txt",
+      "sourceLine": 40,
+      "originalText": "R8 断言：含「不许自动派」的明文",
+      "currentDisposition": "supported_current",
+      "reason": "R8 精确校验“绝不自动派”文字；首轮通过。",
+      "evidenceIds": [
+        "RT",
+        "SKILL",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "routing:R2-A3",
+      "module": "routing",
+      "originalTask": "R2",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/routing/todo.md.txt",
+      "sourceLine": 41,
+      "originalText": "三条回来之后的纪律写明：不 `cat` 整个日志、`--write` 必看 git 验收块、`--write` 需用户当轮明确要求",
+      "currentDisposition": "supported_current",
+      "reason": "skill 与主命令都写明按片段读日志、失败也看 Git、当轮授权 --write。",
+      "evidenceIds": [
+        "SKILL",
+        "CMD"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "routing:R2-A4",
+      "module": "routing",
+      "originalTask": "R2",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/routing/todo.md.txt",
+      "sourceLine": 42,
+      "originalText": "frontmatter 的 description 写得能被匹配到（参照 spec-guard 的经验：措辞决定会不会被加载）",
+      "currentDisposition": "supported_current",
+      "reason": "B2：原生交互自然提示实际调用 Skill(delegate:delegate-routing)，JSONL/TTY/debug直接证明加载，不是仅列表或 hook 指针；单次提示样本，不保证所有情境。",
+      "evidenceIds": [
+        "SKILL",
+        "BULK"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "routing:R2-V1",
+      "module": "routing",
+      "originalTask": "R2",
+      "kind": "verification",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/routing/todo.md.txt",
+      "sourceLine": 45,
+      "originalText": "2 条断言全绿",
+      "currentDisposition": "supported_current",
+      "reason": "当前 R7/R8 两个文本断言首轮通过。",
+      "evidenceIds": [
+        "RT",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "routing:R2-V2",
+      "module": "routing",
+      "originalTask": "R2",
+      "kind": "verification",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/routing/todo.md.txt",
+      "sourceLine": 46,
+      "originalText": "变异：删掉「不许自动派」那句 → R8 必须变红",
+      "currentDisposition": "supported_current",
+      "reason": "MUT-09-remove-auto-ban：F8 修复前临时产品副本的特定故意错误触发指定断言失败，无变异基线和还原后套通过；仅证明此反向样本，历史完成/批准仍未知。",
+      "evidenceIds": [
+        "MUT"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "routing:R3-A1",
+      "module": "routing",
+      "originalTask": "R3",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/routing/todo.md.txt",
+      "sourceLine": 59,
+      "originalText": "三种结局：通过 / 不通过 / **没跑起来**（退出码 0 / 1 / 2）",
+      "currentDisposition": "supported_current",
+      "reason": "propose judge 实现 0/1/2，7 项判决器正反自检在首轮实际通过。",
+      "evidenceIds": [
+        "PROP",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "routing:R3-A2",
+      "module": "routing",
+      "originalTask": "R3",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/routing/todo.md.txt",
+      "sourceLine": 60,
+      "originalText": "`--scaffold-only` 免费建脚手架并自检 hook 是否激活",
+      "currentDisposition": "supported_current",
+      "reason": "本批 SUP-25 实际 --scaffold-only 退出 0、route JSON 校验通过；这不是宿主激活实测。",
+      "evidenceIds": [
+        "SUP",
+        "PROP"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "routing:R3-A3",
+      "module": "routing",
+      "originalTask": "R3",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/routing/todo.md.txt",
+      "sourceLine": 61,
+      "originalText": "`--selftest` 喂已知输入给判决器自己（免费，进 `validate.sh`）",
+      "currentDisposition": "supported_current",
+      "reason": "propose --selftest 7 通过并纳入 validate；当前实际首轮结果可追溯。",
+      "evidenceIds": [
+        "PROP",
+        "VALIDATOR",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "routing:R3-A4",
+      "module": "routing",
+      "originalTask": "R3",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/routing/todo.md.txt",
+      "sourceLine": 62,
+      "originalText": "`evals/_preflight.sh` 核对「装着的插件内容 == 仓库内容」，不一致就拒跑",
+      "currentDisposition": "superseded",
+      "reason": "当前 eval 使用 --plugin-dir 加载源码并原生 validate 源目录；不再比较安装缓存和仓库是否相同。",
+      "evidenceIds": [
+        "PREF",
+        "PROP",
+        "REL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "routing:R3-A5",
+      "module": "routing",
+      "originalTask": "R3",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/routing/todo.md.txt",
+      "sourceLine": 63,
+      "originalText": "「没有自动调」判**桩的调用日志**（文件系统）；「提议了」判 transcript ——\n      这个不对称要在脚本注释里写明理由",
+      "currentDisposition": "supported_current",
+      "reason": "无自动 exec 检查调用日志，提议只读 transcript 作为观察项；注释说明 headless 不判提议失败。",
+      "evidenceIds": [
+        "PROP"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "routing:R3-V1",
+      "module": "routing",
+      "originalTask": "R3",
+      "kind": "verification",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/routing/todo.md.txt",
+      "sourceLine": 67,
+      "originalText": "`--selftest` 通过并接进 `validate.sh`",
+      "currentDisposition": "supported_current",
+      "reason": "propose --selftest 7 通过并纳入 validate；当前实际首轮结果可追溯。",
+      "evidenceIds": [
+        "PROP",
+        "VALIDATOR",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "routing:R3-V2",
+      "module": "routing",
+      "originalTask": "R3",
+      "kind": "verification",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/routing/todo.md.txt",
+      "sourceLine": 68,
+      "originalText": "`--scaffold-only` 通过",
+      "currentDisposition": "supported_current",
+      "reason": "本批 SUP-25 免费 scaffold 实际通过。",
+      "evidenceIds": [
+        "SUP"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "routing:R3-V3",
+      "module": "routing",
+      "originalTask": "R3",
+      "kind": "verification",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/routing/todo.md.txt",
+      "sourceLine": 69,
+      "originalText": "真跑一次通过",
+      "currentDisposition": "supported_current",
+      "reason": "具体批准的64文件/16640行原生单样本实际加载Skill，推荐具体只读委托、默认模型并等用户确认，exec为0、业务内容快照相同；仅此样本，不证明所有提示、失败重派授权或完整交互，历史批准未知。",
+      "evidenceIds": [
+        "PROP",
+        "SKILL",
+        "PROPOSE"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "routing:R4-A1",
+      "module": "routing",
+      "originalTask": "R4",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/routing/todo.md.txt",
+      "sourceLine": 82,
+      "originalText": "处理组（决策已定、只剩执行）→ 应当提议",
+      "currentDisposition": "supported_current",
+      "reason": "B1：恢复认证后获新批次具体批准，既有差分入口退出0，处理组首行判断：委托、对照组判断：自己做，两组 exec=0；以前 OAuth NORUN 保留为旧快照，一次样本不代表所有模型情境。",
+      "evidenceIds": [
+        "FIT",
+        "BULK",
+        "LIVE"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "routing:R4-A2",
+      "module": "routing",
+      "originalTask": "R4",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/routing/todo.md.txt",
+      "sourceLine": 83,
+      "originalText": "对照组（还需取舍，比如「这两个方案选哪个」）→ **不应当**提议",
+      "currentDisposition": "supported_current",
+      "reason": "B1：恢复认证后获新批次具体批准，既有差分入口退出0，处理组首行判断：委托、对照组判断：自己做，两组 exec=0；以前 OAuth NORUN 保留为旧快照，一次样本不代表所有模型情境。",
+      "evidenceIds": [
+        "FIT",
+        "BULK",
+        "LIVE"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "routing:R4-A3",
+      "module": "routing",
+      "originalTask": "R4",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/routing/todo.md.txt",
+      "sourceLine": 84,
+      "originalText": "**对照组同时充当脚手架自检**：它要是也提议了，处理组的结果无从归因，\n      这时给「没跑起来」而不是结论",
+      "currentDisposition": "supported_current",
+      "reason": "routing judge 对照组主张委托返回 NORUN，12 项自检覆盖两组都委托及格式失败。",
+      "evidenceIds": [
+        "FIT",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "routing:R4-A4",
+      "module": "routing",
+      "originalTask": "R4",
+      "kind": "acceptance",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/routing/todo.md.txt",
+      "sourceLine": 86,
+      "originalText": "`--selftest` + `--scaffold-only`（免费）",
+      "currentDisposition": "supported_current",
+      "reason": "首轮 routing 自检 12 通过；本批 SUP-26 scaffold 实际退出 0。",
+      "evidenceIds": [
+        "FIT",
+        "SUP",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "routing:R4-V1",
+      "module": "routing",
+      "originalTask": "R4",
+      "kind": "verification",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/routing/todo.md.txt",
+      "sourceLine": 89,
+      "originalText": "`--selftest` 通过并接进 `validate.sh`",
+      "currentDisposition": "supported_current",
+      "reason": "routing-fitness --selftest 纳入总验证并实际 12 通过。",
+      "evidenceIds": [
+        "FIT",
+        "VALIDATOR",
+        "VAL"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    },
+    {
+      "id": "routing:R4-V2",
+      "module": "routing",
+      "originalTask": "R4",
+      "kind": "verification",
+      "archivePath": "docs/archive/pre-spec-guard/tasks/routing/todo.md.txt",
+      "sourceLine": 90,
+      "originalText": "真跑一次，两组结果分开",
+      "currentDisposition": "supported_current",
+      "reason": "B1：恢复认证后获新批次具体批准，既有差分入口退出0，处理组首行判断：委托、对照组判断：自己做，两组 exec=0；以前 OAuth NORUN 保留为旧快照，一次样本不代表所有模型情境。",
+      "evidenceIds": [
+        "FIT",
+        "BULK",
+        "LIVE"
+      ],
+      "historicalCompletion": "unknown",
+      "historicalApproval": "unknown"
+    }
+  ]
+}

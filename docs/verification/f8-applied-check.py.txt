@@ -1,0 +1,40 @@
+from pathlib import Path
+import subprocess,tempfile,os,json,hashlib,shutil,concurrent.futures,ast,time
+root=Path.cwd();base='56c3ba76f1059f929bc908c0e45469abc623859a';file='plugins/delegate/tests/test-detection.sh'
+original=subprocess.check_output(['git','show',base+':'+file],text=True)
+tree=ast.parse(Path('docs/verification/doctor-isolation-proposal.py.txt').read_text());literals={}
+for n in tree.body:
+ if isinstance(n,ast.Assign) and len(n.targets)==1 and isinstance(n.targets[0],ast.Name) and n.targets[0].id in ('helper','needle'):
+  literals[n.targets[0].id]=ast.literal_eval(n.value)
+expected=original.replace(literals['needle'],literals['helper']+literals['needle'],1).replace('"${DOCTOR_SCRIPT}" 2>','run_doctor 2>')
+assert Path(file).read_text()==expected
+patch=Path('docs/verification/doctor-isolation-proposal.patch.txt');proposal=json.loads(Path('docs/verification/doctor-isolation-proposal-results.json').read_text());assert hashlib.sha256(patch.read_bytes()).hexdigest()==proposal['patchSha256']
+commands={
+ 'detection-no-outer-codex':['/bin/bash',file],
+ 'detection-outer-rejects-login':['/bin/bash',file],
+ 'aggregate-no-outer-codex':['/bin/bash','scripts/validate.sh']}
+def check(name):
+ with tempfile.TemporaryDirectory(prefix='delegate-f8-applied.',dir='/private/tmp') as tmp:
+  tmp=Path(tmp);env=os.environ.copy()
+  for key in ['OPENAI_API_KEY','CODEX_API_KEY','CODEX_AUTH_FILE','CODEX_AGENTS_FILE','STUB_CALL_LOG','STUB_LOGIN_TEXT','STUB_LOGIN_EXIT','STUB_VERSION_EXIT']:env.pop(key,None)
+  for key in ['HOME','CODEX_HOME','TMPDIR']:
+   directory=tmp/key;directory.mkdir();env[key]=str(directory)
+  env.update(PATH='/usr/bin:/bin',PYTHONDONTWRITEBYTECODE='1',GIT_OPTIONAL_LOCKS='0')
+  assert shutil.which('codex',path=env['PATH']) is None
+  if name=='detection-outer-rejects-login':
+   bindir=tmp/'bin';bindir.mkdir();fake=bindir/'codex';fake.write_text('#!/bin/bash\nif [ "${1:-}" = --version ]; then echo fake; exit 0; fi\necho "Logged in using an API key (synthetic)"\nexit 1\n');fake.chmod(0o755);env['PATH']=str(bindir)+':/usr/bin:/bin'
+  start=time.monotonic();r=subprocess.run(commands[name],cwd=root,env=env,stdin=subprocess.DEVNULL,text=True,capture_output=True,timeout=300)
+  output=r.stdout+r.stderr;passed=r.returncode==0
+  if name.startswith('detection'):passed=passed and '总计 19 通过 / 0 失败' in output
+  else:
+   for marker in ['validate: ok','总计 24 通过 / 0 失败','总计 19 通过 / 0 失败','总计 9 通过 / 0 失败','Ran 10 tests','Ran 7 tests','总计 7 通过 / 0 失败','总计 12 通过 / 0 失败']:passed=passed and marker in output
+  result={'id':name,'command':commands[name],'exit':r.returncode,'passed':passed,'seconds':round(time.monotonic()-start,3),'output':output.replace(str(tmp),'<fixture>').replace(str(root),'<repository>'),'rawOutputSha256':hashlib.sha256(output.encode()).hexdigest(),'hashScope':'raw captured stdout+stderr before local-path replacement'}
+  print(name+(' PASS' if passed else ' FAIL'),flush=True)
+  return result
+with concurrent.futures.ThreadPoolExecutor(max_workers=3) as pool:
+ results=list(pool.map(check,commands))
+changed=subprocess.check_output(['git','diff','--name-only',base,'--','plugins','scripts','evals','.claude-plugin','LICENSE'],text=True).splitlines()
+assert changed==[file],changed
+payload={'date':'2026-10-08','sourceCommit':base,'sourceSnapshot':'uncommitted working tree; exactly approved detection-test fixture patch in product paths','authorization':'User replied 继续 after concrete request to apply the verified single-file F8 patch; no commit, delegation, installation, or publishing authorization.','patch':str(patch),'patchSha256':proposal['patchSha256'],'testFile':file,'testFileSha256':hashlib.sha256(Path(file).read_bytes()).hexdigest(),'exactCandidateMatched':True,'productPathChanges':changed,'runtimeUnchanged':True,'modelCalls':0,'cases':results,'passed':sum(r['passed'] for r in results),'failed':sum(not r['passed'] for r in results),'limits':['Local controlled tests only; does not establish real-host, sandbox, or model acceptance.','Historical completion and approvals remain unknown.']}
+Path('<LOCAL_TMP>/delegate-f8-applied-results.json').write_text(json.dumps(payload,ensure_ascii=False,indent=2)+'\n')
+assert payload['failed']==0

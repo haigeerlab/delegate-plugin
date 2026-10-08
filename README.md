@@ -237,9 +237,11 @@ doctor 会刷新临时缓存，不修改业务文件。它只做部分中文全�
 
 UserPromptSubmit 使用一个串行入口。缓存有效期 8 小时，绑定 CLI 路径、Codex home、插件根目录与版本；未来时间、旧格式、身份变化和坏文件都会失效。缓存不保证当前认证有效，真正执行前总会重新检查登录。
 
-阅读顺序和两种语言的对应页见[文档索引](docs/README.md)。设计见 [DESIGN.md](DESIGN.md)，模块职责见[能力图](capability-map.md)，精确合同见[通道](SPEC-channel.md)、[探测](SPEC-detection.md)和[路由](SPEC-routing.md)规格。发行变化见 [v0.4.0](docs/releases/v0.4.0.md)，后续修改见[未发布记录](docs/releases/unreleased.md)。
+阅读顺序和两种语言的对应页见[文档索引](docs/README.md)。设计见 [DESIGN.md](DESIGN.md)，模块职责见[能力图](spec/CAPABILITY-MAP.md)，精确合同见[通道](spec/channel.md)、[探测](spec/detection.md)和[路由](spec/routing.md)规格。发行变化见 [v0.4.0](docs/releases/v0.4.0.md)，后续修改见[未发布记录](docs/releases/unreleased.md)。
 
 ## 开发、贡献与反馈
+
+开发流程与两类 AI 项目约定见 [开发流程](docs/development-workflow.md)；当前中文规格使用 `spec/<id>.md`，历史记录与当前维护任务分开。
 
 从**本仓库根目录**运行免费离线验证：
 
@@ -247,7 +249,7 @@ UserPromptSubmit 使用一个串行入口。缓存有效期 8 小时，绑定 CL
 /bin/bash scripts/validate.sh
 ```
 
-总入口包含语法、清单必填字段、判决器自检、3 个 shell 产品套及 2 个 Python 回归套。基线为 channel 24 条、detection 19 条、routing 9 条断言和 17 个 Python 回归测试。测试使用临时桩，不读取真实凭据或发起模型请求。
+总入口包含语法、清单必填字段、判决器自检、3 个 shell 产品套及 2 个 Python 回归套。基线为 channel 24 条、detection 19 条、routing 9 条断言和 17 个 Python 回归测试。免费总验证不发起模型请求；doctor 规则测试已自行配置 CLI 桩、合成登录状态和临时日志，不再依赖外层 Codex 的安装或登录。[F8 实际修复验证](docs/verification/2026-10-08-f8-applied.md)包含无外层 CLI 和外层拒绝登录的结果。
 
 开发约定、单独测试入口、付费 live 验证和双语维护规则见 [贡献指南](CONTRIBUTING.md)。问题和建议统一通过 [GitHub Issues](https://github.com/haigeerlab/delegate-plugin/issues) 反馈，Bug 提交步骤见下节。
 

@@ -1,8 +1,61 @@
 # Specification: detection (local readiness and diagnostics)
 
-[简体中文](../../SPEC-detection.md) | English
+[简体中文](../../spec/detection.md) | English
 
-Current contract: 2026-10-08. Early `tasks/detection/` records remain historical.
+Current contract: 2026-10-08. Earlier records are preserved in the [historical archive](../archive/pre-spec-guard/README.md). Current `tasks/detection/` tracks maintenance reconciliation only; it neither retroactively accepts historical work nor overrides this specification.
+
+
+## Tech stack and commands
+
+Bash 3.2, Python 3 standard library, Git, and Codex CLI; Claude Code hosts hooks/doctor. Cache identity includes the plugin-manifest version; readiness follows direct probes or a bounded TTL.
+This is a script plugin with no separate compilation build or development server. The existing contract below lists module tests. Aggregate checks and source loading are shown here; loading starts the host and does not delegate by itself.
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 /bin/bash scripts/validate.sh
+claude plugin validate .
+claude plugin validate ./plugins/delegate
+claude --plugin-dir "$PWD/plugins/delegate"
+```
+
+## Project structure
+
+Paths are relative to the repository root; plugin-relative paths are explained in the original contract.
+
+```text
+plugins/delegate/hooks/detect.py            → identity cache, probes, atomic writes
+plugins/delegate/hooks/detect.sh            → silent Shell entry point
+plugins/delegate/hooks/doctor.sh            → refresh and instruction diagnostics
+plugins/delegate/scripts/backend.py        → shared CLI authentication probes
+plugins/delegate/tests/test-detection.sh    → Shell stub assertions
+plugins/delegate/tests/test-backend.py      → Python unittest auth/identity/ordering regressions
+spec/detection.md                            → current Chinese contract
+docs/en/SPEC-detection.md                    → current English contract
+tasks/detection/plan.md / todo.md            → current maintenance steps and records
+```
+
+## Code style
+
+Keep existing style without formatting refactors. Preserve Bash 3.2, braced `${VAR}` variables and existing empty-array guards; do not use `cmd | grep -q`. Python uses the standard library, four-space indentation and snake_case functions. Serialize JSON instead of manually escaping it.
+This existing excerpt from `plugins/delegate/hooks/detect.py` illustrates actual style (context, not a new command):
+
+```python
+        with tempfile.NamedTemporaryFile(mode='w', dir=str(CACHE_FILE.parent), delete=False) as output:
+            temporary = output.name
+            json.dump(data, output, ensure_ascii=False)
+            output.write('\n')
+        os.replace(temporary, str(CACHE_FILE))
+```
+
+## Development boundaries
+
+- **Always:** Read the contract before editing; reproduce behavior defects before fixing; preserve Bash 3.2 and bilingual contracts; review actual diffs and relevant tests.
+- **Ask first:** New backends/dependencies/flags, sandbox defaults or authentication changes, or capabilities outside the module; obtain separate authorization for paid live checks, delegation, commits and remote writes.
+- **Never:** Expose credentials or full private logs; weaken failing assertions; automatically roll back user changes; retroactively approve history or edit archives; treat stubs as complete host-behavior guarantees.
+
+## Testing strategy
+
+Shell suites use `stub-codex` and temporary fixtures; Python regressions use standard-library `unittest`. Locations are listed above; exact commands and assertion scope remain in the original contract. No line-coverage percentage is set or invented.
+Assess coverage per clause and risk, including positive and negative cases. Source guarantees without independent assertions are marked partially covered in the matrix. Real-model, permission and interaction checks remain separate; paid samples require authorization.
 
 ## Goals and implementation
 
@@ -54,3 +107,18 @@ python3 -B plugins/delegate/tests/test-backend.py
 The original 19 assertions cover wrapper/CLI/login failures, cache hits and invalidation, silent degradation, valid JSON, and doctor. Additional regressions cover CLI authentication without auth.json, rejecting API-key/unknown status without leakage, login failure, doctor refresh of stale cache, home identity changes, future timestamps, and sequential cold-start output.
 
 Success criteria: failures do not inject misleading context; cache hits make no CLI status requests; doctor refresh is reproducibly verifiable; cache writes are atomic and identity-bound. No unmeasured <5ms promise is made. Python startup, file I/O, and CLI probes incur local overhead; real performance requires separate measurement.
+
+## Success criteria and verification mapping
+
+The IDs below label existing contract clauses for the 2026-10-08 documentation reconciliation; they are not historical IDs or approvals.
+
+- **DET-01：** Readiness follows CLI-reported ChatGPT authentication and bounded probes; it does not establish remote connectivity or quota.
+- **DET-02：** Cache types, eight-hour TTL, future timestamps, and identity matching follow the existing contract; writes are atomic and failures degrade safely.
+- **DET-03：** Forced refresh, cache reuse, silent output, and serial prompt ordering follow the existing entry-point contract.
+- **DET-04：** Doctor refreshes and reports limited Chinese-rule diagnostics without editing business rules or treating heuristics as full instruction validation.
+
+See the [clause-to-evidence matrix](../verification/2026-10-08-contract-matrix.md) (administrative record in Chinese) for exact tests, implementation references and coverage gaps. The current maintenance plan Task 5 checks this mapping; it does not declare every product clause fully accepted.
+
+## Open questions
+
+Historical task-by-task acceptance, earlier approvals/plugin versions and complete interactive host behavior remain unverified. Current known coverage gaps are listed in the matrix; no new capability or stronger guarantee is introduced here.

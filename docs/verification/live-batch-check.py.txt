@@ -1,0 +1,52 @@
+from pathlib import Path
+import hashlib,json,os,subprocess,sys,tempfile,time
+root=Path.cwd()
+mode=sys.argv[1]
+assert mode in ('channel','routing')
+run=Path('<LOCAL_TMP>/delegate-live-2026-10-08')
+run.mkdir(mode=0o700,exist_ok=True)
+marker=run/(mode+'.started')
+if marker.exists(): raise SystemExit('Refusing repeated invocation: '+mode)
+paths=[p for p in (root/'plugins/delegate').rglob('*') if p.is_file() and '__pycache__' not in p.parts]
+paths.extend(p for p in (root/'evals').glob('*.sh'))
+snapshot={str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for p in paths}
+env=dict(os.environ,PYTHONDONTWRITEBYTECODE='1')
+checks={}
+for name,cmd in [('codex-basic',['python3','-B',str(root/'plugins/delegate/scripts/backend.py')]),('claude-source',['/bin/bash',str(root/'evals/_preflight.sh')])]:
+ p=subprocess.run(cmd,cwd=root,env=env,stdin=subprocess.DEVNULL,capture_output=True,timeout=30)
+ checks[name]={'exit':p.returncode,'stdoutSha256':hashlib.sha256(p.stdout).hexdigest(),'stderrSha256':hashlib.sha256(p.stderr).hexdigest()}
+ if p.returncode:
+  (run/(mode+'-preflight.json')).write_text(json.dumps(checks,indent=2)+'\n')
+  print(json.dumps({'mode':mode,'preflight':checks,'modelCliInvocations':0,'result':'NORUN'}));raise SystemExit(2)
+marker.write_text(time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime())+'\n')
+tmp=run/(mode+'-tmp');tmp.mkdir(mode=0o700)
+env['TMPDIR']=str(tmp)
+cmd=['/bin/bash','plugins/delegate/tests/test-channel.sh','--live'] if mode=='channel' else ['/bin/bash','evals/routing-fitness.sh']
+start=time.monotonic()
+with (run/(mode+'.stdout')).open('wb') as out,(run/(mode+'.stderr')).open('wb') as err:
+ process=subprocess.Popen(cmd,cwd=root,env=env,stdin=subprocess.DEVNULL,stdout=out,stderr=err)
+ print(json.dumps({'mode':mode,'stage':'started','pid':process.pid}),flush=True)
+ code=process.wait()
+after={str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for p in paths}
+stdout=(run/(mode+'.stdout')).read_bytes();stderr=(run/(mode+'.stderr')).read_bytes()
+result={'mode':mode,'command':cmd,'exit':code,'elapsedSeconds':round(time.monotonic()-start,2),'preflight':checks,'sourceSnapshot':snapshot,'sourceUnchanged':snapshot==after,'stdoutSha256':hashlib.sha256(stdout).hexdigest(),'stderrSha256':hashlib.sha256(stderr).hexdigest(),'rawResultsLocation':str(run),'automaticRetries':0}
+if mode=='channel':
+ text=stdout.decode('utf8','replace')
+ result.update({'modelCliInvocations':1,'nonemptyRealAnswerAssertionPassed':'PASS: LIVE：真实只读委托答复非空' in text,'liveArtifactAssertionFailed':'FAIL: LIVE' in stderr.decode('utf8','replace'),'suiteSummary':[l for l in text.splitlines() if '总计' in l or 'LIVE 观察' in l]})
+else:
+ dirs=list(tmp.glob('delegate-routing-fitness.*'))
+ result.update({'modelCliInvocations':2,'judgeSummary':[l for l in stdout.decode('utf8','replace').splitlines() if l.startswith(('PASS:','FAIL:','NORUN:'))],'groups':{}})
+ if len(dirs)==1:
+  d=dirs[0]
+  for group in ('treatment','control'):
+   files={}
+   for ending in ('transcript.txt','codex.calls','claude.stderr'):
+    p=d/(group+'-'+ending)
+    data=p.read_bytes() if p.is_file() else b''
+    files[ending]={'present':p.is_file(),'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest()}
+    if ending=='transcript.txt':files[ending]['firstNonemptyLine']=next((l.strip() for l in data.decode('utf8','replace').splitlines() if l.strip()),'')
+    if ending=='codex.calls':files[ending]['execLines']=sum(' exec ' in l for l in data.decode('utf8','replace').splitlines())
+   result['groups'][group]=files
+(run/(mode+'-result.json')).write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
+print(json.dumps({k:v for k,v in result.items() if k not in ('sourceSnapshot','rawResultsLocation')},ensure_ascii=False),flush=True)
+raise SystemExit(code)

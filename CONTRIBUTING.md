@@ -33,6 +33,10 @@ claude --plugin-dir /path/to/delegate-plugin/plugins/delegate
 
 不要以安装版本号相同推断源码内容已加载。远程缓存、本地路径和重载方式见 [更新与卸载](README.md#更新与卸载)。
 
+## 项目 AI 与流程约定
+
+开发前阅读 [开发流程与 AI 约定](docs/development-workflow.md)。Codex 使用项目 `AGENTS.md`，Claude Code 使用项目 `CLAUDE.md`；当前中文规格统一放在 `spec/`，模块计划/任务放在 `tasks/<id>/`。历史原文见 [归档索引](docs/archive/pre-spec-guard/README.md)，不能重新作为活动任务执行。
+
 ## 修改与验证
 
 保持修改聚焦。行为变更先增加能够复现故障的回归，再修复实现；不要通过削弱断言让测试变绿。修改相关规格与帮助说明，避免文档和实际行为分离。
@@ -43,7 +47,7 @@ claude --plugin-dir /path/to/delegate-plugin/plugins/delegate
 /bin/bash scripts/validate.sh
 ```
 
-总入口检查 JSON/Python/Bash 语法、可执行位、清单必填字段、判决器自检、全部 3 个 shell 产品套和 2 个 Python 回归套。基线为 52 条产品断言和 17 个 Python 回归；桩测试不读取真实凭据，不调用模型。
+总入口检查 JSON/Python/Bash 语法、可执行位、清单必填字段、判决器自检、全部 3 个 shell 产品套和 2 个 Python 回归套。基线为 52 条产品断言和 17 个 Python 回归；免费总入口不调用模型；doctor 的四个规则检查通过 run_doctor 显式使用本套受控 CLI、合成登录状态和临时日志，不继承外层安装/认证判据。[本轮实际验证](docs/verification/2026-10-08-f8-applied.md)在无外层 Codex 环境通过整个总套，且无 CLI/外层拒绝登录两种场景的探测套各 19 条通过。
 
 需要定位失败时可单独运行：
 
@@ -65,7 +69,7 @@ python3 -B plugins/delegate/tests/test-channel-regressions.py
 /bin/bash evals/routing-fitness.sh
 ```
 
-eval 显式用 `--plugin-dir` 加载源码；退出 0=PASS、1=FAIL、2=NORUN。routing-fitness 只接受首个非空行的完整“判断：委托”或“判断：自己做”。`claude -p` 单轮不能证明交互式“该提议时总会提议”，全局规则仍可能影响结果。更多细节见 [路由规格](SPEC-routing.md)。
+eval 显式用 `--plugin-dir` 加载源码；退出 0=PASS、1=FAIL、2=NORUN。routing-fitness 只接受首个非空行的完整“判断：委托”或“判断：自己做”。`claude -p` 单轮不能证明交互式“该提议时总会提议”，全局规则仍可能影响结果。更多细节见 [路由规格](spec/routing.md)。
 
 保持 Bash 3.2 兼容：变量用 `${VAR}`，空数组用 `${ARR[@]+"${ARR[@]}"}` 守卫，不使用 `cmd | grep -q`。测试入口用 `/bin/bash`，避免 zsh 重定向行为影响结果。
 

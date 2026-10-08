@@ -1,0 +1,292 @@
+{
+  "date": "2026-10-08",
+  "sourceCommit": "56c3ba76f1059f929bc908c0e45469abc623859a",
+  "scope": "one-off controlled offline probes, not permanent regression tests or real-host acceptance",
+  "modelCalls": 0,
+  "cases": [
+    {
+      "id": "SUP-01-wrapper-INT",
+      "passed": true,
+      "seconds": 21.806,
+      "detail": {
+        "exit": 130,
+        "lateMarker": false,
+        "observationSeconds": 16,
+        "method": "delayed write observer, no ps"
+      }
+    },
+    {
+      "id": "SUP-02-wrapper-HUP",
+      "passed": true,
+      "seconds": 18.526,
+      "detail": {
+        "exit": 129,
+        "lateMarker": false,
+        "observationSeconds": 16,
+        "method": "delayed write observer, no ps"
+      }
+    },
+    {
+      "id": "SUP-03-normal-exit-cleanup",
+      "passed": true,
+      "seconds": 16.54,
+      "detail": {
+        "exit": 0,
+        "lateMarker": false,
+        "observationSeconds": 16,
+        "method": "delayed write observer, no ps"
+      }
+    },
+    {
+      "id": "SUP-04-log-permissions",
+      "passed": true,
+      "seconds": 0.298,
+      "detail": {
+        "directoryMode": "0700",
+        "filesMode": "0600",
+        "filesChecked": 6
+      }
+    },
+    {
+      "id": "SUP-05-log-symlink",
+      "passed": true,
+      "seconds": 2.369,
+      "detail": {
+        "exit": 1,
+        "execCalls": 0,
+        "targetUntouched": true
+      }
+    },
+    {
+      "id": "SUP-06-git-without-HEAD",
+      "passed": true,
+      "seconds": 0.487,
+      "detail": {
+        "exit": 0,
+        "baseline": "尚无提交",
+        "gitAcceptance": true
+      }
+    },
+    {
+      "id": "SUP-07-cache-permissions",
+      "passed": true,
+      "seconds": 0.0,
+      "detail": {
+        "directoryMode": "0700",
+        "fileMode": "0600"
+      }
+    },
+    {
+      "id": "SUP-08-cache-symlink",
+      "passed": true,
+      "seconds": 0.0,
+      "detail": {
+        "writeRejected": true,
+        "targetUntouched": true
+      }
+    },
+    {
+      "id": "SUP-09-available-integer",
+      "passed": true,
+      "seconds": 0.0,
+      "detail": {
+        "invalidVariant": "available-integer",
+        "reused": false
+      }
+    },
+    {
+      "id": "SUP-10-available-string",
+      "passed": true,
+      "seconds": 0.001,
+      "detail": {
+        "invalidVariant": "available-string",
+        "reused": false
+      }
+    },
+    {
+      "id": "SUP-11-reason-integer",
+      "passed": true,
+      "seconds": 0.001,
+      "detail": {
+        "invalidVariant": "reason-integer",
+        "reused": false
+      }
+    },
+    {
+      "id": "SUP-12-time-boolean",
+      "passed": true,
+      "seconds": 0.0,
+      "detail": {
+        "invalidVariant": "time-boolean",
+        "reused": false
+      }
+    },
+    {
+      "id": "SUP-13-time-null",
+      "passed": true,
+      "seconds": 0.0,
+      "detail": {
+        "invalidVariant": "time-null",
+        "reused": false
+      }
+    },
+    {
+      "id": "SUP-14-time-string",
+      "passed": true,
+      "seconds": 0.0,
+      "detail": {
+        "invalidVariant": "time-string",
+        "reused": false
+      }
+    },
+    {
+      "id": "SUP-15-time-nan",
+      "passed": true,
+      "seconds": 0.0,
+      "detail": {
+        "invalidVariant": "time-nan",
+        "reused": false
+      }
+    },
+    {
+      "id": "SUP-16-time-future",
+      "passed": true,
+      "seconds": 0.0,
+      "detail": {
+        "invalidVariant": "time-future",
+        "reused": false
+      }
+    },
+    {
+      "id": "SUP-17-time-expired",
+      "passed": true,
+      "seconds": 0.0,
+      "detail": {
+        "invalidVariant": "time-expired",
+        "reused": false
+      }
+    },
+    {
+      "id": "SUP-18-missing-identity",
+      "passed": true,
+      "seconds": 0.0,
+      "detail": {
+        "invalidVariant": "missing-identity",
+        "reused": false
+      }
+    },
+    {
+      "id": "SUP-19-identity-type",
+      "passed": true,
+      "seconds": 0.001,
+      "detail": {
+        "invalidVariant": "identity-type",
+        "reused": false
+      }
+    },
+    {
+      "id": "SUP-20-identity-codex",
+      "passed": true,
+      "seconds": 0.001,
+      "detail": {
+        "invalidVariant": "codex",
+        "reused": false
+      }
+    },
+    {
+      "id": "SUP-21-identity-codexHome",
+      "passed": true,
+      "seconds": 0.001,
+      "detail": {
+        "invalidVariant": "codexHome",
+        "reused": false
+      }
+    },
+    {
+      "id": "SUP-22-identity-pluginRoot",
+      "passed": true,
+      "seconds": 0.001,
+      "detail": {
+        "invalidVariant": "pluginRoot",
+        "reused": false
+      }
+    },
+    {
+      "id": "SUP-23-identity-pluginVersion",
+      "passed": true,
+      "seconds": 0.0,
+      "detail": {
+        "invalidVariant": "pluginVersion",
+        "reused": false
+      }
+    },
+    {
+      "id": "SUP-24-concurrent-cache",
+      "passed": true,
+      "seconds": 0.038,
+      "detail": {
+        "writers": 4,
+        "writes": 120,
+        "parsedReads": 145,
+        "tornJson": 0,
+        "sampleOnly": true
+      }
+    },
+    {
+      "id": "SUP-25-propose-not-auto-scaffold",
+      "passed": true,
+      "seconds": 0.161,
+      "detail": {
+        "exit": 0,
+        "routeJsonChecked": true,
+        "modelCalls": 0
+      }
+    },
+    {
+      "id": "SUP-26-routing-fitness-scaffold",
+      "passed": true,
+      "seconds": 0.218,
+      "detail": {
+        "exit": 0,
+        "routeJsonChecked": true,
+        "modelCalls": 0
+      }
+    }
+  ],
+  "passed": 26,
+  "failed": 0,
+  "sourceUnchanged": true,
+  "initialAttempt": {
+    "passed": 23,
+    "failed": 3,
+    "failedCases": [
+      {
+        "id": "SUP-01-wrapper-INT",
+        "passed": false,
+        "seconds": 3.005,
+        "detail": {
+          "error": "controlled exec did not start"
+        }
+      },
+      {
+        "id": "SUP-02-wrapper-HUP",
+        "passed": false,
+        "seconds": 4.114,
+        "detail": {
+          "error": "[Errno 1] Operation not permitted: '/bin/ps'"
+        }
+      },
+      {
+        "id": "SUP-03-normal-exit-cleanup",
+        "passed": false,
+        "seconds": 0.535,
+        "detail": {
+          "error": "[Errno 1] Operation not permitted: '/bin/ps'"
+        }
+      }
+    ],
+    "resolution": "Extended fixture startup allowance from 3 to 8 seconds; replaced sandbox-denied ps calls with a 16-second delayed-write observation. Product code unchanged."
+  },
+  "checkerArchive": "docs/verification/supplemental-check.py.txt",
+  "checkerSha256": "c2eebf5e8abcc06ec42501a3ec83c36e8f993ee88c51b9d66cd215aff90d1550"
+}
