@@ -1,5 +1,7 @@
 # Tasks: routing
 
+历史归档：本文保留早期实现时的方案与勾选状态，部分命令、认证判据、性能或测试约定已过时。当前合同见 [模块规格](../../SPEC-routing.md)，使用入口见 [README](../../README.md)。本文不作为当前任务清单。
+
 计划见 [`plan.md`](plan.md)。断言编号对应 [`../../SPEC-routing.md`](../../SPEC-routing.md) 的 Testing Strategy 表。
 
 ---

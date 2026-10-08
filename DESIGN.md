@@ -1,5 +1,7 @@
 # delegate 的设计与边界
 
+简体中文 | [English](docs/en/DESIGN.md)
+
 将已定方案的执行与查证放入独立 Codex CLI 调用，只把最终答复带回 Claude Code。主会话负责需求澄清、取舍、授权与验收。独立运行减少主会话携带过程日志的体量，但不保证总 token 或费用降低。
 
 ## 决策是否已定
