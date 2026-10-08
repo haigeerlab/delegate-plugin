@@ -252,4 +252,6 @@ UserPromptSubmit 使用一个串行入口。缓存有效期 8 小时，绑定 CL
 
 ## 许可
 
-仓库目前没有 LICENSE 文件，未声明开源许可证。本次文档修订不选择或新增许可；后续以维护者明确发布的 LICENSE 为准。
+本项目源码及随附文档采用 [MIT 许可证](LICENSE)，版权声明为 `Copyright (c) 2026 haigeerlab and contributors`。允许商业使用、修改和分发，分发时须保留版权声明与许可声明；软件按原样提供，不作担保。此处为中文摘要，以 LICENSE 中的英文标准全文为准。
+
+插件目录内附有同文 [LICENSE](plugins/delegate/LICENSE)，确保单独分发或安装插件时也携带许可。

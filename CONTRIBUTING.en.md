@@ -85,4 +85,4 @@ Use a separate branch and submit a focused PR. Describe the concrete problem, re
 
 Check manifests and relevant validation before submission, and inspect the actual diff. A write-mode delegation can leave changes after either success or failure; the model's own account is not sufficient to verify correctness.
 
-The repository currently has no LICENSE file and declares no open-source license. This guide does not add a licensing commitment.
+This project uses the [MIT License](LICENSE). Ensure contributions are compatible with it and retain required copyright and license notices for third-party material.

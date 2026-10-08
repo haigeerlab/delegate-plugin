@@ -30,6 +30,8 @@ Simplified Chinese is delegate's default documentation language. English counter
 
 Start with README for installation and use. Current `SPEC-*.md` files define exact implementation and test contracts. Maintain both languages together. Report discrepancies so they can be checked against current implementation and validation results and corrected in both versions.
 
+Project source and accompanying documentation use the [MIT License](../../LICENSE). See the [README license section](../../README.en.md#license) for a summary; the standard English text in LICENSE governs.
+
 ## Source entry points
 
 The repository contains both marketplace and plugin source:

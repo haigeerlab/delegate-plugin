@@ -11,4 +11,9 @@ This page records changes after v0.4.0 that have not yet been released. Publishe
 - Add a bilingual documentation index and contribution guide. Provide English counterparts and language switches for README, design, capability map, three specifications, and release notes.
 - Identify historical tasks, plans, and older release descriptions, and correct stale statements after v0.4.0 was published.
 
-This is a documentation revision. The plugin manifest remains at 0.4.0; runtime behavior has not changed and no new release has been created.
+## License
+
+- Adopt the MIT License, with identical standard text at the repository root and in the plugin directory.
+- Declare `license: MIT` in the plugin manifest and synchronize license information in both READMEs, contribution guides, and documentation indexes.
+
+This revision updates documentation and license metadata. The plugin version remains 0.4.0; runtime behavior has not changed and no new release has been created.

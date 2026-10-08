@@ -252,4 +252,6 @@ See [Contributing](CONTRIBUTING.en.md) for development conventions, individual t
 
 ## License
 
-The repository currently contains no LICENSE file and declares no open-source license. This documentation revision does not select or add a license; refer to any LICENSE explicitly published by the maintainers in the future.
+The project source and accompanying documentation are licensed under the [MIT License](LICENSE), with `Copyright (c) 2026 haigeerlab and contributors`. Commercial use, modification, and distribution are permitted; copyright and permission notices must be retained in distributions. The software is provided as is, without warranty. This is a summary; the standard English text in LICENSE governs.
+
+An identical [LICENSE](plugins/delegate/LICENSE) is included in the plugin directory so standalone distribution or installation also carries the license.
