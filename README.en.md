@@ -241,13 +241,15 @@ See the [documentation index](docs/en/README.md) for reading order and language 
 
 ## Development, contributions, and feedback
 
+See [Development workflow](docs/en/development-workflow.md) for both AI hosts and project conventions. Chinese specifications use `spec/<id>.md`; historical records and current maintenance tasks are separate.
+
 Run the free offline validation from the **repository root**:
 
 ```bash
 /bin/bash scripts/validate.sh
 ```
 
-The entry point covers syntax, manifest required fields, evaluator self-tests, 3 shell product suites, and 2 Python regression suites. The baseline comprises 24 channel, 19 detection, and 9 routing assertions plus 17 Python regression tests. Tests use temporary stubs without reading real credentials or making model requests.
+The entry point covers syntax, manifest required fields, evaluator self-tests, 3 shell product suites, and 2 Python regression suites. The baseline comprises 24 channel, 19 detection, and 9 routing assertions plus 17 Python regression tests. The free aggregate validation makes no model requests. Doctor rule tests now supply their own CLI stub, synthetic login state, and temporary log, without depending on an outer Codex installation or login. The [actual F8 fix verification in Chinese](docs/verification/2026-10-08-f8-applied.md) covers absent outer CLI and rejected outer login.
 
 See [Contributing](CONTRIBUTING.en.md) for development conventions, individual tests, paid live verification, and bilingual maintenance. Use [GitHub Issues](https://github.com/haigeerlab/delegate-plugin/issues) for problems and suggestions; follow the next section to report a bug.
 

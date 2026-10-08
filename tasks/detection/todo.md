@@ -1,119 +1,62 @@
-# Tasks: detection
+# 当前维护核对：detection
 
-历史归档：本文保留早期实现时的方案与勾选状态，部分命令、认证判据、性能或测试约定已过时。当前合同见 [模块规格](../../SPEC-detection.md)，使用入口见 [README](../../README.md)。本文不作为当前任务清单。
+日期：2026-10-08。计划：[plan.md](plan.md)。只跟踪本次接入，不替代历史产品验收。
 
-计划见 [`plan.md`](plan.md)。断言编号对应 [`../../SPEC-detection.md`](../../SPEC-detection.md) 的 Testing Strategy 表。
+- [x] 当前规格、模块映射及中英文链接核对通过。
+- [x] 接入前 plan/todo 已按字节归档，SHA-256 与 `56c3ba7` 一致。
+- [x] 本轮插件结构、阶段及相关确定性验证通过，结果已记录。
 
----
+## 实际记录
 
-## Task D1: hook 骨架与「零足迹」
+归档：运行本轮归档核验，逐字节比较基准提交与存档，并验证 manifest 中 SHA-256；本模块两份原文均一致。
+本轮核对：Spec Guard 0.52.3 严格能力图解析成功，产物检查为 3 通过、0 警告、0 失败；完成项写入前阶段为 BUILDING。
+`PYTHONDONTWRITEBYTECODE=1 /bin/bash scripts/validate.sh` 退出 0；本模块 19 条 shell 断言通过；统一 backend 10 与 channel-regressions 7 个 Python 测试通过，eval 自检 7 + 12 通过。
+迁移规格正文与命令围栏核对一致（仅导航链接调整）；Markdown 文件链接和锚点核对通过。当前清单完成后的阶段另在最终报告核验。
+两项原生 `claude plugin validate` 通过。完整本轮记录见 [接入任务](../../docs/process/2026-10-08-adoption/todo.md)。
 
-**Description:** 建 `hooks/hooks.json`、`hooks/detect.sh` 和 `tests/test-detection.sh`。**先做性质 1**：没装 Codex 的机器上必须静默退 0、零输出。这条不成立的话后面都不用做。
+## 未验证项
 
-**Acceptance criteria:**
-- [ ] `detect.sh` 支持 `--print`（人看的）与 hook 模式（输出 JSON 或什么都不输出）
-- [ ] 断言 10：`PATH` 里没有 codex → hook 模式**退出 0 且 stdout 完全为空**
-- [ ] `hooks.json` 注册 SessionStart 与 UserPromptSubmit，路径用 `${CLAUDE_PLUGIN_ROOT}`
-- [ ] `hooks.json` 里的命令即使脚本缺失也不报错（照 spec-guard 的写法留兜底）
+历史人工批准、旧清单各项当时的验收、真实交互行为及远端交付未核实。
+这些事实不因本轮归档、桩验证或阶段 `DONE` 被改成完成。
 
-**Verification:**
-- [ ] `/bin/bash scripts/validate.sh` 退出 0
-- [ ] `/bin/bash plugins/delegate/tests/test-detection.sh` 退出 0
-- [ ] 变异：把「零输出」那条去掉 → 断言 10 必须变红
+## 内容补全任务（2026-10-08）
 
-**Dependencies:** channel 的 T1/T2（复用 validate.sh 与 stub-codex）
-**Files:** `plugins/delegate/hooks/hooks.json`, `plugins/delegate/hooks/detect.sh`, `plugins/delegate/tests/test-detection.sh`
-**Scope:** S
+- [x] Task 4：双语规格的开发约束齐备，原行为合同保留。
+  - 描述：按增补计划补齐中英文规格的开发约束，不改变原功能合同。
+  - 验收：六个核心领域完整；双语编号/命令/代码示例一致。
+  - 验证：标题、源代码片段、原正文保留核对。
+  - 依赖：初轮维护 1–3；涉及文件：本模块中英文 Spec；规模 S（2 文件）。
+  - 结果：文档内容检查退出 0；六领域/三级边界存在；两版新命令及源代码片段一致；原中英文行为正文完整保留。
+- [x] Task 5：条款到已有测试与缺口的映射齐备。
+  - 描述：把现有产品条款对应到测试和源码，明确尚未充分覆盖的条件。
+  - 验收：全部条款有映射行，测试引用存在，覆盖限制明确，plan 含逐任务字段。
+  - 验证：条款编号、源码与测试断言定向核对。
+  - 依赖：Task 4；涉及文件：本模块 plan、共享验证映射；规模 S（2 文件）。
+  - 结果：4 个 DET 条款与映射逐项对应；全表 13 行，16 个明确 Python 用例引用存在；缺口保持部分覆盖。plan Task 4–6 的六字段已核对。
+- [x] Task 6：本轮内容验收及实际证据已记录。
+  - 描述：核验本次文档及其证据，完成维护记录而不关闭历史未知。
+  - 验收：本轮完成项有证据，历史未知及产品覆盖缺口保持开放。
+  - 验证：文档链接/字段、插件结构/阶段、归档哈希、产品范围比较。
+  - 依赖：Task 5；涉及文件：本模块 todo；规模 S（1 文件）。
+  - 结果：文件链接/锚点、8 份归档和 30 份证据哈希均通过；verify-artifacts 为 3 通过/0 警告/0 失败；diff 空白及产品范围检查通过。新增 task 完成前阶段为 BUILDING；完成后的阶段由最终报告记入。既有产品测试沿用首轮真实离线结果，本次未重复运行。
 
----
+- [x] Task 7：本模块历史裁决及免费补验记录齐备。
+  - 描述：逐条区分当前证据、合同替代和未验证，不回填历史勾选。
+  - 验收：全部原条目有来源/理由/证据；历史批准保持未知；样本限制明确。
+  - 验证：行号/文本/哈希、定向结果和产品范围核对。
+  - 依赖：Task 4–6；涉及文件：本模块 todo；规模 S（1 文件）。
+  - 结果：36 条：27 项当前证据支持、3 项合同替代、6 项仍待验证，逐项记录见[裁决](../../docs/verification/2026-10-08-historical-reconciliation.md)；SUP-07–24 的缓存权限/软链接、字段/身份反例及有限线程并发样本通过，详见[定向补验](../../docs/verification/2026-10-08-supplemental.md)。历史完成/批准均未知；临时夹具不等于永久回归或完整宿主验收。
 
-## Task D2: 三级探测阶梯
+- [x] Task 8：免费反向条件证据与当前裁决更新。
+  - 描述：临时副本变异/还原与定向记录，不改产品。
+  - 验收：指定断言抓住故意错误、还原通过；历史未知保留。
+  - 验证：本批正常/变异/还原、归档哈希和产品范围。
+  - 依赖：Task 7；涉及文件：本模块 todo；规模 S（1 文件）。
+  - 结果：MUT-02–06 的 5 个故意错误均被指定断言抓住，还原套通过；FOOTPRINT-01 的业务 Git 夹具前后快照相同。F8：doctor 规则用例继承外层 CLI 的隔离缺口待修复。见[本批证据](../../docs/verification/2026-10-08-mutation.md)。历史完成/批准保持未知，产品未改。
 
-**Description:** 实现三级判据，每一级失败给出**不同且可执行**的原因。第 2 级是重点：`command -v` 为真不代表跑得起来。
-
-**Acceptance criteria:**
-- [ ] 断言 1：三级全过 → 可用
-- [ ] 断言 2：wrapper 不可执行 → 不可用，原因指向 wrapper
-- [ ] 断言 3：`codex` 不在 PATH → 不可用
-- [ ] 断言 4：`codex` 在 PATH 但 `--version` 失败 → 不可用，提示含 `npm install -g @openai/codex@latest`
-- [ ] 断言 5/6：`auth.json` 不存在 / 存在但为空 → 不可用，提示去登录
-- [ ] `auth.json` 路径可用 `CODEX_AUTH_FILE` 覆盖（**测试绝不碰真实 `~/.codex/`**）
-
-**Verification:**
-- [ ] 6 条断言全绿
-- [ ] 变异：把第 2 级换成只查 `command -v` → 断言 4 必须变红（这是真实故障的形状）
-
-**Dependencies:** D1
-**Files:** `plugins/delegate/hooks/detect.sh`, `plugins/delegate/tests/test-detection.sh`
-**Scope:** S
-
----
-
-## Task D3: 缓存
-
-**Description:** SessionStart 探一次写 `${TMPDIR}/delegate/detection.json`，UserPromptSubmit 只读。**缓存坏了等于没缓存**——重探，不报错。
-
-**Acceptance criteria:**
-- [ ] 断言 7：缓存新鲜 → **不再调用 codex**（用 `stub-codex` 的调用日志为空来证明）
-- [ ] 断言 8：缓存 `checkedAt` 超过 8 小时 → 重探（调用日志有一次）
-- [ ] 断言 9：缓存文件是非法 JSON → 重探，不崩，退出 0
-- [ ] 缓存文件写在 `${TMPDIR}` 下，**不写进任何项目目录**
-
-**Verification:**
-- [ ] 3 条断言全绿
-- [ ] 变异：让缓存永不过期 → 断言 8 必须变红
-- [ ] 手工确认跑完之后项目目录里没有新增文件
-
-**Dependencies:** D2
-**Files:** `plugins/delegate/hooks/detect.sh`, `plugins/delegate/tests/test-detection.sh`
-**Scope:** M
-
----
-
-## Task D4: 输出契约
-
-**Description:** hook 的 stdout **要么为空、要么是合法 JSON**。非 JSON 会被宿主拒绝，**而且失败是静默的**——这是最难发现的一类故障。
-
-**Acceptance criteria:**
-- [ ] 断言 11：把 hook 的 stdout 喂给 `python3 -c 'json.load(sys.stdin)'`，空则跳过，非空必须解析成功
-- [ ] 断言 12：构造一个探测内部失败点（比如缓存目录不可写）→ 仍退出 0、不注入噪音
-- [ ] JSON 结构与 spec-guard 一致：`hookSpecificOutput.hookEventName` / `additionalContext`
-- [ ] 注入的内容**只有事实**，不含「你应该派给 Codex」这类建议（那是 routing 的活）
-
-**Verification:**
-- [ ] 2 条断言全绿
-- [ ] 变异：在输出前面多打一行普通文本 → 断言 11 必须变红
-
-**Dependencies:** D3
-**Files:** `plugins/delegate/hooks/detect.sh`, `plugins/delegate/tests/test-detection.sh`
-**Scope:** S
-
----
-
-## Task D5: 接入体检 doctor
-
-**Description:** 按需跑的体检。除了安装与登录，重点查一件每轮 hook **不该**查的事：`~/.codex/AGENTS.md` 里有没有会让非交互委托死锁的流程编排规则。
-
-**Acceptance criteria:**
-- [ ] `hooks/doctor.sh` + `commands/doctor.md`（`allowed-tools: Bash`，脚本按 `${CLAUDE_PLUGIN_ROOT}` 引用）
-- [ ] 断言 13：AGENTS.md 含「等确认 / 先出方案 / 不要直接开始改代码」这类模式 → 报告风险并给出修法（加交互式条件）
-- [ ] 断言 14（**反向**）：AGENTS.md 干净 → **不报**
-- [ ] 断言 15：没有 `~/.codex/AGENTS.md` → 不报错
-- [ ] AGENTS.md 路径可覆盖，测试用临时文件，**绝不读用户真实的那份**
-
-**Verification:**
-- [ ] 3 条断言全绿，**19 条全绿**
-- [ ] `/bin/bash scripts/validate.sh` 通过
-- [ ] 变异：把「干净就不报」改成「总是报」 → 断言 14 必须变红
-
-**Dependencies:** D4
-**Files:** `plugins/delegate/hooks/doctor.sh`, `plugins/delegate/commands/doctor.md`, `plugins/delegate/tests/test-detection.sh`
-**Scope:** M
-
----
-
-## Checkpoints
-
-- [x] **E（D1–D2）** 没装 Codex 时零输出退 0；三级阶梯每级可单独复现，尤其「`command -v` 为真但 `--version` 失败」
-- [x] **F（D3–D4）** 缓存命中不再调 codex；损坏缓存与内部失败点下仍退 0 且输出可被 `json.load` 解析
-- [x] **G（D5）** 15 条断言全绿；doctor 对含「等确认」的 AGENTS.md 报风险、对干净的不报
+- [x] Task 9：已授权的 F8 单文件测试隔离修复。
+  - 描述：将四个 doctor 规则调用改为受控 run_doctor，不改运行时。
+  - 验收：候选一致；两个外层反例各 19 条通过；无真实外层 CLI 的总验证通过。
+  - 验证：隔离测试、补丁一致性、证据哈希、允许变更与插件阶段。
+  - 依赖：Task 8；涉及文件：测试文件、todo、验证记录按计划切片；规模 S。
+  - 结果：已应用批准候选，实际内容一致；当前仓库两个隔离探测场景各 19/0，外层无 CLI 的总验证退出 0（52 Shell、17 Python、7+12 判决器自检）。唯一产品树差异是本测试文件，运行时未改；见[实际结果](../../docs/verification/2026-10-08-f8-applied.md)。

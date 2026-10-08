@@ -1,0 +1,55 @@
+{
+  "date": "2026-10-08",
+  "sourceCommit": "56c3ba76f1059f929bc908c0e45469abc623859a",
+  "documentation": {
+    "purpose": "documentation content and reference verification; not product acceptance",
+    "markdownFiles": 50,
+    "fileLinks": 354,
+    "anchors": 38,
+    "clauses": 13,
+    "detailedModuleTasks": 12,
+    "referencedPythonMethods": 16,
+    "archives": 8,
+    "historicalEvidenceHashes": 30,
+    "errors": []
+  },
+  "historicalReconciliation": {
+    "sourceEntries": 119,
+    "matchedEntries": 119,
+    "counts": {
+      "superseded": 12,
+      "supported_current": 87,
+      "unverified": 20
+    },
+    "evidenceHashes": 27,
+    "historicalCompletionUnknown": 119,
+    "historicalApprovalUnknown": 119
+  },
+  "supplemental": {
+    "passed": 26,
+    "failed": 0,
+    "modelCalls": 0,
+    "checkerArchiveHashMatched": true,
+    "limits": "one-off controlled samples; not permanent regression, cross-process stress, or full real-host/model acceptance"
+  },
+  "checks": {
+    "whitespace": {
+      "exit": 0,
+      "output": ""
+    },
+    "productScope": {
+      "exit": 0,
+      "output": ""
+    },
+    "artifacts": {
+      "exit": 0,
+      "output": "✅ 能力图存在\n  ✅ 没有根目录 spec 漂移\n  ✅ 能力图通过严格解析\n\n结果: 3 通过 · 0 警告 · 0 失败"
+    },
+    "phase": {
+      "exit": 0,
+      "output": "{\"hookSpecificOutput\": {\"hookEventName\": \"UserPromptSubmit\", \"additionalContext\": \"## spec-guard local workflow\\n\\nLocation: branch `codex/spec-guard-conventions` \\u00b7 worktree `<PROJECT_ROOT>`. State this location to the user whenever you ask them to review or confirm.\\n\\n\\u5f53\\u524d\\u9636\\u6bb5: **DONE**\\n\\n- Capability map: present\\n- Modules 3 \\u00b7 Specs 3 \\u00b7 Plans 3 \\u00b7 In progress 0 \\u00b7 Done 3\\n- Module boundary: a good point to free context. Say in one sentence that the user can /compact with a focus on the next module, or /clear if the next work is unrelated; do not paste handoff text. This stage summary carries over, the conversation does not need to.\\n\\nSuggested next step: every mapped module has a plan and no open todo item. For new work, insert a module with /spec-guard:add-module (Codex: spec-guard-ops add-module) at this checkpoint; use a Proposal when the addition needs a recorded, reviewed decision.\"}}"
+    }
+  },
+  "productTests": "Actual first adoption full-suite run reused, not repeated for this documentation/evidence batch.",
+  "errors": []
+}

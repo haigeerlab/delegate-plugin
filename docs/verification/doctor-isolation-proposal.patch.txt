@@ -1,0 +1,52 @@
+--- a/plugins/delegate/tests/test-detection.sh
++++ b/plugins/delegate/tests/test-detection.sh
+@@ -47,6 +47,13 @@
+   mkdir -p "${RUN_TMPDIR}"
+   PATH="${1}" TMPDIR="${RUN_TMPDIR}" CODEX_AUTH_FILE="${2}" STUB_CALL_LOG="${3}" STUB_VERSION_EXIT="${4}" \
+     "${5}" --print 2>"${TEST_TMPDIR}/stderr"
++}
++
++# 规则检查必须用本套受控 CLI；不要继承作者的安装或登录环境。
++run_doctor() {
++  PATH="${TEST_BIN}:/usr/bin:/bin" CODEX_AUTH_FILE="${AUTH_FILE}" \
++    STUB_CALL_LOG="${TEST_TMPDIR}/doctor.argv" STUB_VERSION_EXIT=0 \
++    STUB_LOGIN_EXIT=0 STUB_LOGIN_TEXT='Logged in using ChatGPT' "${DOCTOR_SCRIPT}"
+ }
+ 
+ # 10：没有 codex 时 hook 必须静默成功，且 stdout 完全为空。
+@@ -233,7 +240,7 @@
+ DOCTOR_SCRIPT="${SCRIPT_DIR}/../hooks/doctor.sh"
+ RISK_AGENTS_FILE="${TEST_TMPDIR}/risk-AGENTS.md"
+ printf '不要直接开始改代码\n' > "${RISK_AGENTS_FILE}"
+-OUTPUT="$(CODEX_AGENTS_FILE="${RISK_AGENTS_FILE}" "${DOCTOR_SCRIPT}" 2>"${TEST_TMPDIR}/thirteen.stderr")"
++OUTPUT="$(CODEX_AGENTS_FILE="${RISK_AGENTS_FILE}" run_doctor 2>"${TEST_TMPDIR}/thirteen.stderr")"
+ case "${OUTPUT}" in
+   *风险*仅适用于交互式会话*)
+     pass '13：流程编排规则报告风险并给出非交互修法'
+@@ -249,7 +256,7 @@
+ # 而当时 18 条断言全绿。假警报比不报危害大。
+ EXEMPTED_AGENTS_FILE="${TEST_TMPDIR}/exempted-AGENTS.md"
+ printf '本节仅适用于交互式会话；非交互调用（codex exec）时整节跳过。\n复杂任务开场时，先按下面顺序启动，不要直接开始改代码：\n' > "${EXEMPTED_AGENTS_FILE}"
+-OUTPUT="$(CODEX_AGENTS_FILE="${EXEMPTED_AGENTS_FILE}" "${DOCTOR_SCRIPT}" 2>"${TEST_TMPDIR}/thirteen-b.stderr")"
++OUTPUT="$(CODEX_AGENTS_FILE="${EXEMPTED_AGENTS_FILE}" run_doctor 2>"${TEST_TMPDIR}/thirteen-b.stderr")"
+ STATUS=$?
+ if [ "${STATUS}" -ne 0 ]; then
+   fail "13b：已豁免的 AGENTS.md 时 doctor 退出 ${STATUS}"
+@@ -264,7 +271,7 @@
+ # 14：干净的 AGENTS.md 不得产生假警报。
+ CLEAN_AGENTS_FILE="${TEST_TMPDIR}/clean-AGENTS.md"
+ printf '用中文回答\n' > "${CLEAN_AGENTS_FILE}"
+-OUTPUT="$(CODEX_AGENTS_FILE="${CLEAN_AGENTS_FILE}" "${DOCTOR_SCRIPT}" 2>"${TEST_TMPDIR}/fourteen.stderr")"
++OUTPUT="$(CODEX_AGENTS_FILE="${CLEAN_AGENTS_FILE}" run_doctor 2>"${TEST_TMPDIR}/fourteen.stderr")"
+ STATUS=$?
+ if [ "${STATUS}" -ne 0 ]; then
+   fail "14：干净 AGENTS.md 时 doctor 退出 ${STATUS}"
+@@ -280,7 +287,7 @@
+ # 退出码一模一样（实测：那个变异存活过）。
+ MISSING_AGENTS_FILE="${TEST_TMPDIR}/no-such-AGENTS.md"
+ rm -f "${MISSING_AGENTS_FILE}"
+-OUTPUT="$(CODEX_AGENTS_FILE="${MISSING_AGENTS_FILE}" "${DOCTOR_SCRIPT}" 2>"${TEST_TMPDIR}/fifteen.stderr")"
++OUTPUT="$(CODEX_AGENTS_FILE="${MISSING_AGENTS_FILE}" run_doctor 2>"${TEST_TMPDIR}/fifteen.stderr")"
+ STATUS=$?
+ if [ "${STATUS}" -ne 0 ]; then
+   fail "15：AGENTS.md 不存在时 doctor 退出 ${STATUS}"

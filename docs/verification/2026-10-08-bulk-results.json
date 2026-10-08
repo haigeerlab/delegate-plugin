@@ -1,0 +1,388 @@
+{
+  "date": "2026-10-08",
+  "approval": "User continued after the specific combined A/B approval request; current approval only, not historical approval.",
+  "scopeDecision": {
+    "adr": "docs/decisions/ADR-001-command-tool-scope.md",
+    "status": "Accepted",
+    "runtimeDeclarationChanged": false,
+    "archivedCriterion": "channel:7-A1",
+    "disposition": "superseded",
+    "historicalApproval": "unknown"
+  },
+  "claudeCliSessions": 4,
+  "realCodexExecs": 1,
+  "automaticRetries": 0,
+  "configuredModelsUsed": true,
+  "nativeClaudeVersionObserved": "2.1.294",
+  "nativeModelLabelObserved": "Opus 5.5 / Claude Max",
+  "apiRequestCountAndCost": "not measured; sessions are not API request counts",
+  "B1": {
+    "mode": "routing",
+    "command": [
+      "/bin/bash",
+      "evals/routing-fitness.sh"
+    ],
+    "exit": 0,
+    "elapsedSeconds": 35.74,
+    "preflight": {
+      "codex-basic": {
+        "exit": 0,
+        "stdoutSha256": "0c1d5a77d0e685f1011e0dd4cbdd7fa80617f9bb3bcdddcf8c34877b657dc6cc",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "claude-source": {
+        "exit": 0,
+        "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "sourceSnapshot": {
+      "plugins/delegate/LICENSE": "d8e4560e8f9c35d52ccc96de8ec8d38345852f277ec4683ef56a142f2e5e4b62",
+      "plugins/delegate/tests/test-backend.py": "a981949d849e31835fddf3c965133dfb70f933891d70c3234b0b4c522dce7f04",
+      "plugins/delegate/tests/test-routing.sh": "0e7ff4b2d51615d726c73d2f6f67ae3fd1c2dff739112e3d9dda863876653eef",
+      "plugins/delegate/tests/stub-codex": "8dc61a9b8b3a10cba2d8cf6515d67f3d01ade152a169b16c5b212bd66b3d6975",
+      "plugins/delegate/tests/test-channel-regressions.py": "9ad02c3e8a6e53866cbecab3773b2dcd954bbcc83088e91fdf0e43efd1cc9005",
+      "plugins/delegate/tests/test-channel.sh": "c9eaaf272e118ceedd3b350d71f7b7c98acace81a48651038619bdbc1e566f02",
+      "plugins/delegate/tests/test-detection.sh": "9e98791e54586f76ad6ba321689d17b46ed429e9261532ba8fa5f39d6386980b",
+      "plugins/delegate/hooks/prompt.sh": "0740361f811c048dcd6ed715920deb5c63b24577718fc3b01b91a5009fcf6027",
+      "plugins/delegate/hooks/doctor.sh": "ab206f2ad5bbe1e6e3ee31638d9d0eb2f58c6469c321e4892be2d16eda179bf5",
+      "plugins/delegate/hooks/detect.sh": "acf85d86cfabf2380bc55792c2b45b3d26ffd0c24c41ec59adc692a23cc3d33d",
+      "plugins/delegate/hooks/hooks.json": "822d1fed0b4febdfcc46ac17db2c832ba38d48e842aad69a32db7ecf78ab7483",
+      "plugins/delegate/hooks/route.sh": "518911694a0d308090387e5c5d76472841849fe519468463235190faa12101f5",
+      "plugins/delegate/hooks/detect.py": "18d2436079e01dca7af4f06b39c38ee2f03bf1ecc91b90898acb6128a54ab0e9",
+      "plugins/delegate/scripts/codex-exec.sh": "cdc0392b917ef7815abfc243f9ce987a7a67fa2512336bcd09db116754a46dec",
+      "plugins/delegate/scripts/backend.py": "5862704d46bf565dcb4be7f3e1d6959a3a46c9ad3052d0854722ae9a7ac036db",
+      "plugins/delegate/scripts/run_codex.py": "ba4d0b29338e0b8756b4f1a920e6ef8877a058b42f1c28a44e8da3cc56e432d7",
+      "plugins/delegate/.claude-plugin/plugin.json": "f17b6c5be85f264b6a6e55e0acb16780fed0a42f214e6580f9b47e17547137f4",
+      "plugins/delegate/commands/doctor.md": "d05026b0ee276eb2d1a3406d5798f8ed778d584d2ae4195c3e3df696e05fdd0e",
+      "plugins/delegate/commands/help.md": "1100ba609955f646ba5bf908001835eb5d4dfd455811a628c6c67492383c472a",
+      "plugins/delegate/commands/delegate.md": "a5b36f9942e65c891901cdd26da729590461cd4bd89cca1aeee5b9ddd63144ba",
+      "plugins/delegate/skills/delegate-routing/SKILL.md": "3b47cec2483dbeece36d78f530db32c3e09dfa6d67c12b69c63de34cc6d12bf2",
+      "evals/propose-not-auto.sh": "ba9f5251aec405a721bceb7f245a551cd2b9db248ce2bd516b22580e15279446",
+      "evals/_preflight.sh": "3a32e7ac8caf9370aa5b1b0526201299ea39fb2542c38634ef3b41318a406187",
+      "evals/routing-fitness.sh": "aa90ba85060e2f7122dd8b25db2534352b491ee2f5023bf2a475a4a40b343ac0"
+    },
+    "sourceUnchanged": true,
+    "stdoutSha256": "b06afdaccd536cfde1e9bafea8885fce5288dd64c03b4405536ab5277737dcd7",
+    "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "automaticRetries": 0,
+    "modelCliInvocations": 2,
+    "judgeSummary": [
+      "PASS: 处理组主张委托，对照组主张自己做"
+    ],
+    "groups": {
+      "treatment": {
+        "transcript.txt": {
+          "present": true,
+          "bytes": 1651,
+          "sha256": "f52334cd1e443828d647f91934a537c5548d0586bacef9c9775d4607bed576d6",
+          "firstNonemptyLine": "判断：委托"
+        },
+        "codex.calls": {
+          "present": true,
+          "bytes": 35,
+          "sha256": "1bf7f751ce849b45c83ae85ce5df98279971335206ce906eb0ffaf131250454b",
+          "execLines": 0
+        },
+        "claude.stderr": {
+          "present": true,
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "control": {
+        "transcript.txt": {
+          "present": true,
+          "bytes": 1310,
+          "sha256": "a03b0ec42b84990d2d04b27cd57017a2a2a373ed322aa80a860e5f5325526ea6",
+          "firstNonemptyLine": "判断：自己做"
+        },
+        "codex.calls": {
+          "present": true,
+          "bytes": 35,
+          "sha256": "1bf7f751ce849b45c83ae85ce5df98279971335206ce906eb0ffaf131250454b",
+          "execLines": 0
+        },
+        "claude.stderr": {
+          "present": true,
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    }
+  },
+  "B2": {
+    "mode": "native interactive TTY; naturally requested execution plan; no explicit skill command; installed user plugin; Codex stub",
+    "skillCalls": [
+      {
+        "skill": "delegate:delegate-routing"
+      }
+    ],
+    "actualSkillLoaded": true,
+    "delegationOptionOffered": true,
+    "waitedForConfirmation": true,
+    "codexExecs": 0,
+    "recommendation": "self work due small fixture; delegation offered as an option",
+    "activeDelegationRecommendationVerified": false,
+    "proposalSpecifiedModelWithoutUserPreference": true,
+    "safeExcerpts": [
+      "按规则可以派，但这次我建议不派，在主会话里做。",
+      "按上面的提示词派给 Codex 只读执行。",
+      "确认后开始。"
+    ],
+    "jsonl": {
+      "bytes": 306934,
+      "sha256": "70efaf6412f8faa7db6616674be35fbf438ab43ce0a680cf0bf579c596aac22b"
+    },
+    "debug": {
+      "bytes": 84575,
+      "sha256": "d2b8201cb78f16245d2a7cf255d4e705ae9a27b09615862031d545584c10ba64"
+    },
+    "tty": {
+      "bytes": 37987,
+      "sha256": "b62ee3ffb470701fcd2df3d608d5c4931eafd8cf7e70c1d017ed71775f9c8cf5"
+    },
+    "callLog": {
+      "bytes": 35,
+      "sha256": "1bf7f751ce849b45c83ae85ce5df98279971335206ce906eb0ffaf131250454b"
+    }
+  },
+  "B3": {
+    "mode": "native interactive TTY; installed user-scope slash command; no --plugin-dir",
+    "slashCommand": "/delegate:delegate",
+    "commandMarkerParsed": true,
+    "command": "bash \"<PROJECT>/plugins/delegate/scripts/codex-exec.sh\" \"只回复“批次验收通过”。不要执行其他操作。\"",
+    "timeout": 600000,
+    "bashResultIsError": false,
+    "wrapperSucceeded": true,
+    "realExecs": 1,
+    "sandbox": "read-only",
+    "explicitModelOverride": false,
+    "answer": "批次验收通过",
+    "answerArtifact": {
+      "bytes": 18,
+      "sha256": "31631b2b672529db1bbc3fa0f88f460a98b1ff44a397c7d0024e322dbca311df"
+    },
+    "processLog": {
+      "bytes": 5924,
+      "sha256": "2c07b93cd0dd9ee787d0954e4373599fc8c43a5d25450db49bb5d248589031d9"
+    },
+    "jsonl": {
+      "bytes": 294169,
+      "sha256": "2388f5b2b192748507eb43e63ff292cd1a168cd3221fbf30ebdedc8e373a98bb"
+    },
+    "debug": {
+      "bytes": 77396,
+      "sha256": "cc21462e9db2c18654284d45cdac0ab31710cb3f76a6533f5db194f9145754a9"
+    },
+    "tty": {
+      "bytes": 13837,
+      "sha256": "d26b22c2bf9170d243510f91726ae294166f5559193838d7dc08a602121b6765"
+    },
+    "realCallLog": {
+      "bytes": 661,
+      "sha256": "31f22a9d089cad785f3fa88631c07eebac7836b9a7fe3abe355569558d8bbf10"
+    }
+  },
+  "userInstallation": {
+    "scope": "user",
+    "version": "0.4.0",
+    "runtimeFilesMatched": 13,
+    "hashes": {
+      "hooks/prompt.sh": "0740361f811c048dcd6ed715920deb5c63b24577718fc3b01b91a5009fcf6027",
+      "hooks/doctor.sh": "ab206f2ad5bbe1e6e3ee31638d9d0eb2f58c6469c321e4892be2d16eda179bf5",
+      "hooks/detect.sh": "acf85d86cfabf2380bc55792c2b45b3d26ffd0c24c41ec59adc692a23cc3d33d",
+      "hooks/hooks.json": "822d1fed0b4febdfcc46ac17db2c832ba38d48e842aad69a32db7ecf78ab7483",
+      "hooks/route.sh": "518911694a0d308090387e5c5d76472841849fe519468463235190faa12101f5",
+      "hooks/detect.py": "18d2436079e01dca7af4f06b39c38ee2f03bf1ecc91b90898acb6128a54ab0e9",
+      "scripts/codex-exec.sh": "cdc0392b917ef7815abfc243f9ce987a7a67fa2512336bcd09db116754a46dec",
+      "scripts/backend.py": "5862704d46bf565dcb4be7f3e1d6959a3a46c9ad3052d0854722ae9a7ac036db",
+      "scripts/run_codex.py": "ba4d0b29338e0b8756b4f1a920e6ef8877a058b42f1c28a44e8da3cc56e432d7",
+      "commands/doctor.md": "d05026b0ee276eb2d1a3406d5798f8ed778d584d2ae4195c3e3df696e05fdd0e",
+      "commands/help.md": "1100ba609955f646ba5bf908001835eb5d4dfd455811a628c6c67492383c472a",
+      "commands/delegate.md": "a5b36f9942e65c891901cdd26da729590461cd4bd89cca1aeee5b9ddd63144ba",
+      "skills/delegate-routing/SKILL.md": "3b47cec2483dbeece36d78f530db32c3e09dfa6d67c12b69c63de34cc6d12bf2"
+    },
+    "traceResolvedToProjectPluginRoot": true
+  },
+  "fixtures": {
+    "routing-natural": {
+      "before": {
+        ".git/HEAD": "28d25bf82af4c0e2b72f50959b2beb859e3e60b9630a5e8c603dad4ddb2b6e80",
+        ".git/config": "cae33efdb02cf774435c1ff9cb16bcc1014606908530c6e1dc727615fe3e8cda",
+        ".git/description": "85ab6c163d43a17ea9cf7788308bca1466f1b0a8d1cc92e26e9bf63da4062aee",
+        ".git/hooks/applypatch-msg.sample": "0223497a0b8b033aa58a3a521b8629869386cf7ab0e2f101963d328aa62193f7",
+        ".git/hooks/commit-msg.sample": "1f74d5e9292979b573ebd59741d46cb93ff391acdd083d340b94370753d92437",
+        ".git/hooks/fsmonitor-watchman.sample": "e0549964e93897b519bd8e333c037e51fff0f88ba13e086a331592bf801fa1d0",
+        ".git/hooks/post-update.sample": "81765af2daef323061dcbc5e61fc16481cb74b3bac9ad8a174b186523586f6c5",
+        ".git/hooks/pre-applypatch.sample": "e15c5b469ea3e0a695bea6f2c82bcf8e62821074939ddd85b77e0007ff165475",
+        ".git/hooks/pre-commit.sample": "57185b7b9f05239d7ab52db045f5b89eb31348d7b2177eab214f5eb872e1971b",
+        ".git/hooks/pre-merge-commit.sample": "d3825a70337940ebbd0a5c072984e13245920cdf8898bd225c8d27a6dfc9cb53",
+        ".git/hooks/pre-push.sample": "ecce9c7e04d3f5dd9d8ada81753dd1d549a9634b26770042b58dda00217d086a",
+        ".git/hooks/pre-rebase.sample": "4febce867790052338076f4e66cc47efb14879d18097d1d61c8261859eaaa7b3",
+        ".git/hooks/pre-receive.sample": "a4c3d2b9c7bb3fd8d1441c31bd4ee71a595d66b44fcf49ddb310252320169989",
+        ".git/hooks/prepare-commit-msg.sample": "e9ddcaa4189fddd25ed97fc8c789eca7b6ca16390b2392ae3276f0c8e1aa4619",
+        ".git/hooks/push-to-checkout.sample": "a53d0741798b287c6dd7afa64aee473f305e65d3f49463bb9d7408ec3b12bf5f",
+        ".git/hooks/sendemail-validate.sample": "44ebfc923dc5466bc009602f0ecf067b9c65459abfe8868ddc49b78e6ced7a92",
+        ".git/hooks/update.sample": "8d5f2fa83e103cf08b57eaa67521df9194f45cbdbcb37da52ad586097a14d106",
+        ".git/info/exclude": "6671fe83b7a07c8932ee89164d1f2793b2318058eb8b98dc5c06ee0a5a3b0ec1",
+        "src/module_00.py": "75f19696a2beb84da763876f746482e9b9ea53354a78f177ec7f3ab57b2c4fa7",
+        "src/module_01.py": "7c84fdb6cf1daf4f206b4037886207800a9883883fb25e28f1ab1e64d61e432f",
+        "src/module_02.py": "afd3edcf17edce7d3a14f8c4dfcdb39a02ff19890d053a8181016b70a2bcc6f3",
+        "src/module_03.py": "6fee1c1edce28df65bf5668b5d3b524f79f3c53ead1570968423668285e7f2b6",
+        "src/module_04.py": "4918451d7deae3988576e580446b86114962860122776a46da1ef0b7c3abd798",
+        "src/module_05.py": "dc3d14cf39d4aeb24e3ef38d1259fde344f88510db7b426ed6fa8935e6a96979",
+        "src/module_06.py": "c0ec39e422c36e8d14cbe15c7ee939a8a8161329487561d5f84cebb8ae419437",
+        "src/module_07.py": "a2d7e6c41169fc1f132215352c462e427851babfe343a9fbeb824caff250ee79",
+        "src/module_08.py": "59e40c13c6f33b5c22308267ad74849b5594c513092bb1f459f9818c92c65e2c",
+        "src/module_09.py": "92a2611db3e99284e5c16f111c8e2539ea161d234715a8914824dde177f81c2f",
+        "src/module_10.py": "01b72112a6edb6435a4eab4fe5ad833edbe3085c1239d146ba58c5521f52be69",
+        "src/module_11.py": "eb6efad31b709e54bea5df68d50bcf1c57a4c29a92e17c85fb0f0710e5bd19b6",
+        "src/module_12.py": "5fd7db3189974c5d199ac418b3ee2f33ae0e3a859400c5b7ce0aa8463ee6c732",
+        "src/module_13.py": "4d9dfb55d5d8ff4422ab2770b2f141aaa966f38fbf06c8ebc880c2cf9efd0dfe",
+        "src/module_14.py": "e235efd968a127e720b6a6b0b8e3b21f19308f8633183df67da4e1bc50b862c8",
+        "src/module_15.py": "661822a7809ad947056ae6bf1b70393e3f48a3b4e3a27f1e7461f34e2025a331",
+        "src/module_16.py": "4acfbf8af0f240d5fd50dea50ed8f4d606d98474c362a55543075db186e53f94",
+        "src/module_17.py": "1abb93371fcfa7f75bc6fac94a872a857a9747aa9855aa7541346d298665712a",
+        "src/module_18.py": "b1a1412d0882fe9e8cb7b70e874948c6fb83676633bfcae2fa42eee0408885e2",
+        "src/module_19.py": "59e97830fcb6e6a9e594c1de680098fbcc719dae791fb778f76224e821222761",
+        "src/module_20.py": "ea2bec6615b9365f06f8f83112bacefb0e588f96d866c64498b77226535a4a79",
+        "src/module_21.py": "01692974ce9aaaff31dd98c2876326749e7bd25078df6c13b28fc863aa9830f1",
+        "src/module_22.py": "c8852058dd28bf5370985594142fb47f10d1ab018081cda8000128d2c81a6207",
+        "src/module_23.py": "8310f032fedacdcd988663ffdd35d8e1b0b277c26280c1808787c4f90439f555",
+        "src/module_24.py": "b0882054cd3624fb8e76d7ca03cbb85890392844a3d5a7f1a18426919a0db7c6",
+        "src/module_25.py": "ebae86d59cd2f3f0827431cf10e8a91574c0cedf12dbaa35d456a241d9fee38e",
+        "src/module_26.py": "f8600554fe068b3209097693479d577c7ef73eff2077d19614236cf16dd55582",
+        "src/module_27.py": "8eda40ae29146c2183da0507dc1017a524a180cda42b058449eda9bbc68d499b",
+        "src/module_28.py": "700ebd47cdde402e64c1b7ea1c9e964295d38f8ad787d9145dab518fc529b86e",
+        "src/module_29.py": "287e30fbcf8f64f2d93a3465f8003807341521f2eca979ea679935945981b9eb",
+        "tests/test_all.py": "1cd6c30cf98c5c92a243dce477179bc994d7f082a002f2263e8005f72b86aa12"
+      },
+      "after": {
+        "tests/test_all.py": "1cd6c30cf98c5c92a243dce477179bc994d7f082a002f2263e8005f72b86aa12",
+        ".git/config": "cae33efdb02cf774435c1ff9cb16bcc1014606908530c6e1dc727615fe3e8cda",
+        ".git/HEAD": "28d25bf82af4c0e2b72f50959b2beb859e3e60b9630a5e8c603dad4ddb2b6e80",
+        ".git/description": "85ab6c163d43a17ea9cf7788308bca1466f1b0a8d1cc92e26e9bf63da4062aee",
+        ".git/info/exclude": "6671fe83b7a07c8932ee89164d1f2793b2318058eb8b98dc5c06ee0a5a3b0ec1",
+        ".git/hooks/commit-msg.sample": "1f74d5e9292979b573ebd59741d46cb93ff391acdd083d340b94370753d92437",
+        ".git/hooks/pre-rebase.sample": "4febce867790052338076f4e66cc47efb14879d18097d1d61c8261859eaaa7b3",
+        ".git/hooks/sendemail-validate.sample": "44ebfc923dc5466bc009602f0ecf067b9c65459abfe8868ddc49b78e6ced7a92",
+        ".git/hooks/pre-commit.sample": "57185b7b9f05239d7ab52db045f5b89eb31348d7b2177eab214f5eb872e1971b",
+        ".git/hooks/applypatch-msg.sample": "0223497a0b8b033aa58a3a521b8629869386cf7ab0e2f101963d328aa62193f7",
+        ".git/hooks/fsmonitor-watchman.sample": "e0549964e93897b519bd8e333c037e51fff0f88ba13e086a331592bf801fa1d0",
+        ".git/hooks/pre-receive.sample": "a4c3d2b9c7bb3fd8d1441c31bd4ee71a595d66b44fcf49ddb310252320169989",
+        ".git/hooks/prepare-commit-msg.sample": "e9ddcaa4189fddd25ed97fc8c789eca7b6ca16390b2392ae3276f0c8e1aa4619",
+        ".git/hooks/post-update.sample": "81765af2daef323061dcbc5e61fc16481cb74b3bac9ad8a174b186523586f6c5",
+        ".git/hooks/pre-merge-commit.sample": "d3825a70337940ebbd0a5c072984e13245920cdf8898bd225c8d27a6dfc9cb53",
+        ".git/hooks/pre-applypatch.sample": "e15c5b469ea3e0a695bea6f2c82bcf8e62821074939ddd85b77e0007ff165475",
+        ".git/hooks/pre-push.sample": "ecce9c7e04d3f5dd9d8ada81753dd1d549a9634b26770042b58dda00217d086a",
+        ".git/hooks/update.sample": "8d5f2fa83e103cf08b57eaa67521df9194f45cbdbcb37da52ad586097a14d106",
+        ".git/hooks/push-to-checkout.sample": "a53d0741798b287c6dd7afa64aee473f305e65d3f49463bb9d7408ec3b12bf5f",
+        "src/module_03.py": "6fee1c1edce28df65bf5668b5d3b524f79f3c53ead1570968423668285e7f2b6",
+        "src/module_13.py": "4d9dfb55d5d8ff4422ab2770b2f141aaa966f38fbf06c8ebc880c2cf9efd0dfe",
+        "src/module_27.py": "8eda40ae29146c2183da0507dc1017a524a180cda42b058449eda9bbc68d499b",
+        "src/module_07.py": "a2d7e6c41169fc1f132215352c462e427851babfe343a9fbeb824caff250ee79",
+        "src/module_23.py": "8310f032fedacdcd988663ffdd35d8e1b0b277c26280c1808787c4f90439f555",
+        "src/module_17.py": "1abb93371fcfa7f75bc6fac94a872a857a9747aa9855aa7541346d298665712a",
+        "src/module_06.py": "c0ec39e422c36e8d14cbe15c7ee939a8a8161329487561d5f84cebb8ae419437",
+        "src/module_22.py": "c8852058dd28bf5370985594142fb47f10d1ab018081cda8000128d2c81a6207",
+        "src/module_16.py": "4acfbf8af0f240d5fd50dea50ed8f4d606d98474c362a55543075db186e53f94",
+        "src/module_02.py": "afd3edcf17edce7d3a14f8c4dfcdb39a02ff19890d053a8181016b70a2bcc6f3",
+        "src/module_12.py": "5fd7db3189974c5d199ac418b3ee2f33ae0e3a859400c5b7ce0aa8463ee6c732",
+        "src/module_26.py": "f8600554fe068b3209097693479d577c7ef73eff2077d19614236cf16dd55582",
+        "src/module_09.py": "92a2611db3e99284e5c16f111c8e2539ea161d234715a8914824dde177f81c2f",
+        "src/module_19.py": "59e97830fcb6e6a9e594c1de680098fbcc719dae791fb778f76224e821222761",
+        "src/module_29.py": "287e30fbcf8f64f2d93a3465f8003807341521f2eca979ea679935945981b9eb",
+        "src/module_28.py": "700ebd47cdde402e64c1b7ea1c9e964295d38f8ad787d9145dab518fc529b86e",
+        "src/module_08.py": "59e40c13c6f33b5c22308267ad74849b5594c513092bb1f459f9818c92c65e2c",
+        "src/module_18.py": "b1a1412d0882fe9e8cb7b70e874948c6fb83676633bfcae2fa42eee0408885e2",
+        "src/module_05.py": "dc3d14cf39d4aeb24e3ef38d1259fde344f88510db7b426ed6fa8935e6a96979",
+        "src/module_21.py": "01692974ce9aaaff31dd98c2876326749e7bd25078df6c13b28fc863aa9830f1",
+        "src/module_15.py": "661822a7809ad947056ae6bf1b70393e3f48a3b4e3a27f1e7461f34e2025a331",
+        "src/module_01.py": "7c84fdb6cf1daf4f206b4037886207800a9883883fb25e28f1ab1e64d61e432f",
+        "src/module_11.py": "eb6efad31b709e54bea5df68d50bcf1c57a4c29a92e17c85fb0f0710e5bd19b6",
+        "src/module_25.py": "ebae86d59cd2f3f0827431cf10e8a91574c0cedf12dbaa35d456a241d9fee38e",
+        "src/module_00.py": "75f19696a2beb84da763876f746482e9b9ea53354a78f177ec7f3ab57b2c4fa7",
+        "src/module_10.py": "01b72112a6edb6435a4eab4fe5ad833edbe3085c1239d146ba58c5521f52be69",
+        "src/module_24.py": "b0882054cd3624fb8e76d7ca03cbb85890392844a3d5a7f1a18426919a0db7c6",
+        "src/module_04.py": "4918451d7deae3988576e580446b86114962860122776a46da1ef0b7c3abd798",
+        "src/module_20.py": "ea2bec6615b9365f06f8f83112bacefb0e588f96d866c64498b77226535a4a79",
+        "src/module_14.py": "e235efd968a127e720b6a6b0b8e3b21f19308f8633183df67da4e1bc50b862c8"
+      },
+      "contentHashesMatched": true,
+      "cacheOutsideBusiness": true,
+      "gitHasHead": false
+    },
+    "installed-command": {
+      "before": {
+        ".git/HEAD": "28d25bf82af4c0e2b72f50959b2beb859e3e60b9630a5e8c603dad4ddb2b6e80",
+        ".git/config": "cae33efdb02cf774435c1ff9cb16bcc1014606908530c6e1dc727615fe3e8cda",
+        ".git/description": "85ab6c163d43a17ea9cf7788308bca1466f1b0a8d1cc92e26e9bf63da4062aee",
+        ".git/hooks/applypatch-msg.sample": "0223497a0b8b033aa58a3a521b8629869386cf7ab0e2f101963d328aa62193f7",
+        ".git/hooks/commit-msg.sample": "1f74d5e9292979b573ebd59741d46cb93ff391acdd083d340b94370753d92437",
+        ".git/hooks/fsmonitor-watchman.sample": "e0549964e93897b519bd8e333c037e51fff0f88ba13e086a331592bf801fa1d0",
+        ".git/hooks/post-update.sample": "81765af2daef323061dcbc5e61fc16481cb74b3bac9ad8a174b186523586f6c5",
+        ".git/hooks/pre-applypatch.sample": "e15c5b469ea3e0a695bea6f2c82bcf8e62821074939ddd85b77e0007ff165475",
+        ".git/hooks/pre-commit.sample": "57185b7b9f05239d7ab52db045f5b89eb31348d7b2177eab214f5eb872e1971b",
+        ".git/hooks/pre-merge-commit.sample": "d3825a70337940ebbd0a5c072984e13245920cdf8898bd225c8d27a6dfc9cb53",
+        ".git/hooks/pre-push.sample": "ecce9c7e04d3f5dd9d8ada81753dd1d549a9634b26770042b58dda00217d086a",
+        ".git/hooks/pre-rebase.sample": "4febce867790052338076f4e66cc47efb14879d18097d1d61c8261859eaaa7b3",
+        ".git/hooks/pre-receive.sample": "a4c3d2b9c7bb3fd8d1441c31bd4ee71a595d66b44fcf49ddb310252320169989",
+        ".git/hooks/prepare-commit-msg.sample": "e9ddcaa4189fddd25ed97fc8c789eca7b6ca16390b2392ae3276f0c8e1aa4619",
+        ".git/hooks/push-to-checkout.sample": "a53d0741798b287c6dd7afa64aee473f305e65d3f49463bb9d7408ec3b12bf5f",
+        ".git/hooks/sendemail-validate.sample": "44ebfc923dc5466bc009602f0ecf067b9c65459abfe8868ddc49b78e6ced7a92",
+        ".git/hooks/update.sample": "8d5f2fa83e103cf08b57eaa67521df9194f45cbdbcb37da52ad586097a14d106",
+        ".git/info/exclude": "6671fe83b7a07c8932ee89164d1f2793b2318058eb8b98dc5c06ee0a5a3b0ec1",
+        "fixture.txt": "953820d9196479206d010bfebae2aab2f13ff83083196194515eef2908314b6b"
+      },
+      "after": {
+        "fixture.txt": "953820d9196479206d010bfebae2aab2f13ff83083196194515eef2908314b6b",
+        ".git/config": "cae33efdb02cf774435c1ff9cb16bcc1014606908530c6e1dc727615fe3e8cda",
+        ".git/HEAD": "28d25bf82af4c0e2b72f50959b2beb859e3e60b9630a5e8c603dad4ddb2b6e80",
+        ".git/description": "85ab6c163d43a17ea9cf7788308bca1466f1b0a8d1cc92e26e9bf63da4062aee",
+        ".git/info/exclude": "6671fe83b7a07c8932ee89164d1f2793b2318058eb8b98dc5c06ee0a5a3b0ec1",
+        ".git/hooks/commit-msg.sample": "1f74d5e9292979b573ebd59741d46cb93ff391acdd083d340b94370753d92437",
+        ".git/hooks/pre-rebase.sample": "4febce867790052338076f4e66cc47efb14879d18097d1d61c8261859eaaa7b3",
+        ".git/hooks/sendemail-validate.sample": "44ebfc923dc5466bc009602f0ecf067b9c65459abfe8868ddc49b78e6ced7a92",
+        ".git/hooks/pre-commit.sample": "57185b7b9f05239d7ab52db045f5b89eb31348d7b2177eab214f5eb872e1971b",
+        ".git/hooks/applypatch-msg.sample": "0223497a0b8b033aa58a3a521b8629869386cf7ab0e2f101963d328aa62193f7",
+        ".git/hooks/fsmonitor-watchman.sample": "e0549964e93897b519bd8e333c037e51fff0f88ba13e086a331592bf801fa1d0",
+        ".git/hooks/pre-receive.sample": "a4c3d2b9c7bb3fd8d1441c31bd4ee71a595d66b44fcf49ddb310252320169989",
+        ".git/hooks/prepare-commit-msg.sample": "e9ddcaa4189fddd25ed97fc8c789eca7b6ca16390b2392ae3276f0c8e1aa4619",
+        ".git/hooks/post-update.sample": "81765af2daef323061dcbc5e61fc16481cb74b3bac9ad8a174b186523586f6c5",
+        ".git/hooks/pre-merge-commit.sample": "d3825a70337940ebbd0a5c072984e13245920cdf8898bd225c8d27a6dfc9cb53",
+        ".git/hooks/pre-applypatch.sample": "e15c5b469ea3e0a695bea6f2c82bcf8e62821074939ddd85b77e0007ff165475",
+        ".git/hooks/pre-push.sample": "ecce9c7e04d3f5dd9d8ada81753dd1d549a9634b26770042b58dda00217d086a",
+        ".git/hooks/update.sample": "8d5f2fa83e103cf08b57eaa67521df9194f45cbdbcb37da52ad586097a14d106",
+        ".git/hooks/push-to-checkout.sample": "a53d0741798b287c6dd7afa64aee473f305e65d3f49463bb9d7408ec3b12bf5f"
+      },
+      "contentHashesMatched": true,
+      "cacheOutsideBusiness": true,
+      "gitHasHead": false
+    }
+  },
+  "newSupportedConditions": [
+    "routing:R4-A1",
+    "routing:R4-A2",
+    "routing:R4-V2",
+    "routing:R2-A4",
+    "channel:7-V2"
+  ],
+  "newSupersededConditions": [
+    "channel:7-A1"
+  ],
+  "stillUnverified": [
+    "routing:R3-V3"
+  ],
+  "limits": [
+    "Natural session offered delegation and waited, but did not primarily recommend it; do not certify the stronger active recommendation condition.",
+    "Raw native transcripts contain private global instructions and remain local; only minimal safe extracts and hashes are recorded.",
+    "One-off controlled samples, not permanent regression or all host and sandbox configurations.",
+    "Historical completion and approval remain unknown for all 119 original entries.",
+    "No runtime changes, installs, commits, pushes or releases."
+  ],
+  "checker": {
+    "archive": "docs/verification/2026-10-08-bulk-closeout.py.txt",
+    "sha256": "6d0b4dc11aa8fe9180de74637a85513776a6aab1d61ee879e25fba31150c7542"
+  }
+}

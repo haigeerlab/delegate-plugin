@@ -1,15 +1,24 @@
 # Capability map: delegate
 
-[简体中文](../../capability-map.md) | English
+[简体中文](../../spec/CAPABILITY-MAP.md) | English
 
-Repair contract dated 2026-10-08, based on user-confirmed scope; early task records remain historical evidence.
-An independent marketplace supporting only Codex CLI, without dependencies on spec-guard or agent-skills.
+## Goal
 
-| Module | Responsibility | Dependency |
+Delegate settled execution and investigation to Codex CLI, separate process logs, and return the final answer with Git evidence for writes. This independent marketplace supports only Codex CLI; runtime does not depend on Spec Guard or agent-skills.
+
+The project adoption scope confirmed on 2026-10-08 standardizes file locations. See the [historical archive](../archive/pre-spec-guard/README.md). This confirmation does not retroactively approve earlier module gates.
+
+## Modules
+
+| Module id | Responsibility | Depends on |
 |---|---|---|
-| channel | Invocation options, read/write sandboxes, process-group deadline and cleanup, log separation, Git evidence | Shared backend readiness checks |
-| detection | CLI checks, identity-bound cache, atomic writes, silent degradation, doctor | Shared backend readiness checks |
-| routing | Inject facts and confirmation requirements; skill supplies task criteria | Detection cache; channel executes after confirmation |
+| channel | Invocation options, read/write sandboxes, process-group deadline and cleanup, log separation, Git evidence | — |
+| detection | CLI checks, identity-bound cache, atomic writes, silent degradation, doctor | — |
+| routing | Inject facts and confirmation requirements; skill supplies task criteria | channel, detection |
+
+Build order: channel → detection → routing
+
+channel and detection share `backend.py`; this shared code is not a separate module dependency. routing consumes detection cache and uses channel after confirmation. The build order preserves the existing implementation sequence without adding runtime responsibilities.
 
 ```text
 backend.py → codex-exec.sh → run_codex.py → codex exec

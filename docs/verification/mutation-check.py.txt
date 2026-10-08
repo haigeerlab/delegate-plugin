@@ -1,0 +1,82 @@
+from pathlib import Path
+import subprocess,tempfile,shutil,os,json,hashlib,time,re
+root=Path.cwd();base='56c3ba76f1059f929bc908c0e45469abc623859a'
+results=[]
+def run(command,cwd,env,timeout=240):
+ start=time.monotonic();p=subprocess.run(command,cwd=cwd,env=env,stdin=subprocess.DEVNULL,text=True,capture_output=True,timeout=timeout)
+ output=p.stdout+p.stderr
+ return {'exit':p.returncode,'seconds':round(time.monotonic()-start,3),'output':output,'outputSha256':hashlib.sha256(output.encode()).hexdigest()}
+def snapshot(folder):
+ result={}
+ for p in sorted(folder.rglob('*')):
+  st=p.lstat();entry={'mode':st.st_mode & 0o777,'mtimeNs':st.st_mtime_ns}
+  if p.is_symlink():entry.update(type='symlink',target=os.readlink(p))
+  elif p.is_file():entry.update(type='file',sha256=hashlib.sha256(p.read_bytes()).hexdigest(),size=st.st_size)
+  else:entry.update(type='directory')
+  result[str(p.relative_to(folder))]=entry
+ return result
+with tempfile.TemporaryDirectory(prefix='delegate-mutation.',dir='/private/tmp') as work:
+ work=Path(work);copy=work/'source';copy.mkdir()
+ for directory in ['plugins','scripts','evals','.claude-plugin']:
+  shutil.copytree(root/directory,copy/directory,ignore=shutil.ignore_patterns('__pycache__','*.pyc'))
+ for filename in ['README.md','README.en.md','LICENSE']:
+  shutil.copy2(root/filename,copy/filename)
+ env=os.environ.copy()
+ for name in ['OPENAI_API_KEY','CODEX_API_KEY','CODEX_AUTH_FILE','CODEX_AGENTS_FILE','STUB_CALL_LOG','STUB_LOGIN_EXIT','STUB_LOGIN_OUTPUT','STUB_VERSION_EXIT']:
+  env.pop(name,None)
+ for name,folder in [('HOME','home'),('CODEX_HOME','codex-home'),('TMPDIR','tmp')]:
+  path=work/folder;path.mkdir();env[name]=str(path)
+ binpath=work/'bin';binpath.mkdir();(binpath/'codex').symlink_to(copy/'plugins/delegate/tests/stub-codex')
+ auth=work/'stub-auth.json';auth.write_text('{}\n')
+ env.update(PYTHONDONTWRITEBYTECODE='1',PATH=str(binpath)+':/usr/bin:/bin',GIT_OPTIONAL_LOCKS='0',CODEX_AUTH_FILE=str(auth),STUB_CALL_LOG=str(work/'fallback.argv'))
+ suites={'validate':['/bin/bash','scripts/validate.sh'],'detection':['/bin/bash','plugins/delegate/tests/test-detection.sh'],'routing':['/bin/bash','plugins/delegate/tests/test-routing.sh']}
+ baselines={}
+ for name in ['validate','detection','routing']:
+  baselines[name]=run(suites[name],copy,env)
+  assert baselines[name]['exit']==0,(name,baselines[name]['output'])
+  print('BASELINE '+name+' PASS',flush=True)
+ mutants=[
+ ('MUT-01-multibyte-variable','channel',['channel:1-A3','channel:1-V2'],'validate','plugins/delegate/hooks/route.sh',None,'\n# MUTATION: $VAR中文\n','bare variable directly before multibyte text'),
+ ('MUT-02-unavailable-detection-output','detection',['detection:D1-V3'],'detection','plugins/delegate/hooks/detect.py',"elif mode not in ('--session-start', '--warm') and data['available']:","elif mode not in ('--session-start', '--warm'):",'FAIL: 10：'),
+ ('MUT-03-skip-version-probe','detection',['detection:D2-V2'],'detection','plugins/delegate/scripts/backend.py',"version_status, _ = probe_cli([codex, '--version'], env)","version_status = 0  # deliberately accept presence alone",'FAIL: 4：'),
+ ('MUT-04-never-expire-cache','detection',['detection:D3-V2'],'detection','plugins/delegate/hooks/detect.py','or not 0 <= age <= TTL_SECONDS or', 'or not 0 <= age or','FAIL: 8：'),
+ ('MUT-05-extra-plain-text','detection',['detection:D4-V2'],'detection','plugins/delegate/hooks/detect.py',"print(json.dumps({'hookSpecificOutput':", "print('MUTATION unexpected non-JSON output')\n        print(json.dumps({'hookSpecificOutput':",'FAIL: 11：'),
+ ('MUT-06-doctor-false-alarm','detection',['detection:D5-V3'],'detection','plugins/delegate/hooks/doctor.sh','if [ "${ORCHESTRATION}" -eq 0 ]; then','if false; then','FAIL: 14：'),
+ ('MUT-07-unavailable-routing-output','routing',['routing:R1-V2'],'routing','plugins/delegate/hooks/route.sh',"if cache and cache['available']:",'if cache:','FAIL: R1：'),
+ ('MUT-08-cross-confirmation-gate','routing',['routing:R1-V3'],'routing','plugins/delegate/hooks/route.sh','等用户确认后再调','我这就派','FAIL: R4：'),
+ ('MUT-09-remove-auto-ban','routing',['routing:R2-V2'],'routing','plugins/delegate/skills/delegate-routing/SKILL.md','绝不自动派：只提议，等用户一个明确的肯定答复再调。','MUTATION 自动派禁令已删除','FAIL: R8：')]
+ for rid,module,entries,suite,file,old,new,expected in mutants:
+  p=copy/file;original=p.read_bytes();text=original.decode()
+  if old is None:changed=text+new
+  else:
+   assert text.count(old)==1,(rid,text.count(old));changed=text.replace(old,new,1)
+  try:
+   p.write_text(changed);bad=run(suites[suite],copy,env)
+  finally:p.write_bytes(original)
+  restored=run(suites[suite],copy,env)
+  ok=bad['exit']!=0 and expected in bad['output'] and restored['exit']==0
+  results.append({'id':rid,'module':module,'entries':entries,'mutationFile':file,'change':{'old':old,'new':new},'expectedFailure':expected,'passed':ok,'baseline':baselines[suite],'mutant':bad,'restored':restored})
+  print(rid+(' KILLED; RESTORED PASS' if ok else ' CHECK FAILED'),flush=True)
+ business=work/'business';business.mkdir();(business/'README.md').write_text('Controlled business repository\n');(business/'nested').mkdir();(business/'nested/data.txt').write_text('unchanged\n')
+ initialized=run(['/usr/bin/git','init','-q'],business,env);assert initialized['exit']==0
+ footprintenv=env.copy();footprintenv.update(PATH=str(binpath)+':/usr/bin:/bin',CODEX_AUTH_FILE=str(auth),CLAUDE_PROJECT_DIR=str(business),STUB_CALL_LOG=str(work/'footprint.argv'))
+ before=snapshot(business);hookresults=[]
+ for command in [['/bin/bash',str(copy/'plugins/delegate/hooks/detect.sh'),'--session-start'],['/bin/bash',str(copy/'plugins/delegate/hooks/prompt.sh')],['/bin/bash',str(copy/'plugins/delegate/hooks/detect.sh')]]:
+  result=run(command,business,footprintenv)
+  # Store logical command; disposable local paths are not public evidence.
+  result['command']=['/bin/bash','plugins/delegate/hooks/'+Path(command[1]).name]+command[2:]
+  if result['output'].strip():
+   parsed=json.loads(result['output']);assert 'hookSpecificOutput' in parsed
+  assert result['exit']==0
+  hookresults.append(result)
+ after=snapshot(business);cache=Path(env['TMPDIR'])/'delegate/detection.json';assert cache.is_file()
+ zero={'id':'FOOTPRINT-01','entries':['detection:D3-V3'],'passed':before==after,'before':before,'after':after,'commands':hookresults,'cacheOutsideBusiness':True,'scope':'one isolated no-HEAD Git repository; content, modes, directory entries and mtimes including .git; read-access times excluded'}
+ print('FOOTPRINT '+('PASS' if zero['passed'] else 'FAIL'),flush=True)
+ # Replace disposable absolute directory in suite output; hashes are of raw captured bytes, not sanitized text.
+ for r in [*baselines.values(),*[v[k] for v in results for k in ['baseline','mutant','restored']],*zero['commands']]:
+  r['output']=r['output'].replace(str(work),'<fixture>')
+  r['outputHashScope']='raw captured stdout+stderr before temporary-path replacement'
+ source=subprocess.run(['git','diff','--exit-code',base,'--','plugins','scripts','evals','.claude-plugin','LICENSE'],cwd=root,text=True,capture_output=True)
+ payload={'date':'2026-10-08','sourceCommit':base,'scope':'9 controlled mutants covering 10 archived conditions, plus one business-directory snapshot; no product edits, real-host acceptance, or model calls','modelCalls':0,'cases':results,'footprint':zero,'passedMutants':sum(r['passed'] for r in results),'failedMutants':sum(not r['passed'] for r in results),'sourceUnchanged':source.returncode==0}
+ Path('<LOCAL_TMP>/delegate-mutation-results.json').write_text(json.dumps(payload,ensure_ascii=False,indent=2)+'\n')
+ assert payload['sourceUnchanged'] and payload['failedMutants']==0 and zero['passed']

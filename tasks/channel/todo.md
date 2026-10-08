@@ -1,183 +1,62 @@
-# Tasks: channel
+# 当前维护核对：channel
 
-历史归档：本文保留早期实现时的方案与勾选状态，部分命令、认证判据、性能或测试约定已过时。当前合同见 [模块规格](../../SPEC-channel.md)，使用入口见 [README](../../README.md)。本文不作为当前任务清单。
+- [x] Task 9：执行已授权的当前通道 live 样本，记录成功、失败或环境不可运行及证据。
 
-计划见 [`plan.md`](plan.md)。断言编号对应 [`../../SPEC-channel.md`](../../SPEC-channel.md) 的 Testing Strategy 表。
+Task 9 结果：既有 --live 入口退出 0，25 通过/0 失败，真实只读答复非空（3 字节）；产品快照不变，无自动重试。channel:8-A1/8-V1 取得当前样本依据，历史完成/批准仍未知。见[本批 live 证据](../../docs/verification/2026-10-08-live.md)。
 
----
+日期：2026-10-08。计划：[plan.md](plan.md)。只跟踪本次接入，不替代历史产品验收。
 
-## Task 1: 仓库骨架与校验器
+- [x] 当前规格、模块映射及中英文链接核对通过。
+- [x] 接入前 plan/todo 已按字节归档，SHA-256 与 `56c3ba7` 一致。
+- [x] 本轮插件结构、阶段及相关确定性验证通过，结果已记录。
 
-**Description:** 建 marketplace 清单、插件清单、`scripts/validate.sh`。让「跑一条命令就知道仓库没坏」这件事从第一天就成立。
+## 实际记录
 
-**Acceptance criteria:**
-- [ ] `.claude-plugin/marketplace.json` 与 `plugins/delegate/.claude-plugin/plugin.json` 均为合法 JSON，含 `version`
-- [ ] `validate.sh` 检查：JSON 语法、所有 `.sh` 的 `bash -n`、可执行位、`${VAR}` 写法（不许 `$VAR` 紧跟多字节）、不许 `cmd | grep -q`
-- [ ] 喂一个已知坏输入（故意写 `$VAR中文`）时 `validate.sh` 非零退出
+归档：运行本轮归档核验，逐字节比较基准提交与存档，并验证 manifest 中 SHA-256；本模块两份原文均一致。
+本轮核对：Spec Guard 0.52.3 严格能力图解析成功，产物检查为 3 通过、0 警告、0 失败；完成项写入前阶段为 BUILDING。
+`PYTHONDONTWRITEBYTECODE=1 /bin/bash scripts/validate.sh` 退出 0；本模块 24 条 shell 断言通过；统一 backend 10 与 channel-regressions 7 个 Python 测试通过，eval 自检 7 + 12 通过。
+迁移规格正文与命令围栏核对一致（仅导航链接调整）；Markdown 文件链接和锚点核对通过。当前清单完成后的阶段另在最终报告核验。
+两项原生 `claude plugin validate` 通过。完整本轮记录见 [接入任务](../../docs/process/2026-10-08-adoption/todo.md)。
 
-**Verification:**
-- [ ] `/bin/bash scripts/validate.sh` 退出 0
-- [ ] 手工注入坏输入后退出非 0，还原后回到 0
+## 未验证项
 
-**Dependencies:** None
-**Files:** `.claude-plugin/marketplace.json`, `plugins/delegate/.claude-plugin/plugin.json`, `scripts/validate.sh`
-**Scope:** S
+历史人工批准、旧清单各项当时的验收、真实交互行为及远端交付未核实。
+这些事实不因本轮归档、桩验证或阶段 `DONE` 被改成完成。
 
----
+## 内容补全任务（2026-10-08）
 
-## Task 2: codex 桩与断言套骨架
+- [x] Task 4：双语规格的开发约束齐备，原行为合同保留。
+  - 描述：按增补计划补齐中英文规格的开发约束，不改变原功能合同。
+  - 验收：六个核心领域完整；双语编号/命令/代码示例一致。
+  - 验证：标题、源代码片段、原正文保留核对。
+  - 依赖：初轮维护 1–3；涉及文件：本模块中英文 Spec；规模 S（2 文件）。
+  - 结果：文档内容检查退出 0；六领域/三级边界存在；两版新命令及源代码片段一致；原中英文行为正文完整保留。
+- [x] Task 5：条款到已有测试与缺口的映射齐备。
+  - 描述：把现有产品条款对应到测试和源码，明确尚未充分覆盖的条件。
+  - 验收：全部条款有映射行，测试引用存在，覆盖限制明确，plan 含逐任务字段。
+  - 验证：条款编号、源码与测试断言定向核对。
+  - 依赖：Task 4；涉及文件：本模块 plan、共享验证映射；规模 S（2 文件）。
+  - 结果：5 个 CH 条款与映射逐项对应；全表 13 行，16 个明确 Python 用例引用存在；缺口保持部分覆盖。plan Task 4–6 的六字段已核对。
+- [x] Task 6：本轮内容验收及实际证据已记录。
+  - 描述：核验本次文档及其证据，完成维护记录而不关闭历史未知。
+  - 验收：本轮完成项有证据，历史未知及产品覆盖缺口保持开放。
+  - 验证：文档链接/字段、插件结构/阶段、归档哈希、产品范围比较。
+  - 依赖：Task 5；涉及文件：本模块 todo；规模 S（1 文件）。
+  - 结果：文件链接/锚点、8 份归档和 30 份证据哈希均通过；verify-artifacts 为 3 通过/0 警告/0 失败；diff 空白及产品范围检查通过。新增 task 完成前阶段为 BUILDING；完成后的阶段由最终报告记入。既有产品测试沿用首轮真实离线结果，本次未重复运行。
 
-**Description:** 建 `stub-codex` 和 `test-channel.sh`。桩由环境变量驱动：最终答复内容、退出码、往 stdout 吐多少过程文本、是否消费 stdin。断言套用 PASS/FAIL 计数，末行打「总计 N 通过 / M 失败」。**这是后面每个任务的验收载体，必须先有。**
+- [x] Task 7：本模块历史裁决及免费补验记录齐备。
+  - 描述：逐条区分当前证据、合同替代和未验证，不回填历史勾选。
+  - 验收：全部原条目有来源/理由/证据；历史批准保持未知；样本限制明确。
+  - 验证：行号/文本/哈希、定向结果和产品范围核对。
+  - 依赖：Task 4–6；涉及文件：本模块 todo；规模 S（1 文件）。
+  - 结果：52 条：39 项当前证据支持、7 项合同替代、6 项仍待验证，逐项记录见[裁决](../../docs/verification/2026-10-08-historical-reconciliation.md)；SUP-01–06 的同组清理、日志权限/软链接及无 HEAD 样本通过，详见[定向补验](../../docs/verification/2026-10-08-supplemental.md)。历史完成/批准均未知；临时夹具不等于永久回归或完整宿主验收。
 
-**Acceptance criteria:**
-- [ ] 桩把收到的完整 argv 写进一个可断言的调用日志
-- [ ] 桩支持：`STUB_ANSWER` / `STUB_EXIT` / `STUB_STDOUT_BYTES` / `STUB_READ_STDIN`
-- [ ] 断言套能把 `PATH` 指向桩，且**不触网**
-- [ ] 空套跑出「总计 0 通过 / 0 失败」并退出 0
+- [x] Task 8：免费反向条件证据与当前裁决更新。
+  - 描述：临时副本变异/还原与定向记录，不改产品。
+  - 验收：指定断言抓住故意错误、还原通过；历史未知保留。
+  - 验证：本批正常/变异/还原、归档哈希和产品范围。
+  - 依赖：Task 7；涉及文件：本模块 todo；规模 S（1 文件）。
+  - 结果：MUT-01 抓住变量多字节错误，覆盖 2 条原条件；无变异和还原总套通过。工具范围取舍追到引入提交，但人工批准未知。见[本批证据](../../docs/verification/2026-10-08-mutation.md)。历史完成/批准保持未知，产品未改。
 
-**Verification:**
-- [ ] `/bin/bash plugins/delegate/tests/test-channel.sh` 退出 0
-- [ ] 手工让桩 `STUB_EXIT=3`，确认调用日志里记下了 argv
-
-**Dependencies:** T1
-**Files:** `plugins/delegate/tests/stub-codex`, `plugins/delegate/tests/test-channel.sh`
-**Scope:** S
-
----
-
-## Task 3: 最小可用调用（只读端到端）
-
-**Description:** `codex-exec.sh` 的第一版：接一个任务字符串，按四要素调用，过程输出落盘，只回最终答复。**本模块最高风险的部分，排在最前。**
-
-**Acceptance criteria:**
-- [ ] 调用含全部四要素：`env -u OPENAI_API_KEY`、`</dev/null`、`-o` + stdout 重定向、非交互 preamble
-- [ ] 断言 1：桩吐 100KB 到 stdout → 调用方拿到的 stdout **不含**那 100KB
-- [ ] 断言 2a（**反**）：`STUB_READ_STDIN=1` + stdin 是永不关闭的管道 + **不加** `</dev/null` → 桩阻塞
-      —— 这条先证明「测法能复现真故障」，否则 2b 是空断言
-- [ ] 断言 2b（**正**）：同样条件**加上** `</dev/null` → 桩在限时内完成
-- [ ] 断言 10：桩收到 `--sandbox read-only`
-- [ ] 断言 15/16：空任务或未知选项退出 **64**；以 `-` 开头的任务不被当成选项
-- [ ] 输出末尾回报日志路径与「过程 N 字节 / 答复 M 字节」
-
-**Verification:**
-- [ ] `test-channel.sh` 新增 7 条断言全绿
-- [ ] 断言 2a/2b 必须带超时上限，挂起要判失败而不是卡住套件
-- [ ] **断言必须在 `/bin/bash` 下跑**：zsh 的 MULTIOS 会把多个输入重定向**拼接**
-      而不是后者覆盖，在 zsh 里写这条会得出完全相反的结论（2026-08-29 实测踩到）
-
-**Dependencies:** T2
-**Files:** `plugins/delegate/scripts/codex-exec.sh`, `plugins/delegate/tests/test-channel.sh`
-**Scope:** M
-
----
-
-## Task 4: 失败路径要响
-
-**Description:** 四种静默失败是这个模块存在的全部理由。让它们每一种都退出非 0，并在 stderr 给出可执行的下一步。
-
-**Acceptance criteria:**
-- [ ] 断言 3：`codex` 存在但 `--version` 失败 → 退出 **127** + 提示 `npm install -g @openai/codex@latest`
-- [ ] 断言 4：`codex` 不在 PATH → 退出 127
-- [ ] 断言 5：桩退出非 0 → 脚本退出非 0，stderr 回显日志尾部与完整日志路径
-- [ ] 断言 6：桩退出 0 但答复文件为空 → **退出非 0**（不许把空当成功）
-
-**Verification:**
-- [ ] `test-channel.sh` 新增 4 条断言全绿
-- [x] 每条都同时断言退出码和 stderr 内容，不只断言其一
-      —— 实测证明这条是必要的：删掉 `command -v` 检查后退出码**仍是 127**
-      （bash 找不到命令本就返回 127），只验退出码的话断言 4 是空的
-
-**Dependencies:** T3
-**Files:** `plugins/delegate/scripts/codex-exec.sh`, `plugins/delegate/tests/test-channel.sh`
-**Scope:** S
-
----
-
-## Task 5: 模型与推理档透传
-
-**Description:** `--model` / `--effort`。重点是**无效 slug 必须硬失败**——静默退回默认会让 `--model` 变成一句谎话。
-
-**Acceptance criteria:**
-- [ ] 断言 8：`--model X --effort high` → 桩收到 `-m X` 和 `-c model_reasoning_effort="high"`
-- [ ] 断言 9：不传 → 桩**没有**收到 `-m`
-- [ ] 断言 7：桩模拟无效 slug 的 400 → 脚本退出非 0
-- [ ] 输出末尾回报实际使用的模型与推理档（不传时显示「配置默认」）
-- [ ] 空数组展开写成 `${ARR[@]+"${ARR[@]}"}`（bash 3.2）
-
-**Verification:**
-- [ ] `test-channel.sh` 新增 3 条断言全绿
-- [ ] `/bin/bash scripts/validate.sh` 通过（bash 3.2 静态检查）
-
-**Dependencies:** T4
-**Files:** `plugins/delegate/scripts/codex-exec.sh`, `plugins/delegate/tests/test-channel.sh`
-**Scope:** S
-
----
-
-## Task 6: `--write` 与 git 验收块
-
-**Description:** 唯一有副作用的路径。输出必须带一段调用方能据以验收的客观证据——**因为模型的自述不可信**（实测撞到过自述说改了而 `git status` 是空的）。
-
-**Acceptance criteria:**
-- [ ] 断言 11：`--write` → 桩收到 `--sandbox workspace-write`
-- [ ] 断言 12：git 仓库里 → 输出含基线 HEAD + `git status --short` + `git diff --stat`
-- [ ] 断言 13：**非** git 目录 → 明说拿不到 diff，**不伪造验收块**
-- [ ] 断言 14：跑前已有 N 个未提交变更 → 验收块把 N 报出来
-- [ ] 默认仍是只读；`--write` 必须显式
-
-**Verification:**
-- [ ] `test-channel.sh` 新增 4 条断言全绿，**19 条全绿**
-- [ ] `/bin/bash scripts/validate.sh` 通过
-
-**Dependencies:** T5
-**Files:** `plugins/delegate/scripts/codex-exec.sh`, `plugins/delegate/tests/test-channel.sh`
-**Scope:** M
-
----
-
-## Task 7: `/delegate` 命令与插件清单接线
-
-**Description:** 把通道接成可用的斜杠命令，并把边界纪律写进命令文档——那些纪律靠模型读文档执行，不是靠代码。
-
-**Acceptance criteria:**
-- [ ] `commands/delegate.md` 的 `allowed-tools` 只放 `Bash(<脚本路径> *)`
-- [ ] 文档写明：Bash timeout 设 600000；`--write` 必看验收块；**不要 `cat` 整个日志**
-- [ ] 文档写明 `--write` 需用户当轮明确要求，Claude 不得自行升级
-- [ ] `plugin.json` 正确声明 commands
-
-**Verification:**
-- [ ] `/bin/bash scripts/validate.sh` 通过（含清单一致性）
-- [ ] 装进 user scope 后 `/delegate` 能跑通一次真实委托
-
-**Dependencies:** T6
-**Files:** `plugins/delegate/commands/delegate.md`, `plugins/delegate/.claude-plugin/plugin.json`
-**Scope:** S
-
----
-
-## Task 8: `--live` 真跑冒烟
-
-**Description:** 桩验的是契约，`--live` 验的是契约**没和真 codex 漂移**。门控在 flag 后面，不进 `validate.sh`。
-
-**Acceptance criteria:**
-- [ ] `--live` 真调一次只读委托，答复非空
-- [ ] 断言日志/答复体量比 **≥ 40×**
-- [ ] 不带 `--live` 时这组被跳过且在输出里说明「跳过不代表通过」
-- [ ] 前置检查 `codex --version` 与 `auth.json`，缺任一则报「**没跑起来**」而不是「不通过」
-
-**Verification:**
-- [ ] `/bin/bash plugins/delegate/tests/test-channel.sh --live` 通过
-- [ ] 不带 flag 时套件仍全绿且明确标出跳过
-
-**Dependencies:** T7
-**Files:** `plugins/delegate/tests/test-channel.sh`
-**Scope:** S
-
----
-
-## Checkpoints
-
-- [x] **A（T1–T2）** `validate.sh` 通过；空套跑出总计行；桩可被环境变量驱动
-- [x] **B（T3–T4）** 只读委托端到端可用；100KB 过程输出不进 stdout；四种失败各自退非 0 且 stderr 有下一步 ← **最重要**
-- [x] **C（T5–T6）** 19 条断言全绿；`validate.sh` 通过
-- [x] **D（T7–T8）** `/delegate` 可用；`--live` 通过，体量比 ≥ 40×
+- [x] Task 10：当前 Bash 决定及已安装斜杠命令验收。
+  - 结果：当前用户批准以 ADR 记录，channel:7-A1 归为合同替代；原生 user-scope /delegate:delegate 实际解析，Bash timeout 600000，真实 read-only Codex 一次答复“批次验收通过”，18 字节 answer/5924 字节过程日志；夹具前后文件哈希相同。仅当前一次样本，历史批准仍未知。见[整批证据](../../docs/verification/2026-10-08-bulk.md)。

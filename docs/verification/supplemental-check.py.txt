@@ -1,0 +1,134 @@
+from pathlib import Path
+import os,sys,json,time,signal,subprocess,tempfile,importlib.util,copy,threading,concurrent.futures,stat,hashlib
+ROOT=Path.cwd();results=[]
+def record(name,fn):
+    t=time.monotonic()
+    try:
+        detail=fn();ok=True
+    except Exception as e:
+        detail={'error':str(e)};ok=False
+    results.append({'id':name,'passed':ok,'seconds':round(time.monotonic()-t,3),'detail':detail})
+    print(name+(': PASS' if ok else ': FAIL '+str(detail)),flush=True)
+def need(condition,msg):
+    if not condition:raise AssertionError(msg)
+STUB=r'''#!/usr/bin/env python3
+import sys,os,json,subprocess,time,signal
+from pathlib import Path
+args=sys.argv[1:]
+with open(os.environ['STUB_CALL_LOG'],'a') as f:f.write(json.dumps(args)+'\n')
+if args==['--version']:print('controlled stub');raise SystemExit(0)
+if args==['login','status']:print('Logged in using ChatGPT');raise SystemExit(0)
+if not args or args[0]!='exec':raise SystemExit(64)
+mode=os.environ.get('STUB_MODE','success')
+if mode in ('hang_child','normal_child'):
+    code="import signal,time;from pathlib import Path;signal.signal(signal.SIGTERM,signal.SIG_IGN);time.sleep(15);Path(%r).write_text('late')"%os.environ['STUB_MARKER']
+    child=subprocess.Popen([sys.executable,'-c',code])
+    Path(os.environ['STUB_CHILD_PID']).write_text(str(child.pid))
+    time.sleep(.15)
+Path(os.environ['STUB_READY']).write_text('ready')
+if mode=='hang_child':
+    signal.signal(signal.SIGTERM,signal.SIG_IGN)
+    while True:time.sleep(.05)
+Path(args[args.index('-o')+1]).write_text('stub answer')
+raise SystemExit(0)
+'''
+with tempfile.TemporaryDirectory(prefix='delegate-supplemental-',dir='/private/tmp') as temporary:
+    base=Path(temporary);binpath=base/'bin';binpath.mkdir();stub=binpath/'codex';stub.write_text(STUB);stub.chmod(0o755)
+    home=base/'home';home.mkdir();codexhome=base/'codex-home';codexhome.mkdir();tmpdir=base/'tmp';tmpdir.mkdir();repo=base/'project';repo.mkdir()
+    subprocess.run(['git','init','-q',str(repo)],check=True)
+    env=dict(os.environ,HOME=str(home),CODEX_HOME=str(codexhome),TMPDIR=str(tmpdir),PATH=str(binpath)+':'+str(Path(sys.executable).parent)+':/usr/bin:/bin',PYTHONDONTWRITEBYTECODE='1',STUB_CALL_LOG=str(base/'calls.jsonl'),STUB_READY=str(base/'ready'),STUB_CHILD_PID=str(base/'child.pid'),STUB_MARKER=str(base/'marker'),DELEGATE_TIMEOUT_SECONDS='10')
+    for key in ['OPENAI_API_KEY','CODEX_API_KEY','CODEX_AUTH_FILE','CODEX_AGENTS_FILE']:env.pop(key,None)
+    os.environ.update({k:env[k] for k in ['HOME','CODEX_HOME','TMPDIR','PATH','PYTHONDONTWRITEBYTECODE']})
+    wrapper=ROOT/'plugins/delegate/scripts/codex-exec.sh'
+    def run_wrapper(mode='success',write=False):
+        for name in ['ready','child.pid','marker']:(base/name).unlink(missing_ok=True)
+        e=dict(env,STUB_MODE=mode)
+        return subprocess.run(['/bin/bash',str(wrapper)]+(['--write'] if write else [])+['fixture'],cwd=repo,env=e,stdin=subprocess.DEVNULL,capture_output=True,text=True,timeout=12)
+    def child_stopped():
+        pid=int((base/'child.pid').read_text())
+        r=subprocess.run(['/bin/ps','-o','stat=','-p',str(pid)],capture_output=True,text=True)
+        return not r.stdout.strip() or r.stdout.lstrip().startswith('Z')
+    def signal_case(sig,status):
+        for name in ['ready','child.pid','marker']:(base/name).unlink(missing_ok=True)
+        proc=subprocess.Popen(['/bin/bash',str(wrapper),'fixture'],cwd=repo,env=dict(env,STUB_MODE='hang_child'),stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True,start_new_session=True)
+        try:
+            deadline=time.monotonic()+8
+            while not (base/'ready').exists() and time.monotonic()<deadline:time.sleep(.02)
+            need((base/'ready').exists(),'controlled exec did not start')
+            os.kill(proc.pid,sig);out,err=proc.communicate(timeout=8)
+            need(proc.returncode==status,f'expected {status}, got {proc.returncode}: '+err[-400:])
+            observation_end=time.monotonic()+16
+            while time.monotonic()<observation_end and not (base/'marker').exists():time.sleep(.05)
+            need(not (base/'marker').exists(),'descendant wrote after interruption')
+            return {'exit':proc.returncode,'lateMarker':False,'observationSeconds':16,'method':'delayed write observer, no ps'}
+        finally:
+            if proc.poll() is None:
+                os.killpg(proc.pid,signal.SIGKILL);proc.wait()
+    record('SUP-01-wrapper-INT',lambda:signal_case(signal.SIGINT,130))
+    record('SUP-02-wrapper-HUP',lambda:signal_case(signal.SIGHUP,129))
+    def normal_child():
+        r=run_wrapper('normal_child');need(r.returncode==0,r.stderr[-400:]);observation_end=time.monotonic()+16
+        while time.monotonic()<observation_end and not (base/'marker').exists():time.sleep(.05)
+        need(not (base/'marker').exists(),'descendant wrote after normal exit')
+        return {'exit':r.returncode,'lateMarker':False,'observationSeconds':16,'method':'delayed write observer, no ps'}
+    record('SUP-03-normal-exit-cleanup',normal_child)
+    def log_modes():
+        r=run_wrapper();need(r.returncode==0,r.stderr[-400:]);folder=tmpdir/'delegate';modes={p.suffix:stat.S_IMODE(p.stat().st_mode) for p in folder.iterdir() if p.suffix in ['.answer','.log']}
+        need(stat.S_IMODE(folder.stat().st_mode)==0o700,'directory not 0700');need(modes and all(v==0o600 for v in modes.values()),'files not 0600')
+        return {'directoryMode':'0700','filesMode':'0600','filesChecked':len(list(folder.iterdir()))}
+    record('SUP-04-log-permissions',log_modes)
+    def log_symlink():
+        isolated=base/'symlink-tmp';isolated.mkdir();target=base/'symlink-target';target.mkdir();(isolated/'delegate').symlink_to(target,target_is_directory=True)
+        calllog=base/'symlink.calls';r=subprocess.run(['/bin/bash',str(wrapper),'fixture'],cwd=repo,env=dict(env,TMPDIR=str(isolated),STUB_CALL_LOG=str(calllog),STUB_MODE='success'),capture_output=True,text=True,timeout=5)
+        need(r.returncode==1 and '软链接' in r.stderr,'log symlink not rejected');need(not list(target.iterdir()),'symlink target written');calls=[json.loads(s) for s in calllog.read_text().splitlines()];need(not any(c[0]=='exec' for c in calls),'exec called after symlink rejection')
+        return {'exit':r.returncode,'execCalls':0,'targetUntouched':True}
+    record('SUP-05-log-symlink',log_symlink)
+    def no_head():
+        r=run_wrapper(write=True);need(r.returncode==0,r.stderr[-400:]);need('尚无提交' in r.stdout and 'git 验收' in r.stdout,'no-HEAD acceptance missing')
+        return {'exit':r.returncode,'baseline':'尚无提交','gitAcceptance':True}
+    record('SUP-06-git-without-HEAD',no_head)
+    spec=importlib.util.spec_from_file_location('supplemental_detect',ROOT/'plugins/delegate/hooks/detect.py');detect=importlib.util.module_from_spec(spec);spec.loader.exec_module(detect)
+    cachefolder=base/'cache';cachefolder.mkdir();detect.CACHE_FILE=cachefolder/'delegate'/'detection.json'
+    valid={'available':True,'reason':'controlled sample','checkedAt':time.time(),'identity':detect.identity()}
+    def cache_modes():
+        need(detect.write_cache(valid),'cache write rejected');need(stat.S_IMODE(detect.CACHE_FILE.parent.stat().st_mode)==0o700,'cache dir mode');need(stat.S_IMODE(detect.CACHE_FILE.stat().st_mode)==0o600,'cache file mode')
+        return {'directoryMode':'0700','fileMode':'0600'}
+    record('SUP-07-cache-permissions',cache_modes)
+    def cache_symlink():
+        original=detect.CACHE_FILE;target=base/'cache-link-target';target.mkdir();parent=base/'cache-link';parent.symlink_to(target,target_is_directory=True)
+        try:
+            detect.CACHE_FILE=parent/'detection.json';need(detect.write_cache(valid) is False,'cache symlink accepted');need(not list(target.iterdir()),'cache target changed')
+        finally:detect.CACHE_FILE=original
+        return {'writeRejected':True,'targetUntouched':True}
+    record('SUP-08-cache-symlink',cache_symlink)
+    def invalid_cache(name,mutate):
+        data=copy.deepcopy(valid);mutate(data);detect.CACHE_FILE.write_text(json.dumps(data));need(detect.read_cache() is None,'invalid cache reused: '+name)
+        return {'invalidVariant':name,'reused':False}
+    variants=[('available-integer',lambda d:d.update(available=1)),('available-string',lambda d:d.update(available='yes')),('reason-integer',lambda d:d.update(reason=1)),('time-boolean',lambda d:d.update(checkedAt=True)),('time-null',lambda d:d.update(checkedAt=None)),('time-string',lambda d:d.update(checkedAt='now')),('time-nan',lambda d:d.update(checkedAt=float('nan'))),('time-future',lambda d:d.update(checkedAt=time.time()+3600)),('time-expired',lambda d:d.update(checkedAt=time.time()-28801)),('missing-identity',lambda d:d.pop('identity')),('identity-type',lambda d:d.update(identity='invalid'))]
+    for number,(name,fn) in enumerate(variants,9):record(f'SUP-{number:02d}-'+name,lambda name=name,fn=fn:invalid_cache(name,fn))
+    for number,key in enumerate(['codex','codexHome','pluginRoot','pluginVersion'],20):record(f'SUP-{number:02d}-identity-'+key,lambda key=key:invalid_cache(key,lambda d:d['identity'].update({key:'different-controlled-value'})))
+    def concurrent_cache():
+        need(detect.write_cache(valid),'initial cache write');failures=[];reads=0
+        def writer(number):
+            for i in range(30):
+                data=dict(valid,reason=f'writer-{number}-{i}',checkedAt=time.time())
+                if not detect.write_cache(data):failures.append('write failure')
+        with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+            jobs=[executor.submit(writer,n) for n in range(4)]
+            while not all(j.done() for j in jobs):
+                try:
+                    data=json.loads(detect.CACHE_FILE.read_text());need(data.get('available') is True,'invalid parsed cache');reads+=1
+                except Exception as e:failures.append(str(e))
+            for j in jobs:j.result()
+        need(not failures,str(failures[:3]));need(reads>0,'no concurrent reads');need(detect.read_cache() is not None,'final cache invalid')
+        return {'writers':4,'writes':120,'parsedReads':reads,'tornJson':0,'sampleOnly':True}
+    record('SUP-24-concurrent-cache',concurrent_cache)
+    for number,name in [(25,'propose-not-auto'),(26,'routing-fitness')]:
+        def scaffold(name=name):
+            r=subprocess.run(['/bin/bash',str(ROOT/'evals'/f'{name}.sh'),'--scaffold-only'],cwd=ROOT,env=env,capture_output=True,text=True,timeout=10)
+            need(r.returncode==0,r.stderr[-400:]);need('确实注入' in r.stdout,'scaffold output missing');return {'exit':r.returncode,'routeJsonChecked':True,'modelCalls':0}
+        record(f'SUP-{number:02d}-'+name+'-scaffold',scaffold)
+result={'date':'2026-10-08','sourceCommit':'56c3ba76f1059f929bc908c0e45469abc623859a','scope':'one-off controlled offline probes, not permanent regression tests or real-host acceptance','modelCalls':0,'cases':results,'passed':sum(c['passed'] for c in results),'failed':sum(not c['passed'] for c in results),'sourceUnchanged':subprocess.run(['git','diff','--exit-code','56c3ba7','--','plugins','scripts','evals','.claude-plugin','LICENSE'],stdout=subprocess.DEVNULL).returncode==0}
+Path('<LOCAL_TMP>/delegate-supplemental-results.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
+print(json.dumps({'passed':result['passed'],'failed':result['failed'],'sourceUnchanged':result['sourceUnchanged']}),flush=True)
+raise SystemExit(1 if result['failed'] else 0)

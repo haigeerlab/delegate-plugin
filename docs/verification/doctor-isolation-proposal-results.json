@@ -1,0 +1,24 @@
+{
+  "scope": "proposed test-only patch, applied and checked only in temporary copies",
+  "patch": "docs/verification/doctor-isolation-proposal.patch.txt",
+  "checks": [
+    {
+      "case": "no-outer-codex",
+      "exit": 0,
+      "summary": "总计 19 通过 / 0 失败",
+      "failures": []
+    },
+    {
+      "case": "outer-codex-rejects-login",
+      "exit": 0,
+      "summary": "总计 19 通过 / 0 失败",
+      "failures": []
+    }
+  ],
+  "appliedToRepository": false,
+  "patchSha256": "b0ee39e9d7fe3a5655ddc5e5fb802e3d26c45c8389d5dd82f64a08e40f51e3e1",
+  "checkerArchive": "docs/verification/doctor-isolation-proposal.py.txt",
+  "checkerSha256": "bd4d9f62ee7dbea81b79b4f5ebceb657de53467fa66b913fe65469ba179fb28e",
+  "date": "2026-10-08",
+  "sourceCommit": "56c3ba76f1059f929bc908c0e45469abc623859a"
+}

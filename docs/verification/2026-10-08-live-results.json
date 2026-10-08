@@ -1,0 +1,171 @@
+{
+  "date": "2026-10-08",
+  "baseCommit": "56c3ba76f1059f929bc908c0e45469abc623859a",
+  "uncommitted": true,
+  "authorization": {
+    "userReply": "继续推进",
+    "scope": "previous concrete request: one Codex channel live and two Claude routing group CLI invocations, no automatic retry; evidence update only"
+  },
+  "cliInvocationsAttempted": 3,
+  "codexSuccessfulRealAnswerSamples": 1,
+  "claudeSuccessfulModelJudgmentSamples": 0,
+  "remoteRequestAndBillingTotals": "unknown; CLI attempts are not evidence of billable model completion",
+  "automaticRetries": 0,
+  "sourceSnapshot": {
+    "plugins/delegate/LICENSE": "d8e4560e8f9c35d52ccc96de8ec8d38345852f277ec4683ef56a142f2e5e4b62",
+    "plugins/delegate/tests/test-backend.py": "a981949d849e31835fddf3c965133dfb70f933891d70c3234b0b4c522dce7f04",
+    "plugins/delegate/tests/test-routing.sh": "0e7ff4b2d51615d726c73d2f6f67ae3fd1c2dff739112e3d9dda863876653eef",
+    "plugins/delegate/tests/stub-codex": "8dc61a9b8b3a10cba2d8cf6515d67f3d01ade152a169b16c5b212bd66b3d6975",
+    "plugins/delegate/tests/test-channel-regressions.py": "9ad02c3e8a6e53866cbecab3773b2dcd954bbcc83088e91fdf0e43efd1cc9005",
+    "plugins/delegate/tests/test-channel.sh": "c9eaaf272e118ceedd3b350d71f7b7c98acace81a48651038619bdbc1e566f02",
+    "plugins/delegate/tests/test-detection.sh": "9e98791e54586f76ad6ba321689d17b46ed429e9261532ba8fa5f39d6386980b",
+    "plugins/delegate/hooks/prompt.sh": "0740361f811c048dcd6ed715920deb5c63b24577718fc3b01b91a5009fcf6027",
+    "plugins/delegate/hooks/doctor.sh": "ab206f2ad5bbe1e6e3ee31638d9d0eb2f58c6469c321e4892be2d16eda179bf5",
+    "plugins/delegate/hooks/detect.sh": "acf85d86cfabf2380bc55792c2b45b3d26ffd0c24c41ec59adc692a23cc3d33d",
+    "plugins/delegate/hooks/hooks.json": "822d1fed0b4febdfcc46ac17db2c832ba38d48e842aad69a32db7ecf78ab7483",
+    "plugins/delegate/hooks/route.sh": "518911694a0d308090387e5c5d76472841849fe519468463235190faa12101f5",
+    "plugins/delegate/hooks/detect.py": "18d2436079e01dca7af4f06b39c38ee2f03bf1ecc91b90898acb6128a54ab0e9",
+    "plugins/delegate/scripts/codex-exec.sh": "cdc0392b917ef7815abfc243f9ce987a7a67fa2512336bcd09db116754a46dec",
+    "plugins/delegate/scripts/backend.py": "5862704d46bf565dcb4be7f3e1d6959a3a46c9ad3052d0854722ae9a7ac036db",
+    "plugins/delegate/scripts/run_codex.py": "ba4d0b29338e0b8756b4f1a920e6ef8877a058b42f1c28a44e8da3cc56e432d7",
+    "plugins/delegate/.claude-plugin/plugin.json": "f17b6c5be85f264b6a6e55e0acb16780fed0a42f214e6580f9b47e17547137f4",
+    "plugins/delegate/commands/doctor.md": "d05026b0ee276eb2d1a3406d5798f8ed778d584d2ae4195c3e3df696e05fdd0e",
+    "plugins/delegate/commands/help.md": "1100ba609955f646ba5bf908001835eb5d4dfd455811a628c6c67492383c472a",
+    "plugins/delegate/commands/delegate.md": "a5b36f9942e65c891901cdd26da729590461cd4bd89cca1aeee5b9ddd63144ba",
+    "plugins/delegate/skills/delegate-routing/SKILL.md": "3b47cec2483dbeece36d78f530db32c3e09dfa6d67c12b69c63de34cc6d12bf2",
+    "evals/propose-not-auto.sh": "ba9f5251aec405a721bceb7f245a551cd2b9db248ce2bd516b22580e15279446",
+    "evals/_preflight.sh": "3a32e7ac8caf9370aa5b1b0526201299ea39fb2542c38634ef3b41318a406187",
+    "evals/routing-fitness.sh": "aa90ba85060e2f7122dd8b25db2534352b491ee2f5023bf2a475a4a40b343ac0"
+  },
+  "sourceUnchanged": true,
+  "channel": {
+    "mode": "channel",
+    "command": [
+      "/bin/bash",
+      "plugins/delegate/tests/test-channel.sh",
+      "--live"
+    ],
+    "exit": 0,
+    "elapsedSeconds": 23.53,
+    "preflight": {
+      "codex-basic": {
+        "exit": 0,
+        "stdoutSha256": "0c1d5a77d0e685f1011e0dd4cbdd7fa80617f9bb3bcdddcf8c34877b657dc6cc",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "claude-source": {
+        "exit": 0,
+        "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "sourceUnchanged": true,
+    "stdoutSha256": "6cb795e984673fcbbc3474147896bf28cb2cf5906d6d8197029948c534bd7d8e",
+    "stderrSha256": "93a37c233546905d93d4a925a4d6cc17d0dce810d280960e5c41604464949898",
+    "automaticRetries": 0,
+    "modelCliInvocations": 1,
+    "nonemptyRealAnswerAssertionPassed": true,
+    "liveArtifactAssertionFailed": false,
+    "suiteSummary": [
+      "LIVE 观察：过程日志 3532 字节；最终答复 3 字节（体量比不是通过判据）。",
+      "  总计 25 通过 / 0 失败"
+    ]
+  },
+  "routing": {
+    "mode": "routing",
+    "command": [
+      "/bin/bash",
+      "evals/routing-fitness.sh"
+    ],
+    "exit": 2,
+    "elapsedSeconds": 9.85,
+    "preflight": {
+      "codex-basic": {
+        "exit": 0,
+        "stdoutSha256": "0c1d5a77d0e685f1011e0dd4cbdd7fa80617f9bb3bcdddcf8c34877b657dc6cc",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "claude-source": {
+        "exit": 0,
+        "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "sourceUnchanged": true,
+    "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stderrSha256": "f5425601b7d8d0e7704917177a9503fe4bc4002c5248546d4f27c6e152162def",
+    "automaticRetries": 0,
+    "modelCliInvocations": 2,
+    "judgeSummary": [],
+    "groups": {
+      "treatment": {
+        "transcript.txt": {
+          "present": true,
+          "bytes": 73,
+          "sha256": "8cc9b1270cb50388fd8e797f7bf4124c7cda06210809fdb4ea99cc0ec80383de",
+          "firstNonemptyLine": "Failed to authenticate: OAuth session expired and could not be refreshed"
+        },
+        "codex.calls": {
+          "present": true,
+          "bytes": 35,
+          "sha256": "1bf7f751ce849b45c83ae85ce5df98279971335206ce906eb0ffaf131250454b",
+          "execLines": 0
+        },
+        "claude.stderr": {
+          "present": true,
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "control": {
+        "transcript.txt": {
+          "present": true,
+          "bytes": 73,
+          "sha256": "8cc9b1270cb50388fd8e797f7bf4124c7cda06210809fdb4ea99cc0ec80383de",
+          "firstNonemptyLine": "Failed to authenticate: OAuth session expired and could not be refreshed"
+        },
+        "codex.calls": {
+          "present": true,
+          "bytes": 35,
+          "sha256": "1bf7f751ce849b45c83ae85ce5df98279971335206ce906eb0ffaf131250454b",
+          "execLines": 0
+        },
+        "claude.stderr": {
+          "present": true,
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      }
+    }
+  },
+  "sanitizedOutputs": {
+    "channel.stdout": {
+      "rawSha256": "6cb795e984673fcbbc3474147896bf28cb2cf5906d6d8197029948c534bd7d8e",
+      "text": "PASS: 1：100KB 过程输出未进入调用方 stdout\nPASS: 2a：直接调用桩在永不关闭 stdin 下未完成\nPASS: 2b：wrapper 在永不关闭 stdin 下限时内完成\nPASS: 10：桩收到 --sandbox read-only\nPASS: 15a：不给任务退出 64\nPASS: 15b：未知选项退出 64\nPASS: 16：-- 后以 - 开头的任务正常执行\nPASS: 3：--version 失败退出 127 并提示安装命令\nPASS: 4：codex 不在 PATH 时退出 127 并说明原因\nPASS: 5：exec 失败退出原码并回显日志尾部和路径\nPASS: 6：空答复退出非 0 并说明产出为空\nPASS: 8：--model 与 --effort 同时透传给 exec\nPASS: 9：未传模型与推理档时不覆盖配置默认值\nPASS: 7：无效模型失败时不删除 -m 重试\nPASS: 9b：--model 缺少值退出 64\nPASS: 11：--write 使用 workspace-write，且任务不含只读 preamble\nPASS: 12：git 仓库输出基线 HEAD、status 与 diff 验收段\nPASS: 13：非 Git 目录退出 64，且未调用 exec\nPASS: 14：写模式验收块报告跑前 2 个未提交变更\nPASS: C20：过程日志目录最多保留最近 50 个 .log\nPASS: C21：按修改时间最新的过程日志仍被保留\nPASS: C22：日志目录不可写不影响委托成功\nPASS: C23：2 秒超时中止并报告完整日志路径\nPASS: C24：30 秒超时上限不影响正常调用\nPASS: LIVE：真实只读委托答复非空\nLIVE 观察：过程日志 3532 字节；最终答复 3 字节（体量比不是通过判据）。\n  总计 25 通过 / 0 失败\n"
+    },
+    "channel.stderr": {
+      "rawSha256": "93a37c233546905d93d4a925a4d6cc17d0dce810d280960e5c41604464949898",
+      "text": "plugins/delegate/tests/test-channel.sh: line 421:  3083 Done                    ( sleep 10 ) 2> /dev/null\n      3084 Terminated: 15          | STUB_CALL_LOG=\"${CALL_LOG}\" STUB_ANSWER='直接调用答复' STUB_READ_STDIN=1 codex exec -o \"${ANSWER}\" -- '读取 stdin' > \"${TEST_TMPDIR}/two-a.stdout\" 2> \"${TEST_TMPDIR}/two-a.stderr\"\n"
+    },
+    "routing.stdout": {
+      "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "text": ""
+    },
+    "routing.stderr": {
+      "rawSha256": "f5425601b7d8d0e7704917177a9503fe4bc4002c5248546d4f27c6e152162def",
+      "text": "NORUN: 任一 claude -p 没有成功产出 transcript\n"
+    }
+  },
+  "limits": [
+    "Current sample proof only; historical completion and approval remain unknown.",
+    "Channel suite removes its temporary live logs/answer on exit; their nonempty/size facts are proved by the saved suite output, not archived full log/answer hashes.",
+    "Routing group transcripts contain authentication errors, not model judgments; exit 2 is NORUN, not a product FAIL.",
+    "No actual user-scope slash command, automatic skill match, interactive proposal, or exhaustive real sandbox acceptance."
+  ],
+  "checker": {
+    "rawToolSha256": "fd64eb092cc707cc056c3ec696d38107f0ed2260aa62ce8cb8a44dbf88354f5d",
+    "archive": "docs/verification/live-batch-check.py.txt",
+    "archiveSha256": "303c5e75540c9bc3f9b17919671bd2f87655dfcb679c7992f6626234feca14f8",
+    "archiveTransformation": "Replace fixed personal repository path with Path.cwd(); run from repository root. All other source preserved."
+  }
+}

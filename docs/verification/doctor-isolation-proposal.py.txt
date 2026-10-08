@@ -1,0 +1,34 @@
+from pathlib import Path
+import tempfile,shutil,subprocess,os,difflib,json
+root=Path.cwd();file='plugins/delegate/tests/test-detection.sh';original=(root/file).read_text()
+needle='# 10：没有 codex 时 hook 必须静默成功，且 stdout 完全为空。'
+helper='''# 规则检查必须用本套受控 CLI；不要继承作者的安装或登录环境。
+run_doctor() {
+  PATH="${TEST_BIN}:/usr/bin:/bin" CODEX_AUTH_FILE="${AUTH_FILE}" \\
+    STUB_CALL_LOG="${TEST_TMPDIR}/doctor.argv" STUB_VERSION_EXIT=0 \\
+    STUB_LOGIN_EXIT=0 STUB_LOGIN_TEXT='Logged in using ChatGPT' "${DOCTOR_SCRIPT}"
+}
+
+'''
+changed=original.replace(needle,helper+needle,1)
+assert changed.count('"${DOCTOR_SCRIPT}" 2>')==4
+changed=changed.replace('"${DOCTOR_SCRIPT}" 2>','run_doctor 2>')
+patch=''.join(difflib.unified_diff(original.splitlines(True),changed.splitlines(True),fromfile='a/'+file,tofile='b/'+file))
+Path('<LOCAL_TMP>/delegate-doctor-isolation.patch').write_text(patch)
+results=[]
+with tempfile.TemporaryDirectory(prefix='delegate-isolation-proposal.',dir='/private/tmp') as tmp:
+ tmp=Path(tmp);source=tmp/'source';shutil.copytree(root/'plugins',source/'plugins',ignore=shutil.ignore_patterns('__pycache__'))
+ (source/file).write_text(changed)
+ for case in ['no-outer-codex','outer-codex-rejects-login']:
+  folder=tmp/case;folder.mkdir();env=os.environ.copy()
+  for key in ['OPENAI_API_KEY','CODEX_API_KEY','CODEX_AUTH_FILE','CODEX_AGENTS_FILE','STUB_CALL_LOG','STUB_LOGIN_TEXT','STUB_LOGIN_EXIT','STUB_VERSION_EXIT']:env.pop(key,None)
+  for key in ['HOME','CODEX_HOME','TMPDIR']:
+   directory=folder/key;directory.mkdir();env[key]=str(directory)
+  env.update(PATH='/usr/bin:/bin',PYTHONDONTWRITEBYTECODE='1')
+  if case=='outer-codex-rejects-login':
+   bindir=folder/'bin';bindir.mkdir();fake=bindir/'codex';fake.write_text('#!/bin/bash\nif [ "${1:-}" = --version ]; then echo fake; exit 0; fi\necho "Logged in using an API key (synthetic)"\nexit 1\n');fake.chmod(0o755);env['PATH']=str(bindir)+':/usr/bin:/bin'
+  r=subprocess.run(['/bin/bash',file],cwd=source,env=env,text=True,capture_output=True,timeout=120)
+  result={'case':case,'exit':r.returncode,'summary':next((line.strip() for line in r.stdout.splitlines() if '总计' in line),None),'failures':[line for line in (r.stdout+r.stderr).splitlines() if line.startswith('FAIL:')]}
+  results.append(result);print(json.dumps(result,ensure_ascii=False),flush=True)
+  assert r.returncode==0 and '19 通过 / 0 失败' in result['summary']
+Path('<LOCAL_TMP>/delegate-doctor-isolation-proposal-results.json').write_text(json.dumps({'scope':'proposed test-only patch, applied and checked only in temporary copies','patch':'<LOCAL_TMP>/delegate-doctor-isolation.patch','checks':results,'appliedToRepository':False},ensure_ascii=False,indent=2)+'\n')

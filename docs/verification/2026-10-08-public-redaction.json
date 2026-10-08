@@ -1,0 +1,217 @@
+{
+  "date": "2026-10-08",
+  "purpose": "public derivatives of local evidence; not new execution or historical approval",
+  "sourceCommit": "209ba9ba85893d470ea3d77b57def395650fefa1",
+  "derivatives": [
+    {
+      "path": "docs/process/2026-10-08-adoption/bulk-verification.json",
+      "originalSha256": "a61f3263bacf61c299e10275cf176b2f87a3bab6393a818fd20eac4967244f5f",
+      "publicSha256": "bea48346ec6ab8303d839284ba653eb7be5d35d220fca5611615b4d01d53cd7c",
+      "redactions": [
+        "home_path"
+      ],
+      "originalRetainedLocally": true
+    },
+    {
+      "path": "docs/process/2026-10-08-adoption/evidence-closeout-verification.json",
+      "originalSha256": "72e59ecc4a6c4f4a2e25bb1d816bd4c33a3a3b2825aa0792a7ac15163141af80",
+      "publicSha256": "500d7f3a8f6bcd37f96d8f0b800a9ec66a2ee12263eda8edba4412f42327c566",
+      "redactions": [
+        "home_path"
+      ],
+      "originalRetainedLocally": true
+    },
+    {
+      "path": "docs/process/2026-10-08-adoption/f8-verification.json",
+      "originalSha256": "70c6cf10955bb3975957c5a13d15a554f096d1176ee1efd5e48c7539ed6f5c8a",
+      "publicSha256": "77359f273cad2bd5103c9b6d97672d1839a23ab1a8e1f4ff095a7840294e6fc8",
+      "redactions": [
+        "home_path"
+      ],
+      "originalRetainedLocally": true
+    },
+    {
+      "path": "docs/process/2026-10-08-adoption/live-verification.json",
+      "originalSha256": "0371ae672bfb8c040d17f8c316c7c824a7c9d3d449df568862300ea0d94d9b06",
+      "publicSha256": "454b513ab5ba7c11bea863288ff80cae576dfa9df89217209cf6f4cd54b37a7f",
+      "redactions": [
+        "home_path"
+      ],
+      "originalRetainedLocally": true
+    },
+    {
+      "path": "docs/process/2026-10-08-adoption/mutation-verification.json",
+      "originalSha256": "0f4923dd3501d2ad2fc2209493f1d26d87a701a04ec8b3c591fba2406e69163c",
+      "publicSha256": "45150243beebbd12aa356b225f86729869dcee0b99e6064fb707c786f12f1530",
+      "redactions": [
+        "home_path"
+      ],
+      "originalRetainedLocally": true
+    },
+    {
+      "path": "docs/process/2026-10-08-adoption/plan.md",
+      "originalSha256": "b7b55ab08cb3ded58cb28d4ded30a083f8f40da799ebafc67562af9dc6deb444",
+      "publicSha256": "062e53d37b4cd5935ef5151fa3aad7aee701a6d4dea8cf6946198a418dadfee6",
+      "redactions": [
+        "home_path"
+      ],
+      "originalRetainedLocally": true
+    },
+    {
+      "path": "docs/process/2026-10-08-adoption/proposal-preparation-verification.json",
+      "originalSha256": "731ab8baa2b6d1b2241a9076cb800e6a06675c2a45335b60c015e47b9a902267",
+      "publicSha256": "43e12cda25b89214f3c1cdb16376bfaa62fd5e09e66356a22ced264dfca8d416",
+      "redactions": [
+        "home_path"
+      ],
+      "originalRetainedLocally": true
+    },
+    {
+      "path": "docs/process/2026-10-08-adoption/proposal-verification.json",
+      "originalSha256": "ddadc349db4358e6a469843bc0d4c9e0bb6f32455c58d54520543c008718df5d",
+      "publicSha256": "61c6cd59d87887adb92ec823f88f4ee25de75e31b6b465f3a9a48d4c18116c4c",
+      "redactions": [
+        "home_path"
+      ],
+      "originalRetainedLocally": true
+    },
+    {
+      "path": "docs/process/2026-10-08-adoption/report.md",
+      "originalSha256": "ac9c74929600a743e94fb986f9eb524f4b3859922d8cf30d759e09f633b5a0d9",
+      "publicSha256": "7f879c629df0873d914e119d0f1f98fa8fb9208db45ca2886b3db08986b174f1",
+      "redactions": [
+        "home_path",
+        "private_tmp"
+      ],
+      "originalRetainedLocally": true
+    },
+    {
+      "path": "docs/verification/2026-10-08-bulk-closeout.py.txt",
+      "originalSha256": "6d0b4dc11aa8fe9180de74637a85513776a6aab1d61ee879e25fba31150c7542",
+      "publicSha256": "7e50beef208268a052318cdc6e42740925567aafd139306ec527f9b86e0c6cd6",
+      "redactions": [
+        "private_tmp"
+      ],
+      "originalRetainedLocally": true
+    },
+    {
+      "path": "docs/verification/2026-10-08-f8-applied.md",
+      "originalSha256": "83ba92707ad7eb8073daffdc967c53a1a5177e2e7c13b5c748c8a871f1a6986a",
+      "publicSha256": "89871ecb087482bcf790b8dd65fd62521ebacec14a9ae08257f54bed8486dab2",
+      "redactions": [
+        "private_tmp"
+      ],
+      "originalRetainedLocally": true
+    },
+    {
+      "path": "docs/verification/2026-10-08-mutation.md",
+      "originalSha256": "244303b9fb827f452ca49be019d880a5c43c668db0a02f56c32bbb0f7e0096d1",
+      "publicSha256": "009e76a165ae4a6df5d845ef5d762874369aaca3fdbbe49841718468dd9fe915",
+      "redactions": [
+        "private_tmp"
+      ],
+      "originalRetainedLocally": true
+    },
+    {
+      "path": "docs/verification/2026-10-08-proposal-closeout.py.txt",
+      "originalSha256": "9319a0d4c4121b431a832409ee2a0e620b072757bc5883f0473ea6e0114a0fae",
+      "publicSha256": "ccce53ea4bdf5fec537e86e35ce6ee66865e98ebaf8dea86748cea86114a1767",
+      "redactions": [
+        "native_session_path",
+        "private_tmp"
+      ],
+      "originalRetainedLocally": true
+    },
+    {
+      "path": "docs/verification/2026-10-08-proposal-plan.md",
+      "originalSha256": "0c384d756b204b18c8ac09ca353ca92864e5d2715c80760c3fb8012bef088b39",
+      "publicSha256": "e4517e95aa6d2ae7bed661c3d5f0c26c34c85ab77b5a81a16bee265208d8647b",
+      "redactions": [
+        "home_path"
+      ],
+      "originalRetainedLocally": true
+    },
+    {
+      "path": "docs/verification/2026-10-08-proposal.md",
+      "originalSha256": "2fb999002aa49ea84f0d5880399777cae9487a32507871bd721797db6ab9a253",
+      "publicSha256": "a2b47466f297628fb2dc398e91aab8478748e279d2f63c4385e529dcd69f39a4",
+      "redactions": [
+        "home_path"
+      ],
+      "originalRetainedLocally": true
+    },
+    {
+      "path": "docs/verification/2026-10-08-supplemental.md",
+      "originalSha256": "f757bd0927cdd3665889266c9b5066afbce6e6171ef52a946b753aa053bf9d43",
+      "publicSha256": "a908df61c97f2730fbe994bdc27b1e24facf992a7f299bed53bd7717c3a5e8d8",
+      "redactions": [
+        "private_tmp"
+      ],
+      "originalRetainedLocally": true
+    },
+    {
+      "path": "docs/verification/doctor-isolation-proposal.py.txt",
+      "originalSha256": "bd4d9f62ee7dbea81b79b4f5ebceb657de53467fa66b913fe65469ba179fb28e",
+      "publicSha256": "2ce46dfd0b8e6331dc1cd5e1cbc99f6c631495709bbf6bcd830d32a9c1959e29",
+      "redactions": [
+        "private_tmp"
+      ],
+      "originalRetainedLocally": true
+    },
+    {
+      "path": "docs/verification/f8-applied-check.py.txt",
+      "originalSha256": "8ab083c3906d53bcab024ebfd7045c706ac447efc2d56ce7adaeb43807f2914d",
+      "publicSha256": "4993b1770590fcb7138bedf24ad287eedbf3231a59c96719e9a820976a6f9d11",
+      "redactions": [
+        "private_tmp"
+      ],
+      "originalRetainedLocally": true
+    },
+    {
+      "path": "docs/verification/live-batch-check.py.txt",
+      "originalSha256": "303c5e75540c9bc3f9b17919671bd2f87655dfcb679c7992f6626234feca14f8",
+      "publicSha256": "7cc779e236a1da94aa1b5f7e9304169bc2f64828cbdb84545b0bac7f08e7540f",
+      "redactions": [
+        "private_tmp"
+      ],
+      "originalRetainedLocally": true
+    },
+    {
+      "path": "docs/verification/mutation-check.py.txt",
+      "originalSha256": "eb76b87168a7e7b575e9d562dfa8ec9decc3ece0e1fa4b583f69f76d159ecd4a",
+      "publicSha256": "50e12445a8e9521b08dc39c63c64737da69374c06a1869062922d615f23f6c6b",
+      "redactions": [
+        "private_tmp"
+      ],
+      "originalRetainedLocally": true
+    },
+    {
+      "path": "docs/verification/supplemental-check.py.txt",
+      "originalSha256": "c2eebf5e8abcc06ec42501a3ec83c36e8f993ee88c51b9d66cd215aff90d1550",
+      "publicSha256": "4063f43e704a8b90e50abcb39c937edfb391fad695169bc9914819937fc1f42e",
+      "redactions": [
+        "private_tmp"
+      ],
+      "originalRetainedLocally": true
+    },
+    {
+      "path": "tasks/routing/plan.md",
+      "originalSha256": "1a5600b8cd0b02edb0168b69bcc6747d3f2ebc477a055f25eb96b336a71aefc6",
+      "publicSha256": "d5fadc307dae7b54dc9b033537070d9ac29e963ba2e1bd3330411a6dfb194e96",
+      "redactions": [
+        "home_path"
+      ],
+      "originalRetainedLocally": true
+    }
+  ],
+  "currentEvidenceReferenceUpdates": [
+    {
+      "id": "VAL",
+      "path": "docs/process/2026-10-08-adoption/report.md",
+      "originalSha256": "ac9c74929600a743e94fb986f9eb524f4b3859922d8cf30d759e09f633b5a0d9",
+      "publicSha256": "7f879c629df0873d914e119d0f1f98fa8fb9208db45ca2886b3db08986b174f1"
+    }
+  ],
+  "historicalSnapshotsUnchanged": "Recorded checker hashes and success flags describe the original local execution. Public script/text derivatives are not byte-identical originals; verify them against this manifest.",
+  "rawLogsPublished": false
+}

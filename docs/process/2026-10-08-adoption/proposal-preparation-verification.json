@@ -1,0 +1,112 @@
+{
+  "date": "2026-10-08",
+  "sourceCommit": "56c3ba76f1059f929bc908c0e45469abc623859a",
+  "documentation": {
+    "purpose": "documentation content and reference verification; not product acceptance",
+    "markdownFiles": 58,
+    "fileLinks": 429,
+    "anchors": 38,
+    "clauses": 13,
+    "detailedModuleTasks": 20,
+    "referencedPythonMethods": 16,
+    "archives": 8,
+    "historicalEvidenceHashes": 30,
+    "errors": []
+  },
+  "historicalReconciliation": {
+    "sourceEntries": 119,
+    "matchedEntries": 119,
+    "counts": {
+      "superseded": 13,
+      "supported_current": 105,
+      "unverified": 1
+    },
+    "evidenceHashes": 32,
+    "historicalCompletionUnknown": 119,
+    "historicalApprovalUnknown": 119
+  },
+  "supplemental": {
+    "passed": 26,
+    "failed": 0,
+    "modelCalls": 0,
+    "checkerArchiveHashMatched": true,
+    "limits": "one-off controlled samples; not permanent regression, cross-process stress, or full real-host/model acceptance"
+  },
+  "checks": {
+    "whitespace": {
+      "exit": 0,
+      "output": ""
+    },
+    "productScope": {
+      "exit": 0,
+      "output": ""
+    },
+    "artifacts": {
+      "exit": 0,
+      "output": "✅ 能力图存在\n  ✅ 没有根目录 spec 漂移\n  ✅ 能力图通过严格解析\n\n结果: 3 通过 · 0 警告 · 0 失败"
+    },
+    "phase": {
+      "exit": 0,
+      "output": "{\"hookSpecificOutput\": {\"hookEventName\": \"UserPromptSubmit\", \"additionalContext\": \"## spec-guard local workflow\\n\\nLocation: branch `codex/spec-guard-conventions` \\u00b7 worktree `<PROJECT_ROOT>`. State this location to the user whenever you ask them to review or confirm.\\n\\n\\u5f53\\u524d\\u9636\\u6bb5: **BUILDING**\\n\\n- Capability map: present\\n- Current module: `routing` (next in Build order)\\n- Modules 3 \\u00b7 Specs 3 \\u00b7 Plans 3 \\u00b7 In progress 1 \\u00b7 Done 2\\n\\nSuggested next step: continue `/build` on `routing`: 1 unchecked item(s) in `tasks/routing/todo.md`.\"}}"
+    }
+  },
+  "productTests": "No new product source change. B1 existing routing differential passed, B2/B3 native interactive cases completed. Previous F8 and live artifacts retain their actual outcomes; free product suites were not rerun unnecessarily.",
+  "errors": [],
+  "proposal": {
+    "testFileCount": 1,
+    "environmentChecksPassed": 2,
+    "patchHashMatched": true,
+    "checkerHashMatched": true,
+    "gitApplyReverseCheckExit": 0,
+    "originalProposalAppliedToRepository": false,
+    "currentlyAppliedToRepository": true
+  },
+  "mutation": {
+    "mutantsKilled": 9,
+    "archivedConditionsSupported": 10,
+    "restoredRunsPassed": 9,
+    "footprintSnapshotsMatched": true,
+    "declarationBlobHashMatched": true,
+    "initialBaselineIsolationGap": "F8: original gap preserved as history; approved fixture fix now applied and checked"
+  },
+  "f8Application": {
+    "testFile": "plugins/delegate/tests/test-detection.sh",
+    "testFileSha256": "9e98791e54586f76ad6ba321689d17b46ed429e9261532ba8fa5f39d6386980b",
+    "exactApprovedCandidateMatched": true,
+    "actualEnvironmentChecksPassed": 3,
+    "runtimeDiffExit": 0,
+    "modelCalls": 0,
+    "productPathChanges": [
+      "plugins/delegate/tests/test-detection.sh"
+    ],
+    "committed": false,
+    "published": false
+  },
+  "specGuardInstalledVersion": "0.54.0",
+  "bulkVerification": {
+    "claudeCliSessions": 4,
+    "realCodexExecs": 1,
+    "newSupportedConditions": 5,
+    "newSupersededConditions": 1,
+    "remainingUnverified": [
+      "routing:R3-V3"
+    ],
+    "automaticRetries": 0,
+    "businessContentHashesMatched": true,
+    "actualSkillLoaded": true,
+    "installedSlashCommandSucceeded": true,
+    "rawArtifactHashesRecheckedByCloseoutTool": true
+  },
+  "currentPhase": "BUILDING: routing has one unchecked interactive validation task; channel/detection done.",
+  "proposalPreparation": {
+    "files": 64,
+    "lines": 16640,
+    "functions": 512,
+    "astParsedFiles": 64,
+    "modelsInvoked": 0,
+    "nativeSessionsLaunched": 0,
+    "newSessionApproval": "pending",
+    "claudeAuthenticationAvailable": true,
+    "currentCountsUnchanged": true
+  }
+}

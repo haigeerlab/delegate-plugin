@@ -1,0 +1,165 @@
+{
+  "sourceCommit": "f961e6016e903e6d8fcb4c2326bf513b1d5a000b",
+  "sourceRef": "codex/delegate-review-fixes",
+  "note": "Sanitized index only. Original artifacts remain in the local source commit; hashing checks consistency, not approval or correctness.",
+  "sets": [
+    {
+      "sourcePath": "docs/reviews/2026-10-08-fix-evidence/results.json",
+      "validateExit": 0,
+      "shellAssertions": {
+        "channel": 24,
+        "detection": 19,
+        "routing": 9
+      },
+      "pythonTests": {
+        "backend": 9,
+        "channel-regressions": 7
+      },
+      "live": null,
+      "evidence": [
+        {
+          "path": "docs/reviews/2026-10-08-fix-evidence/validate.log",
+          "sha256": "798689c42046e345be19b682eb554ebff89c98c5f2030fa29830e78ad066fedd"
+        },
+        {
+          "path": "docs/reviews/2026-10-08-fix-evidence/plugin-validate.json",
+          "sha256": "029de2685ecc871423743ffaffbe41d60db9da40a7b88da256b6307f9a20c80a"
+        },
+        {
+          "path": "docs/reviews/2026-10-08-fix-evidence/marketplace-validate.json",
+          "sha256": "f5448ed83cbe5dc4e5aa1c26e0700640f8a0014e440edc4d82033194d56d8275"
+        },
+        {
+          "path": "docs/reviews/2026-10-08-fix-evidence/validator-mutation.log",
+          "sha256": "7792fc5038f8d17b6092dbcf914d6f4ef10700d3e3234ad0245ea4cbcb165784"
+        },
+        {
+          "path": "docs/reviews/2026-10-08-fix-evidence/backend-red.log",
+          "sha256": "47c994450f2f61cd3e714e48896e230c5a729b77d1ceca5241c2801ad1366d8c"
+        },
+        {
+          "path": "docs/reviews/2026-10-08-fix-evidence/channel-regressions-red.log",
+          "sha256": "52c33c091f66980e0acc9c3a492559604d8d79b4b147e8f532e3c9ebb7f9a251"
+        }
+      ]
+    },
+    {
+      "sourcePath": "docs/reviews/2026-10-08-live-evidence/results.json",
+      "validateExit": 0,
+      "shellAssertions": {
+        "channel": 24,
+        "detection": 19,
+        "routing": 9
+      },
+      "pythonTests": {
+        "backend": 10,
+        "channel-regressions": 7
+      },
+      "live": {
+        "codexReadExit": 0,
+        "codexWriteExit": 0,
+        "proposeNotAutoExit": 0,
+        "routingFitnessExit": 0,
+        "helpExit": 0
+      },
+      "evidence": [
+        {
+          "path": "docs/reviews/2026-10-08-live-evidence/routing.stdout",
+          "sha256": "62f0984065d2970531465aa201d13deec102964df2ed3f0c3134c395982bc046"
+        },
+        {
+          "path": "docs/reviews/2026-10-08-live-evidence/fixture-status.txt",
+          "sha256": "07f339388c31b3f295631e2de892d1377dcb4ea76404891fa323bf70c765b4a9"
+        },
+        {
+          "path": "docs/reviews/2026-10-08-live-evidence/propose.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "docs/reviews/2026-10-08-live-evidence/live-measurements.json",
+          "sha256": "208abc857cb97cf63f45a727ba8b1969fdd27e9cd5013bdcdda20a3cea4f81a4"
+        },
+        {
+          "path": "docs/reviews/2026-10-08-live-evidence/help.stdout",
+          "sha256": "d67aa154900fc7366467449f032a8ae832df81889df670b2a08ac5362fe76683"
+        },
+        {
+          "path": "docs/reviews/2026-10-08-live-evidence/read.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "docs/reviews/2026-10-08-live-evidence/live-harness-red-final.log",
+          "sha256": "ed23cd296f474ddcc642a5aadcc767404352c428292bcb10f08e1c12471cd0b7"
+        },
+        {
+          "path": "docs/reviews/2026-10-08-live-evidence/read.stdout",
+          "sha256": "7c672f94d2962d1a7edcf55cf28e9ffcc6f9e3fc9530b4b95dc83038d3b10a08"
+        },
+        {
+          "path": "docs/reviews/2026-10-08-live-evidence/propose.stdout",
+          "sha256": "6b2fa97b6bc4d4b1ddb6a5940f2ce7a8b84b972476acb7f9d5465af8866b929c"
+        },
+        {
+          "path": "docs/reviews/2026-10-08-live-evidence/propose-route.json",
+          "sha256": "348c7476c7f6fd9c8051dc67b490a7e3a06eb9b703a5c36c37c16960c38e4bf3"
+        },
+        {
+          "path": "docs/reviews/2026-10-08-live-evidence/live-harness-green-final.log",
+          "sha256": "3f8c9f661397acafdcbaad335b0bdf2ced743bb1595304fc4e6d75cd3a867059"
+        },
+        {
+          "path": "docs/reviews/2026-10-08-live-evidence/help.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "docs/reviews/2026-10-08-live-evidence/routing-treatment-transcript.txt",
+          "sha256": "df65b133640d9844b214a9d5bad8f25d893c7cff58aa9b1c09149e838244385d"
+        },
+        {
+          "path": "docs/reviews/2026-10-08-live-evidence/routing.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "docs/reviews/2026-10-08-live-evidence/validate.log",
+          "sha256": "01f3cf2bb3a403aeb7790f4f778870794cc5f57af71a197efe87541c8094cb2c"
+        },
+        {
+          "path": "docs/reviews/2026-10-08-live-evidence/routing-control-transcript.txt",
+          "sha256": "25ec9f3fcd3142f16f107907d2a8a6139f484101532be863b7ecc17e7b5b752e"
+        },
+        {
+          "path": "docs/reviews/2026-10-08-live-evidence/write.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "docs/reviews/2026-10-08-live-evidence/routing-route.json",
+          "sha256": "348c7476c7f6fd9c8051dc67b490a7e3a06eb9b703a5c36c37c16960c38e4bf3"
+        },
+        {
+          "path": "docs/reviews/2026-10-08-live-evidence/propose-transcript.txt",
+          "sha256": "4acd5e2fc0ad8ee722bf5b12616eca2ca4437687d5164737017bdc4cced9786f"
+        },
+        {
+          "path": "docs/reviews/2026-10-08-live-evidence/propose-codex.calls",
+          "sha256": "1bf7f751ce849b45c83ae85ce5df98279971335206ce906eb0ffaf131250454b"
+        },
+        {
+          "path": "docs/reviews/2026-10-08-live-evidence/routing-control-codex.calls",
+          "sha256": "1bf7f751ce849b45c83ae85ce5df98279971335206ce906eb0ffaf131250454b"
+        },
+        {
+          "path": "docs/reviews/2026-10-08-live-evidence/routing-treatment-codex.calls",
+          "sha256": "1bf7f751ce849b45c83ae85ce5df98279971335206ce906eb0ffaf131250454b"
+        },
+        {
+          "path": "docs/reviews/2026-10-08-live-evidence/write.stdout",
+          "sha256": "c455b4ddeed4b1ef6de7d45f5e8b290eff39c6b1396c6c0b53c15017f75af71f"
+        },
+        {
+          "path": "docs/reviews/2026-10-08-live-evidence/fixture.diff",
+          "sha256": "1861927b273e97ab3288683ea6554d8b19c87d3317cb9d5fde10ed0482a09e2d"
+        }
+      ]
+    }
+  ]
+}

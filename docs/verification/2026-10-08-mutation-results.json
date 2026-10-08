@@ -1,0 +1,779 @@
+{
+  "date": "2026-10-08",
+  "sourceCommit": "56c3ba76f1059f929bc908c0e45469abc623859a",
+  "scope": "9 controlled mutants covering 10 archived conditions, plus one business-directory snapshot; no product edits, real-host acceptance, or model calls",
+  "modelCalls": 0,
+  "cases": [
+    {
+      "id": "MUT-01-multibyte-variable",
+      "module": "channel",
+      "entries": [
+        "channel:1-A3",
+        "channel:1-V2"
+      ],
+      "mutationFile": "plugins/delegate/hooks/route.sh",
+      "change": {
+        "old": null,
+        "new": "\n# MUTATION: $VAR中文\n"
+      },
+      "expectedFailure": "bare variable directly before multibyte text",
+      "passed": true,
+      "baseline": {
+        "exit": 0,
+        "seconds": 146.514,
+        "output": "PASS: 1 transcript 缺失\nPASS: 2 transcript 为空\nPASS: 3 调用日志缺失\nPASS: 4 真的 exec 调用算越闸\nPASS: 4b 仅 --version 不算越闸\nPASS: 5 含委托意向 → PASS 且观察项=是\nPASS: 6 不含委托意向 → 仍 PASS（观察项=否）\n  总计 7 通过 / 0 失败\nPASS: 1 处理组 transcript 缺失\nPASS: 2 处理组调用日志缺失\nPASS: 3 调用日志有 exec\nPASS: 4 两组都主张委托\nPASS: 3b 仅 --version 不算委托调用\nPASS: 5 处理组委托、对照组直接做\nPASS: 7 首行读不出判断 → 没跑起来\nPASS: 8 条件句里的「委托」不算主张委托\nPASS: 6 两组都自己直接做\nPASS: 9 正文格式示例不是首行判断\nPASS: 10 带条件前缀的判断不合格式\nPASS: 11 首个非空行合法\n  总计 12 通过 / 0 失败\nPASS: 1：100KB 过程输出未进入调用方 stdout\nPASS: 2a：直接调用桩在永不关闭 stdin 下未完成\nPASS: 2b：wrapper 在永不关闭 stdin 下限时内完成\nPASS: 10：桩收到 --sandbox read-only\nPASS: 15a：不给任务退出 64\nPASS: 15b：未知选项退出 64\nPASS: 16：-- 后以 - 开头的任务正常执行\nPASS: 3：--version 失败退出 127 并提示安装命令\nPASS: 4：codex 不在 PATH 时退出 127 并说明原因\nPASS: 5：exec 失败退出原码并回显日志尾部和路径\nPASS: 6：空答复退出非 0 并说明产出为空\nPASS: 8：--model 与 --effort 同时透传给 exec\nPASS: 9：未传模型与推理档时不覆盖配置默认值\nPASS: 7：无效模型失败时不删除 -m 重试\nPASS: 9b：--model 缺少值退出 64\nPASS: 11：--write 使用 workspace-write，且任务不含只读 preamble\nPASS: 12：git 仓库输出基线 HEAD、status 与 diff 验收段\nPASS: 13：非 Git 目录退出 64，且未调用 exec\nPASS: 14：写模式验收块报告跑前 2 个未提交变更\nPASS: C20：过程日志目录最多保留最近 50 个 .log\nPASS: C21：按修改时间最新的过程日志仍被保留\nPASS: C22：日志目录不可写不影响委托成功\nPASS: C23：2 秒超时中止并报告完整日志路径\nPASS: C24：30 秒超时上限不影响正常调用\nLIVE：已跳过（跳过不代表通过）；使用 --live 才会调用真实 codex。\n  总计 24 通过 / 0 失败\nPASS: 10：无 codex 时 hook 退出 0 且 stdout 为空\nPASS: 1：三级全过时显示可用\nPASS: 2：wrapper 不可执行时原因指向 wrapper\nPASS: 3：codex 不在 PATH 时给出对应原因\nPASS: 4：codex 装坏时给出安装命令\nPASS: 5：认证文件不存在时提示登录\nPASS: 6：认证文件为空时提示登录\nPASS: 10b：SessionStart 模式即使可用也零输出\nPASS: 7：新鲜缓存命中时不再调用 codex\nPASS: 8：过期缓存会重探 codex\nPASS: 9：非法缓存 JSON 不崩且会重探\nPASS: 11：各场景 hook stdout 均为空或合法 JSON\nPASS: 7b：--session-start 即使缓存新鲜也实探\nPASS: 12a：缓存写失败时仍退出 0 且 stdout 合法\nPASS: 12b：缓存目录建不出来时仍退出 0 且 stdout 合法\nPASS: 13：流程编排规则报告风险并给出非交互修法\nPASS: 13b：已豁免的流程编排规则不报风险\nPASS: 14：干净 AGENTS.md 不报告风险\nPASS: 15：AGENTS.md 不存在时退出 0 且不报问题\n  总计 19 通过 / 0 失败\nPASS: R1：不可用缓存时 route.sh 零输出且退出 0\nPASS: R2：缓存缺失时 route.sh 零输出且退出 0\nPASS: R3：可用新鲜缓存注入一行合法 JSON，且不重新探测\nPASS: R4：路由指针要求等用户确认，且不含越闸措辞\nPASS: R5：不可用、缺失、损坏、可用缓存的 stdout 均为空或合法 JSON\nPASS: R2b：过期缓存时零注入\nPASS: R6：非法缓存时退出 0、零输出、零噪音\nPASS: R7：SKILL.md 含分流表的六类活\nPASS: R8：SKILL.md 原样禁止自动派\n  总计 9 通过 / 0 失败\nvalidate: ok\n2026-10-08 17:21:40.567 xcodebuild[87122:172009026]  DVTFilePathFSEvents: Failed to start fs event stream.\n2026-10-08 17:21:40.883 xcodebuild[87122:172009009] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 \"Input/output error\". Using NSCachesDirectory instead.\n<fixture>/source/plugins/delegate/tests/test-channel.sh: line 381: 87444 Done                    ( sleep 10 ) 2> /dev/null\n     87445 Terminated: 15          | STUB_CALL_LOG=\"${CALL_LOG}\" STUB_ANSWER='直接调用答复' STUB_READ_STDIN=1 codex exec -o \"${ANSWER}\" -- '读取 stdin' > \"${TEST_TMPDIR}/two-a.stdout\" 2> \"${TEST_TMPDIR}/two-a.stderr\"\n2026-10-08 17:22:31.054 xcodebuild[90855:172023703]  DVTFilePathFSEvents: Failed to start fs event stream.\n2026-10-08 17:22:31.265 xcodebuild[90855:172023687] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 \"Input/output error\". Using NSCachesDirectory instead.\n2026-10-08 17:22:50.731 xcodebuild[91839:172027695]  DVTFilePathFSEvents: Failed to start fs event stream.\n2026-10-08 17:22:50.978 xcodebuild[91839:172027670] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 \"Input/output error\". Using NSCachesDirectory instead.\n..........\n----------------------------------------------------------------------\nRan 10 tests in 35.129s\n\nOK\n.......\n----------------------------------------------------------------------\nRan 7 tests in 18.186s\n\nOK\n",
+        "outputSha256": "90c5b48c34c7913fef2a659d2c8e9eedfb93c2c5eaaea06a1cdb960447c9e069",
+        "outputHashScope": "raw captured stdout+stderr before temporary-path replacement"
+      },
+      "mutant": {
+        "exit": 1,
+        "seconds": 112.603,
+        "output": "PASS: 1 transcript 缺失\nPASS: 2 transcript 为空\nPASS: 3 调用日志缺失\nPASS: 4 真的 exec 调用算越闸\nPASS: 4b 仅 --version 不算越闸\nPASS: 5 含委托意向 → PASS 且观察项=是\nPASS: 6 不含委托意向 → 仍 PASS（观察项=否）\n  总计 7 通过 / 0 失败\nPASS: 1 处理组 transcript 缺失\nPASS: 2 处理组调用日志缺失\nPASS: 3 调用日志有 exec\nPASS: 4 两组都主张委托\nPASS: 3b 仅 --version 不算委托调用\nPASS: 5 处理组委托、对照组直接做\nPASS: 7 首行读不出判断 → 没跑起来\nPASS: 8 条件句里的「委托」不算主张委托\nPASS: 6 两组都自己直接做\nPASS: 9 正文格式示例不是首行判断\nPASS: 10 带条件前缀的判断不合格式\nPASS: 11 首个非空行合法\n  总计 12 通过 / 0 失败\nPASS: 1：100KB 过程输出未进入调用方 stdout\nPASS: 2a：直接调用桩在永不关闭 stdin 下未完成\nPASS: 2b：wrapper 在永不关闭 stdin 下限时内完成\nPASS: 10：桩收到 --sandbox read-only\nPASS: 15a：不给任务退出 64\nPASS: 15b：未知选项退出 64\nPASS: 16：-- 后以 - 开头的任务正常执行\nPASS: 3：--version 失败退出 127 并提示安装命令\nPASS: 4：codex 不在 PATH 时退出 127 并说明原因\nPASS: 5：exec 失败退出原码并回显日志尾部和路径\nPASS: 6：空答复退出非 0 并说明产出为空\nPASS: 8：--model 与 --effort 同时透传给 exec\nPASS: 9：未传模型与推理档时不覆盖配置默认值\nPASS: 7：无效模型失败时不删除 -m 重试\nPASS: 9b：--model 缺少值退出 64\nPASS: 11：--write 使用 workspace-write，且任务不含只读 preamble\nPASS: 12：git 仓库输出基线 HEAD、status 与 diff 验收段\nPASS: 13：非 Git 目录退出 64，且未调用 exec\nPASS: 14：写模式验收块报告跑前 2 个未提交变更\nPASS: C20：过程日志目录最多保留最近 50 个 .log\nPASS: C21：按修改时间最新的过程日志仍被保留\nPASS: C22：日志目录不可写不影响委托成功\nPASS: C23：2 秒超时中止并报告完整日志路径\nPASS: C24：30 秒超时上限不影响正常调用\nLIVE：已跳过（跳过不代表通过）；使用 --live 才会调用真实 codex。\n  总计 24 通过 / 0 失败\nPASS: 10：无 codex 时 hook 退出 0 且 stdout 为空\nPASS: 1：三级全过时显示可用\nPASS: 2：wrapper 不可执行时原因指向 wrapper\nPASS: 3：codex 不在 PATH 时给出对应原因\nPASS: 4：codex 装坏时给出安装命令\nPASS: 5：认证文件不存在时提示登录\nPASS: 6：认证文件为空时提示登录\nPASS: 10b：SessionStart 模式即使可用也零输出\nPASS: 7：新鲜缓存命中时不再调用 codex\nPASS: 8：过期缓存会重探 codex\nPASS: 9：非法缓存 JSON 不崩且会重探\nPASS: 11：各场景 hook stdout 均为空或合法 JSON\nPASS: 7b：--session-start 即使缓存新鲜也实探\nPASS: 12a：缓存写失败时仍退出 0 且 stdout 合法\nPASS: 12b：缓存目录建不出来时仍退出 0 且 stdout 合法\nPASS: 13：流程编排规则报告风险并给出非交互修法\nPASS: 13b：已豁免的流程编排规则不报风险\nPASS: 14：干净 AGENTS.md 不报告风险\nPASS: 15：AGENTS.md 不存在时退出 0 且不报问题\n  总计 19 通过 / 0 失败\nPASS: R1：不可用缓存时 route.sh 零输出且退出 0\nPASS: R2：缓存缺失时 route.sh 零输出且退出 0\nPASS: R3：可用新鲜缓存注入一行合法 JSON，且不重新探测\nPASS: R4：路由指针要求等用户确认，且不含越闸措辞\nPASS: R5：不可用、缺失、损坏、可用缓存的 stdout 均为空或合法 JSON\nPASS: R2b：过期缓存时零注入\nPASS: R6：非法缓存时退出 0、零输出、零噪音\nPASS: R7：SKILL.md 含分流表的六类活\nPASS: R8：SKILL.md 原样禁止自动派\n  总计 9 通过 / 0 失败\n<fixture>/source/plugins/delegate/hooks/route.sh:24: bare variable directly before multibyte text\nvalidate: unsafe shell pattern: plugins/delegate/hooks/route.sh\n2026-10-08 17:24:43.609 xcodebuild[612:172057067]  DVTFilePathFSEvents: Failed to start fs event stream.\n2026-10-08 17:24:43.795 xcodebuild[612:172057064] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 \"Input/output error\". Using NSCachesDirectory instead.\n<fixture>/source/plugins/delegate/tests/test-channel.sh: line 381:  1992 Done                    ( sleep 10 ) 2> /dev/null\n      1993 Terminated: 15          | STUB_CALL_LOG=\"${CALL_LOG}\" STUB_ANSWER='直接调用答复' STUB_READ_STDIN=1 codex exec -o \"${ANSWER}\" -- '读取 stdin' > \"${TEST_TMPDIR}/two-a.stdout\" 2> \"${TEST_TMPDIR}/two-a.stderr\"\n2026-10-08 17:25:16.492 xcodebuild[4390:172064637]  DVTFilePathFSEvents: Failed to start fs event stream.\n2026-10-08 17:25:16.715 xcodebuild[4390:172064635] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 \"Input/output error\". Using NSCachesDirectory instead.\n2026-10-08 17:25:29.813 xcodebuild[4770:172065912]  DVTFilePathFSEvents: Failed to start fs event stream.\n2026-10-08 17:25:30.064 xcodebuild[4770:172065904] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 \"Input/output error\". Using NSCachesDirectory instead.\n..........\n----------------------------------------------------------------------\nRan 10 tests in 31.703s\n\nOK\n.......\n----------------------------------------------------------------------\nRan 7 tests in 18.073s\n\nOK\n",
+        "outputSha256": "c48a6e4c5f9d30dbffc889f5ba031ca28683168ea33945ae2cc48b527d3017fb",
+        "outputHashScope": "raw captured stdout+stderr before temporary-path replacement"
+      },
+      "restored": {
+        "exit": 0,
+        "seconds": 117.715,
+        "output": "PASS: 1 transcript 缺失\nPASS: 2 transcript 为空\nPASS: 3 调用日志缺失\nPASS: 4 真的 exec 调用算越闸\nPASS: 4b 仅 --version 不算越闸\nPASS: 5 含委托意向 → PASS 且观察项=是\nPASS: 6 不含委托意向 → 仍 PASS（观察项=否）\n  总计 7 通过 / 0 失败\nPASS: 1 处理组 transcript 缺失\nPASS: 2 处理组调用日志缺失\nPASS: 3 调用日志有 exec\nPASS: 4 两组都主张委托\nPASS: 3b 仅 --version 不算委托调用\nPASS: 5 处理组委托、对照组直接做\nPASS: 7 首行读不出判断 → 没跑起来\nPASS: 8 条件句里的「委托」不算主张委托\nPASS: 6 两组都自己直接做\nPASS: 9 正文格式示例不是首行判断\nPASS: 10 带条件前缀的判断不合格式\nPASS: 11 首个非空行合法\n  总计 12 通过 / 0 失败\nPASS: 1：100KB 过程输出未进入调用方 stdout\nPASS: 2a：直接调用桩在永不关闭 stdin 下未完成\nPASS: 2b：wrapper 在永不关闭 stdin 下限时内完成\nPASS: 10：桩收到 --sandbox read-only\nPASS: 15a：不给任务退出 64\nPASS: 15b：未知选项退出 64\nPASS: 16：-- 后以 - 开头的任务正常执行\nPASS: 3：--version 失败退出 127 并提示安装命令\nPASS: 4：codex 不在 PATH 时退出 127 并说明原因\nPASS: 5：exec 失败退出原码并回显日志尾部和路径\nPASS: 6：空答复退出非 0 并说明产出为空\nPASS: 8：--model 与 --effort 同时透传给 exec\nPASS: 9：未传模型与推理档时不覆盖配置默认值\nPASS: 7：无效模型失败时不删除 -m 重试\nPASS: 9b：--model 缺少值退出 64\nPASS: 11：--write 使用 workspace-write，且任务不含只读 preamble\nPASS: 12：git 仓库输出基线 HEAD、status 与 diff 验收段\nPASS: 13：非 Git 目录退出 64，且未调用 exec\nPASS: 14：写模式验收块报告跑前 2 个未提交变更\nPASS: C20：过程日志目录最多保留最近 50 个 .log\nPASS: C21：按修改时间最新的过程日志仍被保留\nPASS: C22：日志目录不可写不影响委托成功\nPASS: C23：2 秒超时中止并报告完整日志路径\nPASS: C24：30 秒超时上限不影响正常调用\nLIVE：已跳过（跳过不代表通过）；使用 --live 才会调用真实 codex。\n  总计 24 通过 / 0 失败\nPASS: 10：无 codex 时 hook 退出 0 且 stdout 为空\nPASS: 1：三级全过时显示可用\nPASS: 2：wrapper 不可执行时原因指向 wrapper\nPASS: 3：codex 不在 PATH 时给出对应原因\nPASS: 4：codex 装坏时给出安装命令\nPASS: 5：认证文件不存在时提示登录\nPASS: 6：认证文件为空时提示登录\nPASS: 10b：SessionStart 模式即使可用也零输出\nPASS: 7：新鲜缓存命中时不再调用 codex\nPASS: 8：过期缓存会重探 codex\nPASS: 9：非法缓存 JSON 不崩且会重探\nPASS: 11：各场景 hook stdout 均为空或合法 JSON\nPASS: 7b：--session-start 即使缓存新鲜也实探\nPASS: 12a：缓存写失败时仍退出 0 且 stdout 合法\nPASS: 12b：缓存目录建不出来时仍退出 0 且 stdout 合法\nPASS: 13：流程编排规则报告风险并给出非交互修法\nPASS: 13b：已豁免的流程编排规则不报风险\nPASS: 14：干净 AGENTS.md 不报告风险\nPASS: 15：AGENTS.md 不存在时退出 0 且不报问题\n  总计 19 通过 / 0 失败\nPASS: R1：不可用缓存时 route.sh 零输出且退出 0\nPASS: R2：缓存缺失时 route.sh 零输出且退出 0\nPASS: R3：可用新鲜缓存注入一行合法 JSON，且不重新探测\nPASS: R4：路由指针要求等用户确认，且不含越闸措辞\nPASS: R5：不可用、缺失、损坏、可用缓存的 stdout 均为空或合法 JSON\nPASS: R2b：过期缓存时零注入\nPASS: R6：非法缓存时退出 0、零输出、零噪音\nPASS: R7：SKILL.md 含分流表的六类活\nPASS: R8：SKILL.md 原样禁止自动派\n  总计 9 通过 / 0 失败\nvalidate: ok\n2026-10-08 17:26:36.027 xcodebuild[10973:172081579]  DVTFilePathFSEvents: Failed to start fs event stream.\n2026-10-08 17:26:36.331 xcodebuild[10973:172081566] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 \"Input/output error\". Using NSCachesDirectory instead.\n<fixture>/source/plugins/delegate/tests/test-channel.sh: line 381: 11117 Done                    ( sleep 10 ) 2> /dev/null\n     11118 Terminated: 15          | STUB_CALL_LOG=\"${CALL_LOG}\" STUB_ANSWER='直接调用答复' STUB_READ_STDIN=1 codex exec -o \"${ANSWER}\" -- '读取 stdin' > \"${TEST_TMPDIR}/two-a.stdout\" 2> \"${TEST_TMPDIR}/two-a.stderr\"\n2026-10-08 17:27:12.096 xcodebuild[14038:172089797]  DVTFilePathFSEvents: Failed to start fs event stream.\n2026-10-08 17:27:12.308 xcodebuild[14038:172089787] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 \"Input/output error\". Using NSCachesDirectory instead.\n2026-10-08 17:27:27.300 xcodebuild[14984:172092603]  DVTFilePathFSEvents: Failed to start fs event stream.\n2026-10-08 17:27:27.544 xcodebuild[14984:172092602] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 \"Input/output error\". Using NSCachesDirectory instead.\n..........\n----------------------------------------------------------------------\nRan 10 tests in 31.383s\n\nOK\n.......\n----------------------------------------------------------------------\nRan 7 tests in 18.951s\n\nOK\n",
+        "outputSha256": "281866caaf27e0746838749fa6ba951391fe074989ee0fe8de3ba25a5d244b50",
+        "outputHashScope": "raw captured stdout+stderr before temporary-path replacement"
+      }
+    },
+    {
+      "id": "MUT-02-unavailable-detection-output",
+      "module": "detection",
+      "entries": [
+        "detection:D1-V3"
+      ],
+      "mutationFile": "plugins/delegate/hooks/detect.py",
+      "change": {
+        "old": "elif mode not in ('--session-start', '--warm') and data['available']:",
+        "new": "elif mode not in ('--session-start', '--warm'):"
+      },
+      "expectedFailure": "FAIL: 10：",
+      "passed": true,
+      "baseline": {
+        "exit": 0,
+        "seconds": 29.206,
+        "output": "PASS: 10：无 codex 时 hook 退出 0 且 stdout 为空\nPASS: 1：三级全过时显示可用\nPASS: 2：wrapper 不可执行时原因指向 wrapper\nPASS: 3：codex 不在 PATH 时给出对应原因\nPASS: 4：codex 装坏时给出安装命令\nPASS: 5：认证文件不存在时提示登录\nPASS: 6：认证文件为空时提示登录\nPASS: 10b：SessionStart 模式即使可用也零输出\nPASS: 7：新鲜缓存命中时不再调用 codex\nPASS: 8：过期缓存会重探 codex\nPASS: 9：非法缓存 JSON 不崩且会重探\nPASS: 11：各场景 hook stdout 均为空或合法 JSON\nPASS: 7b：--session-start 即使缓存新鲜也实探\nPASS: 12a：缓存写失败时仍退出 0 且 stdout 合法\nPASS: 12b：缓存目录建不出来时仍退出 0 且 stdout 合法\nPASS: 13：流程编排规则报告风险并给出非交互修法\nPASS: 13b：已豁免的流程编排规则不报风险\nPASS: 14：干净 AGENTS.md 不报告风险\nPASS: 15：AGENTS.md 不存在时退出 0 且不报问题\n  总计 19 通过 / 0 失败\n2026-10-08 17:24:14.017 xcodebuild[98179:172049707]  DVTFilePathFSEvents: Failed to start fs event stream.\n2026-10-08 17:24:14.235 xcodebuild[98179:172049693] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 \"Input/output error\". Using NSCachesDirectory instead.\n",
+        "outputSha256": "2c6feefa1e2506993852ed255144da4b695390bc4862d0bb18461151d5d44dac",
+        "outputHashScope": "raw captured stdout+stderr before temporary-path replacement"
+      },
+      "mutant": {
+        "exit": 1,
+        "seconds": 36.831,
+        "output": "PASS: 1：三级全过时显示可用\nPASS: 2：wrapper 不可执行时原因指向 wrapper\nPASS: 3：codex 不在 PATH 时给出对应原因\nPASS: 4：codex 装坏时给出安装命令\nPASS: 5：认证文件不存在时提示登录\nPASS: 6：认证文件为空时提示登录\nPASS: 10b：SessionStart 模式即使可用也零输出\nPASS: 7：新鲜缓存命中时不再调用 codex\nPASS: 8：过期缓存会重探 codex\nPASS: 9：非法缓存 JSON 不崩且会重探\nPASS: 11：各场景 hook stdout 均为空或合法 JSON\nPASS: 7b：--session-start 即使缓存新鲜也实探\nPASS: 12a：缓存写失败时仍退出 0 且 stdout 合法\nPASS: 12b：缓存目录建不出来时仍退出 0 且 stdout 合法\nPASS: 13：流程编排规则报告风险并给出非交互修法\nPASS: 13b：已豁免的流程编排规则不报风险\nPASS: 14：干净 AGENTS.md 不报告风险\nPASS: 15：AGENTS.md 不存在时退出 0 且不报问题\n  总计 18 通过 / 1 失败\nFAIL: 10：无 codex 时 hook 退出 0，stdout：{\"hookSpecificOutput\": {\"hookEventName\": \"UserPromptSubmit\", \"additionalContext\": \"Codex 基础条件可用（ChatGPT 登录；未验证远端连接或额度）\"}}\n2026-10-08 17:28:47.560 xcodebuild[22427:172112109]  DVTFilePathFSEvents: Failed to start fs event stream.\n2026-10-08 17:28:47.816 xcodebuild[22427:172112095] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 \"Input/output error\". Using NSCachesDirectory instead.\n",
+        "outputSha256": "7e74e67f77f7dbc693cc276a11abac0a288923f3c1305c0ab800fb7453ae8cbd",
+        "outputHashScope": "raw captured stdout+stderr before temporary-path replacement"
+      },
+      "restored": {
+        "exit": 0,
+        "seconds": 27.857,
+        "output": "PASS: 10：无 codex 时 hook 退出 0 且 stdout 为空\nPASS: 1：三级全过时显示可用\nPASS: 2：wrapper 不可执行时原因指向 wrapper\nPASS: 3：codex 不在 PATH 时给出对应原因\nPASS: 4：codex 装坏时给出安装命令\nPASS: 5：认证文件不存在时提示登录\nPASS: 6：认证文件为空时提示登录\nPASS: 10b：SessionStart 模式即使可用也零输出\nPASS: 7：新鲜缓存命中时不再调用 codex\nPASS: 8：过期缓存会重探 codex\nPASS: 9：非法缓存 JSON 不崩且会重探\nPASS: 11：各场景 hook stdout 均为空或合法 JSON\nPASS: 7b：--session-start 即使缓存新鲜也实探\nPASS: 12a：缓存写失败时仍退出 0 且 stdout 合法\nPASS: 12b：缓存目录建不出来时仍退出 0 且 stdout 合法\nPASS: 13：流程编排规则报告风险并给出非交互修法\nPASS: 13b：已豁免的流程编排规则不报风险\nPASS: 14：干净 AGENTS.md 不报告风险\nPASS: 15：AGENTS.md 不存在时退出 0 且不报问题\n  总计 19 通过 / 0 失败\n2026-10-08 17:29:21.786 xcodebuild[24115:172116740]  DVTFilePathFSEvents: Failed to start fs event stream.\n2026-10-08 17:29:22.001 xcodebuild[24115:172116739] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 \"Input/output error\". Using NSCachesDirectory instead.\n",
+        "outputSha256": "d47c357b1cbf0af75728cb30658efcbbd7edd0eda31d31b3920623d81a983d00",
+        "outputHashScope": "raw captured stdout+stderr before temporary-path replacement"
+      }
+    },
+    {
+      "id": "MUT-03-skip-version-probe",
+      "module": "detection",
+      "entries": [
+        "detection:D2-V2"
+      ],
+      "mutationFile": "plugins/delegate/scripts/backend.py",
+      "change": {
+        "old": "version_status, _ = probe_cli([codex, '--version'], env)",
+        "new": "version_status = 0  # deliberately accept presence alone"
+      },
+      "expectedFailure": "FAIL: 4：",
+      "passed": true,
+      "baseline": {
+        "exit": 0,
+        "seconds": 29.206,
+        "output": "PASS: 10：无 codex 时 hook 退出 0 且 stdout 为空\nPASS: 1：三级全过时显示可用\nPASS: 2：wrapper 不可执行时原因指向 wrapper\nPASS: 3：codex 不在 PATH 时给出对应原因\nPASS: 4：codex 装坏时给出安装命令\nPASS: 5：认证文件不存在时提示登录\nPASS: 6：认证文件为空时提示登录\nPASS: 10b：SessionStart 模式即使可用也零输出\nPASS: 7：新鲜缓存命中时不再调用 codex\nPASS: 8：过期缓存会重探 codex\nPASS: 9：非法缓存 JSON 不崩且会重探\nPASS: 11：各场景 hook stdout 均为空或合法 JSON\nPASS: 7b：--session-start 即使缓存新鲜也实探\nPASS: 12a：缓存写失败时仍退出 0 且 stdout 合法\nPASS: 12b：缓存目录建不出来时仍退出 0 且 stdout 合法\nPASS: 13：流程编排规则报告风险并给出非交互修法\nPASS: 13b：已豁免的流程编排规则不报风险\nPASS: 14：干净 AGENTS.md 不报告风险\nPASS: 15：AGENTS.md 不存在时退出 0 且不报问题\n  总计 19 通过 / 0 失败\n2026-10-08 17:24:14.017 xcodebuild[98179:172049707]  DVTFilePathFSEvents: Failed to start fs event stream.\n2026-10-08 17:24:14.235 xcodebuild[98179:172049693] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 \"Input/output error\". Using NSCachesDirectory instead.\n",
+        "outputSha256": "2c6feefa1e2506993852ed255144da4b695390bc4862d0bb18461151d5d44dac",
+        "outputHashScope": "raw captured stdout+stderr before temporary-path replacement"
+      },
+      "mutant": {
+        "exit": 1,
+        "seconds": 28.295,
+        "output": "PASS: 10：无 codex 时 hook 退出 0 且 stdout 为空\nPASS: 1：三级全过时显示可用\nPASS: 2：wrapper 不可执行时原因指向 wrapper\nPASS: 3：codex 不在 PATH 时给出对应原因\nPASS: 5：认证文件不存在时提示登录\nPASS: 6：认证文件为空时提示登录\nPASS: 10b：SessionStart 模式即使可用也零输出\nPASS: 7：新鲜缓存命中时不再调用 codex\nPASS: 8：过期缓存会重探 codex\nPASS: 9：非法缓存 JSON 不崩且会重探\nPASS: 11：各场景 hook stdout 均为空或合法 JSON\nPASS: 7b：--session-start 即使缓存新鲜也实探\nPASS: 12a：缓存写失败时仍退出 0 且 stdout 合法\nPASS: 12b：缓存目录建不出来时仍退出 0 且 stdout 合法\nPASS: 13：流程编排规则报告风险并给出非交互修法\nPASS: 13b：已豁免的流程编排规则不报风险\nPASS: 14：干净 AGENTS.md 不报告风险\nPASS: 15：AGENTS.md 不存在时退出 0 且不报问题\n  总计 18 通过 / 1 失败\nFAIL: 4：codex 装坏时给出安装命令（输出：可用）\n2026-10-08 17:29:48.900 xcodebuild[25495:172119988]  DVTFilePathFSEvents: Failed to start fs event stream.\n2026-10-08 17:29:49.109 xcodebuild[25495:172119986] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 \"Input/output error\". Using NSCachesDirectory instead.\n",
+        "outputSha256": "66047952917b40106c2dd10294c442e9b28e768f6d37e3189b21a25961ee0b56",
+        "outputHashScope": "raw captured stdout+stderr before temporary-path replacement"
+      },
+      "restored": {
+        "exit": 0,
+        "seconds": 30.521,
+        "output": "PASS: 10：无 codex 时 hook 退出 0 且 stdout 为空\nPASS: 1：三级全过时显示可用\nPASS: 2：wrapper 不可执行时原因指向 wrapper\nPASS: 3：codex 不在 PATH 时给出对应原因\nPASS: 4：codex 装坏时给出安装命令\nPASS: 5：认证文件不存在时提示登录\nPASS: 6：认证文件为空时提示登录\nPASS: 10b：SessionStart 模式即使可用也零输出\nPASS: 7：新鲜缓存命中时不再调用 codex\nPASS: 8：过期缓存会重探 codex\nPASS: 9：非法缓存 JSON 不崩且会重探\nPASS: 11：各场景 hook stdout 均为空或合法 JSON\nPASS: 7b：--session-start 即使缓存新鲜也实探\nPASS: 12a：缓存写失败时仍退出 0 且 stdout 合法\nPASS: 12b：缓存目录建不出来时仍退出 0 且 stdout 合法\nPASS: 13：流程编排规则报告风险并给出非交互修法\nPASS: 13b：已豁免的流程编排规则不报风险\nPASS: 14：干净 AGENTS.md 不报告风险\nPASS: 15：AGENTS.md 不存在时退出 0 且不报问题\n  总计 19 通过 / 0 失败\n2026-10-08 17:30:18.086 xcodebuild[27069:172124394]  DVTFilePathFSEvents: Failed to start fs event stream.\n2026-10-08 17:30:18.379 xcodebuild[27069:172124352] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 \"Input/output error\". Using NSCachesDirectory instead.\n",
+        "outputSha256": "260e71694b907b746a041d8c0986f3b5bb1d5ac4914b805bbeb00cbf9a223cc4",
+        "outputHashScope": "raw captured stdout+stderr before temporary-path replacement"
+      }
+    },
+    {
+      "id": "MUT-04-never-expire-cache",
+      "module": "detection",
+      "entries": [
+        "detection:D3-V2"
+      ],
+      "mutationFile": "plugins/delegate/hooks/detect.py",
+      "change": {
+        "old": "or not 0 <= age <= TTL_SECONDS or",
+        "new": "or not 0 <= age or"
+      },
+      "expectedFailure": "FAIL: 8：",
+      "passed": true,
+      "baseline": {
+        "exit": 0,
+        "seconds": 29.206,
+        "output": "PASS: 10：无 codex 时 hook 退出 0 且 stdout 为空\nPASS: 1：三级全过时显示可用\nPASS: 2：wrapper 不可执行时原因指向 wrapper\nPASS: 3：codex 不在 PATH 时给出对应原因\nPASS: 4：codex 装坏时给出安装命令\nPASS: 5：认证文件不存在时提示登录\nPASS: 6：认证文件为空时提示登录\nPASS: 10b：SessionStart 模式即使可用也零输出\nPASS: 7：新鲜缓存命中时不再调用 codex\nPASS: 8：过期缓存会重探 codex\nPASS: 9：非法缓存 JSON 不崩且会重探\nPASS: 11：各场景 hook stdout 均为空或合法 JSON\nPASS: 7b：--session-start 即使缓存新鲜也实探\nPASS: 12a：缓存写失败时仍退出 0 且 stdout 合法\nPASS: 12b：缓存目录建不出来时仍退出 0 且 stdout 合法\nPASS: 13：流程编排规则报告风险并给出非交互修法\nPASS: 13b：已豁免的流程编排规则不报风险\nPASS: 14：干净 AGENTS.md 不报告风险\nPASS: 15：AGENTS.md 不存在时退出 0 且不报问题\n  总计 19 通过 / 0 失败\n2026-10-08 17:24:14.017 xcodebuild[98179:172049707]  DVTFilePathFSEvents: Failed to start fs event stream.\n2026-10-08 17:24:14.235 xcodebuild[98179:172049693] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 \"Input/output error\". Using NSCachesDirectory instead.\n",
+        "outputSha256": "2c6feefa1e2506993852ed255144da4b695390bc4862d0bb18461151d5d44dac",
+        "outputHashScope": "raw captured stdout+stderr before temporary-path replacement"
+      },
+      "mutant": {
+        "exit": 1,
+        "seconds": 32.353,
+        "output": "PASS: 10：无 codex 时 hook 退出 0 且 stdout 为空\nPASS: 1：三级全过时显示可用\nPASS: 2：wrapper 不可执行时原因指向 wrapper\nPASS: 3：codex 不在 PATH 时给出对应原因\nPASS: 4：codex 装坏时给出安装命令\nPASS: 5：认证文件不存在时提示登录\nPASS: 6：认证文件为空时提示登录\nPASS: 10b：SessionStart 模式即使可用也零输出\nPASS: 7：新鲜缓存命中时不再调用 codex\nPASS: 9：非法缓存 JSON 不崩且会重探\nPASS: 11：各场景 hook stdout 均为空或合法 JSON\nPASS: 7b：--session-start 即使缓存新鲜也实探\nPASS: 12a：缓存写失败时仍退出 0 且 stdout 合法\nPASS: 12b：缓存目录建不出来时仍退出 0 且 stdout 合法\nPASS: 13：流程编排规则报告风险并给出非交互修法\nPASS: 13b：已豁免的流程编排规则不报风险\nPASS: 14：干净 AGENTS.md 不报告风险\nPASS: 15：AGENTS.md 不存在时退出 0 且不报问题\n  总计 18 通过 / 1 失败\n2026-10-08 17:30:49.601 xcodebuild[29877:172132229]  DVTFilePathFSEvents: Failed to start fs event stream.\n2026-10-08 17:30:49.825 xcodebuild[29877:172132217] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 \"Input/output error\". Using NSCachesDirectory instead.\nFAIL: 8：过期缓存没有重探 codex\n",
+        "outputSha256": "2e743c9bbe83e215de17d0d19356305d682e3e3fb2655536182d52c2fa5efb2b",
+        "outputHashScope": "raw captured stdout+stderr before temporary-path replacement"
+      },
+      "restored": {
+        "exit": 0,
+        "seconds": 40.005,
+        "output": "PASS: 10：无 codex 时 hook 退出 0 且 stdout 为空\nPASS: 1：三级全过时显示可用\nPASS: 2：wrapper 不可执行时原因指向 wrapper\nPASS: 3：codex 不在 PATH 时给出对应原因\nPASS: 4：codex 装坏时给出安装命令\nPASS: 5：认证文件不存在时提示登录\nPASS: 6：认证文件为空时提示登录\nPASS: 10b：SessionStart 模式即使可用也零输出\nPASS: 7：新鲜缓存命中时不再调用 codex\nPASS: 8：过期缓存会重探 codex\nPASS: 9：非法缓存 JSON 不崩且会重探\nPASS: 11：各场景 hook stdout 均为空或合法 JSON\nPASS: 7b：--session-start 即使缓存新鲜也实探\nPASS: 12a：缓存写失败时仍退出 0 且 stdout 合法\nPASS: 12b：缓存目录建不出来时仍退出 0 且 stdout 合法\nPASS: 13：流程编排规则报告风险并给出非交互修法\nPASS: 13b：已豁免的流程编排规则不报风险\nPASS: 14：干净 AGENTS.md 不报告风险\nPASS: 15：AGENTS.md 不存在时退出 0 且不报问题\n  总计 19 通过 / 0 失败\n2026-10-08 17:31:22.573 xcodebuild[32247:172140254]  DVTFilePathFSEvents: Failed to start fs event stream.\n2026-10-08 17:31:22.837 xcodebuild[32247:172140249] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 \"Input/output error\". Using NSCachesDirectory instead.\n",
+        "outputSha256": "4175e7757616b23d77d7c68319c8876c8541fa7f93253fed6d9e18e1a54251ec",
+        "outputHashScope": "raw captured stdout+stderr before temporary-path replacement"
+      }
+    },
+    {
+      "id": "MUT-05-extra-plain-text",
+      "module": "detection",
+      "entries": [
+        "detection:D4-V2"
+      ],
+      "mutationFile": "plugins/delegate/hooks/detect.py",
+      "change": {
+        "old": "print(json.dumps({'hookSpecificOutput':",
+        "new": "print('MUTATION unexpected non-JSON output')\n        print(json.dumps({'hookSpecificOutput':"
+      },
+      "expectedFailure": "FAIL: 11：",
+      "passed": true,
+      "baseline": {
+        "exit": 0,
+        "seconds": 29.206,
+        "output": "PASS: 10：无 codex 时 hook 退出 0 且 stdout 为空\nPASS: 1：三级全过时显示可用\nPASS: 2：wrapper 不可执行时原因指向 wrapper\nPASS: 3：codex 不在 PATH 时给出对应原因\nPASS: 4：codex 装坏时给出安装命令\nPASS: 5：认证文件不存在时提示登录\nPASS: 6：认证文件为空时提示登录\nPASS: 10b：SessionStart 模式即使可用也零输出\nPASS: 7：新鲜缓存命中时不再调用 codex\nPASS: 8：过期缓存会重探 codex\nPASS: 9：非法缓存 JSON 不崩且会重探\nPASS: 11：各场景 hook stdout 均为空或合法 JSON\nPASS: 7b：--session-start 即使缓存新鲜也实探\nPASS: 12a：缓存写失败时仍退出 0 且 stdout 合法\nPASS: 12b：缓存目录建不出来时仍退出 0 且 stdout 合法\nPASS: 13：流程编排规则报告风险并给出非交互修法\nPASS: 13b：已豁免的流程编排规则不报风险\nPASS: 14：干净 AGENTS.md 不报告风险\nPASS: 15：AGENTS.md 不存在时退出 0 且不报问题\n  总计 19 通过 / 0 失败\n2026-10-08 17:24:14.017 xcodebuild[98179:172049707]  DVTFilePathFSEvents: Failed to start fs event stream.\n2026-10-08 17:24:14.235 xcodebuild[98179:172049693] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 \"Input/output error\". Using NSCachesDirectory instead.\n",
+        "outputSha256": "2c6feefa1e2506993852ed255144da4b695390bc4862d0bb18461151d5d44dac",
+        "outputHashScope": "raw captured stdout+stderr before temporary-path replacement"
+      },
+      "mutant": {
+        "exit": 1,
+        "seconds": 39.827,
+        "output": "PASS: 10：无 codex 时 hook 退出 0 且 stdout 为空\nPASS: 1：三级全过时显示可用\nPASS: 2：wrapper 不可执行时原因指向 wrapper\nPASS: 3：codex 不在 PATH 时给出对应原因\nPASS: 4：codex 装坏时给出安装命令\nPASS: 5：认证文件不存在时提示登录\nPASS: 6：认证文件为空时提示登录\nPASS: 10b：SessionStart 模式即使可用也零输出\nPASS: 7：新鲜缓存命中时不再调用 codex\nPASS: 8：过期缓存会重探 codex\nPASS: 9：非法缓存 JSON 不崩且会重探\nPASS: 7b：--session-start 即使缓存新鲜也实探\nPASS: 12b：缓存目录建不出来时仍退出 0 且 stdout 合法\nPASS: 13：流程编排规则报告风险并给出非交互修法\nPASS: 13b：已豁免的流程编排规则不报风险\nPASS: 14：干净 AGENTS.md 不报告风险\nPASS: 15：AGENTS.md 不存在时退出 0 且不报问题\n  总计 17 通过 / 2 失败\n2026-10-08 17:32:04.632 xcodebuild[38719:172157210]  DVTFilePathFSEvents: Failed to start fs event stream.\n2026-10-08 17:32:05.047 xcodebuild[38719:172157189] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 \"Input/output error\". Using NSCachesDirectory instead.\nFAIL: 11：某个场景的 hook stdout 不是合法 JSON\nFAIL: 12a：缓存写失败时状态 0 或 stdout 非法\n",
+        "outputSha256": "d960c90bf7f2011f576afd1c4137af50a8194c1806c7c2833033565e7c49ffe7",
+        "outputHashScope": "raw captured stdout+stderr before temporary-path replacement"
+      },
+      "restored": {
+        "exit": 0,
+        "seconds": 44.231,
+        "output": "PASS: 10：无 codex 时 hook 退出 0 且 stdout 为空\nPASS: 1：三级全过时显示可用\nPASS: 2：wrapper 不可执行时原因指向 wrapper\nPASS: 3：codex 不在 PATH 时给出对应原因\nPASS: 4：codex 装坏时给出安装命令\nPASS: 5：认证文件不存在时提示登录\nPASS: 6：认证文件为空时提示登录\nPASS: 10b：SessionStart 模式即使可用也零输出\nPASS: 7：新鲜缓存命中时不再调用 codex\nPASS: 8：过期缓存会重探 codex\nPASS: 9：非法缓存 JSON 不崩且会重探\nPASS: 11：各场景 hook stdout 均为空或合法 JSON\nPASS: 7b：--session-start 即使缓存新鲜也实探\nPASS: 12a：缓存写失败时仍退出 0 且 stdout 合法\nPASS: 12b：缓存目录建不出来时仍退出 0 且 stdout 合法\nPASS: 13：流程编排规则报告风险并给出非交互修法\nPASS: 13b：已豁免的流程编排规则不报风险\nPASS: 14：干净 AGENTS.md 不报告风险\nPASS: 15：AGENTS.md 不存在时退出 0 且不报问题\n  总计 19 通过 / 0 失败\n2026-10-08 17:32:45.439 xcodebuild[42840:172168910]  DVTFilePathFSEvents: Failed to start fs event stream.\n2026-10-08 17:32:46.026 xcodebuild[42840:172168862] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 \"Input/output error\". Using NSCachesDirectory instead.\n",
+        "outputSha256": "f63056b09d1e3a8be043be28587da844ffc8852b6d9303001a918030af18567d",
+        "outputHashScope": "raw captured stdout+stderr before temporary-path replacement"
+      }
+    },
+    {
+      "id": "MUT-06-doctor-false-alarm",
+      "module": "detection",
+      "entries": [
+        "detection:D5-V3"
+      ],
+      "mutationFile": "plugins/delegate/hooks/doctor.sh",
+      "change": {
+        "old": "if [ \"${ORCHESTRATION}\" -eq 0 ]; then",
+        "new": "if false; then"
+      },
+      "expectedFailure": "FAIL: 14：",
+      "passed": true,
+      "baseline": {
+        "exit": 0,
+        "seconds": 29.206,
+        "output": "PASS: 10：无 codex 时 hook 退出 0 且 stdout 为空\nPASS: 1：三级全过时显示可用\nPASS: 2：wrapper 不可执行时原因指向 wrapper\nPASS: 3：codex 不在 PATH 时给出对应原因\nPASS: 4：codex 装坏时给出安装命令\nPASS: 5：认证文件不存在时提示登录\nPASS: 6：认证文件为空时提示登录\nPASS: 10b：SessionStart 模式即使可用也零输出\nPASS: 7：新鲜缓存命中时不再调用 codex\nPASS: 8：过期缓存会重探 codex\nPASS: 9：非法缓存 JSON 不崩且会重探\nPASS: 11：各场景 hook stdout 均为空或合法 JSON\nPASS: 7b：--session-start 即使缓存新鲜也实探\nPASS: 12a：缓存写失败时仍退出 0 且 stdout 合法\nPASS: 12b：缓存目录建不出来时仍退出 0 且 stdout 合法\nPASS: 13：流程编排规则报告风险并给出非交互修法\nPASS: 13b：已豁免的流程编排规则不报风险\nPASS: 14：干净 AGENTS.md 不报告风险\nPASS: 15：AGENTS.md 不存在时退出 0 且不报问题\n  总计 19 通过 / 0 失败\n2026-10-08 17:24:14.017 xcodebuild[98179:172049707]  DVTFilePathFSEvents: Failed to start fs event stream.\n2026-10-08 17:24:14.235 xcodebuild[98179:172049693] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 \"Input/output error\". Using NSCachesDirectory instead.\n",
+        "outputSha256": "2c6feefa1e2506993852ed255144da4b695390bc4862d0bb18461151d5d44dac",
+        "outputHashScope": "raw captured stdout+stderr before temporary-path replacement"
+      },
+      "mutant": {
+        "exit": 1,
+        "seconds": 47.042,
+        "output": "PASS: 10：无 codex 时 hook 退出 0 且 stdout 为空\nPASS: 1：三级全过时显示可用\nPASS: 2：wrapper 不可执行时原因指向 wrapper\nPASS: 3：codex 不在 PATH 时给出对应原因\nPASS: 4：codex 装坏时给出安装命令\nPASS: 5：认证文件不存在时提示登录\nPASS: 6：认证文件为空时提示登录\nPASS: 10b：SessionStart 模式即使可用也零输出\nPASS: 7：新鲜缓存命中时不再调用 codex\nPASS: 8：过期缓存会重探 codex\nPASS: 9：非法缓存 JSON 不崩且会重探\nPASS: 11：各场景 hook stdout 均为空或合法 JSON\nPASS: 7b：--session-start 即使缓存新鲜也实探\nPASS: 12a：缓存写失败时仍退出 0 且 stdout 合法\nPASS: 12b：缓存目录建不出来时仍退出 0 且 stdout 合法\nPASS: 13：流程编排规则报告风险并给出非交互修法\nPASS: 13b：已豁免的流程编排规则不报风险\nPASS: 15：AGENTS.md 不存在时退出 0 且不报问题\n  总计 18 通过 / 1 失败\n2026-10-08 17:33:33.298 xcodebuild[47642:172183260]  DVTFilePathFSEvents: Failed to start fs event stream.\n2026-10-08 17:33:33.719 xcodebuild[47642:172183241] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 \"Input/output error\". Using NSCachesDirectory instead.\nFAIL: 14：干净 AGENTS.md 产生风险报告（输出：安装与登录\n可用\n\n诊断范围：已刷新本地基础条件；未验证远端连接、额度、模型权限或项目级规则。\n\nAGENTS.md 体检\n风险：发现可能让非交互委托死锁的流程编排规则。\n修法：在该节开头加一条「本节仅适用于交互式会话；非交互调用（codex exec）时整节跳过，直接执行到底」。\n原因：codex exec 是非交互的，没有人能回答确认请求，Codex 可能停在“请确认后我执行”而什么都不做；请检查实际生效的全局与项目级规则。\n\n小结：发现 1 个问题）\n",
+        "outputSha256": "70d2ef76bd8aadd0c8e14fca972fd57b4408c4e23625989b4591210e6fab0931",
+        "outputHashScope": "raw captured stdout+stderr before temporary-path replacement"
+      },
+      "restored": {
+        "exit": 0,
+        "seconds": 46.256,
+        "output": "PASS: 10：无 codex 时 hook 退出 0 且 stdout 为空\nPASS: 1：三级全过时显示可用\nPASS: 2：wrapper 不可执行时原因指向 wrapper\nPASS: 3：codex 不在 PATH 时给出对应原因\nPASS: 4：codex 装坏时给出安装命令\nPASS: 5：认证文件不存在时提示登录\nPASS: 6：认证文件为空时提示登录\nPASS: 10b：SessionStart 模式即使可用也零输出\nPASS: 7：新鲜缓存命中时不再调用 codex\nPASS: 8：过期缓存会重探 codex\nPASS: 9：非法缓存 JSON 不崩且会重探\nPASS: 11：各场景 hook stdout 均为空或合法 JSON\nPASS: 7b：--session-start 即使缓存新鲜也实探\nPASS: 12a：缓存写失败时仍退出 0 且 stdout 合法\nPASS: 12b：缓存目录建不出来时仍退出 0 且 stdout 合法\nPASS: 13：流程编排规则报告风险并给出非交互修法\nPASS: 13b：已豁免的流程编排规则不报风险\nPASS: 14：干净 AGENTS.md 不报告风险\nPASS: 15：AGENTS.md 不存在时退出 0 且不报问题\n  总计 19 通过 / 0 失败\n2026-10-08 17:34:22.683 xcodebuild[56680:172205000]  DVTFilePathFSEvents: Failed to start fs event stream.\n2026-10-08 17:34:23.378 xcodebuild[56680:172204967] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 \"Input/output error\". Using NSCachesDirectory instead.\n",
+        "outputSha256": "9344794b52e8228d90a5baea37cb3735040885aeba1527030c51bd0e91d21157",
+        "outputHashScope": "raw captured stdout+stderr before temporary-path replacement"
+      }
+    },
+    {
+      "id": "MUT-07-unavailable-routing-output",
+      "module": "routing",
+      "entries": [
+        "routing:R1-V2"
+      ],
+      "mutationFile": "plugins/delegate/hooks/route.sh",
+      "change": {
+        "old": "if cache and cache['available']:",
+        "new": "if cache:"
+      },
+      "expectedFailure": "FAIL: R1：",
+      "passed": true,
+      "baseline": {
+        "exit": 0,
+        "seconds": 11.463,
+        "output": "PASS: R1：不可用缓存时 route.sh 零输出且退出 0\nPASS: R2：缓存缺失时 route.sh 零输出且退出 0\nPASS: R3：可用新鲜缓存注入一行合法 JSON，且不重新探测\nPASS: R4：路由指针要求等用户确认，且不含越闸措辞\nPASS: R5：不可用、缺失、损坏、可用缓存的 stdout 均为空或合法 JSON\nPASS: R2b：过期缓存时零注入\nPASS: R6：非法缓存时退出 0、零输出、零噪音\nPASS: R7：SKILL.md 含分流表的六类活\nPASS: R8：SKILL.md 原样禁止自动派\n  总计 9 通过 / 0 失败\n2026-10-08 17:24:27.518 xcodebuild[99178:172053199]  DVTFilePathFSEvents: Failed to start fs event stream.\n2026-10-08 17:24:27.726 xcodebuild[99178:172053184] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 \"Input/output error\". Using NSCachesDirectory instead.\n",
+        "outputSha256": "b6c869be266a9916fe14468d86213a66f48a5d6b1a7b59171b3825e7697f5f11",
+        "outputHashScope": "raw captured stdout+stderr before temporary-path replacement"
+      },
+      "mutant": {
+        "exit": 1,
+        "seconds": 13.671,
+        "output": "PASS: R2：缓存缺失时 route.sh 零输出且退出 0\nPASS: R3：可用新鲜缓存注入一行合法 JSON，且不重新探测\nPASS: R4：路由指针要求等用户确认，且不含越闸措辞\nPASS: R5：不可用、缺失、损坏、可用缓存的 stdout 均为空或合法 JSON\nPASS: R2b：过期缓存时零注入\nPASS: R6：非法缓存时退出 0、零输出、零噪音\nPASS: R7：SKILL.md 含分流表的六类活\nPASS: R8：SKILL.md 原样禁止自动派\n  总计 8 通过 / 1 失败\n2026-10-08 17:34:42.540 xcodebuild[58783:172210757]  DVTFilePathFSEvents: Failed to start fs event stream.\n2026-10-08 17:34:42.816 xcodebuild[58783:172210746] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 \"Input/output error\". Using NSCachesDirectory instead.\nFAIL: R1：不可用缓存时 route.sh 没有零输出或没有退出 0\n",
+        "outputSha256": "5674d18cf967cc87e3c52504a27832512f8e8502817181cbc1ee048b3fa47e80",
+        "outputHashScope": "raw captured stdout+stderr before temporary-path replacement"
+      },
+      "restored": {
+        "exit": 0,
+        "seconds": 17.943,
+        "output": "PASS: R1：不可用缓存时 route.sh 零输出且退出 0\nPASS: R2：缓存缺失时 route.sh 零输出且退出 0\nPASS: R3：可用新鲜缓存注入一行合法 JSON，且不重新探测\nPASS: R4：路由指针要求等用户确认，且不含越闸措辞\nPASS: R5：不可用、缺失、损坏、可用缓存的 stdout 均为空或合法 JSON\nPASS: R2b：过期缓存时零注入\nPASS: R6：非法缓存时退出 0、零输出、零噪音\nPASS: R7：SKILL.md 含分流表的六类活\nPASS: R8：SKILL.md 原样禁止自动派\n  总计 9 通过 / 0 失败\n2026-10-08 17:34:56.222 xcodebuild[59857:172213566]  DVTFilePathFSEvents: Failed to start fs event stream.\n2026-10-08 17:34:56.448 xcodebuild[59857:172213556] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 \"Input/output error\". Using NSCachesDirectory instead.\n",
+        "outputSha256": "f83fcb2ffd39762f7790919c83b61db40596c21407666ccbb8374191e7797dcb",
+        "outputHashScope": "raw captured stdout+stderr before temporary-path replacement"
+      }
+    },
+    {
+      "id": "MUT-08-cross-confirmation-gate",
+      "module": "routing",
+      "entries": [
+        "routing:R1-V3"
+      ],
+      "mutationFile": "plugins/delegate/hooks/route.sh",
+      "change": {
+        "old": "等用户确认后再调",
+        "new": "我这就派"
+      },
+      "expectedFailure": "FAIL: R4：",
+      "passed": true,
+      "baseline": {
+        "exit": 0,
+        "seconds": 11.463,
+        "output": "PASS: R1：不可用缓存时 route.sh 零输出且退出 0\nPASS: R2：缓存缺失时 route.sh 零输出且退出 0\nPASS: R3：可用新鲜缓存注入一行合法 JSON，且不重新探测\nPASS: R4：路由指针要求等用户确认，且不含越闸措辞\nPASS: R5：不可用、缺失、损坏、可用缓存的 stdout 均为空或合法 JSON\nPASS: R2b：过期缓存时零注入\nPASS: R6：非法缓存时退出 0、零输出、零噪音\nPASS: R7：SKILL.md 含分流表的六类活\nPASS: R8：SKILL.md 原样禁止自动派\n  总计 9 通过 / 0 失败\n2026-10-08 17:24:27.518 xcodebuild[99178:172053199]  DVTFilePathFSEvents: Failed to start fs event stream.\n2026-10-08 17:24:27.726 xcodebuild[99178:172053184] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 \"Input/output error\". Using NSCachesDirectory instead.\n",
+        "outputSha256": "b6c869be266a9916fe14468d86213a66f48a5d6b1a7b59171b3825e7697f5f11",
+        "outputHashScope": "raw captured stdout+stderr before temporary-path replacement"
+      },
+      "mutant": {
+        "exit": 1,
+        "seconds": 18.384,
+        "output": "PASS: R1：不可用缓存时 route.sh 零输出且退出 0\nPASS: R2：缓存缺失时 route.sh 零输出且退出 0\nPASS: R3：可用新鲜缓存注入一行合法 JSON，且不重新探测\nPASS: R5：不可用、缺失、损坏、可用缓存的 stdout 均为空或合法 JSON\nPASS: R2b：过期缓存时零注入\nPASS: R6：非法缓存时退出 0、零输出、零噪音\nPASS: R7：SKILL.md 含分流表的六类活\nPASS: R8：SKILL.md 原样禁止自动派\n  总计 8 通过 / 1 失败\n2026-10-08 17:35:14.316 xcodebuild[60834:172216913]  DVTFilePathFSEvents: Failed to start fs event stream.\n2026-10-08 17:35:14.704 xcodebuild[60834:172216904] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 \"Input/output error\". Using NSCachesDirectory instead.\nFAIL: R4：路由指针缺少确认闸门或含越闸措辞\n",
+        "outputSha256": "dc8f0722bdec7791f2bc6eb33a568e96fcab9c534d2bea17f774d9aca68ab0c7",
+        "outputHashScope": "raw captured stdout+stderr before temporary-path replacement"
+      },
+      "restored": {
+        "exit": 0,
+        "seconds": 15.732,
+        "output": "PASS: R1：不可用缓存时 route.sh 零输出且退出 0\nPASS: R2：缓存缺失时 route.sh 零输出且退出 0\nPASS: R3：可用新鲜缓存注入一行合法 JSON，且不重新探测\nPASS: R4：路由指针要求等用户确认，且不含越闸措辞\nPASS: R5：不可用、缺失、损坏、可用缓存的 stdout 均为空或合法 JSON\nPASS: R2b：过期缓存时零注入\nPASS: R6：非法缓存时退出 0、零输出、零噪音\nPASS: R7：SKILL.md 含分流表的六类活\nPASS: R8：SKILL.md 原样禁止自动派\n  总计 9 通过 / 0 失败\n2026-10-08 17:35:32.578 xcodebuild[62004:172220620]  DVTFilePathFSEvents: Failed to start fs event stream.\n2026-10-08 17:35:32.916 xcodebuild[62004:172220610] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 \"Input/output error\". Using NSCachesDirectory instead.\n",
+        "outputSha256": "687c2b2551fb096cfbcd3fdc20d09cb9672565896d3bf6db704e233e8e529b39",
+        "outputHashScope": "raw captured stdout+stderr before temporary-path replacement"
+      }
+    },
+    {
+      "id": "MUT-09-remove-auto-ban",
+      "module": "routing",
+      "entries": [
+        "routing:R2-V2"
+      ],
+      "mutationFile": "plugins/delegate/skills/delegate-routing/SKILL.md",
+      "change": {
+        "old": "绝不自动派：只提议，等用户一个明确的肯定答复再调。",
+        "new": "MUTATION 自动派禁令已删除"
+      },
+      "expectedFailure": "FAIL: R8：",
+      "passed": true,
+      "baseline": {
+        "exit": 0,
+        "seconds": 11.463,
+        "output": "PASS: R1：不可用缓存时 route.sh 零输出且退出 0\nPASS: R2：缓存缺失时 route.sh 零输出且退出 0\nPASS: R3：可用新鲜缓存注入一行合法 JSON，且不重新探测\nPASS: R4：路由指针要求等用户确认，且不含越闸措辞\nPASS: R5：不可用、缺失、损坏、可用缓存的 stdout 均为空或合法 JSON\nPASS: R2b：过期缓存时零注入\nPASS: R6：非法缓存时退出 0、零输出、零噪音\nPASS: R7：SKILL.md 含分流表的六类活\nPASS: R8：SKILL.md 原样禁止自动派\n  总计 9 通过 / 0 失败\n2026-10-08 17:24:27.518 xcodebuild[99178:172053199]  DVTFilePathFSEvents: Failed to start fs event stream.\n2026-10-08 17:24:27.726 xcodebuild[99178:172053184] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 \"Input/output error\". Using NSCachesDirectory instead.\n",
+        "outputSha256": "b6c869be266a9916fe14468d86213a66f48a5d6b1a7b59171b3825e7697f5f11",
+        "outputHashScope": "raw captured stdout+stderr before temporary-path replacement"
+      },
+      "mutant": {
+        "exit": 1,
+        "seconds": 16.755,
+        "output": "PASS: R1：不可用缓存时 route.sh 零输出且退出 0\nPASS: R2：缓存缺失时 route.sh 零输出且退出 0\nPASS: R3：可用新鲜缓存注入一行合法 JSON，且不重新探测\nPASS: R4：路由指针要求等用户确认，且不含越闸措辞\nPASS: R5：不可用、缺失、损坏、可用缓存的 stdout 均为空或合法 JSON\nPASS: R2b：过期缓存时零注入\nPASS: R6：非法缓存时退出 0、零输出、零噪音\nPASS: R7：SKILL.md 含分流表的六类活\n  总计 8 通过 / 1 失败\n2026-10-08 17:35:48.403 xcodebuild[63251:172224018]  DVTFilePathFSEvents: Failed to start fs event stream.\n2026-10-08 17:35:48.726 xcodebuild[63251:172224008] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 \"Input/output error\". Using NSCachesDirectory instead.\nFAIL: R8：SKILL.md 缺少原样的自动派禁令\n",
+        "outputSha256": "e136377ee7423e8beb3fb54cb90d2d3ec66bb1077341c653d7b4c2a9f7ecfaf0",
+        "outputHashScope": "raw captured stdout+stderr before temporary-path replacement"
+      },
+      "restored": {
+        "exit": 0,
+        "seconds": 15.122,
+        "output": "PASS: R1：不可用缓存时 route.sh 零输出且退出 0\nPASS: R2：缓存缺失时 route.sh 零输出且退出 0\nPASS: R3：可用新鲜缓存注入一行合法 JSON，且不重新探测\nPASS: R4：路由指针要求等用户确认，且不含越闸措辞\nPASS: R5：不可用、缺失、损坏、可用缓存的 stdout 均为空或合法 JSON\nPASS: R2b：过期缓存时零注入\nPASS: R6：非法缓存时退出 0、零输出、零噪音\nPASS: R7：SKILL.md 含分流表的六类活\nPASS: R8：SKILL.md 原样禁止自动派\n  总计 9 通过 / 0 失败\n2026-10-08 17:36:05.306 xcodebuild[64266:172226891]  DVTFilePathFSEvents: Failed to start fs event stream.\n2026-10-08 17:36:05.713 xcodebuild[64266:172226884] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 \"Input/output error\". Using NSCachesDirectory instead.\n",
+        "outputSha256": "587a1bf8586fb5d5f751f8f78c73b409209376d389ab43613e2a8acb04a53445",
+        "outputHashScope": "raw captured stdout+stderr before temporary-path replacement"
+      }
+    }
+  ],
+  "footprint": {
+    "id": "FOOTPRINT-01",
+    "entries": [
+      "detection:D3-V3"
+    ],
+    "passed": true,
+    "before": {
+      ".git": {
+        "mode": 493,
+        "mtimeNs": 1791452179836071827,
+        "type": "directory"
+      },
+      ".git/HEAD": {
+        "mode": 420,
+        "mtimeNs": 1791452179835800368,
+        "type": "file",
+        "sha256": "28d25bf82af4c0e2b72f50959b2beb859e3e60b9630a5e8c603dad4ddb2b6e80",
+        "size": 21
+      },
+      ".git/config": {
+        "mode": 420,
+        "mtimeNs": 1791452179834683364,
+        "type": "file",
+        "sha256": "cae33efdb02cf774435c1ff9cb16bcc1014606908530c6e1dc727615fe3e8cda",
+        "size": 137
+      },
+      ".git/description": {
+        "mode": 420,
+        "mtimeNs": 1791452179829527182,
+        "type": "file",
+        "sha256": "85ab6c163d43a17ea9cf7788308bca1466f1b0a8d1cc92e26e9bf63da4062aee",
+        "size": 73
+      },
+      ".git/hooks": {
+        "mode": 493,
+        "mtimeNs": 1791452179832418649,
+        "type": "directory"
+      },
+      ".git/hooks/applypatch-msg.sample": {
+        "mode": 493,
+        "mtimeNs": 1791452179830999311,
+        "type": "file",
+        "sha256": "0223497a0b8b033aa58a3a521b8629869386cf7ab0e2f101963d328aa62193f7",
+        "size": 478
+      },
+      ".git/hooks/commit-msg.sample": {
+        "mode": 493,
+        "mtimeNs": 1791452179829949100,
+        "type": "file",
+        "sha256": "1f74d5e9292979b573ebd59741d46cb93ff391acdd083d340b94370753d92437",
+        "size": 896
+      },
+      ".git/hooks/fsmonitor-watchman.sample": {
+        "mode": 493,
+        "mtimeNs": 1791452179831287354,
+        "type": "file",
+        "sha256": "e0549964e93897b519bd8e333c037e51fff0f88ba13e086a331592bf801fa1d0",
+        "size": 4726
+      },
+      ".git/hooks/post-update.sample": {
+        "mode": 493,
+        "mtimeNs": 1791452179831610605,
+        "type": "file",
+        "sha256": "81765af2daef323061dcbc5e61fc16481cb74b3bac9ad8a174b186523586f6c5",
+        "size": 189
+      },
+      ".git/hooks/pre-applypatch.sample": {
+        "mode": 493,
+        "mtimeNs": 1791452179832108106,
+        "type": "file",
+        "sha256": "e15c5b469ea3e0a695bea6f2c82bcf8e62821074939ddd85b77e0007ff165475",
+        "size": 424
+      },
+      ".git/hooks/pre-commit.sample": {
+        "mode": 493,
+        "mtimeNs": 1791452179830855269,
+        "type": "file",
+        "sha256": "57185b7b9f05239d7ab52db045f5b89eb31348d7b2177eab214f5eb872e1971b",
+        "size": 1649
+      },
+      ".git/hooks/pre-merge-commit.sample": {
+        "mode": 493,
+        "mtimeNs": 1791452179831828522,
+        "type": "file",
+        "sha256": "d3825a70337940ebbd0a5c072984e13245920cdf8898bd225c8d27a6dfc9cb53",
+        "size": 416
+      },
+      ".git/hooks/pre-push.sample": {
+        "mode": 493,
+        "mtimeNs": 1791452179832228648,
+        "type": "file",
+        "sha256": "ecce9c7e04d3f5dd9d8ada81753dd1d549a9634b26770042b58dda00217d086a",
+        "size": 1374
+      },
+      ".git/hooks/pre-rebase.sample": {
+        "mode": 493,
+        "mtimeNs": 1791452179830232517,
+        "type": "file",
+        "sha256": "4febce867790052338076f4e66cc47efb14879d18097d1d61c8261859eaaa7b3",
+        "size": 4898
+      },
+      ".git/hooks/pre-receive.sample": {
+        "mode": 493,
+        "mtimeNs": 1791452179831395854,
+        "type": "file",
+        "sha256": "a4c3d2b9c7bb3fd8d1441c31bd4ee71a595d66b44fcf49ddb310252320169989",
+        "size": 544
+      },
+      ".git/hooks/prepare-commit-msg.sample": {
+        "mode": 493,
+        "mtimeNs": 1791452179831507938,
+        "type": "file",
+        "sha256": "e9ddcaa4189fddd25ed97fc8c789eca7b6ca16390b2392ae3276f0c8e1aa4619",
+        "size": 1492
+      },
+      ".git/hooks/push-to-checkout.sample": {
+        "mode": 493,
+        "mtimeNs": 1791452179832482608,
+        "type": "file",
+        "sha256": "a53d0741798b287c6dd7afa64aee473f305e65d3f49463bb9d7408ec3b12bf5f",
+        "size": 2783
+      },
+      ".git/hooks/sendemail-validate.sample": {
+        "mode": 493,
+        "mtimeNs": 1791452179830597602,
+        "type": "file",
+        "sha256": "44ebfc923dc5466bc009602f0ecf067b9c65459abfe8868ddc49b78e6ced7a92",
+        "size": 2308
+      },
+      ".git/hooks/update.sample": {
+        "mode": 493,
+        "mtimeNs": 1791452179832333649,
+        "type": "file",
+        "sha256": "8d5f2fa83e103cf08b57eaa67521df9194f45cbdbcb37da52ad586097a14d106",
+        "size": 3650
+      },
+      ".git/info": {
+        "mode": 493,
+        "mtimeNs": 1791452179829184555,
+        "type": "directory"
+      },
+      ".git/info/exclude": {
+        "mode": 420,
+        "mtimeNs": 1791452179829336556,
+        "type": "file",
+        "sha256": "6671fe83b7a07c8932ee89164d1f2793b2318058eb8b98dc5c06ee0a5a3b0ec1",
+        "size": 240
+      },
+      ".git/objects": {
+        "mode": 493,
+        "mtimeNs": 1791452179836211536,
+        "type": "directory"
+      },
+      ".git/objects/info": {
+        "mode": 493,
+        "mtimeNs": 1791452179836209828,
+        "type": "directory"
+      },
+      ".git/objects/pack": {
+        "mode": 493,
+        "mtimeNs": 1791452179836108786,
+        "type": "directory"
+      },
+      ".git/refs": {
+        "mode": 493,
+        "mtimeNs": 1791452179835667326,
+        "type": "directory"
+      },
+      ".git/refs/heads": {
+        "mode": 493,
+        "mtimeNs": 1791452179835627159,
+        "type": "directory"
+      },
+      ".git/refs/tags": {
+        "mode": 493,
+        "mtimeNs": 1791452179835666118,
+        "type": "directory"
+      },
+      "README.md": {
+        "mode": 420,
+        "mtimeNs": 1791452179795565408,
+        "type": "file",
+        "sha256": "a68e5ab03a780765d91d4e1f6959ccee19bdfb7943f2eeb46ff37b95adad7883",
+        "size": 31
+      },
+      "nested": {
+        "mode": 493,
+        "mtimeNs": 1791452179795687325,
+        "type": "directory"
+      },
+      "nested/data.txt": {
+        "mode": 420,
+        "mtimeNs": 1791452179795753367,
+        "type": "file",
+        "sha256": "1cd263f1102656dd6b6cf1d626d1a96f9eba0406af3cb2a52560d473d4801052",
+        "size": 10
+      }
+    },
+    "after": {
+      ".git": {
+        "mode": 493,
+        "mtimeNs": 1791452179836071827,
+        "type": "directory"
+      },
+      ".git/HEAD": {
+        "mode": 420,
+        "mtimeNs": 1791452179835800368,
+        "type": "file",
+        "sha256": "28d25bf82af4c0e2b72f50959b2beb859e3e60b9630a5e8c603dad4ddb2b6e80",
+        "size": 21
+      },
+      ".git/config": {
+        "mode": 420,
+        "mtimeNs": 1791452179834683364,
+        "type": "file",
+        "sha256": "cae33efdb02cf774435c1ff9cb16bcc1014606908530c6e1dc727615fe3e8cda",
+        "size": 137
+      },
+      ".git/description": {
+        "mode": 420,
+        "mtimeNs": 1791452179829527182,
+        "type": "file",
+        "sha256": "85ab6c163d43a17ea9cf7788308bca1466f1b0a8d1cc92e26e9bf63da4062aee",
+        "size": 73
+      },
+      ".git/hooks": {
+        "mode": 493,
+        "mtimeNs": 1791452179832418649,
+        "type": "directory"
+      },
+      ".git/hooks/applypatch-msg.sample": {
+        "mode": 493,
+        "mtimeNs": 1791452179830999311,
+        "type": "file",
+        "sha256": "0223497a0b8b033aa58a3a521b8629869386cf7ab0e2f101963d328aa62193f7",
+        "size": 478
+      },
+      ".git/hooks/commit-msg.sample": {
+        "mode": 493,
+        "mtimeNs": 1791452179829949100,
+        "type": "file",
+        "sha256": "1f74d5e9292979b573ebd59741d46cb93ff391acdd083d340b94370753d92437",
+        "size": 896
+      },
+      ".git/hooks/fsmonitor-watchman.sample": {
+        "mode": 493,
+        "mtimeNs": 1791452179831287354,
+        "type": "file",
+        "sha256": "e0549964e93897b519bd8e333c037e51fff0f88ba13e086a331592bf801fa1d0",
+        "size": 4726
+      },
+      ".git/hooks/post-update.sample": {
+        "mode": 493,
+        "mtimeNs": 1791452179831610605,
+        "type": "file",
+        "sha256": "81765af2daef323061dcbc5e61fc16481cb74b3bac9ad8a174b186523586f6c5",
+        "size": 189
+      },
+      ".git/hooks/pre-applypatch.sample": {
+        "mode": 493,
+        "mtimeNs": 1791452179832108106,
+        "type": "file",
+        "sha256": "e15c5b469ea3e0a695bea6f2c82bcf8e62821074939ddd85b77e0007ff165475",
+        "size": 424
+      },
+      ".git/hooks/pre-commit.sample": {
+        "mode": 493,
+        "mtimeNs": 1791452179830855269,
+        "type": "file",
+        "sha256": "57185b7b9f05239d7ab52db045f5b89eb31348d7b2177eab214f5eb872e1971b",
+        "size": 1649
+      },
+      ".git/hooks/pre-merge-commit.sample": {
+        "mode": 493,
+        "mtimeNs": 1791452179831828522,
+        "type": "file",
+        "sha256": "d3825a70337940ebbd0a5c072984e13245920cdf8898bd225c8d27a6dfc9cb53",
+        "size": 416
+      },
+      ".git/hooks/pre-push.sample": {
+        "mode": 493,
+        "mtimeNs": 1791452179832228648,
+        "type": "file",
+        "sha256": "ecce9c7e04d3f5dd9d8ada81753dd1d549a9634b26770042b58dda00217d086a",
+        "size": 1374
+      },
+      ".git/hooks/pre-rebase.sample": {
+        "mode": 493,
+        "mtimeNs": 1791452179830232517,
+        "type": "file",
+        "sha256": "4febce867790052338076f4e66cc47efb14879d18097d1d61c8261859eaaa7b3",
+        "size": 4898
+      },
+      ".git/hooks/pre-receive.sample": {
+        "mode": 493,
+        "mtimeNs": 1791452179831395854,
+        "type": "file",
+        "sha256": "a4c3d2b9c7bb3fd8d1441c31bd4ee71a595d66b44fcf49ddb310252320169989",
+        "size": 544
+      },
+      ".git/hooks/prepare-commit-msg.sample": {
+        "mode": 493,
+        "mtimeNs": 1791452179831507938,
+        "type": "file",
+        "sha256": "e9ddcaa4189fddd25ed97fc8c789eca7b6ca16390b2392ae3276f0c8e1aa4619",
+        "size": 1492
+      },
+      ".git/hooks/push-to-checkout.sample": {
+        "mode": 493,
+        "mtimeNs": 1791452179832482608,
+        "type": "file",
+        "sha256": "a53d0741798b287c6dd7afa64aee473f305e65d3f49463bb9d7408ec3b12bf5f",
+        "size": 2783
+      },
+      ".git/hooks/sendemail-validate.sample": {
+        "mode": 493,
+        "mtimeNs": 1791452179830597602,
+        "type": "file",
+        "sha256": "44ebfc923dc5466bc009602f0ecf067b9c65459abfe8868ddc49b78e6ced7a92",
+        "size": 2308
+      },
+      ".git/hooks/update.sample": {
+        "mode": 493,
+        "mtimeNs": 1791452179832333649,
+        "type": "file",
+        "sha256": "8d5f2fa83e103cf08b57eaa67521df9194f45cbdbcb37da52ad586097a14d106",
+        "size": 3650
+      },
+      ".git/info": {
+        "mode": 493,
+        "mtimeNs": 1791452179829184555,
+        "type": "directory"
+      },
+      ".git/info/exclude": {
+        "mode": 420,
+        "mtimeNs": 1791452179829336556,
+        "type": "file",
+        "sha256": "6671fe83b7a07c8932ee89164d1f2793b2318058eb8b98dc5c06ee0a5a3b0ec1",
+        "size": 240
+      },
+      ".git/objects": {
+        "mode": 493,
+        "mtimeNs": 1791452179836211536,
+        "type": "directory"
+      },
+      ".git/objects/info": {
+        "mode": 493,
+        "mtimeNs": 1791452179836209828,
+        "type": "directory"
+      },
+      ".git/objects/pack": {
+        "mode": 493,
+        "mtimeNs": 1791452179836108786,
+        "type": "directory"
+      },
+      ".git/refs": {
+        "mode": 493,
+        "mtimeNs": 1791452179835667326,
+        "type": "directory"
+      },
+      ".git/refs/heads": {
+        "mode": 493,
+        "mtimeNs": 1791452179835627159,
+        "type": "directory"
+      },
+      ".git/refs/tags": {
+        "mode": 493,
+        "mtimeNs": 1791452179835666118,
+        "type": "directory"
+      },
+      "README.md": {
+        "mode": 420,
+        "mtimeNs": 1791452179795565408,
+        "type": "file",
+        "sha256": "a68e5ab03a780765d91d4e1f6959ccee19bdfb7943f2eeb46ff37b95adad7883",
+        "size": 31
+      },
+      "nested": {
+        "mode": 493,
+        "mtimeNs": 1791452179795687325,
+        "type": "directory"
+      },
+      "nested/data.txt": {
+        "mode": 420,
+        "mtimeNs": 1791452179795753367,
+        "type": "file",
+        "sha256": "1cd263f1102656dd6b6cf1d626d1a96f9eba0406af3cb2a52560d473d4801052",
+        "size": 10
+      }
+    },
+    "commands": [
+      {
+        "exit": 0,
+        "seconds": 0.259,
+        "output": "",
+        "outputSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "command": [
+          "/bin/bash",
+          "plugins/delegate/hooks/detect.sh",
+          "--session-start"
+        ],
+        "outputHashScope": "raw captured stdout+stderr before temporary-path replacement"
+      },
+      {
+        "exit": 0,
+        "seconds": 0.482,
+        "output": "{\"hookSpecificOutput\": {\"hookEventName\": \"UserPromptSubmit\", \"additionalContext\": \"delegate: Codex 基础条件可用（未验证远端连接或额度）。若这一步的决策已经定完、只剩执行与查证，先说明要委托什么、等用户确认后再调；判据见 delegate-routing skill。\"}}\n",
+        "outputSha256": "348c7476c7f6fd9c8051dc67b490a7e3a06eb9b703a5c36c37c16960c38e4bf3",
+        "command": [
+          "/bin/bash",
+          "plugins/delegate/hooks/prompt.sh"
+        ],
+        "outputHashScope": "raw captured stdout+stderr before temporary-path replacement"
+      },
+      {
+        "exit": 0,
+        "seconds": 0.193,
+        "output": "{\"hookSpecificOutput\": {\"hookEventName\": \"UserPromptSubmit\", \"additionalContext\": \"Codex 基础条件可用（ChatGPT 登录；未验证远端连接或额度）\"}}\n",
+        "outputSha256": "52c7280ebb4bd8549640457ff5954affe27dfceb4d02257513ef52ea7ccc3543",
+        "command": [
+          "/bin/bash",
+          "plugins/delegate/hooks/detect.sh"
+        ],
+        "outputHashScope": "raw captured stdout+stderr before temporary-path replacement"
+      }
+    ],
+    "cacheOutsideBusiness": true,
+    "scope": "one isolated no-HEAD Git repository; content, modes, directory entries and mtimes including .git; read-access times excluded"
+  },
+  "passedMutants": 9,
+  "failedMutants": 0,
+  "sourceUnchanged": true,
+  "toolDeclarationHistory": {
+    "introductionCommit": "cd0ebafb28723a7d195de9ee029f8832670e0885",
+    "path": "plugins/delegate/commands/delegate.md",
+    "line": 4,
+    "gitBlob": "1b55b5294105e3c990d2190fb8d2d09558f562ea",
+    "blobSha256": "58867e3ca53879f8aea047606c45468ddcb90763600f1f2652cf0813a6bbcc1e",
+    "recordedDeclaration": "allowed-tools: Bash",
+    "recordedReason": "引入提交说明裸 Bash 用于避免安装位置变化导致写死 glob 失效，脚本使用 CLAUDE_PLUGIN_ROOT 引用。",
+    "scope": "reachable local introduction commit and all-ref path log; current declaration unchanged; commit rationale does not prove human approval",
+    "humanApproval": "unknown"
+  },
+  "initialAttempt": {
+    "baselineExit": 1,
+    "detectionPassed": 18,
+    "detectionFailed": 1,
+    "failedAssertion": "15：小结没说通过",
+    "cause": "The isolated outer PATH had no codex. Doctor test 15 inherits this PATH and requires an overall successful summary, so its CLI installation failure contaminated the no-AGENTS check.",
+    "resolution": "Added a controlled stub codex, fallback argv log, and synthetic auth fixture to the outer PATH before running unchanged suites; HOME/CODEX_HOME remain isolated.",
+    "productChanged": false,
+    "findingId": "F8"
+  },
+  "checkerArchive": "docs/verification/mutation-check.py.txt",
+  "checkerSha256": "eb76b87168a7e7b575e9d562dfa8ec9decc3ece0e1fa4b583f69f76d159ecd4a"
+}

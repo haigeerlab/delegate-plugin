@@ -1,0 +1,38 @@
+from pathlib import Path
+import json,hashlib,re,subprocess
+root=Path.cwd();tmp=Path('<LOCAL_TMP>/delegate-seven-item-batch')
+def sha(p):return hashlib.sha256(Path(p).read_bytes()).hexdigest()
+def meta(p):
+ p=Path(p);return {'bytes':p.stat().st_size,'sha256':sha(p)}
+def session(folder):
+ files=list((Path.home()/'.claude/projects'/folder).glob('*.jsonl'));assert len(files)==1
+ p=files[0];rows=[json.loads(l) for l in p.read_text().splitlines()];parts=[x for r in rows for x in r.get('message',{}).get('content',[]) if isinstance(r.get('message',{}).get('content',[]),list) and isinstance(x,dict)]
+ return p,rows,parts
+np,nrows,nparts=session('-private-tmp-delegate-seven-item-batch-delegate-routing-fitness-s3HzDo-project')
+sp,srows,sparts=session('-private-tmp-delegate-seven-item-batch-installed-command-project')
+nt='\n'.join(p.get('text','') for p in nparts if p.get('type')=='text');st='\n'.join(p.get('text','') for p in sparts if p.get('type')=='text')
+skills=[p['input'] for p in nparts if p.get('type')=='tool_use' and p.get('name')=='Skill'];assert {'skill':'delegate:delegate-routing'} in skills
+assert '按上面的提示词派给 Codex 只读执行' in nt and '确认后开始' in nt and '这次我建议不派' in nt
+natural_calls=tmp/'delegate-routing-fitness.s3HzDo/natural-codex.calls';nc=natural_calls.read_text();assert not any(' exec ' in l or l.startswith('exec ') for l in nc.splitlines())
+tools=[p for p in sparts if p.get('type')=='tool_use'];assert len(tools)==1 and tools[0]['name']=='Bash'
+call=tools[0]['input'];assert call['timeout']==600000 and '--write' not in call['command']
+results=[p for p in sparts if p.get('type')=='tool_result'];assert len(results)==1 and not results[0].get('is_error',False);assert '批次验收通过' in str(results[0]['content'])
+assert any('<command-name>/delegate:delegate</command-name>' in str(r.get('message',{}).get('content','')) for r in srows)
+real=[json.loads(l) for l in (tmp/'real-codex.calls').read_text().splitlines()];assert len(real)==1 and real[0]['kind']=='real-exec';argv=real[0]['argv'];assert argv[argv.index('--sandbox')+1]=='read-only' and '-m' not in argv
+answers=list((tmp/'installed-command-tmp/delegate').glob('*.answer'));assert len(answers)==1;answer=answers[0];assert answer.read_text().strip()=='批次验收通过';log=answer.with_suffix('.log');assert log.is_file()
+launch=json.loads((tmp/'launches.json').read_text());prep=json.loads(Path('docs/verification/2026-10-08-batch-preparation.json').read_text());fixtures={}
+for key,name in [('routing-natural','natural-session'),('installed-command','installed-slash-session')]:
+ p=Path(launch[name]['cwd']);after={str(f.relative_to(p)):sha(f) for f in p.rglob('*') if f.is_file()};before=prep['fixtures'][key]['fileHashes'];assert after==before
+ fixtures[key]={'before':before,'after':after,'contentHashesMatched':True,'cacheOutsideBusiness':True,'gitHasHead':False}
+b1=json.loads(Path('<LOCAL_TMP>/delegate-bulk-2026-10-08/routing-result.json').read_text());assert b1['exit']==0 and b1['sourceUnchanged'];b1.pop('rawResultsLocation')
+for p,h in b1['sourceSnapshot'].items():assert sha(p)==h
+installed=json.loads((Path.home()/'.claude/plugins/installed_plugins.json').read_text())['plugins']['delegate@delegate-marketplace'][0];assert installed['scope']=='user' and installed['version']=='0.4.0'
+ip=Path(installed['installPath']);installed_hashes={}
+for p in ip.rglob('*'):
+ if p.is_file() and p.relative_to(ip).parts[0] in ('hooks','scripts','commands','skills'):
+  rel=str(p.relative_to(ip));assert sha(p)==sha(root/'plugins/delegate'/rel);installed_hashes[rel]=sha(p)
+assert len(installed_hashes)==13
+payload={'date':'2026-10-08','approval':'User continued after the specific combined A/B approval request; current approval only, not historical approval.','scopeDecision':{'adr':'docs/decisions/ADR-001-command-tool-scope.md','status':'Accepted','runtimeDeclarationChanged':False,'archivedCriterion':'channel:7-A1','disposition':'superseded','historicalApproval':'unknown'},'claudeCliSessions':4,'realCodexExecs':1,'automaticRetries':0,'configuredModelsUsed':True,'nativeClaudeVersionObserved':'2.1.294','nativeModelLabelObserved':'Opus 5.5 / Claude Max','apiRequestCountAndCost':'not measured; sessions are not API request counts','B1':b1,'B2':{'mode':'native interactive TTY; naturally requested execution plan; no explicit skill command; installed user plugin; Codex stub','skillCalls':skills,'actualSkillLoaded':True,'delegationOptionOffered':True,'waitedForConfirmation':True,'codexExecs':0,'recommendation':'self work due small fixture; delegation offered as an option','activeDelegationRecommendationVerified':False,'proposalSpecifiedModelWithoutUserPreference':True,'safeExcerpts':['按规则可以派，但这次我建议不派，在主会话里做。','按上面的提示词派给 Codex 只读执行。','确认后开始。'],'jsonl':meta(np),'debug':meta(tmp/'delegate-routing-fitness.s3HzDo/natural-debug.log'),'tty':meta(tmp/'natural-tty.raw'),'callLog':meta(natural_calls)},'B3':{'mode':'native interactive TTY; installed user-scope slash command; no --plugin-dir','slashCommand':'/delegate:delegate','commandMarkerParsed':True,'command':call['command'].replace(str(root),'<PROJECT>'),'timeout':call['timeout'],'bashResultIsError':False,'wrapperSucceeded':True,'realExecs':1,'sandbox':'read-only','explicitModelOverride':False,'answer':'批次验收通过','answerArtifact':meta(answer),'processLog':meta(log),'jsonl':meta(sp),'debug':meta(tmp/'installed-debug.log'),'tty':meta(tmp/'installed-tty.raw'),'realCallLog':meta(tmp/'real-codex.calls')},'userInstallation':{'scope':'user','version':installed['version'],'runtimeFilesMatched':len(installed_hashes),'hashes':installed_hashes,'traceResolvedToProjectPluginRoot':True},'fixtures':fixtures,'newSupportedConditions':['routing:R4-A1','routing:R4-A2','routing:R4-V2','routing:R2-A4','channel:7-V2'],'newSupersededConditions':['channel:7-A1'],'stillUnverified':['routing:R3-V3'],'limits':['Natural session offered delegation and waited, but did not primarily recommend it; do not certify the stronger active recommendation condition.','Raw native transcripts contain private global instructions and remain local; only minimal safe extracts and hashes are recorded.','One-off controlled samples, not permanent regression or all host and sandbox configurations.','Historical completion and approval remain unknown for all 119 original entries.','No runtime changes, installs, commits, pushes or releases.']}
+payload['checker']={'archive':'docs/verification/2026-10-08-bulk-closeout.py.txt','sha256':sha('<LOCAL_TMP>/delegate-bulk-closeout.py')}
+Path('docs/verification/2026-10-08-bulk-results.json').write_text(json.dumps(payload,ensure_ascii=False,indent=2)+'\n')
+print(json.dumps({'B1':'PASS','skillLoaded':True,'naturalProposal':'partial: option offered, recommended self work','installedSlash':'PASS','claudeSessions':4,'realCodexExecs':1,'businessHashesMatched':True,'runtimeFilesMatched':13,'nextCounts':[105,13,1]},ensure_ascii=False))

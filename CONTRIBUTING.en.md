@@ -33,6 +33,10 @@ claude --plugin-dir /path/to/delegate-plugin/plugins/delegate
 
 An installed version number matching the source version does not prove that source content was loaded. See [Updates and uninstalling](README.en.md#updates-and-uninstalling) for remote caches, local paths, and reloading.
 
+## Project AI and workflow conventions
+
+Read [Development workflow and AI instructions](docs/en/development-workflow.md) before development. Codex uses project `AGENTS.md`; Claude Code uses project `CLAUDE.md`. Chinese specifications live in `spec/`, and module plans/tasks in `tasks/<id>/`. The [archive index](docs/archive/pre-spec-guard/README.md) preserves original records; do not execute them as active tasks.
+
 ## Changes and validation
 
 Keep changes focused. For behavior changes, add a regression that reproduces the failure before fixing the implementation; do not weaken assertions to make tests pass. Update affected specifications and help text so documentation remains consistent with behavior.
@@ -43,7 +47,7 @@ Run the free offline validation from the **repository root**:
 /bin/bash scripts/validate.sh
 ```
 
-The entry point checks JSON/Python/Bash syntax, executable permissions, manifest required fields, evaluator self-tests, all 3 shell product suites, and 2 Python regression suites. The baseline includes 52 product assertions and 17 Python regressions. Stub tests neither read real credentials nor call models.
+The entry point checks JSON/Python/Bash syntax, executable permissions, manifest required fields, evaluator self-tests, all 3 shell product suites, and 2 Python regression suites. The baseline includes 52 product assertions and 17 Python regressions. The free aggregate entry point makes no model calls. The four doctor rule checks use run_doctor with this suite's controlled CLI, synthetic login state, and temporary log, rather than inheriting outer installation/authentication state. [Actual verification in Chinese](docs/verification/2026-10-08-f8-applied.md) passed the aggregate suite without an outer Codex CLI, and all 19 detection assertions passed both with no outer CLI and with an outer rejected login.
 
 To isolate a failure, run individual suites:
 
