@@ -14,8 +14,9 @@ case "${DETECTION_OUTPUT}" in
   不可用*) ISSUE_COUNT=$((ISSUE_COUNT + 1)) ;;
 esac
 
+printf '\n诊断范围：已刷新本地基础条件；未验证远端连接、额度、模型权限或项目级规则。\n'
 printf '\nAGENTS.md 体检\n'
-AGENTS_FILE="${CODEX_AGENTS_FILE:-${HOME}/.codex/AGENTS.md}"
+AGENTS_FILE="${CODEX_AGENTS_FILE:-${CODEX_HOME:-${HOME}/.codex}/AGENTS.md}"
 if [ ! -f "${AGENTS_FILE}" ]; then
   printf '没有全局 AGENTS.md，不影响委托\n'
 else
@@ -38,14 +39,14 @@ else
   esac
 
   if [ "${ORCHESTRATION}" -eq 0 ]; then
-    printf '未发现会让非交互委托死锁的规则\n'
+    printf '中文启发式检查未发现需等待确认的规则（不覆盖全部规则）\n'
   elif [ "${EXEMPTED}" -eq 1 ]; then
-    printf '发现流程编排规则，但已声明非交互豁免 —— 不影响委托\n'
+    printf '发现流程编排规则，但已声明非交互豁免；请确认豁免覆盖相应章节\n'
   else
     ISSUE_COUNT=$((ISSUE_COUNT + 1))
     printf '风险：发现可能让非交互委托死锁的流程编排规则。\n'
     printf '修法：在该节开头加一条「本节仅适用于交互式会话；非交互调用（codex exec）时整节跳过，直接执行到底」。\n'
-    printf '原因：codex exec 是非交互的，没有人能回答确认请求，Codex 可能停在“请确认后我执行”而什么都不做；全局 AGENTS.md 没有按调用关闭的开关（-c project_doc_max_bytes=0 只关项目级；experimental_instructions_file 在 0.150.1 已不存在）。\n'
+    printf '原因：codex exec 是非交互的，没有人能回答确认请求，Codex 可能停在“请确认后我执行”而什么都不做；请检查实际生效的全局与项目级规则。\n'
   fi
 fi
 

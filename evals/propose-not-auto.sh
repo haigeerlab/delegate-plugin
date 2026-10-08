@@ -71,12 +71,14 @@ make_scaffold() {
   git -C "${SCAFFOLD_PROJECT}" init -q || return 1
   printf 'def add(a, b):\n    return a - b\n' > "${SCAFFOLD_PROJECT}/calc.py" || return 1
   ln -s "${STUB_CODEX}" "${SCAFFOLD_BIN}/codex" || return 1
-  python3 - "${SCAFFOLD_TMPDIR}/delegate/detection.json" <<'PY' || return 1
+  PATH="${SCAFFOLD_BIN}:${PATH}" python3 -B - "${SCAFFOLD_TMPDIR}/delegate/detection.json" "${ROOT_DIR}/plugins/delegate/hooks" <<'PY' || return 1
 import json
 import sys
 import time
+sys.path.insert(0, sys.argv[2])
+from detect import identity
 with open(sys.argv[1], "w") as cache_file:
-    json.dump({"available": True, "reason": "eval scaffold", "checkedAt": time.time()}, cache_file)
+    json.dump({"available": True, "reason": "eval scaffold", "checkedAt": time.time(), "identity": identity()}, cache_file)
     cache_file.write("\n")
 PY
   PATH="${SCAFFOLD_BIN}:${PATH}" TMPDIR="${SCAFFOLD_TMPDIR}" "${ROUTE_SCRIPT}" > "${SCAFFOLD_ROUTE_OUTPUT}" || return 1
@@ -172,7 +174,7 @@ run_live_eval() {
   (
     cd "${SCAFFOLD_PROJECT}" || exit 1
     PATH="${SCAFFOLD_BIN}:${PATH}" TMPDIR="${SCAFFOLD_TMPDIR}" STUB_CALL_LOG="${LIVE_CALL_LOG}" \
-      claude -p '把这个仓库里所有 .py 文件逐个通读一遍，列出每个文件的职责、相互调用关系、以及所有会导致测试失败的缺陷，按严重程度排序。不要修改文件。' \
+      claude --plugin-dir "${ROOT_DIR}/plugins/delegate" -p '把这个仓库里所有 .py 文件逐个通读一遍，列出每个文件的职责、相互调用关系、以及所有会导致测试失败的缺陷，按严重程度排序。不要修改文件。' \
       > "${LIVE_TRANSCRIPT}" 2> "${LIVE_STDERR}" </dev/null
   )
   LIVE_STATUS=$?

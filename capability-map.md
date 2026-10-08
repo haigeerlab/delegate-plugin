@@ -1,42 +1,28 @@
 # 能力图：delegate
 
-> **状态：已批准**（2026-08-29）。9 条假设与 3 个待拍板项均按默认值采纳。
+2026-10-08 修复合同，依据用户确认的范围；早期任务记录保留为历史证据。
+独立 marketplace，只支持 Codex CLI，不依赖 spec-guard 或 agent-skills。
 
-## 我做的假设（先纠正，否则我按这些往下走）
-
-| # | 假设 | 依据 / 备选 |
+| 模块 | 职责 | 依赖 |
 |---|---|---|
-| 1 | 独立仓库 `~/Documents/gs/delegate-plugin` + **自己的 marketplace**，不并进 `spec-guard-marketplace` | 两者版本线独立；并进去会让只想要分流的人被迫拉 spec-guard |
-| 2 | **只做 Codex 一个后端，不预留抽象层** | YAGNI。真加第二个后端时再抽，比现在猜接口便宜 |
-| 3 | **永远提议式，不做自动派** —— 这是不可违反的性质，不是配置项 | preamble 拆掉了 Codex 的刹车，自动派 = 无人闸门 |
-| 4 | 沙箱默认只读；`--write` 必须用户在该轮明确要求，Claude 不得自行升级 | 已在实测中确立 |
-| 5 | wrapper 脚本**随插件走**，不依赖用户 home 里的手工脚本 | 四个坑（`command -v` 谎报 / stdin 挂死 / 输出灌回 / AGENTS.md 死锁）必须跟着版本走 |
-| 6 | 目标用户 = Claude 额度紧张的个人开发者；**不做团队 / 多租户 / 共享配额** | — |
-| 7 | **不依赖 agent-skills**（软依赖：装了分类更准，没装照样能用） | 实测：wrapper / 命令 / 分流表对 agent-skills 引用 0 处 |
-| 8 | bash + python3 兜底，与 spec-guard 同构；**不引入 jq / node 硬依赖** | 抄 spec-guard 踩过的坑 |
-| 9 | 继承 spec-guard 的三条不可违反性质：默认不生效 / 探测失败降级不误报 / 不越权 | 同类东西（每轮跑的 hook + 改变 agent 行为的注入） |
+| channel | 调用参数、只读/写沙箱、进程组期限与清理、日志隔离、Git 证据 | 共用 backend 基础检查 |
+| detection | CLI 基础检查、身份绑定缓存、原子写入、静默降级、doctor | 共用 backend 基础检查 |
+| routing | 注入事实与确认要求，skill 提供任务判据 | detection 缓存；确认后通过 channel 执行 |
 
-### 三条我给了默认值、但需要你拍板的
+```text
+backend.py → codex-exec.sh → run_codex.py → codex exec
+     ↓
+detect.py ← detect.sh / doctor.sh
+     ↓ detection.json
+prompt.sh: detect.sh --warm → route.sh → delegate-routing skill
+```
 
-| 问题 | 我的默认 | 代价 |
-|---|---|---|
-| 探测结果缓存粒度 | **SessionStart 探一次写入 state 文件，UserPromptSubmit 只读文件** | 会话中途装好 Codex 不会被立刻发现（要重启）。实测探测本身仅 40–90ms，每轮探也扛得住，但没必要 |
-| `--write` 是否强制要求工作区干净 | **不强制，但把「跑前已有 N 个未提交变更」写进验收块** | 强制会挡住正常的连续开发；不强制则 diff 里混着你自己的改动 |
-| 是否预留 Codex 之外的后端 | **不预留**（同假设 2） | 将来加 Gemini/本地模型时要动通道模块的接口 |
+- channel 不决定“什么任务该派”，且每次实时复查基础认证。
+- detection 不发模型请求；只检查本地条件，不保证远端/额度。
+- routing 不调用 Codex，不做关键词分类；决策交给模型解释，授权交给用户。
+- 移除 routing 后，channel 仍能手动调用；共用 backend 不依赖 hook 缓存。
+- doctor 属于 detection，按需刷新与检查中文全局规则，临时缓存写入不触及业务项目。
+- 写模式不要求干净工作区；原有修改数量和 staged/unstaged 统计必须可见，不能自动回滚。
+- 默认只读、写入须当前轮明确授权；命令指令的确认纪律不能被当作不可绕过技术锁。
 
-## 模块
-
-| Module id | 职责 | 依赖 |
-|---|---|---|
-| `channel` | Codex 委托通道：`codex exec` 调用形态（四个不可省元素）、只读/写沙箱、日志隔离、模型与推理档选择、写模式 git 验收块 | — |
-| `detection` | 后端可用性三级探测（wrapper 可执行 / `codex --version` 真跑得起来 / `auth.json` 非空）、结果缓存、**探测失败静默降级** | — |
-| `routing` | 提议式触发：hook 注入、什么该派 / 什么不该派（判据：这活里还有没有没定的决策）、边界纪律（不许 `cat` 整个日志、`--write` 必看验收块） | `channel`, `detection` |
-
-**构建顺序：** `channel` → `detection` → `routing`
-
-### 边界说明
-
-- `channel` **不认识**「什么活该派」——它只负责把给定任务安全地送过去、把结论安全地带回来。
-- `detection` 的消费者是 `routing`（该不该提议）和接入检查；`channel` 不需要它（它自己会硬失败）。
-- 接入检查（`codex` 装没装、`~/.codex/AGENTS.md` 有没有流程编排类规则）**归入 `detection`**，不单列模块——它和探测共用同一套判据。
-- `routing` 可以整个砍掉，`channel` 不受影响（退化成纯手动 `/delegate`）；反过来不行。这就是分模块的依据。
+合同与验证详见 [channel](SPEC-channel.md)、[detection](SPEC-detection.md)、[routing](SPEC-routing.md)。没有新增后端、非 Git 支持、后台任务、提交/推送/发布或自动升级安装缓存。

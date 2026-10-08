@@ -1,5 +1,8 @@
 {
   "name": "delegate",
-  "version": "0.3.1",
-  "description": "将已决策的执行工作委托给 Codex CLI：默认只读、需用户确认、不自动派。"
+  "version": "0.4.0",
+  "description": "将已决策的执行工作委托给 Codex CLI：默认只读、需用户确认、不自动派。",
+  "author": {
+    "name": "yizhongkaimail-collab"
+  }
 }

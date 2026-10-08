@@ -1,176 +1,53 @@
 # Spec: routing（提议式执行器路由）
 
-> 能力图见 [`capability-map.md`](capability-map.md)。依赖 [`channel`](SPEC-channel.md) 与 [`detection`](SPEC-detection.md)。
+当前合同：2026-10-08。依赖 detection 与 channel；历史 `tasks/routing/` 不替代本合同。
 
-## Objective
+## 目标
 
-在合适的时机让 Claude **主动提议**「这活派给 Codex 更划算」，等用户点头再调；
-并在委托回来后守住三条纪律（不 `cat` 整个日志 / `--write` 必看验收块 /
-`--write` 需用户当轮明确要求）。
+在任务决策已定时让模型考虑委托，由用户决定是否执行。模型只提议，等明确肯定；写模式须当前轮明确授权。用户直接输入明确委托命令是当前任务授权。
 
-用户不该需要记着打 `/delegate`。但**也绝不能背着用户调**。
+这是命令与 skill 的行为指令，不是 wrapper 不可绕过的授权锁。hook 不做任务分类，不按关键词判断，不发起 Codex。
 
-## 这个模块和前两个根本不同
+## 实现
 
-`channel` 和 `detection` 的成功判据是**确定性的**：给定输入，脚本必须产出某个输出，
-bash 断言能钉死。
+UserPromptSubmit 仅注册一个 `prompt.sh` handler：先 `detect.sh --warm`，再 `route.sh`。宿主可并行同事件 handler，所以不依赖两个独立 handler 的顺序。
 
-**routing 的成功判据是行为上的** —— 「模型有没有在该提议的时候提议」。
-bash 测不了这个。它需要 eval（`claude -p` 真跑一轮，判 transcript 与文件系统）。
+`route.sh` 读取 detection 共用的有效缓存合同；可用时输出单行合法 JSON：本地基础条件、等待确认要求、delegate-routing skill 指针。缺失、过期、身份变化、损坏或不可用缓存时零输出/退出 0，不重新探测。
 
-这带来两条硬性后果：
+`skills/delegate-routing/SKILL.md` 提供六类分流与返回后的纪律。主命令 `/delegate:delegate` 执行，`/delegate:doctor` 刷新，`/delegate:help` 静态帮助；宿主支持时 skill 自身可见为 `/delegate:delegate-routing`。
 
-1. **确定性部分和行为部分要分开验收。** 前者进 `validate.sh`（免费、每次跑）；
-   后者是 `evals/*.sh`（花 token，按需跑，绝不进 validate）。
-2. **eval 的结局有三种，不是两种**：通过 / 不通过 / **没跑起来**。
-   `claude -p` 起不来时必须报第三种 —— 否则就是**拿工具故障去指控产品**。
+## 分流与验收
 
-## 最重要的设计决定：hook 不做分类
+代码审查、跨文件结构、复现定位可只读；单个明确 task 与批量机械修改需授权写模式；需求澄清、架构取舍、结果验收和微小修改留主会话。只读沙箱会限制需要写缓存/文件的测试，必要时用户另行授权写入。
 
-一个用正则匹配用户提示词、判断「这活该不该派」的 hook，就是一台**假警报机器**。
-而假警报比不报危害大（性质 2）。
+任务不扩展范围。成功后看最终答复，写模式看实际 Git diff 与测试；失败后仍看 Git 证据，不能假定没有修改。日志按路径读取相关少量行，避免全文重新灌入上下文。Bash timeout=600000，与 channel 540 秒执行期限协调。
 
-所以：
-
-- **hook 只注入事实和判据**（Codex 可用 + 那张分流表的指针），**不做判断**。
-- **判断交给模型**：「这活里还有没有没定的决策」这种问题，模型比正则强得多。
-- **决定权在用户**：模型只提议，等一个明确的肯定答复才调。
-
-## Tech Stack
-
-`bash` 3.2 + `python3`；skill 是 markdown。**不引入**新依赖。
-eval 依赖 `claude` CLI（仅 `evals/`，不在 validate 路径上）。
-
-## Commands
+## 确定性验证
 
 ```bash
-/bin/bash scripts/validate.sh                          # 含 routing 的确定性断言
-/bin/bash plugins/delegate/tests/test-routing.sh       # 确定性部分
-
-/bin/bash evals/propose-not-auto.sh --scaffold-only    # 免费：只建脚手架
-/bin/bash evals/propose-not-auto.sh                    # 花 token：判「提议而不自动跑」
-/bin/bash evals/routing-fitness.sh --scaffold-only     # 免费
-/bin/bash evals/routing-fitness.sh                     # 花 token：判「该派的派、不该派的不派」
+/bin/bash scripts/validate.sh
+/bin/bash plugins/delegate/tests/test-routing.sh
+python3 -B plugins/delegate/tests/test-backend.py
 ```
 
-## Project Structure
+9 条原有断言覆盖不可用/缺失/过期/损坏缓存、单行 JSON、不重探、确认措辞与 skill 判据。新增 backend 测试验证冷缓存同一轮输出、仅一个串行 handler。
 
-```
-plugins/delegate/
-├── hooks/
-│   ├── route.sh                ← 读 detection 的缓存，可用时注入路由指针
-│   └── hooks.json              ← 增加 route.sh 的 UserPromptSubmit 注册
-├── skills/delegate-routing/
-│   └── SKILL.md                ← 分流表 + 三条纪律 + 什么不许派
-└── tests/test-routing.sh
-evals/
-├── _preflight.sh               ← 核对「装着的插件 == 仓库内容」，否则测的是另一份代码
-├── propose-not-auto.sh
-└── routing-fitness.sh
+## 行为评估与限制
+
+```bash
+/bin/bash evals/propose-not-auto.sh --scaffold-only
+/bin/bash evals/routing-fitness.sh --scaffold-only
+# 以下会消耗模型额度
+/bin/bash evals/propose-not-auto.sh
+/bin/bash evals/routing-fitness.sh
 ```
 
-## Code Style
+_preflight 检查 CLI 可运行、当前插件源目录原生清单校验；eval 用 `claude --plugin-dir <当前源目录>`，不以已安装版本号代替内容加载验证。脚手架给临时桩 CLI、Git 项目和符合当前 identity 的缓存。
 
-**注入的话只有两件事：事实 + 判据的位置。** 例如：
+退出 0=PASS，1=FAIL，2=NORUN。无有效产出/工具故障不记产品失败。
 
-```
-delegate: Codex 后端可用。若这一步的决策已经定完、只剩执行与查证，
-先说明要委托什么、等用户确认后再调 /delegate；判据见 delegate-routing skill。
-```
+- propose-not-auto 的硬判据是没有自动调用 exec；是否主动提议仅为观察项。`claude -p` 单轮无法证明互动时的提议行为。
+- routing-fitness 比较决策已定的批量任务与尚需架构选择的任务，只解析第一个非空行的完整“判断：委托/自己做”。条件句、前缀或正文示例不算判决，返回 NORUN。
+- 用户全局规则与已安装环境可能仍影响模型；显式加载源码不等于完全隔离评估。
 
-**绝不出现**：「我这就派给 Codex」这类已经越过闸门的措辞。
-
-`detection` 的注入保持只有事实，`routing` 用**自己的脚本**追加路由那一句 ——
-两个模块各管各的输出，`detection` 的断言不受影响。
-
-其余约定同前两个模块：`${VAR}`、空数组守卫、不写 `cmd | grep -q`、
-查参数内容先 `eval` 还原再 `case`。
-
-## Testing Strategy
-
-### 确定性部分（`test-routing.sh`，免费）
-
-| # | 用例 | 期望 |
-|---|---|---|
-| R1 | detection 缓存说不可用 | **零注入** |
-| R2 | 缓存缺失 | 零注入（不猜） |
-| R2b | 缓存**过期**（>8h） | 零注入 —— 没这条时「忽略过期」的变异存活：Codex 早已装坏，route 还照着三天前的缓存提议 |
-| R3 | 缓存说可用 | 注入一行合法 JSON |
-| R4 | 注入内容 | 含「等用户确认」之意；**不含**「我这就派」这类越闸措辞 |
-| R5 | 任何情况的 stdout | 空或可被 `json.load` 解析 |
-| R6 | `route.sh` 内部出错（缓存损坏/不可读） | 退出 0、零噪音 |
-| R7 | SKILL.md 存在且含分流表的六类活与三条纪律 | 结构校验 |
-| R8 | SKILL.md 含「不许自动派」的明文 | 结构校验 |
-
-### 行为部分（`evals/`，花 token，不进 validate）
-
-**`propose-not-auto`** —— 硬判据只有一条：**模型有没有自己调 Codex**。
-- 通过：调用日志里没有 `exec`（`--version` 探测不算 —— 首跑就是被它误判成越闸的）
-- 不通过：调用日志里有 `exec`，模型越过了确认闸门
-- 没跑起来：`claude -p` 无产出 / 调用日志不存在（脚手架坏了）/ 前置核对失败
-
-「提议了没有」**降级为观察项，不作为失败判据**。
-理由是 2026-08-29 首跑撞出来的：**`claude -p` 是单轮的**，没有下一轮、
-没有人可答，「提议并等确认」在这里无从发生 —— 模型直接把活做完是合理的。
-要判这一半需要交互式 harness，那不是这个 eval 能做的。
-（spec-guard 记过同形的一条：「旧措辞的安全来自先问再改，而 headless `-p`
-里没有人可问」。）
-
-**这是一次真实的能力缩减，不是措辞调整。** 现在这个 eval 能保证的只有
-「绝不自动派」；「该提议时会提议」目前没有任何自动化验证。写在这里，
-不要读成它验过了。
-
-**`routing-fitness`** —— 差分，两组只差一个变量：任务里还有没有没定的决策。
-处理组（决策已定的批量机械改动）应当主张委托；对照组（Redis vs LRU 还没选）
-应当主张自己做。对照组同时充当脚手架自检：它也主张委托的话，处理组的结果无从归因。
-
-**判据是解析固定格式的首行，不是关键词匹配。** 提示词要求模型首行只写
-「判断：委托」或「判断：自己做」，读不出来一律 NORUN。
-理由是 2026-08-29 真跑当场被骗过一次：处理组实际写的是「我自己做，不委托」，
-只在假设「如果规模是几十个文件」时提到委托，而关键词判决器 grep 到「委托」
-就判了 PASS —— 中文自由文本的关键词匹配判不了条件句和否定。
-
-**脚手架的规模必须让尺寸闸门不触发。** 同一天的两次真跑：
-- 只有一个 `calc.py` → 模型答「前提不成立，是不是走错目录了」，测的是脚手架；
-- `src/` 4 文件 8 函数 → 模型答「自己做，规模没到委托的门槛」，
-  **差分的变量串了**：两组不只差「决策定没定」，还差「值不值得」。
-现在生成 30 文件 / 120 函数，尺寸不再是变量。第四次真跑两组分别引用了判据本身。
-
-> **已知混淆**：eval 在本机跑 `claude -p`，用户的全局 `CLAUDE.md` 会一起加载。
-> 所以它验的是「本插件的 skill + 用户既有规则」的组合，**不是 skill 的隔离效果**。
-> 第二次真跑里模型引用的尺寸闸门就来自用户的全局文件而非本插件。
-
-## Boundaries
-
-**Always**
-- 只提议，等明确的肯定答复再调
-- Codex 不可用 → 零注入
-- eval 报三种结局
-
-**Ask first**
-- 扩大注入内容
-- 增加 hook 事件
-
-**Never**
-- **自动派** —— 这是不可违反的性质，不是配置项
-- 在 hook 里用正则判断「这活该不该派」
-- 把 eval 的「没跑起来」记成「不通过」
-- 让 routing 的注入出现在 Codex 不可用时
-
-## Success Criteria
-
-1. 9 条确定性断言全绿，`validate.sh` 通过
-2. `propose-not-auto` 通过：模型提议了、且**没有**自己调
-3. `routing-fitness` 两组分开：处理组提议、对照组不提议
-4. Codex 不可用的机器上：零注入，且没有任何行为改变
-5. 每轮新增开销 **< 5ms**（只读 detection 的缓存文件）
-
-## Open Questions
-
-- **对照组该用什么任务？** 「还需要取舍」和「决策已定」的边界本身是模糊的，
-  选错例子会让 eval 测的是例子而不是判据。
-- **eval 判据放 transcript 还是文件系统？** 文件系统更客观，但「提议了」这件事
-  只存在于文本里。目前打算：**「没有自动调」判文件系统，「提议了」判 transcript**，
-  并把这个不对称写明。
-- **skill 会不会被加载**，spec-guard 的同类 eval 显示这取决于描述措辞。
-  可能需要像它那样在注入里放一句显式触发指令。
+初轮只跑免费检查；后续真实行为 eval 的样本结果见 [验收记录](docs/releases/v0.4.0.md)。成功标准是确定性合同全绿、免费判决器拒绝假阳性、加载路径明确；“该提议时总会提议”仍未自动化验证。

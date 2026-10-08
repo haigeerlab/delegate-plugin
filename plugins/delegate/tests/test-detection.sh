@@ -72,6 +72,7 @@ fi
 COPY_ROOT="${TEST_TMPDIR}/copy"
 mkdir -p "${COPY_ROOT}/hooks" "${COPY_ROOT}/scripts"
 /bin/cp "${DETECT_SCRIPT}" "${COPY_ROOT}/hooks/detect.sh"
+/bin/cp "${SCRIPT_DIR}/../hooks/detect.py" "${COPY_ROOT}/hooks/detect.py"
 /bin/cp "${SCRIPT_DIR}/../scripts/codex-exec.sh" "${COPY_ROOT}/scripts/codex-exec.sh"
 chmod +x "${COPY_ROOT}/hooks/detect.sh"
 chmod -x "${COPY_ROOT}/scripts/codex-exec.sh"

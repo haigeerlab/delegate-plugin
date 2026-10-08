@@ -31,13 +31,15 @@ write_cache() {
   CACHE_TMPDIR="${1}"
   AVAILABLE="${2}"
   mkdir -p "${CACHE_TMPDIR}/delegate"
-  python3 - "${CACHE_TMPDIR}/delegate/detection.json" "${AVAILABLE}" <<'PY'
+  PATH="${TEST_BIN}:/usr/bin:/bin" python3 -B - "${CACHE_TMPDIR}/delegate/detection.json" "${AVAILABLE}" "${SCRIPT_DIR}/../hooks" <<'PY'
 import json
 import sys
 import time
+sys.path.insert(0, sys.argv[3])
+from detect import identity
 
 with open(sys.argv[1], "w") as cache_file:
-    json.dump({"available": sys.argv[2] == "true", "reason": "test", "checkedAt": int(time.time())}, cache_file)
+    json.dump({"available": sys.argv[2] == "true", "reason": "test", "checkedAt": int(time.time()), "identity": identity()}, cache_file)
     cache_file.write("\n")
 PY
 }
@@ -79,7 +81,7 @@ fi
 : > "${TEST_TMPDIR}/r3.argv"
 run_route "${AVAILABLE_TMPDIR}" r3
 if [ "${RUN_STATUS}" -eq 0 ] && [ "$(wc -l < "${TEST_TMPDIR}/r3.stdout" | tr -d ' ')" -eq 1 ] \
-  && python3 -c 'import json, sys; json.load(sys.stdin)' < "${TEST_TMPDIR}/r3.stdout" 2>/dev/null \
+  && python3 -B -c 'import json, sys; json.load(sys.stdin)' < "${TEST_TMPDIR}/r3.stdout" 2>/dev/null \
   && [ ! -s "${TEST_TMPDIR}/r3.argv" ]; then
   pass 'R3：可用新鲜缓存注入一行合法 JSON，且不重新探测'
 else
@@ -87,7 +89,7 @@ else
 fi
 
 # R4：指针保留确认闸门，不许有越闸措辞。
-if python3 - "${TEST_TMPDIR}/r3.stdout" <<'PY'
+if python3 -B - "${TEST_TMPDIR}/r3.stdout" <<'PY'
 import json
 import sys
 
@@ -106,7 +108,7 @@ run_route "${BROKEN_TMPDIR}" r5-broken
 R5_OK=1
 for R5_NAME in r1 r2 r3 r5-broken; do
   if [ -s "${TEST_TMPDIR}/${R5_NAME}.stdout" ] \
-    && ! python3 -c 'import json, sys; json.load(sys.stdin)' < "${TEST_TMPDIR}/${R5_NAME}.stdout" 2>/dev/null; then
+    && ! python3 -B -c 'import json, sys; json.load(sys.stdin)' < "${TEST_TMPDIR}/${R5_NAME}.stdout" 2>/dev/null; then
     R5_OK=0
   fi
 done
@@ -120,12 +122,11 @@ fi
 # 没有这条时，「忽略缓存过期」的变异会存活：Codex 早就装坏了，
 # route.sh 却还在照着一份 3 天前的缓存提议委托。
 STALE_CACHE_DIR="${TEST_TMPDIR}/stale/delegate"
-mkdir -p "${STALE_CACHE_DIR}"
-python3 -c 'import json,sys,time; json.dump({"available":True,"reason":"Codex 后端可用","checkedAt":int(time.time())-9*3600}, open(sys.argv[1],"w"))' \
+write_cache "${TEST_TMPDIR}/stale" true
+python3 -B -c 'import json,sys,time; p=sys.argv[1]; d=json.load(open(p)); d["checkedAt"]=time.time()-9*3600; json.dump(d,open(p,"w"))' \
   "${STALE_CACHE_DIR}/detection.json"
-TMPDIR="${TEST_TMPDIR}/stale" "${ROUTE_SCRIPT}" \
-  >"${TEST_TMPDIR}/r2b.stdout" 2>"${TEST_TMPDIR}/r2b.stderr"
-STATUS=$?
+run_route "${TEST_TMPDIR}/stale" r2b
+STATUS=${RUN_STATUS}
 if [ "${STATUS}" -eq 0 ] && [ ! -s "${TEST_TMPDIR}/r2b.stdout" ]; then
   pass 'R2b：过期缓存时零注入'
 else

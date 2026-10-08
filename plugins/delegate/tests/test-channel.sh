@@ -30,6 +30,12 @@ ln -s "${SCRIPT_DIR}/stub-codex" "${TEST_BIN}/codex"
 PATH="${TEST_BIN}:${PATH}"
 export PATH
 
+# Source archives and callers outside Git must use the same isolated fixture.
+TEST_WORKSPACE="${TEST_TMPDIR}/workspace"
+mkdir "${TEST_WORKSPACE}" || exit 1
+git init -q "${TEST_WORKSPACE}" || exit 1
+cd "${TEST_WORKSPACE}" || exit 1
+
 PASS_COUNT=0
 FAIL_COUNT=0
 
@@ -308,7 +314,7 @@ else
   fail '12：git 仓库缺少基线 HEAD、status 或 diff 验收段'
 fi
 
-# 13：非 git 目录必须说明无法验收，且不得伪造基线 HEAD。
+# 13：非 Git 目录明确拒绝，且不得伪造基线 HEAD。
 NON_GIT_DIR="${TEST_TMPDIR}/thirteen-non-git"
 mkdir "${NON_GIT_DIR}"
 (
@@ -316,10 +322,10 @@ mkdir "${NON_GIT_DIR}"
   STUB_CALL_LOG="${TEST_TMPDIR}/thirteen.argv" STUB_ANSWER='答复' "${EXEC_SCRIPT}" --write '检查非 git 说明'
 ) >"${TEST_TMPDIR}/thirteen.stdout" 2>"${TEST_TMPDIR}/thirteen.stderr"
 STATUS=$?
-if [ "${STATUS}" -eq 0 ] && grep -F -- '不是 git 仓库' "${TEST_TMPDIR}/thirteen.stdout" >/dev/null && ! grep -F -- '基线 HEAD' "${TEST_TMPDIR}/thirteen.stdout" >/dev/null; then
-  pass '13：非 git 目录说明拿不到 diff，且不伪造验收块'
+if [ "${STATUS}" -eq 64 ] && grep -F -- '不是 Git 工作区' "${TEST_TMPDIR}/thirteen.stderr" >/dev/null && ! grep -F -- ' exec ' "${TEST_TMPDIR}/thirteen.argv" >/dev/null; then
+  pass '13：非 Git 目录退出 64，且未调用 exec'
 else
-  fail '13：非 git 目录缺少说明，或伪造了验收块'
+  fail '13：非 Git 目录未拒绝，或仍调用了 exec'
 fi
 
 # 14：验收块必须报告调用前已有的未提交变更数。
@@ -432,14 +438,10 @@ assert_status 0 "$?" 'C24：30 秒超时上限不影响正常调用'
 if [ "${LIVE_MODE}" -eq 0 ]; then
   printf 'LIVE：已跳过（跳过不代表通过）；使用 --live 才会调用真实 codex。\n'
 else
-  LIVE_AUTH_FILE="${CODEX_AUTH_FILE:-${HOME}/.codex/auth.json}"
-  if [ ! -s "${LIVE_AUTH_FILE}" ]; then
-    printf 'LIVE：没跑起来（不是不通过）：认证文件不存在或为空：%s\n' "${LIVE_AUTH_FILE}" >&2
-    exit 2
-  fi
-
-  if ! PATH="${ORIGINAL_PATH}" codex --version >/dev/null 2>&1; then
-    printf 'LIVE：没跑起来（不是不通过）：原始 PATH 中的 codex --version 无法运行。\n' >&2
+  if ! PATH="${ORIGINAL_PATH}" python3 -B "${SCRIPT_DIR}/../scripts/backend.py" \
+    >"${TEST_TMPDIR}/live-preflight.stdout" 2>"${TEST_TMPDIR}/live-preflight.stderr"; then
+    printf 'LIVE：没跑起来（不是不通过）：本地 CLI 或 ChatGPT 登录检查失败。\n' >&2
+    cat "${TEST_TMPDIR}/live-preflight.stdout" >&2
     exit 2
   fi
 
@@ -471,13 +473,10 @@ else
   if [ -n "${LIVE_LOG}" ] && [ -s "${LIVE_ANSWER}" ]; then
     LIVE_LOG_BYTES="$(wc -c < "${LIVE_LOG}" | tr -d ' ')"
     LIVE_ANSWER_BYTES="$(wc -c < "${LIVE_ANSWER}" | tr -d ' ')"
-    if [ "${LIVE_LOG_BYTES}" -ge $((LIVE_ANSWER_BYTES * 40)) ]; then
-      pass 'LIVE：过程日志字节数至少为最终答复的 40 倍'
-    else
-      fail "LIVE：过程日志 ${LIVE_LOG_BYTES} 字节，不足答复 ${LIVE_ANSWER_BYTES} 字节的 40 倍"
-    fi
+    printf 'LIVE 观察：过程日志 %s 字节；最终答复 %s 字节（体量比不是通过判据）。\n' "${LIVE_LOG_BYTES}" "${LIVE_ANSWER_BYTES}"
   else
-    fail 'LIVE：找不到过程日志或最终答复，无法检查 40 倍体量比'
+    fail 'LIVE：找不到过程日志或最终答复'
+
   fi
 fi
 

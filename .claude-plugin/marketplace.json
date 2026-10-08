@@ -1,8 +1,7 @@
 {
   "name": "delegate-marketplace",
   "owner": {
-    "name": "yizhongkaimail-collab",
-    "url": "https://github.com/yizhongkaimail-collab/delegate-plugin"
+    "name": "yizhongkaimail-collab"
   },
   "plugins": [
     {
@@ -10,5 +9,6 @@
       "source": "./plugins/delegate",
       "description": "把已决策的执行与查证工作委托给 Codex CLI，只带回结论；默认只读、必须确认、绝不自动派。"
     }
-  ]
+  ],
+  "description": "将已决策的执行与查证委托给 Codex CLI，隔离过程日志并提供 Git 验收。"
 }

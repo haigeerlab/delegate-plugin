@@ -1,171 +1,49 @@
 # Spec: channel（委托通道）
 
-> 能力图见 [`capability-map.md`](capability-map.md)。本模块是构建顺序的第一个，无依赖。
+当前合同：2026-10-08。早期 `tasks/channel/` 记录是历史，不覆盖本规格。
 
-## Objective
+## 目标与边界
 
-把一个**已经决策完毕**的任务安全地送到 Codex 执行，把结论安全地带回来，
-并且**不让过程输出进入调用方的上下文**。
+将一个已决策任务交给 Codex，隔离过程日志，返回最终答复与可核验的写模式 Git 概览。不负责分类、不可绕过的用户授权、结果正确性、远端登录有效性或发布。两种模式均要求 Git 工作区。
 
-用户是 Claude 额度紧张的个人开发者。成功的样子：Claude 主会话花几百字节，
-换到 Codex 那边几十到几百 KB 的读文件、改文件、跑测试。
+实现：`scripts/codex-exec.sh` 管理参数、日志和 Git；共用 `backend.py` 检查基础认证；`run_codex.py` 管理执行进程组。依赖 Bash 3.2、Python 3、Git、Codex CLI。
 
-**本模块刻意不认识「什么活该派」** —— 那是 `routing` 的事。channel 只做搬运和边界。
-
-### 为什么不是一行 `codex exec`
-
-2026-08-29 实测，裸接会以四种方式失败，每种都静默或反效果：
-
-| 失败 | 表现 | 对策 |
-|---|---|---|
-| 平台二进制缺失 | `command -v codex` **为真**，真跑炸在 Node 栈里 | 用 `codex --version` 实探 |
-| 非 TTY 的 stdin | `codex exec` 等输入，**永久挂起**（实测撞 5 分钟超时） | `</dev/null` |
-| 过程输出未隔离 | 全进调用方上下文，**价值反转成倒贴**（实测 19,939 B vs 170 B 最终答复） | `-o` + stdout 重定向到日志文件 |
-| `~/.codex/AGENTS.md` 的流程编排规则 | 停在「请确认后我执行」，`git status` 是空的 | 前置非交互声明 |
-
-## Tech Stack
-
-- `bash`（必须兼容 macOS 自带的 **3.2**）+ `python3` 兜底
-- `codex` CLI（`@openai/codex`，实测基线 0.150.1）
-- **不引入** `jq` / `node` / 任何 npm 依赖
-
-## Commands
+## 参数与预检
 
 ```bash
-# 全量校验（结构 + 语法 + bash 3.2 兼容 + 各校验器自检）
+bash plugins/delegate/scripts/codex-exec.sh [--write] [--model <slug>] [--effort <level>] [--] "任务"
+```
+
+`--help/-h` 不调用 Codex。未知选项、缺参数、零或多个任务、非 Git 工作区退出 64。模型和推理档透传，不维护可能过期的本地白名单。
+
+基础检查使用 PATH 查找 CLI、`codex --version` 与 `codex login status`；每项探测最多 5 秒。必须识别 ChatGPT 登录，API key/未知状态拒绝。运行前不信任 hook 缓存。CLI/依赖失败 127，认证失败非零；不回显可能含凭据的原始认证文本。
+
+## 调用与生命周期
+
+- 默认 sandbox=read-only；用户当前轮明确授权 `--write` 才用 workspace-write。
+- 删除 `OPENAI_API_KEY` 和 `CODEX_API_KEY`，CLI 配置指定 `forced_login_method="chatgpt"`、`model_provider="openai"`。
+- `--ephemeral`、无颜色、stdin=/dev/null，preamble 明确非交互任务与行为范围。
+- `-o` 写最终答复，合并 stdout/stderr 写过程日志。
+- Codex 开新进程组。期限默认/上限 540 秒；环境变量可缩短，非法或非正值回落默认。期限不包括前置探测和后置验收。
+- 到期或 TERM/INT/HUP：TERM 进程组，最多等 2 秒，KILL 残余并回收直接子进程；正常退出也清理同组残余。
+- 外部 Bash timeout=600000。超时退出 124；信号对应 143/130/129；其他执行失败保留状态，空答复退出 1。
+- 自行脱离进程组的后代不在清理保证中；行为指令不是 OS 权限隔离。真实沙箱允许的 tmp/额外根以宿主配置为准。
+
+## 写入与输出
+
+允许已有未提交修改和尚无 HEAD 的 Git 仓库。启动前记录 HEAD 与已有变更数量。执行已开始的所有退出路径（成功、失败、超时、空答复、中断）输出：基线、status --short、diff --stat、diff --cached --stat。成功到 stdout，失败到 stderr。失败不会自动回滚；统计混有原有修改，须查看实际 diff。
+
+成功只返回答复和元数据，答复无体积上限，不保证固定压缩率。过程文件在 `${TMPDIR:-/tmp}/delegate/`；目录 0700、新文件 0600，拒绝目录软链接。失败日志回显尾部最多 40 行/16KiB 与完整路径。每次完成后尽力保留最近 50 组日志与答复，清理失败不改执行状态；单个日志无体积上限。
+
+## 验证与成功标准
+
+```bash
 /bin/bash scripts/validate.sh
-scripts/check-manifests.py                  ← 清单必填字段（只查 JSON 语法会放行装不上的清单）
-
-# 本模块测试套（默认全部走 codex 桩，免费、确定性）
 /bin/bash plugins/delegate/tests/test-channel.sh
-
-# 真跑冒烟（会花 Codex 额度，不进 validate）
-/bin/bash plugins/delegate/tests/test-channel.sh --live
-
-# 手动调用
-plugins/delegate/scripts/codex-exec.sh [--write] [--model <slug>] [--effort <level>] "<任务>"
+python3 -B plugins/delegate/tests/test-channel-regressions.py
+python3 -B plugins/delegate/tests/test-backend.py
 ```
 
-## Project Structure
+原有 24 条断言验证参数、stdin、stdout 隔离、沙箱参数、日志清理、普通超时、Git 基线。回归验证忽略 TERM 的有界退出、后代不再写文件、wrapper 中断、失败/空答复/超时后的 Git 证据、100KB 单行错误的回显上限、非 Git 不执行、无 CLI 仍能 help。backend 回归验证认证拒绝、执行配置和缓存。
 
-```
-capability-map.md                        ← 能力图（已批准）
-SPEC-channel.md                          ← 本文件
-.claude-plugin/marketplace.json          ← 独立 marketplace，不并进 spec-guard
-plugins/delegate/
-├── .claude-plugin/plugin.json
-├── commands/delegate.md                 ← /delegate 斜杠命令
-├── scripts/codex-exec.sh                ← 本模块的全部实现
-└── tests/
-    ├── test-channel.sh                  ← 断言套（正反并重）
-    └── stub-codex                       ← codex 桩，测试默认用它
-scripts/validate.sh
-```
-
-## Code Style
-
-调用形态是本模块的核心，四个元素**一个都不能省**：
-
-```bash
-env -u OPENAI_API_KEY codex exec \
-  --ephemeral --sandbox "${SANDBOX}" --color never \
-  ${EXTRA[@]+"${EXTRA[@]}"} \
-  -o "${ANSWER}" -- "${PREAMBLE}
-
-${TASK}" >"${LOG}" 2>&1 </dev/null
-```
-
-- `env -u OPENAI_API_KEY` —— 强制走 ChatGPT 订阅额度。留着 API key 就变成按量计费，
-  「另一个额度池」这个前提当场消失
-- `</dev/null` —— 否则永久挂起
-- `-o` + `>"${LOG}"` —— 过程输出落盘，只有最终答复回到调用方
-- `${PREAMBLE}` —— 非交互声明。全局 `~/.codex/AGENTS.md` **没有按调用关闭的开关**
-  （实测：`-c project_doc_max_bytes=0` 只关项目级；`experimental_instructions_file`
-  在 0.150.1 已不存在），只能压
-
-约定：
-- 变量一律 `${VAR}`，不写 `$VAR` —— bash 3.2 会把多字节字符首字节吃进变量名
-- 空数组展开一律 `${ARR[@]+"${ARR[@]}"}` —— bash 3.2 下空数组配 `set -u` 致命退出
-- 不写 `cmd | grep -q` —— `grep -q` 命中即关管道，`pipefail` 把 SIGPIPE(141) 传出来
-
-## Testing Strategy
-
-`bash` 断言套（**必须 `/bin/bash` 跑** —— zsh 的 MULTIOS 会把多个输入重定向拼接而不是后者覆盖，在 zsh 下写断言 2 会得出相反结论），与 spec-guard 同构（PASS/FAIL 计数 + 末行总计）。
-
-**默认全部走 `stub-codex` 桩** —— 免费、确定性、不打网络。桩通过环境变量控制行为：
-返回什么最终答复、退出码几、是否在 stdout 吐大量过程文本。
-
-**反向用例和正向一样重要。** 每条判据至少一正一反。
-
-`--live` 那一组真调 Codex，只做冒烟（能通、答复非空、日志/答复体量比合理），
-不进 `validate.sh`。
-
-必须覆盖的断言（每条都对应今天实测到的一种失败）：
-
-| # | 用例 | 期望 |
-|---|---|---|
-| 1 | 桩在 stdout 吐 100KB | 调用方拿到的 stdout **不含**那 100KB |
-| 2a | `STUB_READ_STDIN=1`、stdin 是永不关闭的管道、**不加** `</dev/null` | **阻塞**（先证明测法能复现真故障） |
-| 2b | 同上但**加** `</dev/null` | 限时内完成 |
-| 3 | `codex` 存在但 `--version` 失败 | 退出 **127** + 给出修复命令 |
-| 4 | `codex` 不在 PATH | 退出 127 |
-| 5 | 桩退出非 0 | 脚本退出非 0，日志尾部回显 |
-| 6 | 桩退出 0 但答复文件为空 | 退出非 0（**不许把空当成成功**） |
-| 7 | `--model` 传了无效 slug（桩模拟 400） | 退出非 0，**不静默退回默认** |
-| 8 | `--model X --effort high` | 桩收到 `-m X` 和 `-c model_reasoning_effort="high"` |
-| 9 | 不传 model | 桩**没有**收到 `-m` |
-| 10 | 默认模式 | 桩收到 `--sandbox read-only` |
-| 11 | `--write` | 桩收到 `--sandbox workspace-write` |
-| 12 | `--write` 在 git 仓库里 | 输出含基线 HEAD + `git status --short` + `git diff --stat` |
-| 13 | `--write` 在**非** git 目录 | 输出明说拿不到 diff，不伪造验收 |
-| 14 | `--write` 跑前工作区已有 N 个未提交变更 | 验收块把 N 报出来 |
-| 15 | 未知选项 / 空任务 | 退出 **64** |
-| 16 | 任务文本以 `-` 开头 | 不被当成选项（`--` 终止符） |
-| C20 | 目录里已有 60 组日志 | 跑完不超过 50 个 `.log` |
-| C21 | 同上 | 被删的是**最老**的，最新的还在 |
-| C22 | 清理目录不可写 | 委托本身仍成功退 0 |
-| C23 | `DELEGATE_TIMEOUT_SECONDS=2`、桩睡 10 秒 | 非 0 退出（124）+ stderr 含秒数与日志路径，**且断言 10 秒内判完** |
-| C24 | `DELEGATE_TIMEOUT_SECONDS=30` 的正常调用 | 仍然成功退 0 |
-
-## Boundaries
-
-**Always**
-- 改调用形态就跑 `test-channel.sh`
-- 新增判据同时加正反用例
-- 探测/执行失败时**说清楚失败了**，不发绿灯
-
-**Ask first**
-- 增加任何外部依赖
-- 改沙箱默认值
-- 新增 flag
-
-**Never**
-- 默认可写（`--write` 必须显式）
-- 把过程日志 `cat` 回上下文
-- 用 `command -v` 当可用性判据
-- 无效模型 slug 静默退回默认
-- 在非 git 目录伪造验收块
-
-## Success Criteria
-
-1. 24 条断言全绿，`validate.sh` 通过
-2. 单次委托回到调用方 stdout 的体量 **≤ 过程日志的 1/40**（今日实测区间 63×–340×）
-3. 从 Claude Code 的 Bash 工具里调用**不挂起**
-4. 只读模式下 Codex 无法写入 cwd；写模式下无法写入 cwd 之外（实测已验证沙箱边界）
-5. `--write` 的输出**必然**含 git 验收块，且内容与 `git status` 实际一致
-6. 任何失败路径的退出码都非 0，且 stderr 有可执行的下一步
-
-## Open Questions（已全部定案，2026-08-29）
-
-- ~~日志目录无限增长~~ → **保留最近 50 组**，每次跑完（成功或失败）顺手清，
-  清理失败一律不影响本次委托的结果与退出码。
-  依据：实测一轮测试就积到 **1310 个文件 / 9.3MB**。
-- ~~wrapper 自身要不要设超时上限~~ → **设**。默认 900 秒，`DELEGATE_TIMEOUT_SECONDS`
-  可覆盖，非数值回落 900。超时杀进程、退出 **124**、stderr 给出秒数与完整日志路径。
-  macOS 自带没有 `timeout` 命令，用后台起进程 + 轮询 + kill 实现。
-  依据：此前完全无界 —— codex 若因新原因挂死就是无限挂，
-  有上限才能把「静默挂死」变成「可诊断的失败」。
-- ~~`--effort` 合法值要不要本地校验~~ → **不做**，透传给 codex 报错。
-  依据：合法值随 Codex 版本变（0.150.1 的 `ultra` 只有部分模型支持），
-  本地白名单会过期，然后拒绝一个**合法**的新档位 ——
-  那正是这个项目最忌的假警报方向。
+免费测试使用桩，只能验证调用参数与进程管理，不能证明真实 CLI 沙箱/付费模型行为。`test-channel.sh --live` 会消耗额度，不进入 validate；初轮离线修复未运行，后续真实验证见 [验收记录](docs/releases/v0.4.0.md)。改调用形态必须跑总验证，修改行为先用回归复现故障。新增后端、flag、沙箱默认或非 Git 支持需另定范围。

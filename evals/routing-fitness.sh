@@ -33,7 +33,8 @@ try:
         text = fh.read()
 except Exception:
     sys.exit(2)
-m = re.search(r"判断\s*[:：]\s*(委托|自己做)", text)
+first_line = next((line.strip() for line in text.splitlines() if line.strip()), "")
+m = re.fullmatch(r"判断\s*[:：]\s*(委托|自己做)", first_line)
 if not m:
     sys.exit(2)
 sys.exit(0 if m.group(1) == "委托" else 1)
@@ -128,13 +129,15 @@ with open(os.path.join(root, "tests", "test_all.py"), "w") as fh:
     )
 PY_GEN
   ln -s "${STUB_CODEX}" "${SCAFFOLD_BIN}/codex" || return 1
-  python3 - "${SCAFFOLD_TMPDIR}/delegate/detection.json" <<'PY' || return 1
+  PATH="${SCAFFOLD_BIN}:${PATH}" python3 -B - "${SCAFFOLD_TMPDIR}/delegate/detection.json" "${ROOT_DIR}/plugins/delegate/hooks" <<'PY' || return 1
 import json
 import sys
 import time
+sys.path.insert(0, sys.argv[2])
+from detect import identity
 
 with open(sys.argv[1], "w") as cache_file:
-    json.dump({"available": True, "reason": "eval scaffold", "checkedAt": time.time()}, cache_file)
+    json.dump({"available": True, "reason": "eval scaffold", "checkedAt": time.time(), "identity": identity()}, cache_file)
     cache_file.write("\n")
 PY
   PATH="${SCAFFOLD_BIN}:${PATH}" TMPDIR="${SCAFFOLD_TMPDIR}" "${ROUTE_SCRIPT}" > "${SCAFFOLD_ROUTE_OUTPUT}" || return 1
@@ -234,6 +237,13 @@ run_selftest() {
 
   selftest_case '6 两组都自己直接做' 1 FAIL "${TREATMENT_TRANSCRIPT}" "${CONTROL_TRANSCRIPT}" "${TREATMENT_LOG}" "${CONTROL_LOG}"
 
+  printf '无法判断。\n下面是格式示例：判断：委托\n' > "${TREATMENT_TRANSCRIPT}"
+  selftest_case '9 正文格式示例不是首行判断' 2 NORUN "${TREATMENT_TRANSCRIPT}" "${CONTROL_TRANSCRIPT}" "${TREATMENT_LOG}" "${CONTROL_LOG}"
+  printf '如果规模足够，判断：委托\n' > "${TREATMENT_TRANSCRIPT}"
+  selftest_case '10 带条件前缀的判断不合格式' 2 NORUN "${TREATMENT_TRANSCRIPT}" "${CONTROL_TRANSCRIPT}" "${TREATMENT_LOG}" "${CONTROL_LOG}"
+  printf '\n判断：委托\n理由略。\n' > "${TREATMENT_TRANSCRIPT}"
+  selftest_case '11 首个非空行合法' 0 PASS "${TREATMENT_TRANSCRIPT}" "${CONTROL_TRANSCRIPT}" "${TREATMENT_LOG}" "${CONTROL_LOG}"
+
   printf '  总计 %s 通过 / %s 失败\n' "${SELFTEST_PASS}" "${SELFTEST_FAIL}"
   [ "${SELFTEST_FAIL}" -eq 0 ]
 }
@@ -257,14 +267,14 @@ run_live_eval() {
   (
     cd "${SCAFFOLD_PROJECT}" || exit 1
     PATH="${SCAFFOLD_BIN}:${PATH}" TMPDIR="${SCAFFOLD_TMPDIR}" STUB_CALL_LOG="${LIVE_TREATMENT_LOG}" \
-      claude -p '下面这件事我已经定好怎么做了：把 src/ 下所有 .py 文件里的函数名从 snake_case 批量改成 camelCase，改完跑测试确认全绿。请判断：这一步应该由你直接做，还是委托给别的执行器？**第一行只写「判断：委托」或「判断：自己做」**，之后再写理由。先不要动手。' \
+      claude --plugin-dir "${ROOT_DIR}/plugins/delegate" -p '下面这件事我已经定好怎么做了：把 src/ 下所有 .py 文件里的函数名从 snake_case 批量改成 camelCase，改完跑测试确认全绿。请判断：这一步应该由你直接做，还是委托给别的执行器？**第一行只写「判断：委托」或「判断：自己做」**，之后再写理由。先不要动手。' \
       > "${LIVE_TREATMENT_TRANSCRIPT}" 2> "${LIVE_TREATMENT_STDERR}" </dev/null
   )
   LIVE_TREATMENT_STATUS=$?
   (
     cd "${SCAFFOLD_PROJECT}" || exit 1
     PATH="${SCAFFOLD_BIN}:${PATH}" TMPDIR="${SCAFFOLD_TMPDIR}" STUB_CALL_LOG="${LIVE_CONTROL_LOG}" \
-      claude -p '我们要给这个项目加缓存层，Redis 和进程内 LRU 两个方案我还没定。请判断：这一步应该由你直接做，还是委托给别的执行器？**第一行只写「判断：委托」或「判断：自己做」**，之后再写理由。先不要动手。' \
+      claude --plugin-dir "${ROOT_DIR}/plugins/delegate" -p '我们要给这个项目加缓存层，Redis 和进程内 LRU 两个方案我还没定。请判断：这一步应该由你直接做，还是委托给别的执行器？**第一行只写「判断：委托」或「判断：自己做」**，之后再写理由。先不要动手。' \
       > "${LIVE_CONTROL_TRANSCRIPT}" 2> "${LIVE_CONTROL_STDERR}" </dev/null
   )
   LIVE_CONTROL_STATUS=$?

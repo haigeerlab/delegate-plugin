@@ -9,4 +9,4 @@ allowed-tools: Bash
 bash "${CLAUDE_PLUGIN_ROOT}/hooks/doctor.sh"
 ```
 
-这是诊断，不会修改任何东西。
+每次强制刷新本地基础探测，并写临时缓存，不修改业务文件。退出 0 表示诊断完成，以文本的问题数量为准。它不验证远端连接、额度、模型权限或所有规则；全局 AGENTS.md 检查仅为中文启发式。

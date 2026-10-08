@@ -95,6 +95,30 @@ if ! /bin/bash "${ROOT_DIR}/evals/routing-fitness.sh" --selftest; then
   fail "routing-fitness 自检未通过"
 fi
 
+# Parse Python without producing __pycache__ in the checkout.
+if ! python3 -B - "${ROOT_DIR}" <<'PYTHON'
+import ast
+from pathlib import Path
+import sys
+for path in Path(sys.argv[1]).rglob('*.py'):
+    if '.git' not in path.parts:
+        ast.parse(path.read_bytes(), filename=str(path))
+PYTHON
+then
+  fail "Python 语法校验未通过"
+fi
+
+for SUITE in channel detection routing; do
+  if ! /bin/bash "${ROOT_DIR}/plugins/delegate/tests/test-${SUITE}.sh"; then
+    fail "${SUITE} 产品测试未通过"
+  fi
+done
+for SUITE in backend channel-regressions; do
+  if ! python3 -B "${ROOT_DIR}/plugins/delegate/tests/test-${SUITE}.py"; then
+    fail "${SUITE} 回归测试未通过"
+  fi
+done
+
 if [ "${STATUS}" -ne 0 ]; then
   exit 1
 fi

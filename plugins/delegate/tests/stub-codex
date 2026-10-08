@@ -17,6 +17,14 @@ if [ "${1:-}" = "--version" ]; then
   exit "${STUB_VERSION_EXIT:-0}"
 fi
 
+if [ "${1:-}" = login ] && [ "${2:-}" = status ]; then
+  if [ -n "${CODEX_AUTH_FILE:-}" ] && [ ! -s "${CODEX_AUTH_FILE}" ]; then
+    exit 1
+  fi
+  printf '%s\n' "${STUB_LOGIN_TEXT:-Logged in using ChatGPT}"
+  exit "${STUB_LOGIN_EXIT:-0}"
+fi
+
 if [ "${STUB_READ_STDIN:-0}" = "1" ]; then
   /bin/cat >/dev/null
 fi
