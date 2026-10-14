@@ -133,7 +133,7 @@ Codex 0.162.1 将这四条源命令转换为 skill：
 
 在 Codex 的 skill 选择器中选择 delegate 对应 skill，再提供相同参数；CLI 可用 `/skills` 打开选择器（[官方说明](https://learn.chatgpt.com/docs/developer-commands#use-skills-with-skills)）。Codex 内置 `/review` 是另一个入口，不能据此推断启动了 delegate 后端。两宿主复用相同脚本，不要求显示相同的斜杠别名；以已加载的宿主列表为准。
 
-四个 Codex 转换产物及 Claude Code 2.1.296 的本次源码初始化加载均已核验；交互界面的展示/调用仍未验收，见[加载证据](docs/verification/2026-10-13-delegate-host-command-loading.md)。下表只描述执行后端是否调用模型；宿主解释命令可能使用主会话模型及额度。
+四个 Codex 转换产物及 Claude Code 2.1.296 的本次源码初始化加载均已核验；后续四入口显示及 S7 菜单到公共脚本、完整 dry-run 已核对，见[实际输出证据](docs/verification/2026-10-14-delegate-s7-output-readback-result.md)。无差错自动 UI 输入仍未验证。下表只描述执行后端是否调用模型；宿主解释命令可能使用主会话模型及额度。
 
 | 入口 | 作用 | 是否调用执行后端模型 |
 |---|---|---|
@@ -232,7 +232,7 @@ claude plugin marketplace add "$PWD"
 claude plugin install delegate@delegate-marketplace
 ```
 
-当前 Claude Code 对本地路径 marketplace 中的相对路径插件可直接加载源码；修改后在新会话或 `/reload-plugins` 中生效。此行为与远程安装缓存不同，具体支持取决于宿主版本。[官方本地加载说明](https://code.claude.com/docs/en/plugin-marketplaces)
+本地 marketplace 指定安装来源，不保证当前会话直接读取该源码。先核对插件登记的 `installPath` 和实际文件；本机验证的安装使用缓存副本，须更新并核对内容后再新开会话或 `/reload-plugins`。仅重载不会刷新旧缓存；同版本 update 也不能证明内容已替换。开发时需要明确加载源码，使用下方 `--plugin-dir`，并核对实际入口。[官方 marketplace 说明](https://code.claude.com/docs/en/plugin-marketplaces)
 
 开发和评估时，也可在业务 Git 项目中显式加载源码插件目录：
 
@@ -298,7 +298,7 @@ v0.5.0 不注册UserPromptSubmit，不按每轮输入自动提醒或探测。Ses
 /bin/bash scripts/validate.sh
 ```
 
-总入口包含语法、清单必填字段、判决器自检、3 个 shell 产品套及 2 个 Python 回归套。基线为 channel 24 条、detection 19 条、routing 9 条断言和 17 个 Python 回归测试。免费总验证不发起模型请求；doctor 规则测试已自行配置 CLI 桩、合成登录状态和临时日志，不再依赖外层 Codex 的安装或登录。[F8 实际修复验证](docs/verification/2026-10-08-f8-applied.md)包含无外层 CLI 和外层拒绝登录的结果。
+总入口包含语法、清单必填字段、判决器自检、3 个 shell 产品套、15 个循环注册的 Python 回归套，以及源码发现回归和隔离策略 policy-only 套。v0.5.0 发布验证为 157 项 Python、53 项 shell 和 19 项 eval；实际 OS、宿主与真实模型证据另列，不计作离线通过。免费总验证不发起模型请求；doctor 规则测试已自行配置 CLI 桩、合成登录状态和临时日志，不再依赖外层 Codex 的安装或登录。[F8 实际修复验证](docs/verification/2026-10-08-f8-applied.md)包含无外层 CLI 和外层拒绝登录的结果。
 
 开发约定、单独测试入口、付费 live 验证和双语维护规则见 [贡献指南](CONTRIBUTING.md)。问题和建议统一通过 [GitHub Issues](https://github.com/haigeerlab/delegate-plugin/issues) 反馈，Bug 提交步骤见下节。
 

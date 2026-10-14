@@ -10,27 +10,27 @@
 
 ```text
 SessionStart → 刷新基础探测缓存（不输出上下文）
-UserPromptSubmit → 串行预热缓存 → 可用时注入确认要求与 skill 指针
-Claude 提议具体任务 → 用户确认 → 命令 → wrapper 实时认证检查
-→ Git 工作区检查 → 新进程组中 codex exec → 答复 / 失败诊断
-→ 写模式无论执行成功与否均输出 Git 概览 → 主会话验收
+用户明确委托，或确认模型的具体提议 → review/run 命令 → 后端专属参数与实时认证检查
+→ Git 范围/工作区检查 → 所选后端执行 → 答复 / 失败诊断
+→ Codex run 写模式无论执行成功与否均输出 Git 概览 → 主会话验收
+UserPromptSubmit 已退役，不按每轮输入探测、提醒或要求重复确认
 ```
 
 ## 职责划分
 
-源命令按用途分为 review/run/doctor/help。delegate_cli.py 负责快捷输入与无模型预览，delegate_capabilities.py 只定义两个后端能力；公共 backend 保持旧脚本兼容。review 始终只读，run 当前仅 Codex。范围快捷参数转为既有共同上下文，不绕过采集/权限/结果验证。新接口未安装、未发布，旧命令迁移见 [模块合同](spec/claude-review.md)。
+源命令按用途分为 review/run/doctor/help。delegate_cli.py 负责快捷输入与无模型预览，delegate_capabilities.py 只定义两个后端能力；公共 backend 保持旧脚本兼容。review 始终只读，run 当前仅 Codex。范围快捷参数转为既有共同上下文，不绕过采集/权限/结果验证。v0.5.0 已发布这些接口，本机两宿主安装已核对；旧命令迁移见 [模块合同](spec/claude-review.md)。
 
 公共 `delegate-exec.sh` 分派后端与专属参数，保留 `codex-exec.sh` 兼容路径。新 `claude-review` 模块独立管理共同上下文/快照/结果、Claude 预检与本机 Mac 运行边界，不扩展 Spec Guard 执行器。detection 缓存与 Hook 仍只表明默认 Codex 基础状态，显式 Claude 不经过该认证闸门。
 
-Claude 仅只读审查：工具限制收敛能力，safe/restricted 收敛项目/插件上下文，srt 收敛整个 CLI 的文件/网络访问；临时 launchd 任务提供独立的内核 resource coalition，STOP 屏障、PID 代际信号及成员计数负责本次 helper 清理。只使用已存在的本机 CLI/认证和运行依赖，不安装 LaunchAgent 或修改全局设置。固定快照有原路径/哈希映射；数据不是执行指令。共同报告由 wrapper 持有执行身份，权限/解析/覆盖不足不能变成无问题。原版本机 CLI 的无模型接口已复验；最新 CLI 2.1.296 的严格边界认证通过，此前失败原因未定，第四批 Codex→Claude 已完成四文件真实只读审查，核心夹具缺陷核对通过、输入不变且回收确认；Claude 主会话→Codex 已运行但未读到文件，修复后成功审查仍未验收，主动模型写入/递归尝试未观察到，候选状态见 [模块合同](spec/claude-review.md)。
+Claude 仅只读审查：工具限制收敛能力，safe/restricted 收敛项目/插件上下文，srt 收敛整个 CLI 的文件/网络访问；临时 launchd 任务提供独立的内核 resource coalition，STOP 屏障、PID 代际信号及成员计数负责本次 helper 清理。只使用已存在的本机 CLI/认证和运行依赖，不安装 LaunchAgent 或修改全局设置。固定快照有原路径/哈希映射；数据不是执行指令。共同报告由 wrapper 持有执行身份，权限/解析/覆盖不足不能变成无问题。原版本机 CLI 的无模型接口已复验；最新 CLI 2.1.296 的严格边界认证通过，此前失败原因未定，第四批 Codex→Claude 已完成四文件真实只读审查，核心夹具缺陷核对通过、输入不变且回收确认；首批 Claude 主会话→Codex 未读到文件，后续修复版本与 S2 固定源码均有真实反向 4/4 成功记录；S7 已核对菜单到公共脚本及完整 dry-run。证据分别绑定当时源码，不代表本次发布重新双向 live 验收；主动模型写入/递归、认证刷新、自然异常 helper 和长期稳定性仍未验证。当前状态见 [模块合同](spec/claude-review.md)。
 
 - `backend.py` 是 channel 与 detection 共用的基础检查：PATH、可执行版本命令、CLI 报告的 ChatGPT 登录。
 - `channel` 管理调用、沙箱选择、日志、执行期限与进程组清理；不判断任务是否值得委托。
 - `detection` 管理基础状态缓存与 doctor，不调用模型，不承诺远端或额度可用。
-- `routing` 读取有效缓存并提供判据；不按关键词分类，不发起 Codex。
+- `routing` 响应显式请求并提供判据；需要时按后端体检，不以 Codex 缓存推断 Claude 可用，不按关键词分类或自动发起执行。
 - 命令和 skill 表达用户授权纪律；最终正确性由调用方根据真实 diff 和测试验收。
 
-## 执行合同
+## Codex run 执行合同
 
 默认 `read-only`，显式 `--write` 才用 `workspace-write`。两种模式均要求 Git 工作区；不强制工作区干净。写模式记录基线与原有变更，执行开始后所有退出路径输出验收概览，失败不会自动回滚。
 

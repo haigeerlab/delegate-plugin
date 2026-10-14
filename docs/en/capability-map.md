@@ -6,7 +6,7 @@
 
 The current implementation delegates settled execution and investigation to Codex CLI, separates process logs, and returns the final answer with Git evidence for writes. This independent marketplace does not depend on Spec Guard or agent-skills at runtime.
 
-The optional Claude Code read-only review backend was approved on 2026-10-09; see [claude-review](SPEC-claude-review.md). Mac source and free checks are connected, and strict original authentication plus a limited Codex→Claude real review passed. Normal real reviews succeeded in both directions; active model boundary attempts and complete abnormal-case acceptance remain incomplete. Unreleased review/run commands, scope shortcuts and model-free previews are added; published v0.4.0 does not contain these changes.
+The optional Claude Code read-only review backend was approved on 2026-10-09; see [claude-review](SPEC-claude-review.md). Mac source and free checks are connected, and strict original authentication plus a limited Codex→Claude real review passed. Normal real reviews succeeded in both directions; active model boundary attempts and complete abnormal-case acceptance remain incomplete. v0.5.0 includes review/run, scope shortcuts and model-free previews, with both local installations checked. S7 verified menu-to-script execution and dry-run. Layered acceptance is complete while unverified safety events and historical unknowns remain; see the [release notes](releases/v0.5.0.md).
 
 The project adoption scope confirmed on 2026-10-08 standardizes file locations. See the [historical archive](../archive/pre-spec-guard/README.md). This confirmation does not retroactively approve earlier module gates.
 

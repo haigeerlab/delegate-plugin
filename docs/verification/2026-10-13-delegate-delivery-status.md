@@ -1,6 +1,6 @@
 # delegate 双后端当前交付状态
 
-更新：2026-10-14。模块 `claude-review`，阶段 **DONE：当前Mac功能与分层验收已收束，未提交/推送/发布**。功能代码和必要修复已完成、同步两宿主；Task2/6/8按明确批准的分层标准完成。用户接续具体最终供审清单回复“继续”，233受审文件与固定条件未变后关闭Checkpoint5。所有未验证项和历史未知保留，不代表所有安全行为已证明。
+更新：2026-10-14。模块 `claude-review`，阶段 **DONE：当前Mac功能与分层验收已收束，v0.5.0已发布并完成两宿主本机安装核对**。功能代码和必要修复已完成、同步两宿主；Task2/6/8按明确批准的分层标准完成。用户接续具体最终供审清单回复“继续”，233受审文件与固定条件未变后关闭Checkpoint5。所有未验证项和历史未知保留，不代表所有安全行为已证明。
 
 本页只列当前状态。历史批次按下方链接保留，不把旧失败写成通过，也不把安装与菜单显示写成真实审查。
 
@@ -11,11 +11,11 @@
 | 官方接口、设计与计划 | 已完成并按会话确认实施；CLI 优先、两个后端、Mac 范围 | [规格](../../spec/claude-review.md)、[计划](../../tasks/claude-review/plan.md) |
 | 功能开发与审查修复 | 三个Required问题及Task9l诊断丢失已修复；Task9n恢复标准原工作区总验证157 Python / 53 shell / 19 eval通过，私有备份执行位限制已解决 | [最新验证维护](2026-10-14-delegate-validator-discovery-result.md) |
 | 普通双向真实审查 | S2 固定源码：Codex→Claude 与 Claude→Codex 各一次，均审 4/4 合成文件，输入/配置/Git/清理核对通过 | [S2 结果](2026-10-13-delegate-s2-resume-result.md) |
-| 本机安装同步 | S5成功：最新62源码匹配两缓存，Codex另有4迁移技能，16项入口检查及48项安装结果回归通过；未重载/调用模型 | [S5结果](2026-10-14-delegate-s5-sync-result.md) |
+| 本机安装同步 | 发布后两宿主已安装并启用0.5.0，62源码匹配两缓存，Codex另有4迁移技能；16项入口检查、48项结果回归通过。未新增模型或宣称旧会话热加载 | [v0.5.0](../releases/v0.5.0.md)；私有发布回执已核对 |
 | 宿主入口显示 | Codex 四入口由用户确认；Claude 四入口由 AI 直接观察，2026-10-14 再次可见。未执行本轮重载或新审查 | [本轮 UI 核对](2026-10-14-delegate-ui-and-s4-preview.md) |
 | 人工接受 | Checkpoint3源码部分接受保留历史范围；Checkpoint5接受当前Mac功能、分层证据及未验证限制，不含Git交付 | [最终供审对象](2026-10-14-delegate-final-layered-review.md) |
 | 分层工程验收 | 按明确批准的CR-03/06/09判据分别关闭Task2/6/8；非安全行为穷举，历史未知保留 | [分层结果](2026-10-14-delegate-layered-acceptance-result.md) |
-| 提交、推送、发布 | 均未执行；清单 0.4.0 仍是本地未发布源码 | 本次会话授权不含 Git 交付 |
+| 提交、推送、发布 | 用户另行明确授权后已完成：提交c59b370，main与开发分支及v0.5.0标签目标一致，正式非预发布版本已创建 | [发行页](https://github.com/haigeerlab/delegate-plugin/releases/tag/v0.5.0)、[提交](https://github.com/haigeerlab/delegate-plugin/commit/c59b370b7e64c9a0f88024ecdfda8a371174ea89) |
 
 ## 已实现与使用方式
 
@@ -27,7 +27,7 @@ Claude 主会话使用 `/delegate:review --backend codex --paths src/login -- �
 
 Claude 采用 Read/Glob/Grep 的工具限制、项目上下文隔离、包围整个 CLI 的 OS 文件系统/网络边界与 Mac coalition 清理；不开 Bash、MCP、派活或写入工具，递归入口受 depth 限制。Codex 保留原进程组实现及 detached 子进程限制。Spec Guard 辅助合同、任务与验收，Agent-Relay 仅用于已授权的宿主间交接，两者不成为 delegate 执行依赖。
 
-Claude 当前要求 Mac、原版 CLI ≥2.1.295、Node ≥22.12.0、SRT 0.0.79 和可用 GUI launchd 域。依赖仍按次提供已有绝对路径，不改全局 PATH、不自动安装或登录。版本号相同不能证明缓存内容相同；S5已按摘要核实最新安装内容。
+Claude 当前要求 Mac、原版 CLI ≥2.1.295、Node ≥22.12.0、SRT 0.0.79 和可用 GUI launchd 域。依赖仍按次提供已有绝对路径，不改全局 PATH、不自动安装或登录。版本号相同不能证明缓存内容相同；发布后已核实0.5.0安装内容与源码一致。
 
 ## 真实结果及未验证项
 

@@ -10,27 +10,28 @@ Suitable work includes reviews, exploration across files, reproduction and diagn
 
 ```text
 SessionStart → refresh basic-readiness cache (no context output)
-UserPromptSubmit → sequentially warm cache → inject confirmation rules and skill pointer if ready
-Claude proposes a specific task → user confirms → command → wrapper checks authentication again
-→ check Git working tree → codex exec in a new process group → answer / failure diagnostics
-→ emit Git summary for write mode whether execution succeeds or fails → verify in main session
+Explicit user delegation, or confirmation of a concrete model proposal → review/run command
+→ backend-specific parameters and live authentication → Git scope/worktree checks
+→ selected backend → answer / failure diagnostics
+→ emit Git summary for Codex run writes on every started exit path → main-session verification
+UserPromptSubmit is retired; no per-prompt probing, reminders or repeated confirmations
 ```
 
 ## Responsibilities
 
-Source commands are review/run/doctor/help. delegate_cli.py owns shortcut inputs and model-free previews; delegate_capabilities.py describes two explicit backends. The backend preserves legacy scripts. Review is always read-only; run currently supports Codex only. Shortcuts reuse common context capture, permissions and result validation. The new interface is not installed or released; migration is specified in the [module contract](../../spec/claude-review.md).
+Source commands are review/run/doctor/help. delegate_cli.py owns shortcut inputs and model-free previews; delegate_capabilities.py describes two explicit backends. The backend preserves legacy scripts. Review is always read-only; run currently supports Codex only. Shortcuts reuse common context capture, permissions and result validation. v0.5.0 includes these interfaces, with both local host installations checked; migration is specified in the [module contract](../../spec/claude-review.md).
 
 The public `delegate-exec.sh` selects the backend and validates its parameters, retaining the `codex-exec.sh` compatibility path. The `claude-review` module manages common context/snapshots/results, Claude preflight and native Mac execution boundaries; it does not extend Spec Guard executors. Detection cache and hooks still describe default Codex readiness; explicit Claude selection bypasses that Codex authentication gate.
 
-Claude is read-only review: tool restrictions narrow capabilities, safe/restricted narrow project/plugin context, srt constrains the entire CLI filesystem/network access; a temporary launchd job supplies an independent kernel resource coalition, with a STOP barrier, PID-generation signals and task-count checks for helper cleanup. Use only existing local CLI/authentication and dependencies, without installing LaunchAgents or changing global settings. Fixed snapshots retain original-path/hash mappings and treat content as data. The wrapper owns execution identity, so denials, parsing errors or insufficient coverage cannot mean no findings. Original local model-free interfaces have been checked; the latest CLI 2.1.296 authentication passed under the strict boundary, while the cause of earlier failures remains unknown. The fourth Codex→Claude run completed a real four-file read-only review, with a checked core fixture defect, unchanged inputs and confirmed cleanup. Claude primary-session→Codex ran once but failed to read the four files; repaired successful review remains unverified; active model write/recursive-delegation attempts were not observed; see the [module contract](SPEC-claude-review.md).
+Claude is read-only review: tool restrictions narrow capabilities, safe/restricted narrow project/plugin context, srt constrains the entire CLI filesystem/network access; a temporary launchd job supplies an independent kernel resource coalition, with a STOP barrier, PID-generation signals and task-count checks for helper cleanup. Use only existing local CLI/authentication and dependencies, without installing LaunchAgents or changing global settings. Fixed snapshots retain original-path/hash mappings and treat content as data. The wrapper owns execution identity, so denials, parsing errors or insufficient coverage cannot mean no findings. Original local model-free interfaces have been checked; the latest CLI 2.1.296 authentication passed under the strict boundary, while the cause of earlier failures remains unknown. The fourth Codex→Claude run completed a real four-file read-only review, with a checked core fixture defect, unchanged inputs and confirmed cleanup. The first Claude primary-session→Codex run read no files; later repaired source and S2 frozen source each have real reverse 4/4 success records. S7 verified menu-to-public-script execution and complete dry-run output. Evidence remains tied to each frozen source, without fresh bidirectional live acceptance during release. Active model writes/recursion, auth refresh, natural abnormal helpers and long-term stability remain unverified; see the [module contract](SPEC-claude-review.md).
 
 - `backend.py` provides shared checks for channel and detection: PATH, a working version command, and CLI-reported ChatGPT authentication.
 - `channel` manages invocation, sandbox selection, logs, execution deadline, and process-group cleanup. It does not decide whether delegation is worthwhile.
 - `detection` manages the readiness cache and doctor. It does not call models or promise remote connectivity or quota availability.
-- `routing` reads valid cache and provides criteria. It does not classify by keywords or invoke Codex.
+- `routing` provides criteria for explicit requests and uses backend-specific diagnostics when needed. Codex cache does not establish Claude readiness; it does not classify by keywords or automatically start execution.
 - Commands and the skill express authorization rules. The caller verifies correctness through actual diffs and tests.
 
-## Execution contract
+## Codex run execution contract
 
 Default to `read-only`; explicit `--write` selects `workspace-write`. Both modes require a Git working tree without requiring it to be clean. Write mode records the baseline and existing changes. Once execution has started, every exit path emits a verification summary; failure does not automatically roll back changes.
 

@@ -91,7 +91,7 @@ identity 包含：实际 CLI 路径、有效 Codex home、插件根目录、插�
 - `--warm`：命中缓存则复用，否则探测；静默。
 - `--print`：强制探测，输出可用或安全的不可用原因；用于 doctor。即使缓存不可写，仍可报告当前直接探测结果。
 - 默认：缓存可用时输出合法 UserPromptSubmit JSON，说明仅本地基础条件；不可用或内部异常零输出、退出 0。
-- 未发布源码不再注册UserPromptSubmit；prompt.sh/route.sh静默兼容，普通提示不触发基础探测或路由提醒。SessionStart和按需doctor行为保留。
+- v0.5.0 不再注册UserPromptSubmit；prompt.sh/route.sh静默兼容，普通提示不触发基础探测或路由提醒。SessionStart和按需doctor行为保留。
 
 ## doctor
 

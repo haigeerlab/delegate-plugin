@@ -135,7 +135,7 @@ Codex 0.162.1 converts the four source commands to skills:
 
 Select the corresponding delegate skill in the Codex skill picker and provide the same arguments. The CLI opens that picker with `/skills` ([official documentation](https://learn.chatgpt.com/docs/developer-commands#use-skills-with-skills)). Codex's built-in `/review` is a separate entry and does not establish that delegate ran. Both hosts share the scripts; identical slash aliases are not required. Use the host's loaded inventory.
 
-All four Codex migration artifacts and Claude Code 2.1.296 session-only source initialization have been checked. Interactive display/invocation remains unverified; see the [loading evidence](docs/verification/2026-10-13-delegate-host-command-loading.md) (Chinese). The table describes execution-backend model calls only; interpreting a command can consume the primary host's model usage.
+All four Codex migration artifacts and Claude Code 2.1.296 session-only source initialization have been checked. Subsequent four-entry display and S7 menu-to-public-script execution with complete dry-run output were checked; see the [actual output evidence](docs/verification/2026-10-14-delegate-s7-output-readback-result.md) (Chinese). Error-free automatic UI input remains unverified. The table describes execution-backend model calls only; interpreting a command can consume the primary host's model usage.
 
 | Entry | Purpose | Calls an execution-backend model? |
 |---|---|---|
@@ -143,7 +143,7 @@ All four Codex migration artifacts and Claude Code 2.1.296 session-only source i
 | `/delegate:run [options] <task>` | Codex general task | Yes |
 | `/delegate:doctor --backend <backend>` | Selected-backend diagnostics and capability description | No; CLI status checks only |
 | `/delegate:help` | Options, examples, limitations, and troubleshooting | No |
-| `/delegate:delegate-routing` | Routing-criteria skill, callable when supported by the host | Criteria only; confirmation is still required |
+| `/delegate:delegate-routing` | Routing-criteria skill, callable when supported by the host | No; a new model proposal needs confirmation, existing scope authorization does not |
 
 ```text
 /delegate:review --backend claude-code --paths src/payments --model sonnet
@@ -232,7 +232,7 @@ claude plugin marketplace add "$PWD"
 claude plugin install delegate@delegate-marketplace
 ```
 
-Current Claude Code can load relative-path plugins in a local-path marketplace directly from source. Changes take effect in a new session or through `/reload-plugins`. This differs from a remote cached installation, and support depends on the host version. [Official local-loading documentation](https://code.claude.com/docs/en/plugin-marketplaces)
+A local marketplace identifies the installation source; it does not guarantee that the session reads that source directly. Check the registered `installPath` and actual files. The locally verified installation uses a cached copy: update and verify its contents before starting a new session or running `/reload-plugins`. Reloading alone does not refresh stale caches, and a same-version update does not prove replacement. For explicit source development, use `--plugin-dir` below and verify the loaded entry points. [Official marketplace documentation](https://code.claude.com/docs/en/plugin-marketplaces)
 
 For development and evaluation, you can also explicitly load the source plugin directory from your target Git project:
 
@@ -240,7 +240,7 @@ For development and evaluation, you can also explicitly load the source plugin d
 claude --plugin-dir /path/to/delegate-plugin/plugins/delegate
 ```
 
-If a marketplace with the same name is already registered, check its source first. Local loading and remote installation are alternatives; you do not need two installations. The `v0.4.0` tag fixes release source at one revision, while `main` continues to change.
+If a marketplace with the same name is already registered, check its source first. Local loading and remote installation are alternatives; you do not need two installations. The `v0.5.0` tag fixes release source at one revision, while `main` continues to change.
 
 ### Uninstall
 
@@ -284,7 +284,7 @@ doctor refreshes the temporary cache and does not modify project files. Its heur
 | detection | Shared basic checks, identity-bound cache, atomic writes, doctor | `backend.py` + `detect.py` + shell entry points |
 | routing | Optional criteria and confirmation rules for explicit delegation requests | Commands + delegate-routing skill; silent legacy prompt/route entries |
 
-Unreleased source does not register UserPromptSubmit or probe/remind on every prompt. SessionStart silently refreshes readiness; doctor reports it on demand. The cache lasts 8 hours and is bound to the CLI path, Codex home, plugin root, and version. Future timestamps, old formats, identity changes, and invalid files invalidate it. Cached readiness does not guarantee current authentication; execution always checks login again.
+v0.5.0 does not register UserPromptSubmit or probe/remind on every prompt. SessionStart silently refreshes readiness; doctor reports it on demand. The cache lasts 8 hours and is bound to the CLI path, Codex home, plugin root, and version. Future timestamps, old formats, identity changes, and invalid files invalidate it. Cached readiness does not guarantee current authentication; execution always checks login again.
 
 See the [documentation index](docs/en/README.md) for reading order and language pairs. Read [Design](docs/en/DESIGN.md) for rationale and the [capability map](docs/en/capability-map.md) for module responsibilities. Exact contracts are in the [channel](docs/en/SPEC-channel.md), [detection](docs/en/SPEC-detection.md), and [routing](docs/en/SPEC-routing.md) specifications. Release changes are in [v0.5.0](docs/en/releases/v0.5.0.md); subsequent changes are in [Unreleased](docs/en/releases/unreleased.md).
 
@@ -298,7 +298,7 @@ Run the free offline validation from the **repository root**:
 /bin/bash scripts/validate.sh
 ```
 
-The entry point covers syntax, manifest required fields, evaluator self-tests, 3 shell product suites, and 2 Python regression suites. The baseline comprises 24 channel, 19 detection, and 9 routing assertions plus 17 Python regression tests. The free aggregate validation makes no model requests. Doctor rule tests now supply their own CLI stub, synthetic login state, and temporary log, without depending on an outer Codex installation or login. The [actual F8 fix verification in Chinese](docs/verification/2026-10-08-f8-applied.md) covers absent outer CLI and rejected outer login.
+The entry point covers syntax, manifest required fields, evaluator self-tests, three shell product suites, 15 loop-registered Python regression suites, the source-discovery regression and the isolation policy-only suite. v0.5.0 release validation passed 157 Python, 53 shell and 19 eval cases. Actual OS, host and live-model evidence is recorded separately, without labeling it as offline coverage. The free aggregate validation makes no model requests. Doctor rule tests now supply their own CLI stub, synthetic login state, and temporary log, without depending on an outer Codex installation or login. The [actual F8 fix verification in Chinese](docs/verification/2026-10-08-f8-applied.md) covers absent outer CLI and rejected outer login.
 
 See [Contributing](CONTRIBUTING.en.md) for development conventions, individual tests, paid live verification, and bilingual maintenance. Use [GitHub Issues](https://github.com/haigeerlab/delegate-plugin/issues) for problems and suggestions; follow the next section to report a bug.
 

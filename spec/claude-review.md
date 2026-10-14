@@ -2,11 +2,15 @@
 
 简体中文 | [English](../docs/en/SPEC-claude-review.md)
 
+**当前发行（2026-10-14）：** v0.5.0 已发布，提交 `c59b370` 已推送 main 与开发分支，本机两宿主 0.5.0 安装内容核对一致。免费发布验证 157 Python / 53 shell / 19 eval、安装后16项入口检查与48项结果回归通过；发布未新增模型调用，S2/S6/S7仍按各自固定源码报告。详见[交付状态](../docs/verification/2026-10-13-delegate-delivery-status.md)。
+
 **当前验收口径（2026-10-14）：** 用户明确“批准分层验收修订”，CR-03/06/09按下表分层判定。生产权限、工具集与产品测试不变；模型主动Write/递归、认证刷新、自然helper类型、历史未定根因和长期稳定性仍单独标未验证，不能追认为旧标准通过。S7菜单到脚本及完整dry-run输出已核对，原自动输入/并发提交失败保留。下方早期状态按当时版本/判据保留；当前逐项结论以本模块todo及证据对账为准。
 
-**2026-10-14最新验证：** Task9l诊断修复已由S5同步两宿主，16项读回/48项安装结果回归通过；Task9n标准工作区免费157/53/19通过。S6诊断接续取得指定快照外Read工具拒权及精确目标归属，回收confirmed；审查1/4、failed/inconclusive，Task2/6/8完整条件仍未完成。S4及原S6认证失败根因未知，不追认修复。见[接续结果](../docs/verification/2026-10-14-delegate-s6-diagnostic-followup-result.md)。
+## 历史接续记录（保留当时状态，不覆盖当前结论）
 
-**最新接续：** S2固定源码普通双向审查及四入口显示已通过；随后CMD-001/CMD-002/DOC-001三批修复免费总148/53/19通过，已同步两宿主正常安装并通过16项无模型读回，尚未真实模型复验或本批会话重载，完整安全条件仍未完成。见[最新修复结果](../docs/verification/2026-10-13-delegate-command-fixes-result.md)。下方早期日期状态保留当时证据，不代表新增修复已live验证。
+**2026-10-14 S5/S6批次：** Task9l诊断修复已由S5同步两宿主，16项读回/48项安装结果回归通过；Task9n标准工作区免费157/53/19通过。S6诊断接续取得指定快照外Read工具拒权及精确目标归属，回收confirmed；审查1/4、failed/inconclusive，Task2/6/8完整条件仍未完成。S4及原S6认证失败根因未知，不追认修复。见[接续结果](../docs/verification/2026-10-14-delegate-s6-diagnostic-followup-result.md)。
+
+**2026-10-13修复批次：** S2固定源码普通双向审查及四入口显示已通过；随后CMD-001/CMD-002/DOC-001三批修复免费总148/53/19通过，已同步两宿主正常安装并通过16项无模型读回，尚未真实模型复验或本批会话重载，完整安全条件仍未完成。见[最新修复结果](../docs/verification/2026-10-13-delegate-command-fixes-result.md)。下方早期日期状态保留当时证据，不代表新增修复已live验证。
 
 日期：2026-10-13。状态：当前Mac功能代码和免费验证已完成；两方向普通真实四文件审查各有成功记录。最新Claude主会话→Codex0.162.1/Node24.18.0完成4/4，核心缺陷核对通过、输入/Git/源码未变，见[收束证据](../docs/verification/2026-10-12-claude-review-mac-reverse-fourth-success.md)。先前Codex→Claude2.1.296仅覆盖其固定历史源码/版本。新斜杠宿主体验、主动模型写入/递归企图、认证刷新和异常helper仍未验收；完整验收未完成。最新严格边界认证通过，此前失败原因未定。目标仅当前Mac；VM为历史证据。安装、新增模型调用、提交、推送、发布继续分别授权。 2026-10-12临时Codex源码安装成功，但原生命令迁移仅生成review/run/doctor，help缺失；已修正4000字节超限并由单次原生CLI安装核对四入口转换产物通过；桌面/Claude新命令体验仍待验，见[复验结果](../docs/verification/2026-10-13-delegate-source-load-fixed-result.md)。
 
@@ -22,11 +26,11 @@
 - Spec Guard 仅跟踪本项目开发及审查上下文，不增加其执行器或运行时依赖。不实现宿主反向自动选择、第三后端、通用调度、后台排队或无限重试。
 - 第一版只支持 Mac 本机 Claude 后端；当前实测 macOS 15.7.3 arm64。使用已有原版 CLI/本机认证与独立内核 coalition；不扩展 Linux/Windows，不自动准备运行依赖。旧 Linux/SSH 实测仅作历史证据。Codex 既有平台和默认行为保持不变。
 
-## 双后端命令接口（未发布源码，2026-10-10）
+## 双后端命令接口（v0.5.0）
 
-本批接口设计经用户“继续”确认；新源斜杠入口为 `/delegate:review`、`/delegate:run`、`/delegate:doctor`、`/delegate:help`。review 两后端都只读；run 保留既有 Codex 自由文本及显式 write，Claude run 拒绝。旧 `/delegate:delegate` 源命令移除；旧 codex-exec.sh 和 delegate-exec.sh 无子命令调用继续有效。两宿主从同一源命令使用公共入口，宿主生成缓存不随源码自动更新，新斜杠体验尚需加载源码验收。
+本批接口设计经用户“继续”确认；新源斜杠入口为 `/delegate:review`、`/delegate:run`、`/delegate:doctor`、`/delegate:help`。review 两后端都只读；run 保留既有 Codex 自由文本及显式 write，Claude run 拒绝。旧 `/delegate:delegate` 源命令移除；旧 codex-exec.sh 和 delegate-exec.sh 无子命令调用继续有效。两宿主从同一源命令使用公共入口，宿主生成缓存不随源码自动更新，四入口显示与 S7 菜单实际公共脚本/dry-run 已验收；无差错自动 UI 输入仍未验证。
 
-以上斜杠写法属于 Claude Code。Codex 0.162.1 对应迁移 skill 为 `source-command-review/run/doctor/help`，通过宿主 skill 选择器调用并提供相同参数；显示名以加载列表为准，不能把 Codex 内置 `/review` 当成本插件入口。统一的是参数和脚本行为，不保证两宿主斜杠别名相同。四个 Codex 转换产物与 Claude CLI 本次源码初始化加载已核验，交互展示/调用仍未验收，见[加载记录](../docs/verification/2026-10-13-delegate-host-command-loading.md)。help/doctor/dry-run 不调用执行后端模型，不代表宿主解释这些命令不消耗主会话额度。
+以上斜杠写法属于 Claude Code。Codex 0.162.1 对应迁移 skill 为 `source-command-review/run/doctor/help`，通过宿主 skill 选择器调用并提供相同参数；显示名以加载列表为准，不能把 Codex 内置 `/review` 当成本插件入口。统一的是参数和脚本行为，不保证两宿主斜杠别名相同。四个 Codex 转换产物与 Claude CLI 本次源码初始化加载已核验，后续菜单到公共脚本与完整 dry-run 已核对，见[S7读回](../docs/verification/2026-10-14-delegate-s7-output-readback-result.md)；原自动输入失败保留。help/doctor/dry-run 不调用执行后端模型，不代表宿主解释这些命令不消耗主会话额度。
 
 ```text
 /delegate:review --backend claude-code --paths src/payments --model sonnet
