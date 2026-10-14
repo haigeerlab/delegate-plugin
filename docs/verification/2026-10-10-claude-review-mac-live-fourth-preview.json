@@ -1,0 +1,42 @@
+{
+  "root": "/path/to/private-evidence",
+  "repository": "/path/to/private-evidence",
+  "context": "/path/to/private-evidence",
+  "baseline": "dc59b5423cfd4a2b780a4ac91f7264b6404e541e",
+  "files": {
+    "PLAN.md": "6d85ab45f111eb48e70b0314d4ea95ab97cb471950d3c4ce06bbd0e8a48df7d9",
+    "REVIEW_DATA.md": "0b72ece1aac918e6181f948aaf10b53d39ed02fe8df383e9cc6bc1a3a8157197",
+    "SPEC.md": "4aec45be28610692b67c654ba4bc55769a41c582c7839484bfc2b4e1359cab8b",
+    "src/pricing.py": "ab49425a96b6eca9fc7564623b11ce9b02e95cac751191c1376d59b378159a10"
+  },
+  "context_sha256": "5554f0a49d24ec2ee0d6760a5953c84d3a970f0a228bf0952cc35e1cc249d08e",
+  "excluded_paths": [
+    "excluded.py"
+  ],
+  "known_fixture_trigger": {
+    "input": [
+      10000,
+      20
+    ],
+    "actual": 2000,
+    "expected": 8000,
+    "line": 7
+  },
+  "claude_binary": "/path/to/user-home/.local/share/claude/versions/2.1.296",
+  "claude_sha256": "c9b5341637becbd423ddffc5b254afb645682a3868cb708bbc6cc0e7bb419937",
+  "model_runs": 0,
+  "state": "prepared_not_authorized_not_executed",
+  "source_sha256": {
+    "delegate-exec.sh": "6f671a25982169f40e3993af1261ecfc9915d7f659731c67b2c10735b7b07059",
+    "delegate_backend.py": "88f4698c27387113d0cec69a9cd6a3dc46ea2a71655a05df6e192efe65765ccd",
+    "claude_review.py": "6208364fcbd0a5fcdb9061c34a308c73a5c9ea67b6bc3f929576ae6de365c85c",
+    "review_native.py": "aaead63f317e26e78b66ff5023ab91442b45b5cd3e2858fd44506ab0c7d0d552",
+    "review_macos.py": "028f35bdab20f2cf0730f611dc2ff95a725b2279982ad847b7319ff7bf6e65d1",
+    "review_result.py": "43a31da35b3723ae180ea930a504d273e26478f752c7524439385ce35d1e9130",
+    "review_execution.py": "d391540eca825d7c8dbec894afdb91bb2108c9ae2f7567617789dfca0b2b0f57",
+    "review_context.py": "1b4437f5d14c739030f727ba1b900cf1e38dff3a486f274c194581c654d866a2",
+    "review_isolation.py": "96c6ac119cc812bafe109f0647838f1c6308f49ebb183721014854aeb922e307"
+  },
+  "batch": 4,
+  "_publication_note": "本机身份与路径已脱敏；原始本地证据私有保留，结论及产品/输入摘要未改。"
+}

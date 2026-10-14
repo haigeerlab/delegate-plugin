@@ -47,7 +47,11 @@ Run the free offline validation from the **repository root**:
 /bin/bash scripts/validate.sh
 ```
 
-The entry point checks JSON/Python/Bash syntax, executable permissions, manifest required fields, evaluator self-tests, all 3 shell product suites, and 2 Python regression suites. The baseline includes 52 product assertions and 17 Python regressions. The free aggregate entry point makes no model calls. The four doctor rule checks use run_doctor with this suite's controlled CLI, synthetic login state, and temporary log, rather than inheriting outer installation/authentication state. [Actual verification in Chinese](docs/verification/2026-10-08-f8-applied.md) passed the aggregate suite without an outer Codex CLI, and all 19 detection assertions passed both with no outer CLI and with an outer rejected login.
+The entry point checks JSON/Python/Bash syntax, executable permissions, manifest required fields, evaluator self-tests, and registered shell product and Python regression suites. The v0.4.0 baseline includes 52 product assertions and 17 Python regressions. The free aggregate entry point makes no model calls. The four doctor rule checks use run_doctor with this suite's controlled CLI, synthetic login state, and temporary log, rather than inheriting outer installation/authentication state. [Actual verification in Chinese](docs/verification/2026-10-08-f8-applied.md) passed the aggregate suite without an outer Codex CLI, and all 19 detection assertions passed both with no outer CLI and with an outer rejected login.
+
+When changing source commands, the free suite also checks Codex 0.162.1's automatic migration size constraint: the generated skill's UTF-8 body and wrapper must total at most 4000 bytes. Oversized commands are skipped without failing installation. Keep entry points concise and detailed development records in documentation. This offline check does not replace actual installation or host usability acceptance.
+
+Syntax discovery excludes only the root `.git` and ignored local `.agent/acceptance` artifacts, so private 0600 installation backups are not treated as executable source. Other `.agent` files, similar directory names, and product source remain checked. Private evidence is verified per batch; all product suites remain enabled. Run `python3 -B scripts/tests/test-validation-discovery.py` for isolated discovery regressions without model calls.
 
 To isolate a failure, run individual suites:
 
@@ -57,6 +61,7 @@ To isolate a failure, run individual suites:
 /bin/bash plugins/delegate/tests/test-routing.sh
 python3 -B plugins/delegate/tests/test-backend.py
 python3 -B plugins/delegate/tests/test-channel-regressions.py
+python3 -B plugins/delegate/tests/test-command-migration.py
 /bin/bash evals/propose-not-auto.sh --scaffold-only
 /bin/bash evals/routing-fitness.sh --scaffold-only
 ```

@@ -1,0 +1,79 @@
+{
+  "date": "2026-10-10",
+  "direction": "claude-code-primary-to-codex-reviewer",
+  "stage": "reverse_execution_observed_later",
+  "target": {
+    "host": "claude",
+    "name": "Claude验收会话",
+    "reported_version": "2.1.295"
+  },
+  "authorization": {
+    "sending_chat_human_reply": "允许发送给Claude验收会话",
+    "scope": "one_handoff",
+    "recipient_execution_authorization": "missing"
+  },
+  "communication": {
+    "transport": "agent-relay-bridge",
+    "dispatch": "enqueued",
+    "wake": "admitted",
+    "receipt": "acknowledged",
+    "response": "received",
+    "send_attempts": 1,
+    "reply_correlation_verified": true,
+    "public_outcome_validation": "passed"
+  },
+  "recipient_reply_summary": "未执行；本会话缺少这次付费 Codex 调用及固定驱动的人类授权，已停止，不重试。",
+  "user_requested_followup": {
+    "scope": "one_additional_message_requesting_same_source_delegate_trial",
+    "communication": {
+      "transport": "agent-relay-bridge",
+      "dispatch": "enqueued",
+      "wake": "admitted",
+      "receipt": "acknowledged",
+      "response": "received",
+      "send_attempts": 1,
+      "reply_correlation_verified": true,
+      "public_outcome_validation": "passed"
+    },
+    "recipient_reply_summary": "已只读核对驱动调用 delegate 源码入口再启动 Codex；已向本会话用户展示范围，等待直接同意，尚未执行。",
+    "recipient_reported_manual_attempt": "用户曾在目标会话手动输入命令；宿主祖先校验拒绝，model_not_started。此过程来自目标报告，来源侧未独立观察该手动调用。",
+    "independent_checks_after_reply": {
+      "fixture_context_hashes": "passed",
+      "launch_marker_absent": true,
+      "result_absent": true,
+      "logs_absent": true
+    },
+    "model_runs": 0
+  },
+  "acceptance_status": "failed",
+  "review_outcome": "inconclusive",
+  "backend_started": true,
+  "model_runs": 1,
+  "checks": {
+    "source_cli_fixture_context_hashes_before_send": "passed",
+    "candidate_kernel_identity_before_send": "passed",
+    "fixture_context_hashes_after_reply": "passed",
+    "launch_marker_absent": true,
+    "result_absent": true,
+    "logs_absent": true
+  },
+  "limitations": [
+    "通信确认不证明实际跨后端审查",
+    "未启动审查后端，实际模型和用量无可报告证据",
+    "真实反向审查仍未验证",
+    "必须由人类在目标会话直接批准后按目标自身权限执行"
+  ],
+  "later_execution": {
+    "recipient_reported_human_reply": "同意，你来跑",
+    "response_correlation_verified": true,
+    "execution_status": "failed",
+    "review_outcome": "inconclusive",
+    "reviewed": [],
+    "unreviewed_count": 4,
+    "diagnostics": [
+      "review_incomplete"
+    ],
+    "evidence": "2026-10-10-claude-review-mac-reverse-first.json"
+  },
+  "_publication_note": "本机身份与路径已脱敏；原始本地证据私有保留，结论及产品/输入摘要未改。"
+}

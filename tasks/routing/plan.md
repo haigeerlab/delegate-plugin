@@ -136,3 +136,14 @@ Task 4–5 完成后，在 todo 各项下记录实际文档检查和仍未验证
 ### Checkpoint 7（gate）：Task 10 新样本范围
 
 旧四会话批准已用完。本次最多一个原生 Claude 会话/一个测试提示，真实 Codex 为零、无重试、配置默认模型；获得具体授权后再启动。分支 codex/spec-guard-conventions，目录 <PROJECT_ROOT>。样本结果后统一更新当前裁决，失败或缺证仍保持未完成。
+
+
+## Task 11：退役每轮自动委托提醒（2026-10-13，report）
+
+人类在LIVE-SAAS会话明确要求本会话核实并修复delegate路由触发问题，来源交接保留该人类指令；只修源码，不修改安装缓存、宿主或LIVE-SAAS。最新源码复现available即注入确认指针。采用最小修复：不注册UserPromptSubmit，旧prompt/route静默兼容；判据只响应显式委托意图，宿主未知不猜方向，不引入宿主探测/关键词分类/去重状态。SessionStart和doctor基础事实与委托决策分开；保留明确委托、默认Codex和写权限，不强制重复确认。
+
+切片：T11a测试红后绿和Hook/skill（运行3文件+skill，测试2文件）；T11b双语routing/detection/能力图/README各两文件及eval脚手架同步；T11c全套、原生清单、链接与有限代码复核，记录证据，不重复泛扫。每片report后继续；失败或需要新模型/安装/通信授权时停。成功标准：普通继续/所有cache状态/未知或冲突宿主环境/重复事件均无提醒无CLI；显式Codex调用仍成功；写权限和两后端参数测试不退化。
+
+验证：3个定向backend用例（含80次回调）、/bin/bash test-routing.sh、两个eval --scaffold-only、PYTHONDONTWRITEBYTECODE=1 /bin/bash scripts/validate.sh、原生清单/链接/diff检查。完整真实宿主新版加载和模型判断不由桩/静态检查冒充；安装、付费、通信及Git交付按另行授权处理。
+
+Task11本批收束：先红41个失败子场景，后绿3个用例/80回调及显式Codex运行；免费142 Python/53 shell/19 eval、两份原生清单和两个脚手架通过，8文件有限复核无新发现。运行入口/基础事实与路由分离，无安装或模型。[修复证据](../../docs/verification/2026-10-13-delegate-routing-host-fix.md)；旧安装和本次真实主宿主行为未验收，Git/发布另授权。

@@ -2,7 +2,10 @@
 
 [简体中文](../../spec/routing.md) | English
 
-Current contract: 2026-10-08. Earlier records are preserved in the [historical archive](../archive/pre-spec-guard/README.md). Current `tasks/routing/` tracks maintenance reconciliation only; it neither retroactively accepts historical work nor overrides this specification.
+
+Per-prompt UserPromptSubmit routing reminders are removed. Codex readiness proves neither the host, delegation intent nor Claude availability. Explicit requests use shared commands/skill with independent host/backend selection: default Codex, explicit Claude only for scoped read-only review. No opposite-host auto-routing, parameter/model mixing or fallback; see [claude-review](SPEC-claude-review.md). Explicit delegation and write authorization remain required, without reconfirming the same authorized scope.
+
+Current contract: 2026-10-13 (routing reminder fix); 2026-10-08 clauses and samples retain their historical scope. Earlier records are preserved in the [historical archive](../archive/pre-spec-guard/README.md). Current `tasks/routing/` tracks maintenance reconciliation and this fix; it neither retroactively accepts historical work nor overrides this specification.
 
 
 ## Tech stack and commands
@@ -22,11 +25,11 @@ claude --plugin-dir "$PWD/plugins/delegate"
 Paths are relative to the repository root; plugin-relative paths are explained in the original contract.
 
 ```text
-plugins/delegate/hooks/prompt.sh            → serial warm-then-route handler
-plugins/delegate/hooks/route.sh             → one-line JSON from valid cache
+plugins/delegate/hooks/prompt.sh            → silent compatibility entry for retired hooks
+plugins/delegate/hooks/route.sh             → silent compatibility entry for retired routing reminders
 plugins/delegate/hooks/hooks.json           → event registration
 plugins/delegate/skills/delegate-routing/SKILL.md → six routing categories and confirmation rules
-plugins/delegate/commands/                  → delegate / doctor / help
+plugins/delegate/commands/                  → review / run / doctor / help
 plugins/delegate/tests/test-routing.sh      → Shell stub assertions
 plugins/delegate/tests/test-backend.py      → Python unittest cold-cache/handler regressions
 evals/                                    → judge self-tests and optional paid samples
@@ -40,15 +43,10 @@ tasks/routing/plan.md / todo.md            → current maintenance steps and rec
 Keep existing style without formatting refactors. Preserve Bash 3.2, braced `${VAR}` variables and existing empty-array guards; do not use `cmd | grep -q`. Python uses the standard library, four-space indentation and snake_case functions. Serialize JSON instead of manually escaping it.
 This existing excerpt from `plugins/delegate/hooks/route.sh` illustrates actual style (context, not a new command):
 
-```python
-    cache = read_cache()
-    if cache and cache['available']:
-        print(json.dumps({
-            'hookSpecificOutput': {
-                'hookEventName': 'UserPromptSubmit',
-                'additionalContext': 'delegate: Codex 基础条件可用（未验证远端连接或额度）。若这一步的决策已经定完、只剩执行与查证，先说明要委托什么、等用户确认后再调；判据见 delegate-routing skill。',
-            },
-        }, ensure_ascii=False))
+```bash
+# Compatibility no-op for callers of the retired per-prompt routing hook.
+# Commands and delegate-routing handle explicit requests without guessing a host.
+exit 0
 ```
 
 ## Development boundaries
@@ -64,17 +62,15 @@ Assess coverage per clause and risk, including positive and negative cases. Sour
 
 ## Goal
 
-Have the model consider delegation once task decisions are settled, while the user decides whether to execute. The model proposes and waits for an explicit affirmative response. Write mode requires explicit authorization in the current turn. Directly entering a specific delegation command authorizes that task.
+Apply routing criteria only when the user explicitly requests delegation, routing, an independent review or executor selection. Settled decisions do not require delegation. An ordinary continuation advances authorized work without an extra delegation gate. New proposals wait for an affirmative response; direct commands and an already authorized scope may proceed. Writes still need explicit authorization.
 
-These are command and skill instructions, not a wrapper authorization lock that cannot be bypassed. Hooks do not classify tasks, match task keywords, or invoke Codex.
+These are command/skill instructions, not an unbypassable wrapper authorization lock. Identify hosts only through reliable main-session context, not Codex readiness or inherited environment hints. Unknown hosts receive no automatic direction advice. Claude→Codex and Codex→Claude follow explicit targets; the corresponding doctor reports basic conditions without backend fallback. Explicit same-host independent Codex reviews remain possible.
 
 ## Implementation
 
-UserPromptSubmit registers only one `prompt.sh` handler: `detect.sh --warm` first, then `route.sh`. Hosts may run handlers for the same event in parallel, so the implementation does not depend on ordering two independent handlers.
+hooks.json no longer registers UserPromptSubmit. SessionStart still silently refreshes Codex readiness. prompt.sh and route.sh remain compatibility entries that exit 0 with no probing or injection, including old registrations referencing new source. No keyword classifier, guessed host, session deduplication state or new setting is needed. Readiness and delegation decisions are separate.
 
-`route.sh` reads detection's shared valid-cache contract. When available, it emits one line of valid JSON containing local readiness, confirmation requirements, and a pointer to the delegate-routing skill. Missing, expired, identity-changed, invalid, or unavailable cache produces no output and exits 0 without probing again.
-
-`skills/delegate-routing/SKILL.md` supplies six routing categories and post-execution rules. `/delegate:delegate` executes, `/delegate:doctor` refreshes, and `/delegate:help` provides static help. Hosts that support it may expose the skill itself as `/delegate:delegate-routing`.
+`skills/delegate-routing/SKILL.md` supplies six routing categories and post-execution rules. `/delegate:review` performs read-only reviews through either backend, `/delegate:run` performs existing Codex tasks, `/delegate:doctor` checks the selected backend, and `/delegate:help` reads model-free local help. Hosts that support it may expose the skill itself as `/delegate:delegate-routing`.
 
 ## Routing and verification
 
@@ -92,7 +88,7 @@ Run the validation and evaluation commands below from the repository root:
 python3 -B plugins/delegate/tests/test-backend.py
 ```
 
-The original 9 assertions cover unavailable/missing/expired/invalid cache, single-line JSON, no re-probing, confirmation wording, and skill criteria. Additional backend tests cover cold-cache output in the same turn and the single sequential handler.
+Ten shell assertions cover silence for every cache state, no re-probing, explicit confirmation and skill/command criteria. Backend regressions cover cold-cache silence without probing, no UserPromptSubmit registration, and 80 compatibility calls across Claude/Codex/unknown/conflicting environments, five prompts, two handlers and two repetitions. Explicit Codex run still starts Codex once in each of two host-environment fixtures. These are not native-host acceptance tests.
 
 ## Behavior evaluations and limitations
 
@@ -118,8 +114,8 @@ See the [v0.4.0 verification record](releases/v0.4.0.md) for real behavior-evalu
 
 The IDs below label existing contract clauses for the 2026-10-08 documentation reconciliation; they are not historical IDs or approvals.
 
-- **RT-01：** Register one prompt handler, warm before routing, emit one valid JSON line only from valid cache, and do not re-probe in route.
-- **RT-02：** Hook/skill instructions require proposals and explicit confirmation without automatic execution; text and stubs do not prove consistent host compliance.
+- **RT-01：** Do not register UserPromptSubmit; retired prompt/route callbacks produce no output or probes across hosts, inputs, cache states and repetitions. SessionStart silently refreshes readiness.
+- **RT-02：** Skill proposal/confirmation rules apply to explicit delegation requests without automatic execution or reconfirming authorized scope. Readiness/settled decisions must not force delegation or upgrade writes. Text/stubs do not establish complete host compliance.
 - **RT-03：** The six routing categories, scope limits, and post-return answer/Git review instructions remain discoverable and consistent with channel arguments.
 - **RT-04：** Eval judges distinguish PASS/FAIL/NORUN and reject false positives; single-turn samples do not establish complete interactive proposal behavior.
 

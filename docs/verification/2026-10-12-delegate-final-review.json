@@ -1,0 +1,383 @@
+{
+  "date": "2026-10-12",
+  "repository": "/path/to/delegate-plugin",
+  "branch": "codex/spec-guard-conventions-public",
+  "baseline": "823c42383cf055ea8af99256618daf6212d10735",
+  "review_kind": "bounded local self-review;not independent external model review",
+  "reviewed_runtime_files": [
+    "delegate_backend.py",
+    "delegate_cli.py",
+    "delegate_capabilities.py",
+    "review_context.py",
+    "review_execution.py",
+    "review_result.py",
+    "claude_review.py",
+    "review_native.py",
+    "review_isolation.py",
+    "review_macos.py",
+    "review_doctor.py",
+    "run_codex.py",
+    "backend.py",
+    "delegate-exec.sh",
+    "codex-exec.sh"
+  ],
+  "reviewed_command_files": [
+    "review.md",
+    "run.md",
+    "doctor.md",
+    "help.md"
+  ],
+  "verdict": "No new runtime defect confirmed within this bounded review;complete acceptance and merge approval remain pending.",
+  "findings": [
+    {
+      "id": "DR-001",
+      "severity": "Required documentation correction",
+      "status": "fixed",
+      "file": "plugins/delegate/commands/help.md",
+      "reason": "Latest successful reverse review was not distinguished clearly from remaining complete-acceptance gaps."
+    }
+  ],
+  "mutation_check": {
+    "copy_root": "/path/to/private-evidence",
+    "mutation": "invert Codex unverified-feature rejection",
+    "mutated_exit": 1,
+    "restored_exit": 0,
+    "test": "test_unverified_codex_tool_restrictions_stop_before_model",
+    "source_unchanged": true,
+    "paid_model_calls": 0
+  },
+  "previous_free_suite": {
+    "python": 138,
+    "shell": 53,
+    "eval": 19,
+    "exit": 0,
+    "rerun": false,
+    "reason": "Runtime source unchanged;only command status prose corrected."
+  },
+  "actual_diff": {
+    "path": "/path/to/private-evidence",
+    "sha256": "f2ddacc36f503603b17e89cde4d95d646d6d6295bc2cce63d9f83fc249f24aed",
+    "scope": "product commands/scripts/tests/manifests and validation;includes untracked files;excludes historical evidence and prose docs"
+  },
+  "inventory": [
+    {
+      "path": ".claude-plugin/marketplace.json",
+      "state": "modified",
+      "sha256": "48a3bb111120ef8666b675968a1fd0cf9bdc8d6d888885785dfa4944ab2c307d",
+      "lines": 15
+    },
+    {
+      "path": "plugins/delegate/.claude-plugin/plugin.json",
+      "state": "modified",
+      "sha256": "674d7beb9ce32182d788f19f7f4bcc76b0b80a0115caa818e1bc9e3953092093",
+      "lines": 9
+    },
+    {
+      "path": "plugins/delegate/commands/delegate.md",
+      "state": "deleted",
+      "sha256": null,
+      "lines": 0
+    },
+    {
+      "path": "plugins/delegate/commands/doctor.md",
+      "state": "modified",
+      "sha256": "78db0b686543be92b04db6d51017eb73de3bb4e9a8058d5d2e287398581697cd",
+      "lines": 15
+    },
+    {
+      "path": "plugins/delegate/commands/help.md",
+      "state": "modified",
+      "sha256": "8fa5e58f3143eb41f55c15cc847373ede96c417056cf404ff5a57463c63ca4a4",
+      "lines": 36
+    },
+    {
+      "path": "plugins/delegate/commands/review.md",
+      "state": "added",
+      "sha256": "33ff17d8c1ddbb7aac1065469ac749fea42e8249e9d8054520e3d8aabcb4b296",
+      "lines": 27
+    },
+    {
+      "path": "plugins/delegate/commands/run.md",
+      "state": "added",
+      "sha256": "d2f5b03279bca80652da8a63b2bbda3c76ee8c9e2dd031420cb626fc4045670e",
+      "lines": 19
+    },
+    {
+      "path": "plugins/delegate/scripts/backend.py",
+      "state": "modified",
+      "sha256": "21af43d0e1022b3f79e79fc1da027dd79cd84482d05fc5eedbacdaa70830748a",
+      "lines": 56
+    },
+    {
+      "path": "plugins/delegate/scripts/claude_review.py",
+      "state": "added",
+      "sha256": "6208364fcbd0a5fcdb9061c34a308c73a5c9ea67b6bc3f929576ae6de365c85c",
+      "lines": 134
+    },
+    {
+      "path": "plugins/delegate/scripts/codex-exec.sh",
+      "state": "modified",
+      "sha256": "98f06790366f169f3639fe249a3634a3892ebf22b43374aff504dede12b6aad8",
+      "lines": 244
+    },
+    {
+      "path": "plugins/delegate/scripts/delegate-exec.sh",
+      "state": "added",
+      "sha256": "4feba934ebe118e949b4576633bf8cb36adf35cf1ce1d0970370245d18f60621",
+      "lines": 9
+    },
+    {
+      "path": "plugins/delegate/scripts/delegate_backend.py",
+      "state": "added",
+      "sha256": "a332fce5abe4340e8b112cfb861dda0da67a5010c3de224d73411e201c435fd5",
+      "lines": 156
+    },
+    {
+      "path": "plugins/delegate/scripts/delegate_capabilities.py",
+      "state": "added",
+      "sha256": "ac83f55038a99f53a6c2aa8c817f8874cb024fd8732db4877789fb3c731a7f8c",
+      "lines": 14
+    },
+    {
+      "path": "plugins/delegate/scripts/delegate_cli.py",
+      "state": "added",
+      "sha256": "dc5eb4bf7b144e12e6dee369a145b9c4047690fc5cfe1f82a1331993c400ef94",
+      "lines": 170
+    },
+    {
+      "path": "plugins/delegate/scripts/review_context.py",
+      "state": "added",
+      "sha256": "639abd917f458744a3c9e0e472683a4860264374727060c30365c4d9169dff2b",
+      "lines": 317
+    },
+    {
+      "path": "plugins/delegate/scripts/review_doctor.py",
+      "state": "added",
+      "sha256": "3906eab38979216f0aea34b906014707557a38c7b4d0e6aa238fb9c9ca86c09a",
+      "lines": 54
+    },
+    {
+      "path": "plugins/delegate/scripts/review_execution.py",
+      "state": "added",
+      "sha256": "1158eba093ea99c0a20e58b019f9893431fc5abace86f0b6088d72fb2fcb51b3",
+      "lines": 233
+    },
+    {
+      "path": "plugins/delegate/scripts/review_guest.py",
+      "state": "added",
+      "sha256": "9014b34c9c027a6b3706e413c2b9d767b7969e8de7f2fcad6920defa7a785aa1",
+      "lines": 188
+    },
+    {
+      "path": "plugins/delegate/scripts/review_guest_entry.py",
+      "state": "added",
+      "sha256": "613f2353ae921527c8bdcadedfb756b0459b9af495775869f9f834a38b2d2da3",
+      "lines": 203
+    },
+    {
+      "path": "plugins/delegate/scripts/review_isolation.py",
+      "state": "added",
+      "sha256": "96c6ac119cc812bafe109f0647838f1c6308f49ebb183721014854aeb922e307",
+      "lines": 92
+    },
+    {
+      "path": "plugins/delegate/scripts/review_macos.py",
+      "state": "added",
+      "sha256": "028f35bdab20f2cf0730f611dc2ff95a725b2279982ad847b7319ff7bf6e65d1",
+      "lines": 385
+    },
+    {
+      "path": "plugins/delegate/scripts/review_native.py",
+      "state": "added",
+      "sha256": "aaead63f317e26e78b66ff5023ab91442b45b5cd3e2858fd44506ab0c7d0d552",
+      "lines": 175
+    },
+    {
+      "path": "plugins/delegate/scripts/review_network.py",
+      "state": "added",
+      "sha256": "b835bc9aa4ba1019895a1eefe667ae7d74a57b6da51c9e1ce10a8477c4ed5d44",
+      "lines": 47
+    },
+    {
+      "path": "plugins/delegate/scripts/review_result.py",
+      "state": "added",
+      "sha256": "43a31da35b3723ae180ea930a504d273e26478f752c7524439385ce35d1e9130",
+      "lines": 243
+    },
+    {
+      "path": "plugins/delegate/scripts/review_service.py",
+      "state": "added",
+      "sha256": "8c76145c624bf6890f3ebcf115ff68b3eeb7da6b11b264d9c28549a951b6f602",
+      "lines": 361
+    },
+    {
+      "path": "plugins/delegate/scripts/review_transport.py",
+      "state": "added",
+      "sha256": "33371942d3b699b998d432d202e2800833779f4738f84277c85e549d377318a8",
+      "lines": 227
+    },
+    {
+      "path": "plugins/delegate/skills/delegate-routing/SKILL.md",
+      "state": "modified",
+      "sha256": "064757bfe47fabbe011a8c55f9d139faedae853f455b2a871cdff2a3b3446d19",
+      "lines": 37
+    },
+    {
+      "path": "plugins/delegate/tests/test-claude-isolation.py",
+      "state": "added",
+      "sha256": "95d9322cf9319288cf8baa3e2979473c68056eb74bbd68821df540f329f65506",
+      "lines": 319
+    },
+    {
+      "path": "plugins/delegate/tests/test-claude-mac-probes.py",
+      "state": "added",
+      "sha256": "63e2e51051fd5020243aef69c0483a35a0074e2a6d473880a29c1d2af57cd2fd",
+      "lines": 84
+    },
+    {
+      "path": "plugins/delegate/tests/test-claude-native-probes.py",
+      "state": "added",
+      "sha256": "91a307cf13b3c238b6235a8256ae93cfa8e345d20b4f4addbbd1b3be7f9b2d84",
+      "lines": 115
+    },
+    {
+      "path": "plugins/delegate/tests/test-claude-review.py",
+      "state": "added",
+      "sha256": "ca9cf2f14789501da581594588b8b1c88ed43656fa99e78e562987a26f3f629e",
+      "lines": 164
+    },
+    {
+      "path": "plugins/delegate/tests/test-review-artifacts.py",
+      "state": "added",
+      "sha256": "feae0eb8c025be00793de662a8181a44ab1b467f5b9597c09573888dd907d236",
+      "lines": 55
+    },
+    {
+      "path": "plugins/delegate/tests/test-review-backends.py",
+      "state": "added",
+      "sha256": "52952673415eb02794ed63c6f4b413bdb0c144f34f66664c69f519575e782d29",
+      "lines": 123
+    },
+    {
+      "path": "plugins/delegate/tests/test-review-cli.py",
+      "state": "added",
+      "sha256": "c7778fe7b6d16761e2778a93e4b0dca12df61dd1596b6be05aa36ea7a263267c",
+      "lines": 203
+    },
+    {
+      "path": "plugins/delegate/tests/test-review-context.py",
+      "state": "added",
+      "sha256": "89ae9845229843bd154f25491ba639ecc61fb8859b2b134fb15eec43f714bd5f",
+      "lines": 152
+    },
+    {
+      "path": "plugins/delegate/tests/test-review-execution.py",
+      "state": "added",
+      "sha256": "3da1b042f744886b2a1a57bebeccbf34f1b9dd36b80c54bcd71cb3b95f6d320c",
+      "lines": 246
+    },
+    {
+      "path": "plugins/delegate/tests/test-review-guest-entry.py",
+      "state": "added",
+      "sha256": "31161366db3c296ac667bb174d644e540d2be2b6163b95ed313dcb11fee92a2e",
+      "lines": 82
+    },
+    {
+      "path": "plugins/delegate/tests/test-review-guest-integration.py",
+      "state": "added",
+      "sha256": "381dd3137c46c2e3dcbc7294e5f2b4ad49aeda04f2f6a5843a667274d43e02f7",
+      "lines": 223
+    },
+    {
+      "path": "plugins/delegate/tests/test-review-guest.py",
+      "state": "added",
+      "sha256": "44a349f7a5fa75260f2686ea3d134b0062848a47aeb3e6c3e94ffeb372caddc9",
+      "lines": 133
+    },
+    {
+      "path": "plugins/delegate/tests/test-review-lifecycle.py",
+      "state": "added",
+      "sha256": "3a91abc4530d4c2decc818998b41a990c3f664e5c0c2adc2f7dccd468390ec24",
+      "lines": 172
+    },
+    {
+      "path": "plugins/delegate/tests/test-review-linux.py",
+      "state": "added",
+      "sha256": "f36417cdf32aad3f547839b948428e27cf7371a07b57313b4ca6e4d599e6e067",
+      "lines": 269
+    },
+    {
+      "path": "plugins/delegate/tests/test-review-mac-integration.py",
+      "state": "added",
+      "sha256": "ddb58f3ca4a14d8c24031d796b454af0abd84e05546a3f5a802deb6d402963d3",
+      "lines": 171
+    },
+    {
+      "path": "plugins/delegate/tests/test-review-macos.py",
+      "state": "added",
+      "sha256": "fe4d1708917f0c28fa3e0ec34ae4c4ad9d36c58fe522d1c93fbc32ceef74e0be",
+      "lines": 216
+    },
+    {
+      "path": "plugins/delegate/tests/test-review-native.py",
+      "state": "added",
+      "sha256": "dda2657fe3eb4abb31daff1ef91921a0a4ac26192de2760018c8253c3f8831f1",
+      "lines": 106
+    },
+    {
+      "path": "plugins/delegate/tests/test-review-result.py",
+      "state": "added",
+      "sha256": "8dcdb2e12daac39e3af7518d7197aa7d61ef44b1d25ca0ab157facb1c2676088",
+      "lines": 227
+    },
+    {
+      "path": "plugins/delegate/tests/test-review-service.py",
+      "state": "added",
+      "sha256": "99ea448dc2ce5a2729ec153a6934f7a83941b0b119e4003d2a71fa3e9e08181e",
+      "lines": 236
+    },
+    {
+      "path": "plugins/delegate/tests/test-review-ssh.py",
+      "state": "added",
+      "sha256": "0805cc7196ef797f2419a5f79038005be29976417290a31564f3357a14120334",
+      "lines": 141
+    },
+    {
+      "path": "plugins/delegate/tests/test-review-transport.py",
+      "state": "added",
+      "sha256": "1b42d18c11b311494acdc5d6ff1fb726e8a6039c8c284318212378a63544d6c6",
+      "lines": 99
+    },
+    {
+      "path": "plugins/delegate/tests/test-routing.sh",
+      "state": "modified",
+      "sha256": "6aed2f51a7b4a5d957035d620036566c5d31cba60224c01dad99e89f31025861",
+      "lines": 193
+    },
+    {
+      "path": "scripts/validate.sh",
+      "state": "modified",
+      "sha256": "05d060a5b8a91406e8d216d05909c2168413684042a582029b1a8fd0d446fe23",
+      "lines": 131
+    }
+  ],
+  "unreviewed_in_this_batch": [
+    "Full line-by-line historical Linux/SSH/guest implementation;no active Mac dispatch to that transport.",
+    "Installed native slash UI and real model active forbidden-tool behavior."
+  ],
+  "remaining_acceptance": [
+    "Task2 complete native permission/authentication acceptance",
+    "Task6 abnormal original CLI lifecycle acceptance",
+    "Task8 active real-model boundary and new slash-host experience",
+    "Checkpoint3 human review of actual diff and limitations"
+  ],
+  "authorization": "No new model invocation,delegation,installation,global setting change,commit,push or release in this batch.",
+  "closing_checks": {
+    "diff_check": 0,
+    "local_file_links": 678,
+    "invalid_links": 0,
+    "runtime_pins_match_latest_real_reverse": true,
+    "routing_assertions": 10
+  },
+  "_publication_note": "本机身份与路径已脱敏；原始本地证据私有保留，结论及产品/输入摘要未改。"
+}

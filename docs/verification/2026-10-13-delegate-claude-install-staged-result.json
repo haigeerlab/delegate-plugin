@@ -1,0 +1,170 @@
+{
+  "date": "2026-10-13",
+  "repository": "/path/to/delegate-plugin",
+  "branch": "codex/spec-guard-conventions-public",
+  "finding_id": "UI-001",
+  "state": "resolved_installation_and_native_menu_visibility",
+  "human_reply": "继续",
+  "authorization_context": "Direct reply to install-once with local staging exception then normal reload/UI check.",
+  "cli_version": "2.1.295",
+  "install": {
+    "execution_status": "completed",
+    "cleanup": "confirmed",
+    "execution_environment": "native",
+    "cleanup_scope": "kernel_coalition",
+    "backend_started": true,
+    "diagnostics": [],
+    "launcher_exit_code": 0,
+    "cli_result": {
+      "command": "install",
+      "outcome": "ok",
+      "plugin": "delegate@delegate-marketplace",
+      "pluginId": "delegate@delegate-marketplace",
+      "message": "Successfully installed plugin: delegate@delegate-marketplace (scope: user)",
+      "scope": "user"
+    },
+    "parsed_keys": [
+      "command",
+      "outcome",
+      "plugin",
+      "pluginId",
+      "scope",
+      "message"
+    ],
+    "known_success": true,
+    "unrelated_semantics_unchanged": true,
+    "after": {
+      "entries": [
+        {
+          "scope": "user",
+          "installPath": "/path/to/user-home/.claude/plugins/cache/delegate-marketplace/delegate/0.4.0",
+          "version": "0.4.0",
+          "installedAt": "2026-10-13T06:10:33.497Z",
+          "lastUpdated": "2026-10-13T06:10:33.497Z",
+          "gitCommitSha": "823c42383cf055ea8af99256618daf6212d10735"
+        }
+      ],
+      "enabled": true,
+      "marketplace": {
+        "source": {
+          "source": "directory",
+          "path": "/path/to/delegate-plugin"
+        },
+        "installLocation": "/path/to/delegate-plugin",
+        "lastUpdated": "2026-10-08T03:24:00.698Z"
+      },
+      "unrelated_semantics_sha256": "095264746fbd6680118a7d7e47658d373f1f3b3700c7f1f702bccdfd4c79d3b1"
+    },
+    "content": {
+      "matched_source": true,
+      "path": "/path/to/user-home/.claude/plugins/cache/delegate-marketplace/delegate/0.4.0",
+      "file_count": 61,
+      "commands": [
+        "doctor.md",
+        "help.md",
+        "review.md",
+        "run.md"
+      ],
+      "files": {
+        "LICENSE": "d8e4560e8f9c35d52ccc96de8ec8d38345852f277ec4683ef56a142f2e5e4b62",
+        "tests/test-review-mac-integration.py": "ddb58f3ca4a14d8c24031d796b454af0abd84e05546a3f5a802deb6d402963d3",
+        "tests/test-review-linux.py": "f36417cdf32aad3f547839b948428e27cf7371a07b57313b4ca6e4d599e6e067",
+        "tests/test-review-service.py": "99ea448dc2ce5a2729ec153a6934f7a83941b0b119e4003d2a71fa3e9e08181e",
+        "tests/test-backend.py": "b653e9236431201941be5173a745e474009d391177c48452bb0546d7a9026202",
+        "tests/test-claude-isolation.py": "95d9322cf9319288cf8baa3e2979473c68056eb74bbd68821df540f329f65506",
+        "tests/test-review-lifecycle.py": "3a91abc4530d4c2decc818998b41a990c3f664e5c0c2adc2f7dccd468390ec24",
+        "tests/test-review-cli.py": "c7778fe7b6d16761e2778a93e4b0dca12df61dd1596b6be05aa36ea7a263267c",
+        "tests/test-routing.sh": "0c5d513d5acd3335b74e62b3b610e0c7df31e1c63d333036c144eb9d9e3cc057",
+        "tests/test-review-backends.py": "52952673415eb02794ed63c6f4b413bdb0c144f34f66664c69f519575e782d29",
+        "tests/test-command-migration.py": "c5bd2fea9e0d6a971fc72a8f90cf1f40c4354fe776f72075a7cf362425a192de",
+        "tests/test-review-ssh.py": "0805cc7196ef797f2419a5f79038005be29976417290a31564f3357a14120334",
+        "tests/test-review-guest.py": "44a349f7a5fa75260f2686ea3d134b0062848a47aeb3e6c3e94ffeb372caddc9",
+        "tests/stub-codex": "8dc61a9b8b3a10cba2d8cf6515d67f3d01ade152a169b16c5b212bd66b3d6975",
+        "tests/test-claude-native-probes.py": "91a307cf13b3c238b6235a8256ae93cfa8e345d20b4f4addbbd1b3be7f9b2d84",
+        "tests/test-review-native.py": "dda2657fe3eb4abb31daff1ef91921a0a4ac26192de2760018c8253c3f8831f1",
+        "tests/test-review-artifacts.py": "feae0eb8c025be00793de662a8181a44ab1b467f5b9597c09573888dd907d236",
+        "tests/test-review-context.py": "89ae9845229843bd154f25491ba639ecc61fb8859b2b134fb15eec43f714bd5f",
+        "tests/test-claude-review.py": "ca9cf2f14789501da581594588b8b1c88ed43656fa99e78e562987a26f3f629e",
+        "tests/test-review-transport.py": "1b42d18c11b311494acdc5d6ff1fb726e8a6039c8c284318212378a63544d6c6",
+        "tests/test-review-result.py": "8dcdb2e12daac39e3af7518d7197aa7d61ef44b1d25ca0ab157facb1c2676088",
+        "tests/test-review-guest-integration.py": "381dd3137c46c2e3dcbc7294e5f2b4ad49aeda04f2f6a5843a667274d43e02f7",
+        "tests/test-review-execution.py": "3da1b042f744886b2a1a57bebeccbf34f1b9dd36b80c54bcd71cb3b95f6d320c",
+        "tests/test-channel-regressions.py": "9ad02c3e8a6e53866cbecab3773b2dcd954bbcc83088e91fdf0e43efd1cc9005",
+        "tests/test-channel.sh": "c9eaaf272e118ceedd3b350d71f7b7c98acace81a48651038619bdbc1e566f02",
+        "tests/test-claude-mac-probes.py": "63e2e51051fd5020243aef69c0483a35a0074e2a6d473880a29c1d2af57cd2fd",
+        "tests/test-review-guest-entry.py": "31161366db3c296ac667bb174d644e540d2be2b6163b95ed313dcb11fee92a2e",
+        "tests/test-review-macos.py": "fe4d1708917f0c28fa3e0ec34ae4c4ad9d36c58fe522d1c93fbc32ceef74e0be",
+        "tests/test-detection.sh": "9e98791e54586f76ad6ba321689d17b46ed429e9261532ba8fa5f39d6386980b",
+        "hooks/prompt.sh": "314b49dbc105562080ed23d924e42449116f8964f9927f046a611409d678a7f6",
+        "hooks/doctor.sh": "ab206f2ad5bbe1e6e3ee31638d9d0eb2f58c6469c321e4892be2d16eda179bf5",
+        "hooks/detect.sh": "acf85d86cfabf2380bc55792c2b45b3d26ffd0c24c41ec59adc692a23cc3d33d",
+        "hooks/hooks.json": "9c0249cfeed8252008a1fd94eccb13a4cfe8d0ec60b2230b65952b25dbabf810",
+        "hooks/route.sh": "ccce4fa5bf33934b312dca5b4a3a7aac089ecdfef278337792d1241d028cc648",
+        "hooks/detect.py": "18d2436079e01dca7af4f06b39c38ee2f03bf1ecc91b90898acb6128a54ab0e9",
+        "scripts/codex-exec.sh": "98f06790366f169f3639fe249a3634a3892ebf22b43374aff504dede12b6aad8",
+        "scripts/backend.py": "21af43d0e1022b3f79e79fc1da027dd79cd84482d05fc5eedbacdaa70830748a",
+        "scripts/review_native.py": "aaead63f317e26e78b66ff5023ab91442b45b5cd3e2858fd44506ab0c7d0d552",
+        "scripts/review_service.py": "8c76145c624bf6890f3ebcf115ff68b3eeb7da6b11b264d9c28549a951b6f602",
+        "scripts/delegate_backend.py": "a332fce5abe4340e8b112cfb861dda0da67a5010c3de224d73411e201c435fd5",
+        "scripts/review_macos.py": "028f35bdab20f2cf0730f611dc2ff95a725b2279982ad847b7319ff7bf6e65d1",
+        "scripts/review_transport.py": "33371942d3b699b998d432d202e2800833779f4738f84277c85e549d377318a8",
+        "scripts/review_execution.py": "1158eba093ea99c0a20e58b019f9893431fc5abace86f0b6088d72fb2fcb51b3",
+        "scripts/review_guest_entry.py": "613f2353ae921527c8bdcadedfb756b0459b9af495775869f9f834a38b2d2da3",
+        "scripts/review_isolation.py": "96c6ac119cc812bafe109f0647838f1c6308f49ebb183721014854aeb922e307",
+        "scripts/review_network.py": "b835bc9aa4ba1019895a1eefe667ae7d74a57b6da51c9e1ce10a8477c4ed5d44",
+        "scripts/review_guest.py": "9014b34c9c027a6b3706e413c2b9d767b7969e8de7f2fcad6920defa7a785aa1",
+        "scripts/review_context.py": "639abd917f458744a3c9e0e472683a4860264374727060c30365c4d9169dff2b",
+        "scripts/review_doctor.py": "3906eab38979216f0aea34b906014707557a38c7b4d0e6aa238fb9c9ca86c09a",
+        "scripts/delegate-exec.sh": "4feba934ebe118e949b4576633bf8cb36adf35cf1ce1d0970370245d18f60621",
+        "scripts/review_result.py": "43a31da35b3723ae180ea930a504d273e26478f752c7524439385ce35d1e9130",
+        "scripts/claude_review.py": "6208364fcbd0a5fcdb9061c34a308c73a5c9ea67b6bc3f929576ae6de365c85c",
+        "scripts/run_codex.py": "ba4d0b29338e0b8756b4f1a920e6ef8877a058b42f1c28a44e8da3cc56e432d7",
+        "scripts/delegate_capabilities.py": "ac83f55038a99f53a6c2aa8c817f8874cb024fd8732db4877789fb3c731a7f8c",
+        "scripts/delegate_cli.py": "dc5eb4bf7b144e12e6dee369a145b9c4047690fc5cfe1f82a1331993c400ef94",
+        ".claude-plugin/plugin.json": "674d7beb9ce32182d788f19f7f4bcc76b0b80a0115caa818e1bc9e3953092093",
+        "commands/doctor.md": "78db0b686543be92b04db6d51017eb73de3bb4e9a8058d5d2e287398581697cd",
+        "commands/help.md": "337621c2c506241f51ecf5a14d8d435618306651c730f30848859e4620b98f63",
+        "commands/run.md": "d2f5b03279bca80652da8a63b2bbda3c76ee8c9e2dd031420cb626fc4045670e",
+        "commands/review.md": "33ff17d8c1ddbb7aac1065469ac749fea42e8249e9d8054520e3d8aabcb4b296",
+        "skills/delegate-routing/SKILL.md": "76be2668fceb79e625b95d798f1f315a85e5cd87efb5c5590d7ac8e1a12ea718"
+      }
+    },
+    "models_called": 0,
+    "network_denied": true,
+    "persistent_data_write_denied": true
+  },
+  "normal_reload": {
+    "session": "Claude验收会话",
+    "command": "/reload-plugins",
+    "force": false,
+    "observed_reply": "Reloaded: 7 plugins · 96 skills · 29 agents · 5 hooks · 0 plugin LSP servers",
+    "new_message_numbers": [
+      28,
+      29
+    ],
+    "confirmed_executed_once": true
+  },
+  "native_menu": {
+    "session": "Claude验收会话",
+    "entries": [
+      "delegate:run",
+      "delegate:help",
+      "delegate:doctor",
+      "delegate:review",
+      "delegate:delegate-routing"
+    ],
+    "old_delegate_command_present": false,
+    "observed_via": "dedicated computer-use AX and screenshot",
+    "screenshot_emitted_in_conversation": true,
+    "screenshot_saved_to_file": false,
+    "backend_review_submitted": false,
+    "input_restored_empty": true
+  },
+  "new_backend_model_calls": 0,
+  "global_environment_changed": false,
+  "other_plugins_updated": false,
+  "source_modified_in_installation": false,
+  "committed_or_published": false,
+  "remaining": "Full active-tool/auth-refresh/natural-helper acceptance and final human diff review remain incomplete.",
+  "_publication_note": "本机身份与路径已脱敏；原始本地证据私有保留，结论及产品/输入摘要未改。"
+}

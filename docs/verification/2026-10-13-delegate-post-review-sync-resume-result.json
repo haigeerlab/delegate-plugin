@@ -1,0 +1,126 @@
+{
+  "date": "2026-10-13",
+  "repository": "/path/to/delegate-plugin",
+  "branch": "codex/spec-guard-conventions-public",
+  "state": "failed_stopped",
+  "authorization_reply": "批准S3修正接续",
+  "attempts_this_batch": {
+    "codex_add": 1,
+    "claude_uninstall": 0,
+    "claude_install": 0
+  },
+  "total_codex_add_attempts": 2,
+  "execution": [
+    {
+      "host": "codex",
+      "action": "add",
+      "execution_status": "failed",
+      "cleanup": "confirmed",
+      "launcher_exit_code": 1,
+      "known_success": false,
+      "error_diagnostics": {
+        "stderr_bytes": 602,
+        "categories": [
+          "permission_denied",
+          "installation_failed"
+        ],
+        "locations": [
+          "codex_cache"
+        ]
+      },
+      "unrelated_semantics_unchanged": true
+    }
+  ],
+  "closeout": {
+    "state": "failed_stopped",
+    "log_query_exit": 0,
+    "window_start": "2026-10-13 22:12:35",
+    "window_end": "2026-10-13 22:12:38",
+    "events": [
+      {
+        "pid": "[本机身份已脱敏]",
+        "operation": "file-write-mode",
+        "path": "/path/to/user-home/.codex/tmp/arg0",
+        "timestamp": "2026-10-13 22:12:36.879507+0800"
+      },
+      {
+        "pid": "[本机身份已脱敏]",
+        "operation": "file-read-data",
+        "path": "/path/to/user-home/.codex/auth.json",
+        "timestamp": "2026-10-13 22:12:36.893058+0800"
+      },
+      {
+        "pid": "[本机身份已脱敏]",
+        "operation": "file-write-create",
+        "path": "/path/to/user-home/.codex/plugins/cache/delegate-marketplace/plugin-backup-i65YEg",
+        "timestamp": "2026-10-13 22:12:36.942726+0800"
+      }
+    ],
+    "cache_checks": {
+      "codex": {
+        "cache_equals_backup": true,
+        "backup_file_count": 65,
+        "current_file_count": 65,
+        "differences": []
+      },
+      "claude": {
+        "cache_equals_backup": true,
+        "backup_file_count": 61,
+        "current_file_count": 61,
+        "differences": []
+      }
+    },
+    "selected_and_unrelated_configuration_facts_unchanged": true,
+    "source_and_binaries_unchanged": true,
+    "attribution": "time/path correlation; original native command PID not retained",
+    "retry": false,
+    "model_calls": 0,
+    "claude_install_started": false
+  },
+  "source_research": {
+    "commit": "092d3acd6bec3e3a14bdc7e7a2810ab628ab759d",
+    "store": "https://github.com/openai/codex/blob/092d3acd6bec3e3a14bdc7e7a2810ab628ab759d/codex-rs/core-plugins/src/store.rs",
+    "cli": "https://github.com/openai/codex/blob/092d3acd6bec3e3a14bdc7e7a2810ab628ab759d/codex-rs/cli/src/plugin_cmd.rs",
+    "manager": "https://github.com/openai/codex/blob/092d3acd6bec3e3a14bdc7e7a2810ab628ab759d/codex-rs/core-plugins/src/manager.rs",
+    "local_materialization": "https://github.com/openai/codex/blob/092d3acd6bec3e3a14bdc7e7a2810ab628ab759d/codex-rs/core-plugins/src/loader.rs",
+    "config_editor_source": "fetch_unavailable; no new configuration scope proposed"
+  },
+  "full_candidate": {
+    "allow_temp_prefixes": [
+      "plugin-install-",
+      "plugin-backup-"
+    ],
+    "scope": "delegate-marketplace only",
+    "credential_read": "denied",
+    "arg0_write": "denied",
+    "cycle_probe": {
+      "passed": true,
+      "scenarios": [
+        {
+          "mode": "replace",
+          "passed": true,
+          "temporary_trees_removed": true,
+          "unrelated_unchanged": true,
+          "auth_read_denied": true
+        },
+        {
+          "mode": "rollback",
+          "passed": true,
+          "temporary_trees_removed": true,
+          "unrelated_unchanged": true,
+          "auth_read_denied": true
+        }
+      ],
+      "synthetic_only": true,
+      "official_cli_invoked": false,
+      "models_called": 0
+    },
+    "new_install_authorized": false,
+    "actual_install": "not_performed"
+  },
+  "model_calls": 0,
+  "external_messages": 0,
+  "ui_reload": false,
+  "git_delivery": false,
+  "_publication_note": "本机身份与路径已脱敏；原始本地证据私有保留，结论及产品/输入摘要未改。"
+}

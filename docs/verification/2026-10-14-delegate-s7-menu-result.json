@@ -1,0 +1,39 @@
+{
+  "utc": "2026-10-14T11:13:05.719112+00:00",
+  "host": "claude-code",
+  "host_session": "Claude验收会话",
+  "host_cli_version": null,
+  "host_actual_model": null,
+  "help_actual_script_verified": true,
+  "review_actual_script_verified": true,
+  "review_script": "/bin/bash /path/to/user-home/.claude/plugins/cache/delegate-marketplace/delegate/0.4.0/scripts/delegate-exec.sh review --backend codex --context /path/to/delegate-plugin/.agent/acceptance/s6-read-boundary/context.json --dry-run -- 只预览固定范围，不执行审查。",
+  "submission_messages_observed": 2,
+  "ai_send_click_count": 0,
+  "submission_actor": "unknown_concurrent_ui",
+  "review_draft_deviation": "duplicated_arguments_and_malformed_first_task_text",
+  "host_normalized_to_one_expected_script_call": true,
+  "review_exit_code_host_reported": 0,
+  "backend_started_host_reported": false,
+  "actual_raw_preview_prefix_verified": {
+    "repository": "/path/to/delegate-plugin/.agent/acceptance/s2-recovery/repo",
+    "include": [
+      "src/pricing.py",
+      "REVIEW_DATA.md"
+    ],
+    "exclude": [
+      "excluded.py"
+    ],
+    "module": "synthetic-pricing",
+    "baseline_from": "dcb56fcd2f1c16f675657dc274ccfc7f6cbf2d36"
+  },
+  "complete_actual_output_comparison_verified": false,
+  "main_host_cost": null,
+  "backend_model_calls_observed": 0,
+  "fixed_source_caches_inputs_and_observed_settings_unchanged": true,
+  "s7_acceptance": "partial_inconclusive",
+  "help_acceptance": "passed",
+  "review_acceptance": "actual_call_observed_exact_input_and_full_output_acceptance_incomplete",
+  "no_retry": true,
+  "full_tasks_2_6_8_closed": false,
+  "_publication_note": "本机身份与路径已脱敏；原始本地证据私有保留，结论及产品/输入摘要未改。"
+}

@@ -1,0 +1,83 @@
+{
+  "date": "2026-10-13",
+  "repository": "/path/to/delegate-plugin",
+  "branch": "codex/spec-guard-conventions-public",
+  "finding_id": "UI-001",
+  "category": "Required",
+  "state": "confirmed_installed_content_mismatch",
+  "ui": {
+    "session": "Claude验收会话",
+    "reload_message": "Reloaded: 7 plugins · 95 skills · 29 agents · 6 hooks · 0 plugin LSP servers",
+    "actual_entries": [
+      "delegate:help",
+      "delegate:doctor",
+      "delegate:delegate",
+      "delegate:delegate-routing"
+    ],
+    "review_run_present": false,
+    "details_version": "0.4.0",
+    "details_commands": 3,
+    "details_hooks": 2,
+    "update_button": "disabled",
+    "computer_use_explicitly_authorized": true,
+    "typed_command_sent": false,
+    "input_restored_empty": true
+  },
+  "installation_evidence": {
+    "registry_version": "0.4.0",
+    "registry_git_sha": "38172b7ef333165ef9f33576d3a363fcd7e43839",
+    "cache_commands": [
+      "delegate",
+      "doctor",
+      "help"
+    ],
+    "cache_hooks": [
+      "SessionStart",
+      "UserPromptSubmit"
+    ],
+    "source_commands": [
+      "doctor",
+      "help",
+      "review",
+      "run"
+    ],
+    "source_hooks": [
+      "SessionStart"
+    ],
+    "cache_path": "/path/to/user-home/.claude/plugins/cache/delegate-marketplace/delegate/0.4.0",
+    "marketplace_source": {
+      "source": "directory",
+      "path": "/path/to/delegate-plugin"
+    }
+  },
+  "root_cause": {
+    "confirmed": "The Desktop session and installed cache expose old components, while the source has new components; session reload did not refresh the installed content.",
+    "not_proven": "Exact internal Desktop resolution/cache invalidation algorithm and whether unchanged version alone causes update button disabling."
+  },
+  "correction_of_human_confirmation": "Latest human says they had not noticed the entries; previous Claude four-entry answer is not accepted as a pass. Codex confirmation remains separate.",
+  "help_probe_status": {
+    "commands": [
+      "update --help",
+      "install --help",
+      "uninstall --help"
+    ],
+    "exit_codes": [
+      0,
+      0,
+      0
+    ],
+    "cleanup": "confirmed_each",
+    "network": "denied",
+    "registry_settings_hashes_unchanged": true,
+    "actual_installs_updates_uninstalls": 0
+  },
+  "repair_preview_root": "/path/to/private-evidence",
+  "repair_preview_sha256": "cd87eb7c243cdafcd9955461f670df218b7f6b873c00477e689a59997342d66f",
+  "authorization": "Human approved normal Claude delegate refresh: 批准仅刷新 Claude delegate; executed update and failed uninstall; stopped before install.",
+  "new_backend_model_calls": 0,
+  "refresh_result": "2026-10-13-delegate-claude-refresh-result.json",
+  "latest_refresh_result": "2026-10-13-delegate-claude-refresh-fixed-result.json",
+  "latest_state": "resolved_installation_and_native_menu_visibility",
+  "resolved_by": "2026-10-13-delegate-claude-install-staged-result.json",
+  "_publication_note": "本机身份与路径已脱敏；原始本地证据私有保留，结论及产品/输入摘要未改。"
+}

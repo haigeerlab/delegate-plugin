@@ -9,8 +9,8 @@ delegate 的默认文档语言为简体中文。英文对应页覆盖当前维�
 - 首次使用：阅读 [README](../README.md) 的前置条件与快速开始，再用 `/delegate:doctor` 检查本地基础条件。
 - 日常使用与排障：查 README 的命令、输出验收和故障排查；会话内可用 `/delegate:help`。
 - 理解设计：先读 [设计与边界](../DESIGN.md)，再看 [能力图](../spec/CAPABILITY-MAP.md)。
-- 开发与审查：阅读三份当前规格和 [贡献指南](../CONTRIBUTING.md)，从仓库根目录运行离线验证。
-- 升级：读 [v0.4.0 版本说明](releases/v0.4.0.md)；后续变化看 [未发布记录](releases/unreleased.md)。
+- 开发与审查：先读模块规格和[贡献指南](../CONTRIBUTING.md)，从仓库根运行免费验证。[Claude 审查合同](../spec/claude-review.md)包含v0.5.0 双后端、review/run 接口与快捷范围预览；两方向普通真实审查均有成功记录，菜单实际执行已核对；主动模型越界、认证刷新与自然异常 helper 仍未验证。
+- 升级：读 [v0.5.0 版本说明](releases/v0.5.0.md)；后续变化看 [未发布记录](releases/unreleased.md)。
 
 ## 当前维护的双语文档
 
@@ -24,7 +24,8 @@ delegate 的默认文档语言为简体中文。英文对应页覆盖当前维�
 | 执行合同 | [通道规格](../spec/channel.md) | [Channel specification](en/SPEC-channel.md) |
 | 探测与缓存 | [探测规格](../spec/detection.md) | [Detection specification](en/SPEC-detection.md) |
 | 路由与行为评估 | [路由规格](../spec/routing.md) | [Routing specification](en/SPEC-routing.md) |
-| 当前发行 | [v0.4.0](releases/v0.4.0.md) | [v0.4.0](en/releases/v0.4.0.md) |
+| Claude 审查（源码候选） | [审查规格](../spec/claude-review.md) | [Review specification](en/SPEC-claude-review.md) |
+| 当前发行 | [v0.5.0](releases/v0.5.0.md) | [v0.5.0](en/releases/v0.5.0.md) |
 | 后续变化 | [未发布记录](releases/unreleased.md) | [Unreleased](en/releases/unreleased.md) |
 | 旧版发行记录 | [v0.3.1（历史）](releases/v0.3.1.md) | [v0.3.1 (historical)](en/releases/v0.3.1.md) |
 
@@ -40,7 +41,7 @@ delegate 的默认文档语言为简体中文。英文对应页覆盖当前维�
 .claude-plugin/marketplace.json       marketplace 清单
 plugins/delegate/
   .claude-plugin/plugin.json         插件清单
-  commands/                         delegate、doctor、help 会话入口
+  commands/                         review、run、doctor、help 会话入口
   skills/delegate-routing/          分流判据
   hooks/                            基础探测、缓存和上下文注入
   scripts/                          Codex 调用与进程管理
@@ -56,6 +57,8 @@ evals/                              行为判决器和按需模型评估
 [开发流程与 AI 约定](development-workflow.md)（[English](en/development-workflow.md)）说明两种宿主规则、标准路径、阶段确认及验证边界。当前模块维护清单：[channel](../tasks/channel/todo.md)、[detection](../tasks/detection/todo.md)、[routing](../tasks/routing/todo.md)，只记录接入核对，不追认历史验收。
 
 [合同条款与验证证据](verification/2026-10-08-contract-matrix.md) 把 13 条当前规格条件映射到源码、测试和缺口；当前维护完成不代表这些产品条件都得到充分验收。
+
+新增 `claude-review` 的 [计划](../tasks/claude-review/plan.md) / [任务](../tasks/claude-review/todo.md) 单独跟踪双后端审查；[ADR-002](decisions/ADR-002-claude-review-isolation.md)（[English](en/decisions/ADR-002-claude-review-isolation.md)）记录 CLI、快照和隔离取舍。该能力未完成，不承接旧模块的 live 验收。
 
 ## 历史与实施记录
 
@@ -76,3 +79,5 @@ evals/                              行为判决器和按需模型评估
 当前工具声明取舍：[ADR-001](decisions/ADR-001-command-tool-scope.md)（[English](en/decisions/ADR-001-command-tool-scope.md)）。七项集中处理的最新[整批结果](verification/2026-10-08-bulk.md)含实际宿主证据及唯一未完成条件。
 
 [最后原生交互样本](verification/2026-10-08-proposal.md)及免费收束：119条当前裁决106/13/0，历史完成/批准未知及产品覆盖缺口继续保留。
+
+真实反向首批已启动 Codex，但四文件均未审；免费修复改为有界 inline 文件输入（总输入1MiB）及核实的 shell/apps/plugins/multi_agent 禁用开关，不增加 Bash/MCP 读取权限。修复后已完成真实反向审查4/4，见[最新证据与限制](verification/2026-10-12-claude-review-mac-reverse-fourth-success.md)；首批失败保留为历史事实。

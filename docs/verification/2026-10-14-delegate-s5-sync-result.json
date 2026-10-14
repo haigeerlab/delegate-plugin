@@ -1,0 +1,95 @@
+{
+  "date": "2026-10-14",
+  "repository": "/path/to/delegate-plugin",
+  "branch": "codex/spec-guard-conventions-public",
+  "module": "claude-review",
+  "task": "Task9m",
+  "authorization_reply": "批准S5仅同步诊断修复",
+  "authorization_consumed": true,
+  "state": "synced_verified",
+  "plugin_source_file_count": 62,
+  "frozen_file_count": 63,
+  "source_bundle_sha256": "62ba98f725163674720a62482211914d25c90ba1feb94b34ce8c157ffa715c5f",
+  "actions": [
+    {
+      "host": "codex",
+      "action": "add",
+      "execution_status": "completed",
+      "launcher_exit_code": 0,
+      "cleanup": "confirmed",
+      "known_success": true,
+      "unrelated_semantics_unchanged": true
+    },
+    {
+      "host": "claude",
+      "action": "uninstall",
+      "execution_status": "completed",
+      "launcher_exit_code": 0,
+      "cleanup": "confirmed",
+      "known_success": true,
+      "unrelated_semantics_unchanged": true
+    },
+    {
+      "host": "claude",
+      "action": "install",
+      "execution_status": "completed",
+      "launcher_exit_code": 0,
+      "cleanup": "confirmed",
+      "known_success": true,
+      "unrelated_semantics_unchanged": true
+    }
+  ],
+  "attempts": {
+    "codex_add": 1,
+    "claude_uninstall": 1,
+    "claude_install": 1
+  },
+  "retries": 0,
+  "cache_verification": {
+    "codex": {
+      "file_count": 66,
+      "source_matches": true,
+      "extra_files": [
+        ".codex-plugin/migrated-command-skills/source-command-doctor/SKILL.md",
+        ".codex-plugin/migrated-command-skills/source-command-help/SKILL.md",
+        ".codex-plugin/migrated-command-skills/source-command-review/SKILL.md",
+        ".codex-plugin/migrated-command-skills/source-command-run/SKILL.md"
+      ],
+      "expected_extra": [
+        ".codex-plugin/migrated-command-skills/source-command-doctor/SKILL.md",
+        ".codex-plugin/migrated-command-skills/source-command-help/SKILL.md",
+        ".codex-plugin/migrated-command-skills/source-command-review/SKILL.md",
+        ".codex-plugin/migrated-command-skills/source-command-run/SKILL.md"
+      ]
+    },
+    "claude": {
+      "file_count": 62,
+      "source_matches": true,
+      "extra_files": [],
+      "expected_extra": []
+    }
+  },
+  "model_calls": 0,
+  "public_entry_checks": 16,
+  "installed_result_regressions": 48,
+  "equivalent_common_fields": 12,
+  "source_and_state_unchanged_after_readback": true,
+  "backup_modes_private": true,
+  "session_reload": false,
+  "messages": 0,
+  "dependency_installs": 0,
+  "authentication_probes": 0,
+  "commits": 0,
+  "full_safety_acceptance": false,
+  "s4_specific_failure_cause": "unknown",
+  "s4_failure_preserved": true,
+  "binary_versions": {
+    "codex": "0.162.1",
+    "claude_installer": "2.1.295",
+    "node": "24.18.0",
+    "controller_python": "3.12.14"
+  },
+  "version_evidence": "Existing verified binaries rechecked by SHA-256; no new version probes",
+  "files_updated_in_git_workspace": 11,
+  "_publication_note": "本机身份与路径已脱敏；原始本地证据私有保留，结论及产品/输入摘要未改。"
+}

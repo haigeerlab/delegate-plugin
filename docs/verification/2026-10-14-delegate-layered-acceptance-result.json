@@ -1,0 +1,63 @@
+{
+  "date": "2026-10-14",
+  "approval_reply": "批准分层验收修订",
+  "approval_object_sha256": "f25fe7aacdeb2d8091cf2d9c9f3269d61cdfbbf1c183740f94b156701928eda1",
+  "criteria_revision": "layered CR-03/06/09",
+  "checks_passed": 19,
+  "checks": [
+    "spec/claude-review.md:CR-03:approved_text",
+    "spec/claude-review.md:CR-06:approved_text",
+    "spec/claude-review.md:CR-09:approved_text",
+    "docs/en/SPEC-claude-review.md:CR-03:approved_text",
+    "docs/en/SPEC-claude-review.md:CR-06:approved_text",
+    "docs/en/SPEC-claude-review.md:CR-09:approved_text",
+    "same_production_filesystem_policy",
+    "actual_permissions",
+    "actual_lifecycle",
+    "original_readonly_init_record",
+    "real_read_denial_attributed",
+    "denial_kept_inconclusive",
+    "all_installed_entries_block_recursion",
+    "real_host_direction:forward",
+    "real_host_direction:reverse",
+    "bidirectional_same_scope_and_evidence",
+    "menu_actual_public_preview",
+    "production_permissions_and_test_bytes_unchanged",
+    "four_observed_settings_unchanged"
+  ],
+  "tasks": {
+    "Task2": "verified_under_revised_layered_criteria",
+    "Task6": "verified_bounded_lifecycle_and_log_contract",
+    "Task8": "verified_version_scoped_bidirectional_and_menu_function"
+  },
+  "actual_current_mac_tests": {
+    "permissions": 2,
+    "lifecycle_methods": 6,
+    "signals_in_lifecycle": [
+      "SIGINT",
+      "SIGTERM",
+      "SIGHUP"
+    ]
+  },
+  "new_model_calls": 0,
+  "new_original_claude_calls": 0,
+  "product_and_tests_changed": false,
+  "unverified": [
+    "active model Write event",
+    "active model recursion event",
+    "authentication refresh",
+    "natural abnormal Claude helper variants",
+    "historical runtime failure cause",
+    "historical abnormal-run settings change attribution",
+    "long-term stability",
+    "error-free automatic UI input/submission",
+    "latest diagnostic source repeated ordinary bidirectional live review"
+  ],
+  "failed_fixture_history_retained": [
+    "wrong test base class: zero tests started",
+    "long default TMPDIR SRT socket EINVAL: reviewer not started"
+  ],
+  "historical_full_spec_plan_approval_inferred": false,
+  "final_human_acceptance": false,
+  "git_delivery": false
+}

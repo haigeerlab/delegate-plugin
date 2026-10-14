@@ -1,0 +1,47 @@
+{
+  "date": "2026-10-14",
+  "module": "claude-review",
+  "branch": "codex/spec-guard-conventions-public",
+  "authorization_scope": "继续s6: free read-only diagnosis; no new model call",
+  "auth_status_probe": {
+    "execution_status": "completed",
+    "cleanup": "confirmed",
+    "diagnostics": [],
+    "loggedIn": true,
+    "authMethod": "claude.ai",
+    "apiProvider": "firstParty",
+    "config_directory_is_default": true,
+    "config_directory_reported": true,
+    "model_calls": 0,
+    "network_allowed": false,
+    "read_only_home": true,
+    "settings_changed": [],
+    "raw_auth_json_or_stderr_retained": false
+  },
+  "system_denial_observation": {
+    "log_query_exit_code": 0,
+    "matching_denials": [],
+    "raw_system_log_retained": false,
+    "correlation_only": true
+  },
+  "default_sandbox_log_access": "rejected: Cannot run while sandboxed; exit 64",
+  "credential_values_read_or_retained": false,
+  "probe_sha256": "f35da426951e63d8d3f689d56f786b3021e728403959a54378569e2cfabee2b1",
+  "product_source_changes": 0,
+  "model_calls": 0,
+  "installation_changes": 0,
+  "authentication_changes": 0,
+  "root_cause": "unknown",
+  "remaining_tasks": [
+    2,
+    6,
+    8
+  ],
+  "next_missing_fact": "exact service/CLI failure reason; one bounded observed call prepared, not authorized",
+  "sources": [
+    "https://code.claude.com/docs/en/cli-reference",
+    "https://code.claude.com/docs/en/authentication",
+    "https://code.claude.com/docs/en/troubleshoot-install#not-logged-in-or-token-expired"
+  ],
+  "user_terminal_login_reply": "Login 有效"
+}

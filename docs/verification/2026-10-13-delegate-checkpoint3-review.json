@@ -1,0 +1,35 @@
+{
+  "date": "2026-10-13",
+  "repository": "/path/to/delegate-plugin",
+  "branch": "codex/spec-guard-conventions-public",
+  "baseline": "823c42383cf055ea8af99256618daf6212d10735",
+  "checkpoint": "Checkpoint 3",
+  "state": "awaiting_human_review_of_current_diff_and_limits",
+  "product_diff": "/path/to/private-evidence",
+  "contracts_diff": "/path/to/private-evidence",
+  "evidence_diff": "/path/to/private-evidence",
+  "manifest": "/path/to/private-evidence",
+  "product_changed_files": 57,
+  "product_unchanged_since_prior_checkpoint_package": true,
+  "free_regression_evidence": "142 Python / 53 shell / 19 eval; previously passed with same product inventory, not rerun",
+  "bounded_code_review_evidence": "2026-10-12 five-axis review plus 2026-10-13 documented help/routing/migration delta; not an independent model/security audit",
+  "ui_001": "closed_by_actual_installation_and_native_menu_observation",
+  "tasks_still_unchecked": [
+    "Task 2 full safety acceptance",
+    "Task 6 complete natural exception/helper evidence",
+    "Task 8 active-tool/full command invocation acceptance",
+    "Checkpoint 3 human review"
+  ],
+  "model_calls_this_final_preparation": 0,
+  "new_messages_to_other_sessions": 0,
+  "git_writes": false,
+  "current_s2_packet": {
+    "root": "/path/to/delegate-plugin/.agent/acceptance/s2-recovery/checkpoint3",
+    "result": "docs/verification/2026-10-13-delegate-s2-resume-result.json",
+    "latest_ordinary_bidirectional_passed": true,
+    "full_security_acceptance_complete": false,
+    "final_human_review_approved": false,
+    "git_delivery": false
+  },
+  "_publication_note": "本机身份与路径已脱敏；原始本地证据私有保留，结论及产品/输入摘要未改。"
+}

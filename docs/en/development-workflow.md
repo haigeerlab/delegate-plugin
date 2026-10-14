@@ -40,6 +40,7 @@ git diff --check
 ```
 
 Resolve the currently enabled Spec Guard installation before running `phase-guard.sh` and `verify-artifacts.sh`; do not hardcode a cached version.
+Aggregate source discovery excludes exactly `.git` and private `.agent/acceptance` artifacts. Do not grant executable permissions to installation backups or exclude all of `.agent` or product suites. Verify private batch evidence separately; isolated regressions guard the discovery boundary.
 Structural success, phase `DONE`, and stub-test success describe file layout, current checklists, and deterministic contracts respectively. They do not establish historical approvals, remote publication, or all real-model behavior.
 Paid live validation, delegation to another executor, Git commits, pushes, and publishing each require appropriate authorization; this convention grants none.
 

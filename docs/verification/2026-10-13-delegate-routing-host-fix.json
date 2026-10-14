@@ -1,0 +1,159 @@
+{
+  "date": "2026-10-13",
+  "repository": "/path/to/delegate-plugin",
+  "branch": "codex/spec-guard-conventions-public",
+  "source_request": "LIVE-SAAS conversation forwarded human request to fix delegate routing trigger; no installed-cache/host/LIVE-SAAS changes",
+  "state": "source_fix_and_free_verification_passed",
+  "cause": "UserPromptSubmit prompt→warm→route used only Codex available cache to inject a per-turn delegation/confirmation gate without host or intent evidence",
+  "design": "remove per-turn routing hook, retain silent compatibility callbacks; explicit command/skill criteria use reliable main-session context and target, no host guess/keyword classifier/new state",
+  "red": {
+    "log": "/path/to/private-evidence",
+    "tests": 3,
+    "failures": 41,
+    "explicit_codex_run_passed": true,
+    "matrix_failed_subtests": 40
+  },
+  "green": {
+    "log": "/path/to/private-evidence",
+    "tests": 3,
+    "passed": true,
+    "callback_matrix": {
+      "host_environment_cases": [
+        "claude",
+        "codex",
+        "unknown",
+        "conflicting"
+      ],
+      "prompt_cases": 5,
+      "handlers": 2,
+      "repetitions": 2,
+      "calls": 80,
+      "actual_native_host_identification": false
+    },
+    "explicit_codex_run": "one fake exec for each of two host-environment fixtures"
+  },
+  "full_free_suite": {
+    "exit_code": 0,
+    "python_tests": 142,
+    "shell_assertions": 53,
+    "eval_judge_assertions": 19,
+    "log": "/path/to/private-evidence"
+  },
+  "native_manifest_checks": [
+    {
+      "target": ".",
+      "exit": 0,
+      "stdout": "Validating marketplace manifest: /path/to/delegate-plugin/.claude-plugin/marketplace.json\n\n✔ Validation passed\n",
+      "stderr": ""
+    },
+    {
+      "target": "./plugins/delegate",
+      "exit": 0,
+      "stdout": "Validating plugin manifest: /path/to/delegate-plugin/plugins/delegate/.claude-plugin/plugin.json\n\n✔ Validation passed\n",
+      "stderr": ""
+    }
+  ],
+  "eval_scaffolds": "both --scaffold-only exited 0, retired route output empty",
+  "bounded_code_review": {
+    "scope": [
+      "plugins/delegate/hooks/hooks.json",
+      "plugins/delegate/hooks/prompt.sh",
+      "plugins/delegate/hooks/route.sh",
+      "plugins/delegate/skills/delegate-routing/SKILL.md",
+      "plugins/delegate/tests/test-backend.py",
+      "plugins/delegate/tests/test-routing.sh",
+      "evals/propose-not-auto.sh",
+      "evals/routing-fitness.sh"
+    ],
+    "checks": [
+      "no UserPromptSubmit registration",
+      "compatibility callbacks executable, exit 0/no output/no probing",
+      "SessionStart/detection and backend default/authentication/sandbox/arguments untouched",
+      "no host inference from environment/cache/executable names",
+      "explicit request and existing scope authorization distinct from write permission",
+      "no global configuration or installed-cache mutation"
+    ],
+    "issues_remaining": []
+  },
+  "pins": {
+    "plugins/delegate/hooks/hooks.json": {
+      "before_sha256": "822d1fed0b4febdfcc46ac17db2c832ba38d48e842aad69a32db7ecf78ab7483",
+      "after_sha256": "9c0249cfeed8252008a1fd94eccb13a4cfe8d0ec60b2230b65952b25dbabf810",
+      "before_source": "pre-fix frozen source"
+    },
+    "plugins/delegate/hooks/prompt.sh": {
+      "before_sha256": "0740361f811c048dcd6ed715920deb5c63b24577718fc3b01b91a5009fcf6027",
+      "after_sha256": "314b49dbc105562080ed23d924e42449116f8964f9927f046a611409d678a7f6",
+      "before_source": "pre-fix frozen source"
+    },
+    "plugins/delegate/hooks/route.sh": {
+      "before_sha256": "518911694a0d308090387e5c5d76472841849fe519468463235190faa12101f5",
+      "after_sha256": "ccce4fa5bf33934b312dca5b4a3a7aac089ecdfef278337792d1241d028cc648",
+      "before_source": "pre-fix frozen source"
+    },
+    "plugins/delegate/skills/delegate-routing/SKILL.md": {
+      "before_sha256": "064757bfe47fabbe011a8c55f9d139faedae853f455b2a871cdff2a3b3446d19",
+      "after_sha256": "76be2668fceb79e625b95d798f1f315a85e5cd87efb5c5590d7ac8e1a12ea718",
+      "before_source": "pre-fix frozen source"
+    },
+    "plugins/delegate/tests/test-backend.py": {
+      "before_sha256": "a981949d849e31835fddf3c965133dfb70f933891d70c3234b0b4c522dce7f04",
+      "after_sha256": "b653e9236431201941be5173a745e474009d391177c48452bb0546d7a9026202",
+      "before_source": "pre-fix frozen source"
+    },
+    "plugins/delegate/tests/test-routing.sh": {
+      "before_sha256": "6aed2f51a7b4a5d957035d620036566c5d31cba60224c01dad99e89f31025861",
+      "after_sha256": "0c5d513d5acd3335b74e62b3b610e0c7df31e1c63d333036c144eb9d9e3cc057",
+      "before_source": "pre-fix frozen source"
+    },
+    "evals/propose-not-auto.sh": {
+      "before_sha256": "ba9f5251aec405a721bceb7f245a551cd2b9db248ce2bd516b22580e15279446",
+      "after_sha256": "2e0858ff07835cc6361999f2c44bc145ecfafdc56142173397b16a9f9b0cb9ce",
+      "before_source": "unchanged HEAD eval file"
+    },
+    "evals/routing-fitness.sh": {
+      "before_sha256": "aa90ba85060e2f7122dd8b25db2534352b491ee2f5023bf2a475a4a40b343ac0",
+      "after_sha256": "2998d7c91f0f15a02088cd7522be283adff387cf37620693f003ce9232efa78d",
+      "before_source": "unchanged HEAD eval file"
+    }
+  },
+  "diff": {
+    "path": "/path/to/private-evidence",
+    "sha256": "2aec1d644bf6b00666aba7b356f26b8ecb94a2bdc8236feef82d5fe7fb3300ce",
+    "bytes": 13564,
+    "scope": "eight fix runtime/test/eval files; bilingual docs and plans separately in working tree"
+  },
+  "version": {
+    "source_manifest": "0.4.0 unpublished working tree",
+    "normal_installed_cache_updated": false,
+    "next_release_suggestion": "0.5.0 with already planned command migration; not performed"
+  },
+  "limits": [
+    "no real model calls or native-host behavior acceptance for this hook revision",
+    "host matrix uses environment fixtures; no runtime host-identification feature is claimed",
+    "already-installed 0.4.0 hooks retain old code until authorized update/reload",
+    "historical routing live evidence is not re-attributed to the changed behavior",
+    "no commit/push/release/session communication/global setting changes"
+  ],
+  "models": 0,
+  "installations": 0,
+  "documentation_check": {
+    "files": 16,
+    "local_links": 172,
+    "invalid_links": 0,
+    "diff_check": "passed"
+  },
+  "stage_checks": [
+    {
+      "name": "phase-guard.sh",
+      "exit": 0,
+      "output": "{\"hookSpecificOutput\": {\"hookEventName\": \"UserPromptSubmit\", \"additionalContext\": \"## spec-guard local workflow\\n\\nLocation: branch `codex/spec-guard-conventions-public` \\u00b7 worktree `/path/to/delegate-plugin`. State this location to the user whenever you ask them to review or confirm.\\n\\n\\u5f53\\u524d\\u9636\\u6bb5: **BUILDING**\\n\\n- Capability map: present\\n- Current module: `claude-review` (activeModule)\\n- Modules 4 \\u00b7 Specs 4 \\u00b7 Plans 4 \\u00b7 In progress 1 \\u00b7 Done 3\\n\\nSuggested next step: continue `$incremental-implementation` on `claude-review`: 4 unchecked item(s) in `tasks/claude-review/todo.md`.\"}}\n"
+    },
+    {
+      "name": "verify-artifacts.sh",
+      "exit": 0,
+      "output": "  ✅ 能力图存在\n  ✅ 没有根目录 spec 漂移\n  ✅ 能力图通过严格解析\n\n结果: 3 通过 · 0 警告 · 0 失败\n"
+    }
+  ],
+  "_publication_note": "本机身份与路径已脱敏；原始本地证据私有保留，结论及产品/输入摘要未改。"
+}

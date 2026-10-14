@@ -4,7 +4,9 @@
 
 ## 目标
 
-将已定方案的执行与查证交给 Codex CLI，隔离过程日志，并返回最终答复与写模式 Git 证据。独立 marketplace，只支持 Codex CLI；产品运行不依赖 Spec Guard 或 agent-skills。
+当前实现将已定方案的执行与查证交给 Codex CLI，隔离过程日志，并返回最终答复与写模式 Git 证据。独立 marketplace；产品运行不依赖 Spec Guard 或 agent-skills。
+
+2026-10-09 已确认可选 Claude Code 只读审查后端，见 [claude-review](claude-review.md)。当前源码已接通 Mac 本机路径与免费验证，原版 CLI 严格边界认证及有限 Codex→Claude 真实审查通过；两方向普通真实审查已有成功记录；主动模型越界和完整异常验收仍未完成。新增未发布 review/run 命令、快捷范围及无模型预览；当前发行 v0.4.0 不包含这些变更。
 
 2026-10-08 按已确认的项目接入范围规范化文件布局。历史原文见 [归档索引](../docs/archive/pre-spec-guard/README.md)。本次确认不追认早期模块的人工审批。
 
@@ -14,18 +16,19 @@
 |---|---|---|
 | channel | 调用参数、只读/写沙箱、进程组期限与清理、日志隔离、Git 证据 | — |
 | detection | CLI 基础检查、身份绑定缓存、原子写入、静默降级、doctor | — |
-| routing | 注入事实与确认要求，skill 提供任务判据 | channel, detection |
+| routing | 显式委托请求的可选判据与确认纪律，不自动注入提醒 | channel, detection |
+| claude-review | 为 delegate 增加显式后端选择、Claude Code 只读审查和统一审查结果，保持现有 Codex 行为兼容 | channel, detection, routing |
 
-Build order: channel → detection → routing
+Build order: channel → detection → routing → claude-review
 
-channel 与 detection 共用 `backend.py`，该共享代码不是独立模块依赖。routing 消费 detection 缓存，确认后使用 channel；构建顺序保留既有实施顺序，不新增运行职责。
+channel 与 detection 共用 `backend.py`，该共享代码不是独立模块依赖。routing 按显式请求结合 detection 体检，授权后使用 channel；构建顺序保留既有实施顺序，不新增运行职责。
 
 ```text
 backend.py → codex-exec.sh → run_codex.py → codex exec
      ↓
 detect.py ← detect.sh / doctor.sh
-     ↓ detection.json
-prompt.sh: detect.sh --warm → route.sh → delegate-routing skill
+     ↓ detection.json → doctor
+explicit request → delegate-routing skill → review/run
 ```
 
 - channel 不决定“什么任务该派”，且每次实时复查基础认证。
@@ -36,4 +39,6 @@ prompt.sh: detect.sh --warm → route.sh → delegate-routing skill
 - 写模式不要求干净工作区；原有修改数量和 staged/unstaged 统计必须可见，不能自动回滚。
 - 默认只读、写入须当前轮明确授权；命令指令的确认纪律不能被当作不可绕过技术锁。
 
-合同与验证详见 [channel](channel.md)、[detection](detection.md)、[routing](routing.md)。没有新增后端、非 Git 支持、后台任务、提交/推送/发布或自动升级安装缓存。
+既有合同与验证详见 [channel](channel.md)、[detection](detection.md)、[routing](routing.md)；新增模块按 [claude-review](claude-review.md) 单独追踪。不新增非 Git 支持、后台编排、提交/推送/发布或自动升级安装缓存。
+
+真实反向首批已启动 Codex，但四文件均未审；免费修复改为有界 inline 文件输入（总输入1MiB）及核实的 shell/apps/plugins/multi_agent 禁用开关，不增加 Bash/MCP 读取权限。修复后已完成真实反向审查4/4，见[最新证据与限制](../docs/verification/2026-10-12-claude-review-mac-reverse-fourth-success.md)；首批失败保持历史结论。

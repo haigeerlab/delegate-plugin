@@ -1,0 +1,40 @@
+{
+  "init_validated": true,
+  "known_tools": [
+    "Read",
+    "StructuredOutput"
+  ],
+  "probe": "zero_turns_no_network",
+  "execution_status": "timed_out",
+  "cleanup": "confirmed",
+  "diagnostics": [],
+  "event_metadata": [
+    {
+      "type": "system",
+      "subtype": "ui_invalidate",
+      "has_content": false,
+      "has_tools": false
+    },
+    {
+      "type": "system",
+      "subtype": "init",
+      "has_content": false,
+      "has_tools": true,
+      "tool_count": 2
+    },
+    {
+      "type": "system",
+      "subtype": "api_retry",
+      "has_content": false,
+      "has_tools": false
+    }
+  ],
+  "stdout_bytes": 2394,
+  "network_allowed_domains": 0,
+  "max_turns": 0,
+  "limitations": [
+    "Zero turns does not suppress API attempts in this original CLI; an api_retry event was observed.",
+    "OS network policy denied all destinations. No completed model API request or review result was obtained.",
+    "Init validation passed; the probe then timed out and cleanup was confirmed."
+  ]
+}

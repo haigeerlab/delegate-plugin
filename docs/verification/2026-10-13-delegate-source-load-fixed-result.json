@@ -1,0 +1,239 @@
+{
+  "date": "2026-10-13",
+  "repository": "/path/to/delegate-plugin",
+  "branch": "codex/spec-guard-conventions-public",
+  "state": "artifact_acceptance_passed",
+  "authorization": {
+    "human_replies": [
+      "继续",
+      "批准这一次临时复验"
+    ],
+    "scope": "same one fixed installation batch,not two grants",
+    "consumed": true
+  },
+  "model_calls": 0,
+  "install_attempts": 1,
+  "installation_retries": 0,
+  "runtime_versions": {
+    "codex": "0.162.1",
+    "node": "24.18.0"
+  },
+  "preflight": {
+    "passed": true,
+    "boundary": {
+      "write_allowed": true,
+      "outside_write_denied": true,
+      "network_denied": true
+    },
+    "stages": [
+      {
+        "stage": "boundary-probe",
+        "exit_code": 0,
+        "timed_out": false,
+        "cancelled": false,
+        "output_bounded": true
+      },
+      {
+        "stage": "node-version",
+        "exit_code": 0,
+        "timed_out": false,
+        "cancelled": false,
+        "output_bounded": true
+      },
+      {
+        "stage": "codex-version",
+        "exit_code": 0,
+        "timed_out": false,
+        "cancelled": false,
+        "output_bounded": true
+      }
+    ],
+    "model_calls": 0
+  },
+  "command_stages": [
+    {
+      "stage": "marketplace-add",
+      "exit_code": 0,
+      "timed_out": false,
+      "cancelled": false,
+      "output_bounded": true
+    },
+    {
+      "stage": "plugin-add",
+      "exit_code": 0,
+      "timed_out": false,
+      "cancelled": false,
+      "output_bounded": true
+    },
+    {
+      "stage": "plugin-list",
+      "exit_code": 0,
+      "timed_out": false,
+      "cancelled": false,
+      "output_bounded": true
+    }
+  ],
+  "original_driver_outcome": {
+    "exit_code": 1,
+    "reason": "migration_commands_mismatch",
+    "observation": {
+      "expected": [
+        "source-command-doctor",
+        "source-command-help",
+        "source-command-review",
+        "source-command-run"
+      ],
+      "actual": [],
+      "installed_path": "/path/to/private-evidence"
+    },
+    "preserved": true
+  },
+  "verification_correction": {
+    "cause": "Driver treated plugin-list source.path as the installed cache directory;the field pointed to the local marketplace source.",
+    "method": "Read-only verification of the actual disposable installation cache and exact rendered-source equality;no CLI or installer repeated.",
+    "source_metadata_path": "/path/to/private-evidence",
+    "verified_cache_path": "/path/to/private-evidence",
+    "verified_scope": "Actual CLI-generated migration artifacts;not desktop slash behavior or active model review.",
+    "offline_fault_fixture": {
+      "original_wrong_source_lookup": "failed as expected",
+      "corrected_cache_lookup": "passed",
+      "uses_real_cli": false,
+      "installs_or_models": 0,
+      "executed_driver_preserved": true,
+      "patch": "driver-path-correction.diff"
+    }
+  },
+  "commands": {
+    "review": {
+      "bytes": 3528,
+      "sha256": "fcbd3a71dff11ab1e95deec30ade1ebc5f9c5d7b8374e28eca30b31056185454",
+      "matches_frozen_rendered_source": true,
+      "source_file_matches_snapshot": true
+    },
+    "run": {
+      "bytes": 1843,
+      "sha256": "535662b4256ead862e5e96e478926f3c82ed92fff0c46977b3cba51f41ce1c11",
+      "matches_frozen_rendered_source": true,
+      "source_file_matches_snapshot": true
+    },
+    "doctor": {
+      "bytes": 1038,
+      "sha256": "fab8650827e74a637c24cc11ef78ae6f95c9820a0491b84bdc1dcf37235ab900",
+      "matches_frozen_rendered_source": true,
+      "source_file_matches_snapshot": true
+    },
+    "help": {
+      "bytes": 3586,
+      "sha256": "a3407e7f57a542cc3a0fc8ff5f78d521712a6688e5f328c57f9244386f2f094f",
+      "matches_frozen_rendered_source": true,
+      "source_file_matches_snapshot": true
+    }
+  },
+  "generated_skills": {
+    "review": "---\nname: \"source-command-review\"\ndescription: \"通过 Codex 或 Claude Code 对明确范围执行只读审查\"\n---\n\n# source-command-review\n\nUse this skill when the user asks to run the migrated source command `review`.\n\n## Command Template\n\n用户直接输入本命令授权其明确的审查；模型主动提议后须等待肯定答复。不要扩展用户范围，也不要再次索取同一范围已有的授权。付费执行和项目规则仍按会话中实际授权判断。\n\n```bash\n/bin/bash \"${CLAUDE_PLUGIN_ROOT}/scripts/delegate-exec.sh\" review [选项] -- \"<任务>\"\n```\n\n原样传递明确参数，任务作为完整参数并安全引用；Bash timeout 设为 600000。`--backend` 默认 codex，与主会话宿主无关。显式 `--backend claude-code` 实际调用 Claude；不能混用模型/专属参数或在失败时换后端。两个后端都只读，`--write` 明确拒绝，不自动转换为修复。\n\n常用范围：`--paths <仓库根相对路径>` 可重复，`--exclude`、`--spec`、`--plan`、`--criterion` 可重复；模块加 `--module <名称>`。纯路径/模块默认读取 HEAD，排除未提交内容并展示工作区改动；需要工作区版本必须明确 `--changes staged|unstaged|working-tree`。只有 working-tree 可加 `--include-untracked`。`--repo` 可指定目标 Git 工作区。\n\n固定 diff 用 `--base <提交> [--head <提交>]`，head 默认 HEAD；不能与 changes 混用。没指定 paths 的 diff 只选该比较的变更文件，不扩大为全项目；空比较不启动模型。缺范围先报告，不自行添加 `.`、整个项目或未跟踪文件。\n\n高级 `--context <JSON>` 复用严格的范围合同，与所有快捷范围参数互斥。`--dry-run` 只做无模型输入预览：列出解析后的基准、文件摘要、排除/未审范围、未提交改动策略、权限和停止条件；不检查后端认证、不写审查产物，不代表审查通过。\n\n模型用 `--model`，推理/限制参数按后端验证：Codex 支持 effort；Claude 首版拒绝 effort，支持 max-turns（默认 12）/max-budget-usd（客户端估算，非账单硬上限）。参数错误先失败，不重试。无可靠模型或宿主证据时输出 unknown。\n\nClaude 当前仅 Mac 本机 CLI ≥2.1.295、Node ≥22.12.0、srt 0.0.79 和可用 GUI launchd 域；沿用原有认证。不安装、升级、登录或改全局配置。工具权限、上下文限制及包围整个 CLI 的 OS 隔离落实只读；allowedTools/Plan/提示词不是文件系统沙箱。递归 delegate 被拒绝。Codex 保留原进程组清理，detached 子进程限制仍存在。\n\nCodex review 直接接收已校验的有限文件内容和摘要，不依赖命令读取文件；序列化输入上限 1 MiB，超限明确报告 codex_inline_input_limit，不截断或自动分批。启动前核实 shell/apps/plugins/multi_agent 关闭，禁用网络搜索并清空 MCP 配置；无法核实则停止。该工具设置核验不替代只读沙箱，也不证明真实模型全部行为。dry-run 显示输入方式、字节数和上限。\n\n返回共同报告；退出 0 不等于无缺陷。权限拒绝、空/坏输出、部分覆盖、达限与失败不能当作通过；核对发现的触发条件、行号与证据。结论不授权修改、合并或交付。最终答复、JSON 报告与过滤日志分别保存为私有产物；只按需用 `sed -n` 读片段，不倾倒全过程。帮助用 `/delegate:help`，条件检查用 `/delegate:doctor --backend claude-code`。\n",
+    "run": "---\nname: \"source-command-run\"\ndescription: \"把已明确任务交给 Codex 执行，默认只读，显式 write 才可改文件\"\n---\n\n# source-command-run\n\nUse this skill when the user asks to run the migrated source command `run`.\n\n## Command Template\n\n用户直接输入本命令授权其明确任务；模型主动提议后须等待肯定答复。只委托已决策且用户明确交代的范围，不补充任务、不重复索取已有的同范围授权。\n\n```bash\n/bin/bash \"${CLAUDE_PLUGIN_ROOT}/scripts/delegate-exec.sh\" run [选项] -- \"<任务>\"\n```\n\n任务作为一个完整参数安全引用；Bash timeout 设为 600000。在业务 Git 工作区执行。run 当前只支持 codex，默认只读；`--backend claude-code` 明确拒绝，Claude 仅通过 `/delegate:review` 提供只读审查。需要共同结构化审查时也使用 review；run 不接受 review-context 或范围快捷参数。\n\n只有用户在该轮明确要求写文件才能加 `--write`，不自行升级权限。写入返回后无论成功、失败、超时或空答复，都核对 Git 验收块和真实 diff；失败不自动回滚，不能只相信执行器自述。沿用 Codex 原有认证、沙箱、期限和日志合同，不自动重试、切后端或切模型，不提交、推送或发布。\n\n默认/上限 540 秒；Codex 保留原进程组清理，不证明 detached 后代已回收。旧过程日志位于 `${TMPDIR:-/tmp}/delegate/`，最终答复分开返回；只按需用 `sed -n` 读取必要片段，不 `cat` 整个日志。递归调用 delegate 被拒绝。实际宿主/模型无法核实时标 unknown。\n\n原 `/delegate:delegate` 源命令已替换为 run/review；旧 codex-exec.sh 和 delegate-exec.sh 无子命令调用继续有效。安装缓存不会随源码更新，加载/安装另行处理。帮助见 `/delegate:help`。\n",
+    "doctor": "---\nname: \"source-command-doctor\"\ndescription: \"delegate 所选后端的无模型接入体检\"\n---\n\n# source-command-doctor\n\nUse this skill when the user asks to run the migrated source command `doctor`.\n\n## Command Template\n\n按用户选定后端运行，默认 Codex；先展示共享能力定义，再检查条件，能力说明不代表已可用：\n\n```bash\npython3 -B \"${CLAUDE_PLUGIN_ROOT}/scripts/review_doctor.py\" [--backend codex|claude-code]\n```\n\nCodex 路径保留原 `hooks/doctor.sh`：刷新本地基础探测和临时缓存，检查部分中文全局 AGENTS.md 规则，不修改业务文件。\nClaude 路径在本机 Mac 的同一只读边界检查已有 srt/Node、CLI 版本/参数及原有认证；不调用 Codex或模型、不安装、不登录、不改全局设置。仅保留安全认证方法/提供商，模型、额度、实际审查工具及双向宿主仍未验证。\n退出 0 表示诊断完成，以文本的问题数量和未验证项为准；不代表远端、额度、模型权限或完整审查可用。\n",
+    "help": "---\nname: \"source-command-help\"\ndescription: \"delegate 的审查、执行、后端能力与迁移帮助\"\n---\n\n# source-command-help\n\nUse this skill when the user asks to run the migrated source command `help`.\n\n## Command Template\n\n先读取当前源码的无模型帮助，依据共享能力定义说明参数，不启动执行器或诊断：\n\n```bash\n/bin/bash \"${CLAUDE_PLUGIN_ROOT}/scripts/delegate-exec.sh\" --help\n```\n\n四个入口：`/delegate:review`（两个后端只读审查）、`/delegate:run`（既有 Codex 通用执行）、`/delegate:doctor`（指定后端无模型体检）、`/delegate:help`。主会话宿主与执行后端独立，默认 codex；模型另用 --model，不自动选相反宿主或 fallback。\n\n```text\n/delegate:review --backend claude-code --paths src/login --model sonnet\n/delegate:review --backend codex --base main --head HEAD\n/delegate:review --paths src/payments --module payments --spec spec/payments.md --plan tasks/payments/plan.md --dry-run\n/delegate:review --changes working-tree --paths src/login --include-untracked\n/delegate:review --context /path/review.json\n/delegate:run --write 按已确认方案修复空指针并运行相关测试\n/delegate:doctor --backend claude-code\n```\n\n所有路径以目标仓库根为基准，可用 --repo 指定 Git 工作区。paths/module 默认读取 HEAD；工作区改动须明确 changes，只有 working-tree 可含 untracked。base/head 固定提交 diff，与 changes 互斥；无 paths 时仅选比较中的变更文件，不全项目扫描。exclude/spec/plan/criterion 可重复。高级 context 与快捷范围参数互斥；旧 CLI review-context 保留。dry-run 只是输入预览，不调用模型、检查认证或给出通过结论。\n\nreview 永远只读，拒绝 write；run 当前仅 codex，Claude run 拒绝。Claude 首版拒绝 effort，提供 max-turns（默认12）及 max-budget-usd（估算，非账单硬上限）；Codex 不支持这两个限制参数。参数不混传，未知实际模型/用量不猜、不填零。\n\nClaude 当前仅 Mac 本机 CLI ≥2.1.295、Node ≥22.12.0、srt 0.0.79、GUI launchd；已有绝对路径可通过 DELEGATE_CLAUDE_BIN、DELEGATE_NODE_BIN、DELEGATE_SRT_BIN 指定。沿用原认证，不安装/升级/登录/改全局配置。两方向普通四文件真实审查已有成功记录，各自仅证明固定源码/版本及有限范围；真实模型主动越界和新版斜杠宿主体验仍未验收，不以安装/假 CLI 通过替代。\n\n报告区分执行状态与审查结论；退出0、JSON有效、无输出都不等于代码无问题。发现须核对证据，部分完成列未审范围，不授权修改、合并或交付。answer/report/log 分开保存在私有 delegate-review 目录，旧 Codex 自由文本日志在 delegate 目录；只按需读取片段。参数错误64、条件不足127、超时124、INT/TERM/HUP 130/143/129；doctor 退出0表示诊断完成，以问题和未验证项为准。\n\n迁移：旧 `/delegate:delegate` 通用任务改用 `/delegate:run`；结构化只读审查改用 `/delegate:review`。源命令替换不自动更新已安装缓存；当前未发布，安装、付费验收和发布分别处理。详细合同见源码 spec/claude-review.md。\n\n预检失败时核对 diagnostics 和宿主实际 PATH/运行时；CLI 版本探测失败不等于未登录。只报告可信分类，不输出原始认证诊断；重新执行须符合已有授权和停止条件。历史验收与详细故障证据留在源码仓库 docs/verification/，不要求安装副本包含这些开发记录。\n"
+  },
+  "independent_checks": {
+    "source_unchanged": true,
+    "frozen_source_unchanged": true,
+    "recorded_settings_unchanged": true,
+    "cache_root_inside_isolated_codex_home": true,
+    "batch_root_private": true,
+    "node_pin_unchanged": true,
+    "codex_pin_unchanged": true,
+    "native_pin_unchanged": true,
+    "exact_command_set": true,
+    "all_four_match_source": true
+  },
+  "source_pins": {
+    "plugins/delegate/LICENSE": "d8e4560e8f9c35d52ccc96de8ec8d38345852f277ec4683ef56a142f2e5e4b62",
+    "plugins/delegate/tests/test-review-mac-integration.py": "ddb58f3ca4a14d8c24031d796b454af0abd84e05546a3f5a802deb6d402963d3",
+    "plugins/delegate/tests/test-review-linux.py": "f36417cdf32aad3f547839b948428e27cf7371a07b57313b4ca6e4d599e6e067",
+    "plugins/delegate/tests/test-review-service.py": "99ea448dc2ce5a2729ec153a6934f7a83941b0b119e4003d2a71fa3e9e08181e",
+    "plugins/delegate/tests/test-backend.py": "a981949d849e31835fddf3c965133dfb70f933891d70c3234b0b4c522dce7f04",
+    "plugins/delegate/tests/test-claude-isolation.py": "95d9322cf9319288cf8baa3e2979473c68056eb74bbd68821df540f329f65506",
+    "plugins/delegate/tests/test-review-lifecycle.py": "3a91abc4530d4c2decc818998b41a990c3f664e5c0c2adc2f7dccd468390ec24",
+    "plugins/delegate/tests/test-review-cli.py": "c7778fe7b6d16761e2778a93e4b0dca12df61dd1596b6be05aa36ea7a263267c",
+    "plugins/delegate/tests/test-routing.sh": "6aed2f51a7b4a5d957035d620036566c5d31cba60224c01dad99e89f31025861",
+    "plugins/delegate/tests/test-review-backends.py": "52952673415eb02794ed63c6f4b413bdb0c144f34f66664c69f519575e782d29",
+    "plugins/delegate/tests/test-command-migration.py": "c5bd2fea9e0d6a971fc72a8f90cf1f40c4354fe776f72075a7cf362425a192de",
+    "plugins/delegate/tests/test-review-ssh.py": "0805cc7196ef797f2419a5f79038005be29976417290a31564f3357a14120334",
+    "plugins/delegate/tests/test-review-guest.py": "44a349f7a5fa75260f2686ea3d134b0062848a47aeb3e6c3e94ffeb372caddc9",
+    "plugins/delegate/tests/stub-codex": "8dc61a9b8b3a10cba2d8cf6515d67f3d01ade152a169b16c5b212bd66b3d6975",
+    "plugins/delegate/tests/test-claude-native-probes.py": "91a307cf13b3c238b6235a8256ae93cfa8e345d20b4f4addbbd1b3be7f9b2d84",
+    "plugins/delegate/tests/test-review-native.py": "dda2657fe3eb4abb31daff1ef91921a0a4ac26192de2760018c8253c3f8831f1",
+    "plugins/delegate/tests/test-review-artifacts.py": "feae0eb8c025be00793de662a8181a44ab1b467f5b9597c09573888dd907d236",
+    "plugins/delegate/tests/test-review-context.py": "89ae9845229843bd154f25491ba639ecc61fb8859b2b134fb15eec43f714bd5f",
+    "plugins/delegate/tests/test-claude-review.py": "ca9cf2f14789501da581594588b8b1c88ed43656fa99e78e562987a26f3f629e",
+    "plugins/delegate/tests/test-review-transport.py": "1b42d18c11b311494acdc5d6ff1fb726e8a6039c8c284318212378a63544d6c6",
+    "plugins/delegate/tests/test-review-result.py": "8dcdb2e12daac39e3af7518d7197aa7d61ef44b1d25ca0ab157facb1c2676088",
+    "plugins/delegate/tests/test-review-guest-integration.py": "381dd3137c46c2e3dcbc7294e5f2b4ad49aeda04f2f6a5843a667274d43e02f7",
+    "plugins/delegate/tests/test-review-execution.py": "3da1b042f744886b2a1a57bebeccbf34f1b9dd36b80c54bcd71cb3b95f6d320c",
+    "plugins/delegate/tests/test-channel-regressions.py": "9ad02c3e8a6e53866cbecab3773b2dcd954bbcc83088e91fdf0e43efd1cc9005",
+    "plugins/delegate/tests/test-channel.sh": "c9eaaf272e118ceedd3b350d71f7b7c98acace81a48651038619bdbc1e566f02",
+    "plugins/delegate/tests/test-claude-mac-probes.py": "63e2e51051fd5020243aef69c0483a35a0074e2a6d473880a29c1d2af57cd2fd",
+    "plugins/delegate/tests/test-review-guest-entry.py": "31161366db3c296ac667bb174d644e540d2be2b6163b95ed313dcb11fee92a2e",
+    "plugins/delegate/tests/test-review-macos.py": "fe4d1708917f0c28fa3e0ec34ae4c4ad9d36c58fe522d1c93fbc32ceef74e0be",
+    "plugins/delegate/tests/test-detection.sh": "9e98791e54586f76ad6ba321689d17b46ed429e9261532ba8fa5f39d6386980b",
+    "plugins/delegate/hooks/prompt.sh": "0740361f811c048dcd6ed715920deb5c63b24577718fc3b01b91a5009fcf6027",
+    "plugins/delegate/hooks/doctor.sh": "ab206f2ad5bbe1e6e3ee31638d9d0eb2f58c6469c321e4892be2d16eda179bf5",
+    "plugins/delegate/hooks/detect.sh": "acf85d86cfabf2380bc55792c2b45b3d26ffd0c24c41ec59adc692a23cc3d33d",
+    "plugins/delegate/hooks/hooks.json": "822d1fed0b4febdfcc46ac17db2c832ba38d48e842aad69a32db7ecf78ab7483",
+    "plugins/delegate/hooks/route.sh": "518911694a0d308090387e5c5d76472841849fe519468463235190faa12101f5",
+    "plugins/delegate/hooks/detect.py": "18d2436079e01dca7af4f06b39c38ee2f03bf1ecc91b90898acb6128a54ab0e9",
+    "plugins/delegate/scripts/codex-exec.sh": "98f06790366f169f3639fe249a3634a3892ebf22b43374aff504dede12b6aad8",
+    "plugins/delegate/scripts/backend.py": "21af43d0e1022b3f79e79fc1da027dd79cd84482d05fc5eedbacdaa70830748a",
+    "plugins/delegate/scripts/review_native.py": "aaead63f317e26e78b66ff5023ab91442b45b5cd3e2858fd44506ab0c7d0d552",
+    "plugins/delegate/scripts/review_service.py": "8c76145c624bf6890f3ebcf115ff68b3eeb7da6b11b264d9c28549a951b6f602",
+    "plugins/delegate/scripts/delegate_backend.py": "a332fce5abe4340e8b112cfb861dda0da67a5010c3de224d73411e201c435fd5",
+    "plugins/delegate/scripts/review_macos.py": "028f35bdab20f2cf0730f611dc2ff95a725b2279982ad847b7319ff7bf6e65d1",
+    "plugins/delegate/scripts/review_transport.py": "33371942d3b699b998d432d202e2800833779f4738f84277c85e549d377318a8",
+    "plugins/delegate/scripts/review_execution.py": "1158eba093ea99c0a20e58b019f9893431fc5abace86f0b6088d72fb2fcb51b3",
+    "plugins/delegate/scripts/review_guest_entry.py": "613f2353ae921527c8bdcadedfb756b0459b9af495775869f9f834a38b2d2da3",
+    "plugins/delegate/scripts/review_isolation.py": "96c6ac119cc812bafe109f0647838f1c6308f49ebb183721014854aeb922e307",
+    "plugins/delegate/scripts/review_network.py": "b835bc9aa4ba1019895a1eefe667ae7d74a57b6da51c9e1ce10a8477c4ed5d44",
+    "plugins/delegate/scripts/review_guest.py": "9014b34c9c027a6b3706e413c2b9d767b7969e8de7f2fcad6920defa7a785aa1",
+    "plugins/delegate/scripts/review_context.py": "639abd917f458744a3c9e0e472683a4860264374727060c30365c4d9169dff2b",
+    "plugins/delegate/scripts/review_doctor.py": "3906eab38979216f0aea34b906014707557a38c7b4d0e6aa238fb9c9ca86c09a",
+    "plugins/delegate/scripts/delegate-exec.sh": "4feba934ebe118e949b4576633bf8cb36adf35cf1ce1d0970370245d18f60621",
+    "plugins/delegate/scripts/review_result.py": "43a31da35b3723ae180ea930a504d273e26478f752c7524439385ce35d1e9130",
+    "plugins/delegate/scripts/claude_review.py": "6208364fcbd0a5fcdb9061c34a308c73a5c9ea67b6bc3f929576ae6de365c85c",
+    "plugins/delegate/scripts/run_codex.py": "ba4d0b29338e0b8756b4f1a920e6ef8877a058b42f1c28a44e8da3cc56e432d7",
+    "plugins/delegate/scripts/delegate_capabilities.py": "ac83f55038a99f53a6c2aa8c817f8874cb024fd8732db4877789fb3c731a7f8c",
+    "plugins/delegate/scripts/delegate_cli.py": "dc5eb4bf7b144e12e6dee369a145b9c4047690fc5cfe1f82a1331993c400ef94",
+    "plugins/delegate/.claude-plugin/plugin.json": "674d7beb9ce32182d788f19f7f4bcc76b0b80a0115caa818e1bc9e3953092093",
+    "plugins/delegate/commands/doctor.md": "78db0b686543be92b04db6d51017eb73de3bb4e9a8058d5d2e287398581697cd",
+    "plugins/delegate/commands/help.md": "337621c2c506241f51ecf5a14d8d435618306651c730f30848859e4620b98f63",
+    "plugins/delegate/commands/run.md": "d2f5b03279bca80652da8a63b2bbda3c76ee8c9e2dd031420cb626fc4045670e",
+    "plugins/delegate/commands/review.md": "33ff17d8c1ddbb7aac1065469ac749fea42e8249e9d8054520e3d8aabcb4b296",
+    "plugins/delegate/skills/delegate-routing/SKILL.md": "064757bfe47fabbe011a8c55f9d139faedae853f455b2a871cdff2a3b3446d19",
+    ".claude-plugin/marketplace.json": "48a3bb111120ef8666b675968a1fd0cf9bdc8d6d888885785dfa4944ab2c307d"
+  },
+  "runtime_pins": {
+    "codex_sha256": "61b0194f3bb6534439c8d26a3ed57d0805f84b884588b761795323eeb92fcf70",
+    "node_sha256": "ee6fb0e015284d83a91e8ec5213f43a157f8a392b58555301682892ba928c04a",
+    "native_sha256": "74c6a6d263f40d65f99c27a815275f5b4ed0bcc2baecc396b4cf3255498bdfc0",
+    "driver_sha256": "e5e312486d1560beafd6a56f8807e3ca45cc8cb956698f151cd68620810c1b2b"
+  },
+  "cleanup": {
+    "only_owned_writable_installation_removed": true,
+    "frozen_source_and_small_evidence_preserved": true
+  },
+  "limits": [
+    "Only fixed Codex0.162.1 native CLI installation/migration was verified.",
+    "The first driver assertion failed and is retained as a harness defect;installation commands were not retried.",
+    "Existing normal-installation caches were untouched;new source commands are not loaded in this ongoing desktop session.",
+    "Native desktop slash execution,Claude source-plugin UI loading,active real model write/recursive attempts,auth refresh and abnormal original CLI helpers remain unverified.",
+    "The recorded settings hashes cover selected files;they are not a full snapshot of every global setting.",
+    "No commit,push,release or extra model invocation."
+  ],
+  "closing_checks": {
+    "local_file_links": 695,
+    "invalid_links": 0,
+    "diff_check": 0,
+    "full_free_suite": "previous140Python/53shell/19eval pass;no runtime or product test changes in this batch;not rerun"
+  },
+  "_publication_note": "本机身份与路径已脱敏；原始本地证据私有保留，结论及产品/输入摘要未改。"
+}

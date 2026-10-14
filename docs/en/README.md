@@ -9,8 +9,8 @@ Simplified Chinese is delegate's default documentation language. English counter
 - First use: read [README](../../README.en.md) prerequisites and quick start, then check local readiness with `/delegate:doctor`.
 - Daily use and troubleshooting: see README commands, output verification, and troubleshooting; `/delegate:help` is available inside a session.
 - Design: read [Design and boundaries](DESIGN.md), then the [capability map](capability-map.md).
-- Development and review: read the three current specifications and [Contributing](../../CONTRIBUTING.en.md), and run offline validation from the repository root.
-- Upgrading: read [v0.4.0 release notes](releases/v0.4.0.md); see [Unreleased](releases/unreleased.md) for later changes.
+- Development and review: read the module specifications and [Contributing](../../CONTRIBUTING.en.md), and run offline validation from the repository root. The new [Claude review specification](SPEC-claude-review.md) describes v0.5.0. Native Mac boundaries and isolated regressions passed; normal real reviews succeeded in both directions on their frozen source. Menu-to-script execution and dry-run were verified. Active model boundary attempts, authentication refresh and natural abnormal helpers remain unverified.
+- Upgrading: read [v0.5.0 release notes](releases/v0.5.0.md); see [Unreleased](releases/unreleased.md) for later changes.
 
 ## Maintained bilingual documentation
 
@@ -24,7 +24,8 @@ Simplified Chinese is delegate's default documentation language. English counter
 | Execution contract | [通道规格](../../spec/channel.md) | [Channel specification](SPEC-channel.md) |
 | Detection and cache | [探测规格](../../spec/detection.md) | [Detection specification](SPEC-detection.md) |
 | Routing and behavior evaluation | [路由规格](../../spec/routing.md) | [Routing specification](SPEC-routing.md) |
-| Current release | [v0.4.0](../releases/v0.4.0.md) | [v0.4.0](releases/v0.4.0.md) |
+| Claude reviews | [审查规格](../../spec/claude-review.md) | [Review specification](SPEC-claude-review.md) |
+| Current release | [v0.5.0](../releases/v0.5.0.md) | [v0.5.0](releases/v0.5.0.md) |
 | Subsequent changes | [未发布记录](../releases/unreleased.md) | [Unreleased](releases/unreleased.md) |
 | Previous release record | [v0.3.1（历史）](../releases/v0.3.1.md) | [v0.3.1 (historical)](releases/v0.3.1.md) |
 
@@ -40,10 +41,10 @@ The repository contains both marketplace and plugin source:
 .claude-plugin/marketplace.json       Marketplace manifest
 plugins/delegate/
   .claude-plugin/plugin.json         Plugin manifest
-  commands/                         delegate, doctor, help session entries
+  commands/                         review, run, doctor, help session entries
   skills/delegate-routing/          Routing criteria
   hooks/                            Readiness checks, cache, context injection
-  scripts/                          Codex invocation and process management
+  scripts/                          Backend invocation and process management
   tests/                            Offline stub tests and regressions
 scripts/                            Repository validation
 evals/                              Behavior evaluators and optional model runs
@@ -56,6 +57,8 @@ Command files and the skill are host-executed instructions, currently written in
 [Development workflow and AI instructions](development-workflow.md) ([简体中文](../development-workflow.md)) explains both hosts, standard paths, checkpoint confirmation, and verification limits. Current module checklists in Chinese: [channel](../../tasks/channel/todo.md), [detection](../../tasks/detection/todo.md), [routing](../../tasks/routing/todo.md). They track adoption reconciliation without retroactive historical acceptance.
 
 The [contract clause and evidence matrix](../verification/2026-10-08-contract-matrix.md), an administrative record in Chinese, maps 13 current clauses to source, tests, and gaps. Maintenance completion does not establish sufficient acceptance of every product clause.
+
+The new `claude-review` [plan](../../tasks/claude-review/plan.md) / [tasks](../../tasks/claude-review/todo.md), in Chinese, separately track two-backend reviews. [ADR-002](decisions/ADR-002-claude-review-isolation.md) ([简体中文](../decisions/ADR-002-claude-review-isolation.md)) records CLI, snapshot, and isolation decisions. The module is locally accepted under layered criteria; its real evidence remains source-version-specific and does not inherit other modules' live acceptance evidence.
 
 ## Historical and implementation records
 
@@ -76,3 +79,5 @@ Administrative records in Chinese: [reconciliation of 119 historical unchecked e
 Current command tool-scope decision: [ADR-001](decisions/ADR-001-command-tool-scope.md) ([简体中文](../decisions/ADR-001-command-tool-scope.md)). The latest [seven-condition batch results](../verification/2026-10-08-bulk.md), in Chinese, retain actual native-host evidence and the one incomplete condition.
 
 The [final native interactive sample](../verification/2026-10-08-proposal.md), in Chinese, closes the remaining current sample condition: 106 supported, 13 superseded, zero unverified archived criteria. Historical completion/approval and broader product coverage gaps remain separate.
+
+The first real reverse run started Codex from Claude but reviewed no files. Codex review now receives bounded inline file data, with a 1 MiB serialized input limit and verified disabled shell/apps/plugins/multi-agent features. The repaired real reverse review completed4/4; see the [latest evidence and limits](../verification/2026-10-12-claude-review-mac-reverse-fourth-success.md) (Chinese). The first failed run remains historical.

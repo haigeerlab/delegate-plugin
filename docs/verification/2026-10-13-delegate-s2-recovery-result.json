@@ -1,0 +1,200 @@
+{
+  "date": "2026-10-13",
+  "branch": "codex/spec-guard-conventions-public",
+  "module": "claude-review",
+  "authorization": "批准恢复并继续原S2",
+  "state": "installation_failed_stopped",
+  "dependency": {
+    "srt_version": "0.0.79",
+    "entry_sha256": "3f5544de20b8a4bf9937b1ceaa59e18ca05758f0d6a18ee76e8273585e78817a",
+    "lock_sha256": "af5912ed13f9acf012b75eb5bfdbdeb396cebebb06679a86ed7961ba0918a7f6",
+    "packages": 5,
+    "origins_verified": true
+  },
+  "macos_boundary": {
+    "tests": 14,
+    "result": "passed",
+    "elapsed_seconds": 12.606
+  },
+  "fixture_version": "s2-recovery-1-not-original-bytes",
+  "fixture_files": {
+    "src/pricing.py": "e6412dd030e5221d8e38ab743f3a1277c188cac6420e7dedd688971e01571064",
+    "SPEC.md": "36ca49b484014ad74005de1b0e180a396c69d1e65a405987aa9e1f1ecf8a246e",
+    "PLAN.md": "3aca8139eee83d62dd3010c27e789559c86f5c28fa2eed2fcb3d3fb6994739e2",
+    "REVIEW_DATA.md": "0c2479d560188388c843bca7b9356822ffda226fdb05454d7c6d7e4fe6fed3c6",
+    "excluded.py": "0695d5d20c3f1c81155c9a6938643865e8dcadd6a6976e6b657f864c9f4fdb77"
+  },
+  "baseline": "dcb56fcd2f1c16f675657dc274ccfc7f6cbf2d36",
+  "source_file_count": 61,
+  "installation": {
+    "state": "failed_stopped",
+    "actions": [
+      {
+        "execution_status": "completed",
+        "cleanup": "confirmed",
+        "execution_environment": "native",
+        "cleanup_scope": "kernel_coalition",
+        "backend_started": true,
+        "diagnostics": [],
+        "launcher_exit_code": 0,
+        "action": "update",
+        "elapsed_seconds": 0.567,
+        "cli_result": {
+          "command": "update",
+          "outcome": "ok",
+          "updateOutcome": "up_to_date",
+          "plugin": "delegate@delegate-marketplace",
+          "pluginId": "delegate@delegate-marketplace",
+          "message": "delegate is already at the latest version (0.4.0).",
+          "scope": "user",
+          "oldVersion": "0.4.0",
+          "newVersion": "0.4.0"
+        },
+        "parsed_keys": [
+          "command",
+          "message",
+          "newVersion",
+          "oldVersion",
+          "outcome",
+          "plugin",
+          "pluginId",
+          "scope",
+          "updateOutcome"
+        ],
+        "known_success": true,
+        "unrelated_semantics_unchanged": true,
+        "after": {
+          "entries": [
+            {
+              "scope": "user",
+              "installPath": "/path/to/user-home/.claude/plugins/cache/delegate-marketplace/delegate/0.4.0",
+              "version": "0.4.0",
+              "installedAt": "2026-10-13T06:10:33.497Z",
+              "lastUpdated": "2026-10-13T06:10:33.497Z",
+              "gitCommitSha": "823c42383cf055ea8af99256618daf6212d10735"
+            }
+          ],
+          "marketplace": {
+            "source": {
+              "source": "directory",
+              "path": "/path/to/delegate-plugin"
+            },
+            "installLocation": "/path/to/delegate-plugin",
+            "lastUpdated": "2026-10-08T03:24:00.698Z"
+          },
+          "enabled": true,
+          "unrelated_semantics_sha256": "7bfdfa62c9b4fea0537c72514e4435e9c6b08ea754116d1206ed2c9c779cc19b",
+          "file_modes": {
+            "/path/to/user-home/.claude/plugins/installed_plugins.json": 420,
+            "/path/to/user-home/.claude/plugins/known_marketplaces.json": 420,
+            "/path/to/user-home/.claude/settings.json": 420
+          }
+        },
+        "cache": {
+          "file_count": 61,
+          "matches_source": false,
+          "mismatches": [
+            "scripts/review_macos.py",
+            "tests/test-review-macos.py",
+            "tests/test-review-native.py"
+          ]
+        }
+      },
+      {
+        "execution_status": "failed",
+        "cleanup": "confirmed",
+        "execution_environment": "native",
+        "cleanup_scope": "kernel_coalition",
+        "backend_started": true,
+        "diagnostics": [],
+        "launcher_exit_code": 1,
+        "action": "uninstall",
+        "elapsed_seconds": 0.626,
+        "cli_result": {
+          "command": "uninstall",
+          "outcome": "failed",
+          "plugin": "delegate@delegate-marketplace",
+          "pluginId": "delegate@delegate-marketplace",
+          "message": "\"delegate\" was not uninstalled: it is still switched on in /path/to/user-home/.claude/settings.json, and the settings change failed (Failed to read raw settings from /path/to/user-home/.claude/settings.json: Error: EPERM: operation not permitted, open '/path/to/user-home/.claude/.cc-writes/settings.json.tmp.18285.49f2a8ca934f'). It is still installed. Once that file can be saved, uninstall it again.",
+          "scope": "user"
+        },
+        "parsed_keys": [
+          "command",
+          "failureCode",
+          "message",
+          "outcome",
+          "plugin",
+          "pluginId",
+          "scope"
+        ],
+        "known_success": false,
+        "unrelated_semantics_unchanged": true,
+        "after": {
+          "entries": [
+            {
+              "scope": "user",
+              "installPath": "/path/to/user-home/.claude/plugins/cache/delegate-marketplace/delegate/0.4.0",
+              "version": "0.4.0",
+              "installedAt": "2026-10-13T06:10:33.497Z",
+              "lastUpdated": "2026-10-13T06:10:33.497Z",
+              "gitCommitSha": "823c42383cf055ea8af99256618daf6212d10735"
+            }
+          ],
+          "marketplace": {
+            "source": {
+              "source": "directory",
+              "path": "/path/to/delegate-plugin"
+            },
+            "installLocation": "/path/to/delegate-plugin",
+            "lastUpdated": "2026-10-08T03:24:00.698Z"
+          },
+          "enabled": true,
+          "unrelated_semantics_sha256": "7bfdfa62c9b4fea0537c72514e4435e9c6b08ea754116d1206ed2c9c779cc19b",
+          "file_modes": {
+            "/path/to/user-home/.claude/plugins/installed_plugins.json": 420,
+            "/path/to/user-home/.claude/plugins/known_marketplaces.json": 420,
+            "/path/to/user-home/.claude/settings.json": 420
+          }
+        },
+        "cache": {
+          "file_count": 61,
+          "matches_source": false,
+          "mismatches": [
+            "scripts/review_macos.py",
+            "tests/test-review-macos.py",
+            "tests/test-review-native.py"
+          ]
+        }
+      }
+    ],
+    "exception_type": "AssertionError",
+    "models_called": 0
+  },
+  "regression": {
+    "fake_home_only": true,
+    "models_called": 0,
+    "network_denied": true,
+    "real_user_configuration_touched": false,
+    "cases": [
+      {
+        "version": "json_escaped",
+        "intended_atomic_file": "denied",
+        "unrelated_file": "denied"
+      },
+      {
+        "version": "seatbelt_regex_literal",
+        "intended_atomic_file": "allowed",
+        "unrelated_file": "denied"
+      }
+    ],
+    "regression_confirmed": true
+  },
+  "model_review_invocations": 0,
+  "handoff_messages": 0,
+  "reload_invocations": 0,
+  "retry_invocations": 0,
+  "usage": null,
+  "product_code_changed_in_this_turn": false,
+  "git_delivery": false,
+  "_publication_note": "本机身份与路径已脱敏；原始本地证据私有保留，结论及产品/输入摘要未改。"
+}

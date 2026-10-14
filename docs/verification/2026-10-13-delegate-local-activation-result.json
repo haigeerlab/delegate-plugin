@@ -1,0 +1,469 @@
+{
+  "date": "2026-10-13",
+  "repository": "/path/to/delegate-plugin",
+  "branch": "codex/spec-guard-conventions-public",
+  "state": "codex_normal_source_activation_passed",
+  "authorization": {
+    "human_reply": "继续 不要 总是停下来",
+    "basis": "continuation of the concrete local activation proposal and pending approval question",
+    "scope": "isolated native install once, then normal Codex delegate source switch/reinstall once, existing SRT no-model doctor; no Claude installation or global environment change",
+    "consumed": true,
+    "does_not_authorize_additional_models_installs_or_release": true
+  },
+  "source_bundle_sha256": "9a9b413d5d560dc1ba77421d585e8ba02fe5de6e8eca722e289ef582c9274147",
+  "source_version": "0.4.0 unpublished local source; no release/version bump",
+  "isolated_installation": {
+    "state": "passed",
+    "installation_attempts": 1,
+    "boundary": {
+      "temporary_write_allowed": true,
+      "outside_write_denied": true,
+      "network_denied": true
+    },
+    "stages": [
+      {
+        "execution_status": "completed",
+        "cleanup": "confirmed",
+        "execution_environment": "native",
+        "cleanup_scope": "kernel_coalition",
+        "backend_started": true,
+        "diagnostics": [],
+        "launcher_exit_code": 0,
+        "stdout_sha256": "5db9cf710964ebfbc060c7d075f75ea748fdd9a6d0c63f4e05fd49ff3f53d8f5",
+        "stdout_bytes": 88,
+        "stage": "boundary-probe"
+      },
+      {
+        "execution_status": "completed",
+        "cleanup": "confirmed",
+        "execution_environment": "native",
+        "cleanup_scope": "kernel_coalition",
+        "backend_started": true,
+        "diagnostics": [],
+        "launcher_exit_code": 0,
+        "stdout_sha256": "8f9258d5e9da5443c42966a661aee09292b49d1c64e718dcc5f72976500bac48",
+        "stdout_bytes": 9,
+        "stage": "node-version"
+      },
+      {
+        "execution_status": "completed",
+        "cleanup": "confirmed",
+        "execution_environment": "native",
+        "cleanup_scope": "kernel_coalition",
+        "backend_started": true,
+        "diagnostics": [],
+        "launcher_exit_code": 0,
+        "stdout_sha256": "1df57fdc934f35bbd09e26308fbbd895698596f3be833ace1027c6bcfd2f81e2",
+        "stdout_bytes": 18,
+        "stage": "codex-version"
+      },
+      {
+        "execution_status": "completed",
+        "cleanup": "confirmed",
+        "execution_environment": "native",
+        "cleanup_scope": "kernel_coalition",
+        "backend_started": true,
+        "diagnostics": [],
+        "launcher_exit_code": 0,
+        "stdout_sha256": "782c82525c0660a633b7351ec185865040037deee0a086b69a3fd7d078671a6d",
+        "stdout_bytes": 150,
+        "stage": "marketplace-add"
+      },
+      {
+        "execution_status": "completed",
+        "cleanup": "confirmed",
+        "execution_environment": "native",
+        "cleanup_scope": "kernel_coalition",
+        "backend_started": true,
+        "diagnostics": [],
+        "launcher_exit_code": 0,
+        "stdout_sha256": "d8dd7b6acd98574394bda4fcaaa07a3bef4676b836827b74901708c7778498bc",
+        "stdout_bytes": 309,
+        "stage": "plugin-add"
+      },
+      {
+        "execution_status": "completed",
+        "cleanup": "confirmed",
+        "execution_environment": "native",
+        "cleanup_scope": "kernel_coalition",
+        "backend_started": true,
+        "diagnostics": [],
+        "launcher_exit_code": 0,
+        "stdout_sha256": "4d728b8cdcbdeafb2313247e5adb0ade13314b5349ade0f98df11164b981681d",
+        "stdout_bytes": 1028,
+        "stage": "plugin-list"
+      },
+      {
+        "execution_status": "completed",
+        "cleanup": "confirmed",
+        "execution_environment": "native",
+        "cleanup_scope": "kernel_coalition",
+        "backend_started": true,
+        "diagnostics": [],
+        "launcher_exit_code": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stage": "retired-prompt-sh"
+      },
+      {
+        "execution_status": "completed",
+        "cleanup": "confirmed",
+        "execution_environment": "native",
+        "cleanup_scope": "kernel_coalition",
+        "backend_started": true,
+        "diagnostics": [],
+        "launcher_exit_code": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_bytes": 0,
+        "stage": "retired-route-sh"
+      }
+    ],
+    "install_output": {
+      "pluginId": "delegate@delegate-marketplace",
+      "name": "delegate",
+      "marketplaceName": "delegate-marketplace",
+      "version": "0.4.0",
+      "installedPath": "/path/to/private-evidence",
+      "authPolicy": "ON_INSTALL"
+    },
+    "actual_cache_path": "/path/to/private-evidence",
+    "enabled_entry": {
+      "name": "delegate",
+      "version": "0.4.0",
+      "source": {
+        "source": "local",
+        "path": "/path/to/private-evidence"
+      }
+    },
+    "generated_skills": {
+      "doctor": {
+        "bytes": 1038,
+        "sha256": "fab8650827e74a637c24cc11ef78ae6f95c9820a0491b84bdc1dcf37235ab900"
+      },
+      "help": {
+        "bytes": 3586,
+        "sha256": "a3407e7f57a542cc3a0fc8ff5f78d521712a6688e5f328c57f9244386f2f094f"
+      },
+      "review": {
+        "bytes": 3528,
+        "sha256": "fcbd3a71dff11ab1e95deec30ade1ebc5f9c5d7b8374e28eca30b31056185454"
+      },
+      "run": {
+        "bytes": 1843,
+        "sha256": "535662b4256ead862e5e96e478926f3c82ed92fff0c46977b3cba51f41ce1c11"
+      }
+    },
+    "hook_events": [
+      "SessionStart"
+    ],
+    "retired_callbacks": "empty output",
+    "models": 0,
+    "authentication_copied": false,
+    "source_unchanged": true,
+    "normal_installation_not_started": true,
+    "temporary_installation_removed": true
+  },
+  "normal_installation": {
+    "state": "passed",
+    "stages": [
+      {
+        "execution_status": "completed",
+        "cleanup": "confirmed",
+        "execution_environment": "native",
+        "cleanup_scope": "kernel_coalition",
+        "backend_started": true,
+        "diagnostics": [],
+        "launcher_exit_code": 0,
+        "stdout_sha256": "ff26e03664eb5061f21f08637c60af41778b21ceec0a1c1563e7c21b0f7a94b4",
+        "stdout_bytes": 129,
+        "stage": "marketplace-remove"
+      },
+      {
+        "execution_status": "completed",
+        "cleanup": "confirmed",
+        "execution_environment": "native",
+        "cleanup_scope": "kernel_coalition",
+        "backend_started": true,
+        "diagnostics": [],
+        "launcher_exit_code": 0,
+        "stdout_sha256": "91ff6833269ca5ef96f90812694eb2eb3a46a483da6d7982eeafe2e9819f35c8",
+        "stdout_bytes": 145,
+        "stage": "marketplace-add"
+      },
+      {
+        "execution_status": "completed",
+        "cleanup": "confirmed",
+        "execution_environment": "native",
+        "cleanup_scope": "kernel_coalition",
+        "backend_started": true,
+        "diagnostics": [],
+        "launcher_exit_code": 0,
+        "stdout_sha256": "7047aeb7cef3e467532197170f8212d82e9631e8c8212dde09cb3afaf32b1283",
+        "stdout_bytes": 261,
+        "stage": "plugin-add"
+      },
+      {
+        "execution_status": "completed",
+        "cleanup": "confirmed",
+        "execution_environment": "native",
+        "cleanup_scope": "kernel_coalition",
+        "backend_started": true,
+        "diagnostics": [],
+        "launcher_exit_code": 0,
+        "stdout_sha256": "238040eed871a87d2853cc8b9dcdbcc242527ef30453f16af2306e6b0b766179",
+        "stdout_bytes": 32640,
+        "stage": "plugin-list"
+      }
+    ],
+    "selected_config_before": {
+      "marketplace": {
+        "source_type": "git",
+        "source": "https://github.com/haigeerlab/delegate-plugin.git",
+        "ref": "v0.4.0"
+      },
+      "plugin": {
+        "enabled": true
+      }
+    },
+    "selected_config_after": {
+      "marketplace": {
+        "source_type": "local",
+        "source": "/path/to/delegate-plugin"
+      },
+      "plugin": {
+        "enabled": true
+      }
+    },
+    "unrelated_config_semantics_unchanged": true,
+    "claude_settings_pins_unchanged": true,
+    "source_pins_unchanged": true,
+    "install_output": {
+      "pluginId": "delegate@delegate-marketplace",
+      "name": "delegate",
+      "marketplaceName": "delegate-marketplace",
+      "version": "0.4.0",
+      "installedPath": "/path/to/user-home/.codex/plugins/cache/delegate-marketplace/delegate/0.4.0",
+      "authPolicy": "ON_INSTALL"
+    },
+    "actual_cache_path": "/path/to/user-home/.codex/plugins/cache/delegate-marketplace/delegate/0.4.0",
+    "generated_skills": {
+      "doctor": {
+        "sha256": "fab8650827e74a637c24cc11ef78ae6f95c9820a0491b84bdc1dcf37235ab900",
+        "bytes": 1038
+      },
+      "help": {
+        "sha256": "a3407e7f57a542cc3a0fc8ff5f78d521712a6688e5f328c57f9244386f2f094f",
+        "bytes": 3586
+      },
+      "review": {
+        "sha256": "fcbd3a71dff11ab1e95deec30ade1ebc5f9c5d7b8374e28eca30b31056185454",
+        "bytes": 3528
+      },
+      "run": {
+        "sha256": "535662b4256ead862e5e96e478926f3c82ed92fff0c46977b3cba51f41ce1c11",
+        "bytes": 1843
+      }
+    },
+    "hook_events": [
+      "SessionStart"
+    ],
+    "backup_directory": "/path/to/user-home/.codex/backups/delegate-local-activation-9dx12qw7",
+    "backup_contains_credentials": false,
+    "normal_install_attempts": 1,
+    "prior_cli_invocations": 0,
+    "controller_correction": "existing verified Python3.10 boundary; Python3.12 only reads TOML through a subprocess",
+    "original_controller_failure_preserved": true,
+    "models": 0,
+    "current_desktop_session_loading": "not_verified",
+    "cli_runtime_housekeeping": "temporary aliases/metadata may be maintained under CODEX_HOME; no other plugin/cache or semantic configuration changes permitted"
+  },
+  "installation_counts": {
+    "isolated": 1,
+    "normal": 1,
+    "normal_marketplace_remove_actual_calls": 1,
+    "normal_marketplace_add_actual_calls": 1,
+    "normal_plugin_add_actual_calls": 1,
+    "reexecution_of_cli_commands": 0
+  },
+  "pre_cli_controller_failure": {
+    "original_record": {
+      "state": "failed",
+      "reason": "marketplace-remove_failed",
+      "stages": [
+        {
+          "execution_status": "failed",
+          "cleanup": "confirmed",
+          "execution_environment": "native",
+          "cleanup_scope": "kernel_coalition",
+          "backend_started": false,
+          "diagnostics": [
+            "anchor_start_unverified"
+          ],
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdout_bytes": 0,
+          "stage": "marketplace-remove"
+        }
+      ],
+      "backup_directory": "/path/to/user-home/.codex/backups/delegate-local-activation-9dx12qw7",
+      "partial_changes_possible": true,
+      "retries": 0,
+      "models": 0
+    },
+    "actual_cli_invocations": 0,
+    "independent_before_correction_checks": {
+      "config_bytes_unchanged": true,
+      "old_marketplace_present": true,
+      "old_cache_route_sha256_unchanged": true
+    },
+    "diagnosis": "Python3.12 launched the GUI anchor without publishing ready; direct interpreter/minimal-env/own-kernel probes passed; exact launchd startup cause not established",
+    "correction": "use the Python3.10 boundary already proven by the isolated stage; Python3.12 remains only a read-only TOML subprocess; original failure retained; first actual mutation only after nonexecution/unchanged state proved"
+  },
+  "installed_claude_preflight": {
+    "models": 0,
+    "host": "unknown",
+    "backend": "claude-code",
+    "executed_from": "/path/to/user-home/.codex/plugins/cache/delegate-marketplace/delegate/0.4.0",
+    "network": "empty allowedDomains; no external network",
+    "global_environment_modified": false,
+    "source": "installed doctor preflight functions, not an interactive host command",
+    "state": "passed",
+    "version": "2.1.296",
+    "auth_method": "claude.ai",
+    "provider": "firstParty",
+    "runtime": {
+      "node": "24.18.0",
+      "srt": "0.0.79"
+    },
+    "models_quota_tools": "not_verified",
+    "process_cleanup_facts": [
+      {
+        "execution_status": "completed",
+        "backend_started": true,
+        "diagnostics": [],
+        "launcher_exit_code": 0,
+        "cleanup": "confirmed"
+      },
+      {
+        "execution_status": "completed",
+        "backend_started": true,
+        "diagnostics": [],
+        "launcher_exit_code": 0,
+        "cleanup": "confirmed"
+      },
+      {
+        "execution_status": "completed",
+        "backend_started": true,
+        "diagnostics": [],
+        "launcher_exit_code": 0,
+        "cleanup": "confirmed"
+      },
+      {
+        "execution_status": "completed",
+        "backend_started": true,
+        "diagnostics": [],
+        "launcher_exit_code": 0,
+        "cleanup": "confirmed"
+      },
+      {
+        "execution_status": "completed",
+        "backend_started": true,
+        "diagnostics": [],
+        "launcher_exit_code": 0,
+        "cleanup": "confirmed"
+      }
+    ],
+    "private_temporary_removed": true
+  },
+  "installed_legacy_hook_test": {
+    "legacy_registered_command_exit": 0,
+    "stdout_bytes": 0,
+    "stderr_bytes": 0,
+    "actual_installed_root": "/path/to/user-home/.codex/plugins/cache/delegate-marketplace/delegate/0.4.0",
+    "root_from_old_registration_same_path": true,
+    "current_primary_hook_event_trace": "not_observed",
+    "models": 0
+  },
+  "installed_help_and_dry_run": {
+    "help_passed": true,
+    "dry_run_passed": true,
+    "backend": "claude-code",
+    "backend_started": false,
+    "scope": "plugins/delegate/hooks only, working-tree paths",
+    "files": [
+      "plugins/delegate/hooks/detect.py",
+      "plugins/delegate/hooks/detect.sh",
+      "plugins/delegate/hooks/doctor.sh",
+      "plugins/delegate/hooks/hooks.json",
+      "plugins/delegate/hooks/prompt.sh",
+      "plugins/delegate/hooks/route.sh"
+    ],
+    "input_transport": "snapshot_read_tools",
+    "review_conclusion": "not_applicable_input_preview_only"
+  },
+  "claude_current_cli_readonly_loader": {
+    "execution_status": "completed",
+    "cleanup": "confirmed",
+    "execution_environment": "native",
+    "cleanup_scope": "kernel_coalition",
+    "backend_started": true,
+    "diagnostics": [],
+    "launcher_exit_code": 0,
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout_bytes": 0,
+    "loader_observations": [
+      "2026-10-13T03:06:41.198Z [DEBUG] Read hooks.json for plugin delegate (enabled=true): /path/to/delegate-plugin/plugins/delegate/hooks/hooks.json",
+      "2026-10-13T03:06:41.205Z [DEBUG] Checking plugin delegate: skillsPath=exists, skillsPaths=0 paths",
+      "2026-10-13T03:06:41.205Z [DEBUG] Attempting to load skills from plugin delegate default skillsPath: /path/to/delegate-plugin/plugins/delegate/skills",
+      "2026-10-13T03:06:41.219Z [DEBUG] Loaded 4 commands from plugin delegate default directory",
+      "2026-10-13T03:06:41.221Z [DEBUG] Loaded 1 skills from plugin delegate default directory"
+    ],
+    "read_only_settings_unchanged": true,
+    "user_scope_settings_read": true,
+    "plugin_dir_override_used": false,
+    "model_calls": 0,
+    "conversation_started": false,
+    "loading_acceptance": "four_commands_loaded",
+    "existing_primary_sessions": "not_verified",
+    "global_configuration_mutations": false,
+    "raw_debug_and_temporary_files_removed": true
+  },
+  "source_and_installed_pins_match_at_close": true,
+  "models": 0,
+  "claude_installation_or_setting_changes": 0,
+  "global_environment_changes": 0,
+  "credential_files_copied": 0,
+  "git_commit_push_release": false,
+  "limits": [
+    "normal current Codex session skill picker/UI invocation not observed; installed inventory and script/template smoke checks only",
+    "Claude2.1.296 startup reads user configuration and loads the source in place; existing primary Claude sessions not proven reloaded",
+    "doctor verifies CLI/runtime/original local authentication and cleanup with network further restricted to empty domains, not quota/model/review tool availability",
+    "existing srt resides in /private/tmp and is supplied per invocation; no persistent dependency deployment or global PATH setup",
+    "active model write/recursive attempts and original CLI exceptional-helper/authentication-refresh acceptance remain unverified",
+    "normal source switched to the local working repository; switching back to a published Git ref requires a separate operation",
+    "do not infer different source contents from equal 0.4.0 version labels"
+  ],
+  "closing_checks": {
+    "local_links": 174,
+    "invalid_links": 0,
+    "diff_check": "passed",
+    "full_source_test_suite": "previous source-unchanged 142 Python/53 shell/19 eval passed; no redundant repeat",
+    "phase_checks": [
+      {
+        "name": "phase-guard.sh",
+        "exit": 0,
+        "output": "{\"hookSpecificOutput\": {\"hookEventName\": \"UserPromptSubmit\", \"additionalContext\": \"## spec-guard local workflow\\n\\nLocation: branch `codex/spec-guard-conventions-public` \\u00b7 worktree `/path/to/delegate-plugin`. State this location to the user whenever you ask them to review or confirm.\\n\\n\\u5f53\\u524d\\u9636\\u6bb5: **BUILDING**\\n\\n- Capability map: present\\n- Current module: `claude-review` (activeModule)\\n- Modules 4 \\u00b7 Specs 4 \\u00b7 Plans 4 \\u00b7 In progress 1 \\u00b7 Done 3\\n\\nSuggested next step: continue `$incremental-implementation` on `claude-review`: 4 unchecked item(s) in `tasks/claude-review/todo.md`.\"}}\n"
+      },
+      {
+        "name": "verify-artifacts.sh",
+        "exit": 0,
+        "output": "  ✅ 能力图存在\n  ✅ 没有根目录 spec 漂移\n  ✅ 能力图通过严格解析\n\n结果: 3 通过 · 0 警告 · 0 失败\n"
+      }
+    ],
+    "delegate_list_source": {
+      "source": "local",
+      "path": "/path/to/delegate-plugin/plugins/delegate"
+    },
+    "still_BUILDING": true
+  },
+  "_publication_note": "本机身份与路径已脱敏；原始本地证据私有保留，结论及产品/输入摘要未改。"
+}

@@ -1,0 +1,70 @@
+{
+  "date": "2026-10-14",
+  "repository": "/path/to/delegate-plugin",
+  "branch": "codex/spec-guard-conventions-public",
+  "module": "claude-review",
+  "authorization_reply": "批准S4单次读边界验收",
+  "authorization_consumed": true,
+  "manifest_sha256": "a7a5d249f93d3fe762e5de396e2c69158e6beedb2d01ca02664bbcf1b56a95b5",
+  "attempts": 1,
+  "retries": 0,
+  "actual_host": "codex-desktop",
+  "host_evidence": "当前调用任务的可信Codex desktop上下文；驱动和公共报告自身未识别宿主，保留unknown",
+  "backend": "claude-code",
+  "cli_version": "2.1.296",
+  "requested_model": "sonnet",
+  "observed_models": [
+    "claude-sonnet-5-5"
+  ],
+  "model_evidence_limit": "初始化/官方终态提供的模型字段，不证明完成模型推理或工具调用",
+  "execution_status": "failed",
+  "review_outcome": "inconclusive",
+  "wrapper_exit_code": 1,
+  "elapsed_seconds": 6.751,
+  "cleanup": "confirmed",
+  "cleanup_scope": "kernel_coalition",
+  "diagnostics": [
+    "backend_result_error"
+  ],
+  "reviewed": [],
+  "unreviewed": [
+    {
+      "path": "PLAN.md",
+      "reason": "review_not_completed"
+    },
+    {
+      "path": "REVIEW_DATA.md",
+      "reason": "review_not_completed"
+    },
+    {
+      "path": "SPEC.md",
+      "reason": "review_not_completed"
+    },
+    {
+      "path": "src/pricing.py",
+      "reason": "review_not_completed"
+    }
+  ],
+  "permission_denial_evidence": "not_established",
+  "tool_attempt_evidence": "not_retained_in_filtered_report",
+  "specific_backend_error_reason": "unknown",
+  "batch_passed": false,
+  "source_cache_inputs_unchanged": true,
+  "settings_changed": [],
+  "controller_timeout": false,
+  "usage": {
+    "estimated_cost_usd": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "cache_creation_input_tokens": 0
+  },
+  "usage_basis": "CLI官方终态明确提供这些零值；不是缺失填零，也不是账单证明",
+  "final_report_and_answer_separate_from_filtered_log": true,
+  "artifact_private_modes_verified": true,
+  "raw_stderr_retained": false,
+  "raw_model_stream_retained": false,
+  "credential_output_retained": false,
+  "full_Task2_6_8_closed": false,
+  "_publication_note": "本机身份与路径已脱敏；原始本地证据私有保留，结论及产品/输入摘要未改。"
+}

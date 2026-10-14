@@ -2,6 +2,11 @@
 
 简体中文 | [English](../docs/en/SPEC-detection.md)
 
+
+本页缓存与原 doctor 仍只描述 Codex。新增 `review_doctor.py --backend claude-code` 在同一 Mac 本机只读/进程边界核实 srt/Node、CLI 版本/参数及已有认证；不调用 Codex、不改检测缓存、不安装/登录或调用模型。真实模型、工具与额度仍未验证，审查继续使用相同边界，详见 [claude-review](claude-review.md)，Codex 认证失败不能阻挡显式选择。
+
+doctor 的能力说明来自共享双后端定义，不是可用性结论；已有 Codex 缓存/认证合同保持不变。help 只读取本地参数帮助，不做诊断。
+
 当前合同：2026-10-08。历史原文见 [归档索引](../docs/archive/pre-spec-guard/README.md)。当前 `tasks/detection/` 只跟踪维护核对，不追认历史验收，也不覆盖本规格。
 
 
@@ -86,7 +91,7 @@ identity 包含：实际 CLI 路径、有效 Codex home、插件根目录、插�
 - `--warm`：命中缓存则复用，否则探测；静默。
 - `--print`：强制探测，输出可用或安全的不可用原因；用于 doctor。即使缓存不可写，仍可报告当前直接探测结果。
 - 默认：缓存可用时输出合法 UserPromptSubmit JSON，说明仅本地基础条件；不可用或内部异常零输出、退出 0。
-- 实际 UserPromptSubmit 由 `prompt.sh` 串行 warm 后 route，避免并行 handler 竞争。
+- 未发布源码不再注册UserPromptSubmit；prompt.sh/route.sh静默兼容，普通提示不触发基础探测或路由提醒。SessionStart和按需doctor行为保留。
 
 ## doctor
 

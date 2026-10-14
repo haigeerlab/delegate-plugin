@@ -1,0 +1,82 @@
+{
+  "date": "2026-10-10",
+  "branch": "codex/spec-guard-conventions-public",
+  "head": "823c42383cf055ea8af99256618daf6212d10735",
+  "scope": "purpose-based review/run interface; two existing backends only",
+  "source_sha256": {
+    "plugins/delegate/scripts/delegate_cli.py": "dc5eb4bf7b144e12e6dee369a145b9c4047690fc5cfe1f82a1331993c400ef94",
+    "plugins/delegate/scripts/delegate_capabilities.py": "ac83f55038a99f53a6c2aa8c817f8874cb024fd8732db4877789fb3c731a7f8c",
+    "plugins/delegate/scripts/delegate_backend.py": "a332fce5abe4340e8b112cfb861dda0da67a5010c3de224d73411e201c435fd5",
+    "plugins/delegate/scripts/review_context.py": "639abd917f458744a3c9e0e472683a4860264374727060c30365c4d9169dff2b",
+    "plugins/delegate/scripts/delegate-exec.sh": "4feba934ebe118e949b4576633bf8cb36adf35cf1ce1d0970370245d18f60621",
+    "plugins/delegate/scripts/review_doctor.py": "3906eab38979216f0aea34b906014707557a38c7b4d0e6aa238fb9c9ca86c09a",
+    "plugins/delegate/commands/review.md": "33ff17d8c1ddbb7aac1065469ac749fea42e8249e9d8054520e3d8aabcb4b296",
+    "plugins/delegate/commands/run.md": "d2f5b03279bca80652da8a63b2bbda3c76ee8c9e2dd031420cb626fc4045670e",
+    "plugins/delegate/commands/help.md": "3a70c030439b22f849cdf82e373880e4ea4bf848a800a36a7de9fe005b4d8acf",
+    "plugins/delegate/tests/test-review-cli.py": "c7778fe7b6d16761e2778a93e4b0dca12df61dd1596b6be05aa36ea7a263267c",
+    "plugins/delegate/scripts/review_execution.py": "8df398bb26ba1d9253357ebe78fa33faaed9ffff435908992a5825d1bd7fae51",
+    "plugins/delegate/tests/test-review-native.py": "dda2657fe3eb4abb31daff1ef91921a0a4ac26192de2760018c8253c3f8831f1",
+    "plugins/delegate/tests/test-review-execution.py": "230be070bf5210e70bd5ca891aecf7a703d3ff186642a243594090a6a6bdcd2c"
+  },
+  "free_validation": {
+    "exit_code": 0,
+    "shell_assertions": 53,
+    "python_tests": 137,
+    "eval_assertions": 19,
+    "note": "Final complete free suite passed after inline input, feature preflight, stderr summary and fixture-contract repair. No assertions skipped. An intermediate suite exposed an incomplete native fake report; the fixture was completed and the entire suite rerun.",
+    "log": "/path/to/private-evidence"
+  },
+  "native_fake_cli": {
+    "exit_code": 0,
+    "tests": 6,
+    "scenarios": 8,
+    "elapsed_seconds": 31.619,
+    "entry": "delegate-exec.sh review --context",
+    "real_model_calls": 0,
+    "note": "Final exception-boundary placement follows this run; OS/native policy is unchanged."
+  },
+  "manifest_validation": {
+    "marketplace": 0,
+    "plugin": 0
+  },
+  "workflow": {
+    "phase": "BUILDING",
+    "unchecked": 5,
+    "artifact_pass": 3,
+    "artifact_warn": 0,
+    "artifact_fail": 0
+  },
+  "breaking_change": "source slash delegate removed; use run/review; installed cache not updated",
+  "legacy_script_behavior": "preserved",
+  "real_model_calls_this_batch": 0,
+  "installation_changes": 0,
+  "global_config_changes": 0,
+  "commits_pushes_releases": 0,
+  "limitations": [
+    "new source slash commands not loaded in real hosts",
+    "first reverse real run executed but failed with all four files unreviewed; repaired successful real review remains unverified",
+    "active real-model forbidden-tool attempts remain unverified",
+    "original forward real review validates the previous source revision, not new interface usability",
+    "old reverse one-run driver consumed; stale source pins prohibit rerun. A current model-free preview is prepared, without fresh driver or paid authorization."
+  ],
+  "targeted_after_exception_boundary_change": {
+    "cli": {
+      "tests": 13,
+      "exit_code": 0
+    },
+    "common_execution": {
+      "tests": 8,
+      "exit_code": 0,
+      "note": "Included in final complete suite; two new fault cases verify input limit and disabled-tool preflight."
+    }
+  },
+  "static_checks": {
+    "python_ast": 43,
+    "local_file_links": 612,
+    "invalid_links": 0,
+    "git_diff_check": 0
+  },
+  "reverse_evidence": "2026-10-10-claude-review-mac-reverse-first.json",
+  "current_reverse_preview": "2026-10-10-claude-review-mac-reverse-current-preview.json",
+  "_publication_note": "本机身份与路径已脱敏；原始本地证据私有保留，结论及产品/输入摘要未改。"
+}

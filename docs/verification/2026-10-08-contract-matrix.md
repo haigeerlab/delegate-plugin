@@ -31,7 +31,7 @@
 |---|---|---|---|
 | DET-01 | `backend.py` probe_cli/check；`detect.py` probe | `test-detection.sh` 1–6/10；backend 的 `test_chatgpt_login_does_not_require_auth_json`、`test_api_key_and_unknown_login_are_rejected_without_echoing_credentials`、`test_failed_login_is_not_reported_as_available`、`test_login_timeout_kills_group_with_inherited_output` | 已覆盖基础认证和期限；远端/额度原本就在保证范围外 |
 | DET-02 | `detect.py` identity/read_cache/write_cache | `test-detection.sh` 7/8/9/12a/12b；backend 的 `test_cache_from_other_codex_home_is_not_reused`、`test_future_cache_timestamp_triggers_a_fresh_check` | 部分覆盖：命中/过期/损坏/home/未来时间/写失败有断言；SUP-07–24 补验所列字段类型/身份分量、权限/软链接和 4 写线程 120 次写/145 次读的有限样本；缺永久回归与跨进程压力/全部故障覆盖，同路径账号切换不保证立即失效 |
-| DET-03 | `detect.py` main；`detect.sh`；`prompt.sh` | `test-detection.sh` 7/7b/10/10b/11；backend 的 `test_doctor_refreshes_a_previously_unavailable_cache`、`test_prompt_cold_cache_injects_one_confirmation_pointer` | 已覆盖所列入口刷新、静默/合法输出和冷缓存串行行为；不是宿主完整会话验收；FOOTPRINT-01 补验单个业务 Git 夹具三个 hook 的前后目录快照相同 |
+| DET-03 | detect.py main；detect.sh；退役prompt.sh | test-detection.sh 7/7b/10/10b/11；backend的test_doctor_refreshes_a_previously_unavailable_cache、test_prompt_cold_cache_never_injects_or_probes | 已覆盖探测入口刷新/静默或安全事实输出；2026-10-13不再注册每轮Hook，冷缓存prompt无探测/注入；旧冷缓存串行/FOOTPRINT-01三hook夹具仅是固定历史源码证据，不是当前宿主完整会话验收 |
 | DET-04 | `doctor.sh` 的刷新和中文规则诊断 | `test-detection.sh` 13/13b/14/15；backend 的 doctor 刷新回归 | 部分覆盖：受控环境的所列中文启发式场景及 MUT-06 反例通过。F8 已修复：规则检查自行使用本套受控 CLI；实际当前探测两场景各 19/0，无外层 CLI 的总验证通过。英文/任意项目规则覆盖不属于现有保证 |
 
 ## routing
@@ -40,8 +40,8 @@
 
 | 条款 | 实现来源 | 验证来源与验收对象 | 当前覆盖与未验证项 |
 |---|---|---|---|
-| RT-01 | `hooks.json`、`prompt.sh`、`route.sh`、detect 共用缓存 | `test-routing.sh` R1/R2/R2b/R3/R5/R6；backend 的 `test_prompt_cold_cache_injects_one_confirmation_pointer` | 已覆盖有效/无效缓存、单行 JSON、不重探、单 handler 和 cold-cache；不是所有宿主调度场景验证 |
-| RT-02 | route 提示、`skills/delegate-routing/SKILL.md`、`commands/delegate.md` | `test-routing.sh` R4/R8；`evals/propose-not-auto.sh --selftest` 验证判决器，不发模型请求 | 部分覆盖：指令措辞可发现，判决器有反例；原生 TTY 已实际加载 skill；后续较大案例明确推荐具体只读委托、沿用默认模型并等待，exec为0；只有指定样本，持续遵守及失败恢复仍未充分验收 |
+| RT-01 | hooks.json的SessionStart；退役prompt.sh/route.sh | test-routing.sh R1/R2/R2b/R3/R5/R6；backend的test_prompt_cold_cache_never_injects_or_probes、test_readiness_never_becomes_delegation_for_any_host_or_prompt | 2026-10-13改为无UserPromptSubmit注册、所有缓存/宿主环境/普通与显式输入/重复调用均零注入且不探测；旧单行指针/串行handler证据仅属历史合同，不证明当前原生宿主加载 |
+| RT-02 | 显式请求的`skills/delegate-routing/SKILL.md`、`commands/review.md`/`commands/run.md` | `test-routing.sh` R4/R8；`evals/propose-not-auto.sh --selftest` 验证判决器，不发模型请求 | 部分覆盖：2026-10-13起决策已定不强制委托、已有授权不重复确认；指令措辞可发现，判决器有反例；原生 TTY 已实际加载 skill；后续较大案例明确推荐具体只读委托、沿用默认模型并等待，exec为0；只有指定样本，持续遵守及失败恢复仍未充分验收 |
 | RT-03 | delegate-routing 六类分流表和返回纪律；主命令调用形态 | `test-routing.sh` R7 加指令文件定向阅读；channel 参数断言可复用 | 部分覆盖：文本与调用形态可核对；真实宿主的六类决策、失败后复核纪律未做完整互动验收 |
 | RT-04 | `evals/_preflight.sh`、`propose-not-auto.sh`、`routing-fitness.sh` | 总验证的 preflight 自检、propose 7 项及 routing 12 项自检（均免费） | 已覆盖所列判决器正反输入；SUP-25/26 的两个免费 scaffold 实际退出 0；不作为宿主加载或模型行为验收 |
 

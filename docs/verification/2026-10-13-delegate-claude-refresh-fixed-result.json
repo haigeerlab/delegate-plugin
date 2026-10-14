@@ -1,0 +1,142 @@
+{
+  "date": "2026-10-13",
+  "repository": "/path/to/delegate-plugin",
+  "branch": "codex/spec-guard-conventions-public",
+  "finding_id": "UI-001",
+  "human_reply": "继续",
+  "authorization_context": "Direct reply to the concrete corrected uninstall/install once, offline, normal reload/UI proposal.",
+  "state": "uninstall_completed_install_failed_stopped",
+  "uninstall": {
+    "execution_status": "completed",
+    "cleanup": "confirmed",
+    "execution_environment": "native",
+    "cleanup_scope": "kernel_coalition",
+    "backend_started": true,
+    "diagnostics": [],
+    "launcher_exit_code": 0,
+    "cli_result": {
+      "command": "uninstall",
+      "outcome": "ok",
+      "plugin": "delegate@delegate-marketplace",
+      "pluginId": "delegate@delegate-marketplace",
+      "message": "Successfully uninstalled plugin: delegate (scope: user)",
+      "scope": "user"
+    },
+    "parsed_keys": [
+      "command",
+      "outcome",
+      "plugin",
+      "pluginId",
+      "scope",
+      "keptData",
+      "message"
+    ],
+    "known_success": true,
+    "unrelated_semantics_unchanged": true,
+    "after": {
+      "entries": null,
+      "enabled": null,
+      "marketplace": {
+        "source": {
+          "source": "directory",
+          "path": "/path/to/delegate-plugin"
+        },
+        "installLocation": "/path/to/delegate-plugin",
+        "lastUpdated": "2026-10-08T03:24:00.698Z"
+      },
+      "unrelated_semantics_sha256": "095264746fbd6680118a7d7e47658d373f1f3b3700c7f1f702bccdfd4c79d3b1"
+    },
+    "content": {
+      "matched_source": false,
+      "user_entry_count": 0
+    },
+    "models_called": 0,
+    "network_denied": true,
+    "persistent_data_write_denied": true,
+    "initial_classifier_known_success": false,
+    "classification_correction": "Official CLI outcome ok plus explicit success message and registry entry absent; corrected temporary classifier, no uninstall rerun."
+  },
+  "install": {
+    "execution_status": "failed",
+    "cleanup": "confirmed",
+    "execution_environment": "native",
+    "cleanup_scope": "kernel_coalition",
+    "backend_started": true,
+    "diagnostics": [],
+    "launcher_exit_code": 1,
+    "cli_result": {
+      "command": "install",
+      "outcome": "failed",
+      "plugin": "delegate@delegate-marketplace",
+      "message": "EPERM: operation not permitted, mkdir '/path/to/user-home/.claude/plugins/cache/temp_local_1791871293026_me7aak'",
+      "scope": "user"
+    },
+    "parsed_keys": [
+      "command",
+      "outcome",
+      "plugin",
+      "scope",
+      "message",
+      "failureCode"
+    ],
+    "known_success": false,
+    "unrelated_semantics_unchanged": true,
+    "after": {
+      "entries": null,
+      "enabled": null,
+      "marketplace": {
+        "source": {
+          "source": "directory",
+          "path": "/path/to/delegate-plugin"
+        },
+        "installLocation": "/path/to/delegate-plugin",
+        "lastUpdated": "2026-10-08T03:24:00.698Z"
+      },
+      "unrelated_semantics_sha256": "095264746fbd6680118a7d7e47658d373f1f3b3700c7f1f702bccdfd4c79d3b1"
+    },
+    "content": {
+      "matched_source": false,
+      "user_entry_count": 0
+    },
+    "models_called": 0,
+    "network_denied": true,
+    "persistent_data_write_denied": true
+  },
+  "stopped_state": {
+    "delegate_user_entries": null,
+    "delegate_enabled": null,
+    "unrelated_semantics_unchanged": true,
+    "old_cache_exists": true,
+    "old_cache_relevant_files": 21,
+    "old_cache_unchanged": false,
+    "backup_present": true,
+    "install_temp_created": false
+  },
+  "cache_delta": {
+    "added": [
+      ".orphaned_at"
+    ],
+    "removed": [],
+    "changed": []
+  },
+  "temp_staging_policy_probe": {
+    "execution_status": "completed",
+    "cleanup": "confirmed",
+    "execution_environment": "native",
+    "cleanup_scope": "kernel_coalition",
+    "backend_started": true,
+    "diagnostics": [],
+    "launcher_exit_code": 0,
+    "probe": {
+      "local_staging_move_passed": true,
+      "other_cache_writes_denied": true
+    },
+    "global_home_write_attempted": false
+  },
+  "normal_reload_executed": false,
+  "new_model_calls": 0,
+  "retries": 0,
+  "next_batch_preview": "/path/to/private-evidence",
+  "next_batch_authorized": false,
+  "_publication_note": "本机身份与路径已脱敏；原始本地证据私有保留，结论及产品/输入摘要未改。"
+}

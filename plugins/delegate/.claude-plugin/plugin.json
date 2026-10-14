@@ -1,8 +1,8 @@
 {
   "name": "delegate",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "license": "MIT",
-  "description": "将已决策的执行工作委托给 Codex CLI：默认只读、需用户确认、不自动派。",
+  "description": "通过 Codex 或 Claude Code 执行明确范围的只读审查；保留 Codex 通用委托和显式写入，不自动派活。",
   "author": {
     "name": "yizhongkaimail-collab"
   }

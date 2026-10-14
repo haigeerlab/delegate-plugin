@@ -168,7 +168,7 @@
 | PROMPT | [plugins/delegate/hooks/prompt.sh](../../plugins/delegate/hooks/prompt.sh)，行 5 | 先 warm，后 route 的串行编排。 |
 | DOCMD | [plugins/delegate/commands/doctor.md](../../plugins/delegate/commands/doctor.md)，行 3 | doctor 命令的宿主脚本路径和工具声明。 |
 | DOCTOR | [plugins/delegate/hooks/doctor.sh](../../plugins/delegate/hooks/doctor.sh)，行 19 | 规则诊断路径覆盖、中文启发式和不修改规则。 |
-| CMD | [plugins/delegate/commands/delegate.md](../../plugins/delegate/commands/delegate.md)，行 4 | 现行委托命令声明、确认、timeout 和返回纪律。 |
+| CMD | 基准原路径 `plugins/delegate/commands/delegate.md`，行 4（2026-10-10 源命令已迁移为 [run](../../plugins/delegate/commands/run.md) / [review](../../plugins/delegate/commands/review.md)；本表历史裁决不变） | 现行委托命令声明、确认、timeout 和返回纪律。 |
 | RT | [plugins/delegate/tests/test-routing.sh](../../plugins/delegate/tests/test-routing.sh)，行 64 | 当前 9 条路由断言。 |
 | ROUTE | [plugins/delegate/hooks/route.sh](../../plugins/delegate/hooks/route.sh)，行 10 | 只读共用缓存、单行 JSON、确认指针。 |
 | SKILL | [plugins/delegate/skills/delegate-routing/SKILL.md](../../plugins/delegate/skills/delegate-routing/SKILL.md)，行 3 | 分流表、提议纪律、description 和回来后规则。 |

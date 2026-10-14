@@ -2,7 +2,10 @@
 
 简体中文 | [English](../docs/en/SPEC-routing.md)
 
-当前合同：2026-10-08。历史原文见 [归档索引](../docs/archive/pre-spec-guard/README.md)。当前 `tasks/routing/` 只跟踪维护核对，不追认历史验收，也不覆盖本规格。
+
+取消每轮 UserPromptSubmit 自动路由提醒；Codex 基础可用缓存不代表宿主、委托意图或 Claude 可用。用户明确请求委托时，命令/skill 区分宿主与后端：默认 Codex，显式 Claude 仅固定范围只读审查；不自动选相反宿主、不混模型/参数、不 fallback，详情见 [claude-review](claude-review.md)。显式委托和写权限确认纪律保留，同一范围已有授权不重复确认。
+
+当前合同：2026-10-13（路由提醒修复）；2026-10-08条款与样本保留历史适用范围。历史原文见 [归档索引](../docs/archive/pre-spec-guard/README.md)。当前 `tasks/routing/` 跟踪维护核对和本次修复，不追认历史验收，也不覆盖本规格。
 
 
 ## 技术栈与命令
@@ -22,11 +25,11 @@ claude --plugin-dir "$PWD/plugins/delegate"
 路径均相对仓库根；插件内相对路径在原合同中说明。
 
 ```text
-plugins/delegate/hooks/prompt.sh            → warm 后 route 的串行 handler
-plugins/delegate/hooks/route.sh             → 有效缓存的单行 JSON 指针
+plugins/delegate/hooks/prompt.sh            → 退役 Hook 的静默兼容入口
+plugins/delegate/hooks/route.sh             → 退役自动路由提示的静默兼容入口
 plugins/delegate/hooks/hooks.json           → 事件注册
 plugins/delegate/skills/delegate-routing/SKILL.md → 六类分流及确认纪律
-plugins/delegate/commands/                  → delegate / doctor / help
+plugins/delegate/commands/                  → review / run / doctor / help
 plugins/delegate/tests/test-routing.sh      → Shell 桩断言
 plugins/delegate/tests/test-backend.py      → Python unittest 冷缓存/handler 回归
 evals/                                    → 判决器自检与按需付费样本
@@ -40,15 +43,10 @@ tasks/routing/plan.md / todo.md            → 当前维护步骤与记录
 保持已有风格，不做格式重构。Bash 兼容 3.2，变量用 `${VAR}`、数组展开按已有空数组守卫，不使用 `cmd | grep -q`；Python 使用标准库、4 空格缩进、snake_case 函数名，JSON 通过序列化器生成，不手工拼转义。
 以下为 `plugins/delegate/hooks/route.sh` 的现有片段，展示实际写法（上下文片段，不是新命令）：
 
-```python
-    cache = read_cache()
-    if cache and cache['available']:
-        print(json.dumps({
-            'hookSpecificOutput': {
-                'hookEventName': 'UserPromptSubmit',
-                'additionalContext': 'delegate: Codex 基础条件可用（未验证远端连接或额度）。若这一步的决策已经定完、只剩执行与查证，先说明要委托什么、等用户确认后再调；判据见 delegate-routing skill。',
-            },
-        }, ensure_ascii=False))
+```bash
+# Compatibility no-op for callers of the retired per-prompt routing hook.
+# Commands and delegate-routing handle explicit requests without guessing a host.
+exit 0
 ```
 
 ## 开发边界
@@ -64,17 +62,15 @@ Shell 产品套使用 `stub-codex` 和临时夹具；Python 回归使用标准�
 
 ## 目标
 
-在任务决策已定时让模型考虑委托，由用户决定是否执行。模型只提议，等明确肯定；写模式须当前轮明确授权。用户直接输入明确委托命令是当前任务授权。
+仅在用户明确请求委托、分流、独立审查或执行器选择时使用路由判据。决策已定不等于必须委托；普通“继续”推进已授权工作，不先要求额外委托确认。模型提出新委托时等待明确肯定；直接委托命令和同一范围已有批准可直接执行，写权限仍须用户明确授予。
 
-这是命令与 skill 的行为指令，不是 wrapper 不可绕过的授权锁。hook 不做任务分类，不按关键词判断，不发起 Codex。
+这是命令与 skill 的行为指令，不是 wrapper 不可绕过的授权锁。宿主仅按主会话可靠上下文判断，不能由 Codex 可用缓存或可继承的环境猜测；未知不作自动方向提示。Claude→Codex、Codex→Claude按显式目标选择，后端基础条件由对应doctor报告，不自动换后端。显式要求同宿主独立Codex审查仍允许。
 
 ## 实现
 
-UserPromptSubmit 仅注册一个 `prompt.sh` handler：先 `detect.sh --warm`，再 `route.sh`。宿主可并行同事件 handler，所以不依赖两个独立 handler 的顺序。
+hooks.json不再注册UserPromptSubmit；SessionStart继续静默刷新Codex基础缓存。prompt.sh与route.sh保留为无探测、无注入、退出0的兼容入口，防止旧注册引用新源码时恢复每轮提醒。无需关键词分类、宿主猜测、session去重状态或新配置；基础事实与委托决策分开。
 
-`route.sh` 读取 detection 共用的有效缓存合同；可用时输出单行合法 JSON：本地基础条件、等待确认要求、delegate-routing skill 指针。缺失、过期、身份变化、损坏或不可用缓存时零输出/退出 0，不重新探测。
-
-`skills/delegate-routing/SKILL.md` 提供六类分流与返回后的纪律。主命令 `/delegate:delegate` 执行，`/delegate:doctor` 刷新，`/delegate:help` 静态帮助；宿主支持时 skill 自身可见为 `/delegate:delegate-routing`。
+`skills/delegate-routing/SKILL.md` 提供六类分流与返回后的纪律。`/delegate:review` 执行两个后端的只读审查，`/delegate:run` 执行既有 Codex 任务，`/delegate:doctor` 按后端体检，`/delegate:help` 读取无模型本地帮助；宿主支持时 skill 自身可见为 `/delegate:delegate-routing`。
 
 ## 分流与验收
 
@@ -92,7 +88,7 @@ UserPromptSubmit 仅注册一个 `prompt.sh` handler：先 `detect.sh --warm`，
 python3 -B plugins/delegate/tests/test-backend.py
 ```
 
-9 条原有断言覆盖不可用/缺失/过期/损坏缓存、单行 JSON、不重探、确认措辞与 skill 判据。新增 backend 测试验证冷缓存同一轮输出、仅一个串行 handler。
+10条shell断言覆盖所有缓存状态零注入、不重探、显式确认措辞与skill/命令判据。backend回归覆盖冷缓存无探测/输出、无UserPromptSubmit注册，Claude/Codex/未知/冲突环境×5种提示×2个兼容入口×2次重复共80次调用均静默；显式Codex run在两种环境桩中仍各启动一次Codex。环境夹具不是原生宿主验收。
 
 ## 行为评估与限制
 
@@ -118,8 +114,8 @@ v0.4.0 的真实行为 eval 样本结果见 [验收记录](../docs/releases/v0.4
 
 以下编号于 2026-10-08 为既有合同添加检索标识，不是历史编号或批准记录。
 
-- **RT-01：** 只注册一个 prompt handler，先 warm 再 route；有效缓存才输出单行合法 JSON，route 不重探。
-- **RT-02：** hook/skill 保持提议与明确确认纪律，不自动执行；文本和桩测试不能证明宿主始终遵守。
+- **RT-01：** 不注册UserPromptSubmit；退役prompt/route所有宿主、输入、缓存及重复调用均无探测/无输出；SessionStart仍静默刷新基础条件。
+- **RT-02：** skill只对显式委托请求使用提议与确认纪律，不自动执行；已批准范围不重复确认，不由基础可用/决策已定强制委托；写权限不升级。文本和桩不证明完整宿主行为。
 - **RT-03：** 六类分流、范围限制及返回后的答复/Git 复核要求可读、与通道参数一致。
 - **RT-04：** eval 判决器区分 PASS/FAIL/NORUN，拒绝假阳性；单轮样本不代表完整交互提议行为。
 

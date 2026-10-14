@@ -1,0 +1,272 @@
+{
+  "date": "2026-10-13",
+  "repository": "/path/to/delegate-plugin",
+  "branch": "codex/spec-guard-conventions-public",
+  "state": "synced_verified",
+  "authorization_reply": "批准S3完整替换接续",
+  "frozen_source_bundle_sha256": "7b4dd67c8814d94f41da1d37850205d9ad171c0a6cf29314661485a24f5b6a07",
+  "plugin_source_file_count": 62,
+  "attempts_this_batch": {
+    "codex_add": 1,
+    "claude_uninstall": 1,
+    "claude_install": 1
+  },
+  "cumulative_attempts": {
+    "codex_add": 3,
+    "claude_uninstall": 1,
+    "claude_install": 1
+  },
+  "actions": [
+    {
+      "host": "codex",
+      "action": "add",
+      "execution_status": "completed",
+      "cleanup": "confirmed",
+      "launcher_exit_code": 0,
+      "known_success": true,
+      "parsed_keys": [
+        "authPolicy",
+        "installedPath",
+        "marketplaceName",
+        "name",
+        "pluginId",
+        "version"
+      ],
+      "unrelated_semantics_unchanged": true,
+      "cache": {
+        "file_count": 66,
+        "source_matches": true,
+        "extra_files": [
+          ".codex-plugin/migrated-command-skills/source-command-doctor/SKILL.md",
+          ".codex-plugin/migrated-command-skills/source-command-help/SKILL.md",
+          ".codex-plugin/migrated-command-skills/source-command-review/SKILL.md",
+          ".codex-plugin/migrated-command-skills/source-command-run/SKILL.md"
+        ],
+        "expected_extra": [
+          ".codex-plugin/migrated-command-skills/source-command-doctor/SKILL.md",
+          ".codex-plugin/migrated-command-skills/source-command-help/SKILL.md",
+          ".codex-plugin/migrated-command-skills/source-command-review/SKILL.md",
+          ".codex-plugin/migrated-command-skills/source-command-run/SKILL.md"
+        ]
+      }
+    },
+    {
+      "host": "claude",
+      "action": "uninstall",
+      "execution_status": "completed",
+      "cleanup": "confirmed",
+      "launcher_exit_code": 0,
+      "known_success": true,
+      "parsed_keys": [
+        "command",
+        "keptData",
+        "message",
+        "outcome",
+        "plugin",
+        "pluginId",
+        "scope"
+      ],
+      "unrelated_semantics_unchanged": true,
+      "cache": null
+    },
+    {
+      "host": "claude",
+      "action": "install",
+      "execution_status": "completed",
+      "cleanup": "confirmed",
+      "launcher_exit_code": 0,
+      "known_success": true,
+      "parsed_keys": [
+        "command",
+        "message",
+        "outcome",
+        "plugin",
+        "pluginId",
+        "scope"
+      ],
+      "unrelated_semantics_unchanged": true,
+      "cache": {
+        "file_count": 62,
+        "source_matches": true,
+        "extra_files": [],
+        "expected_extra": []
+      }
+    }
+  ],
+  "post_install_verification": {
+    "state": "passed",
+    "checks": [
+      {
+        "host_installation": "codex",
+        "operation": "help",
+        "command": [],
+        "exit_code": 0
+      },
+      {
+        "host_installation": "codex",
+        "operation": "help",
+        "command": [
+          "review"
+        ],
+        "exit_code": 0
+      },
+      {
+        "host_installation": "codex",
+        "operation": "help",
+        "command": [
+          "run"
+        ],
+        "exit_code": 0
+      },
+      {
+        "host_installation": "codex",
+        "operation": "dry_run",
+        "backend": "codex",
+        "exit_code": 0,
+        "backend_started": false,
+        "file_count": 4
+      },
+      {
+        "host_installation": "codex",
+        "operation": "dry_run",
+        "backend": "claude-code",
+        "exit_code": 0,
+        "backend_started": false,
+        "file_count": 4
+      },
+      {
+        "host_installation": "codex",
+        "operation": "cross_backend_model_rejected",
+        "backend": "codex",
+        "exit_code": 64
+      },
+      {
+        "host_installation": "codex",
+        "operation": "cross_backend_model_rejected",
+        "backend": "claude-code",
+        "exit_code": 64
+      },
+      {
+        "host_installation": "codex",
+        "operation": "legacy_uppercase_model_rejected",
+        "exit_code": 64
+      },
+      {
+        "host_installation": "claude",
+        "operation": "help",
+        "command": [],
+        "exit_code": 0
+      },
+      {
+        "host_installation": "claude",
+        "operation": "help",
+        "command": [
+          "review"
+        ],
+        "exit_code": 0
+      },
+      {
+        "host_installation": "claude",
+        "operation": "help",
+        "command": [
+          "run"
+        ],
+        "exit_code": 0
+      },
+      {
+        "host_installation": "claude",
+        "operation": "dry_run",
+        "backend": "codex",
+        "exit_code": 0,
+        "backend_started": false,
+        "file_count": 4
+      },
+      {
+        "host_installation": "claude",
+        "operation": "dry_run",
+        "backend": "claude-code",
+        "exit_code": 0,
+        "backend_started": false,
+        "file_count": 4
+      },
+      {
+        "host_installation": "claude",
+        "operation": "cross_backend_model_rejected",
+        "backend": "codex",
+        "exit_code": 64
+      },
+      {
+        "host_installation": "claude",
+        "operation": "cross_backend_model_rejected",
+        "backend": "claude-code",
+        "exit_code": 64
+      },
+      {
+        "host_installation": "claude",
+        "operation": "legacy_uppercase_model_rejected",
+        "exit_code": 64
+      }
+    ],
+    "check_count": 16,
+    "equivalent_context_fields": [
+      "repository",
+      "working_directory",
+      "review_type",
+      "scope",
+      "baseline",
+      "file_sha256",
+      "diff_sha256",
+      "uncommitted_changes",
+      "context_files",
+      "acceptance_criteria",
+      "allowed_tools",
+      "stop_conditions"
+    ],
+    "dry_run_instances": 4,
+    "scope_file_count": 4,
+    "source_and_tool_pins_unchanged": true,
+    "post_install_configuration_unchanged": true,
+    "cache_checks": {
+      "codex": {
+        "file_count": 66,
+        "source_matches": true,
+        "extra_files": [
+          ".codex-plugin/migrated-command-skills/source-command-doctor/SKILL.md",
+          ".codex-plugin/migrated-command-skills/source-command-help/SKILL.md",
+          ".codex-plugin/migrated-command-skills/source-command-review/SKILL.md",
+          ".codex-plugin/migrated-command-skills/source-command-run/SKILL.md"
+        ],
+        "expected_extra": [
+          ".codex-plugin/migrated-command-skills/source-command-doctor/SKILL.md",
+          ".codex-plugin/migrated-command-skills/source-command-help/SKILL.md",
+          ".codex-plugin/migrated-command-skills/source-command-review/SKILL.md",
+          ".codex-plugin/migrated-command-skills/source-command-run/SKILL.md"
+        ]
+      },
+      "claude": {
+        "file_count": 62,
+        "source_matches": true,
+        "extra_files": [],
+        "expected_extra": []
+      }
+    },
+    "models_called": 0,
+    "authentication_probes": 0,
+    "ui_reload": false,
+    "external_messages": 0,
+    "actual_primary_session_command_selection": "not_performed",
+    "process_logs_not_dumped": true
+  },
+  "models_called": 0,
+  "ui_reload": false,
+  "external_messages": 0,
+  "dependency_installs": 0,
+  "auth_changes": false,
+  "global_environment_changes": false,
+  "git_delivery": false,
+  "real_model_validation_of_current_fix_revision": "not_performed",
+  "existing_primary_session_adoption": "not_verified",
+  "complete_security_acceptance": "incomplete",
+  "history_preserved": true,
+  "_publication_note": "本机身份与路径已脱敏；原始本地证据私有保留，结论及产品/输入摘要未改。"
+}

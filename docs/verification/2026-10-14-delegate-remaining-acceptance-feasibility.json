@@ -1,0 +1,275 @@
+{
+  "date": "2026-10-14",
+  "actual_caller": "current-codex",
+  "installed_entry_cases": [
+    {
+      "cache_origin": "codex-installation",
+      "entry": "delegate-exec.sh",
+      "mode": "review",
+      "backend": "codex",
+      "exit_code": 64,
+      "fixed_recursion_error": true,
+      "unexpected_backend_or_runtime_started": false,
+      "passed": true
+    },
+    {
+      "cache_origin": "codex-installation",
+      "entry": "delegate-exec.sh",
+      "mode": "review",
+      "backend": "claude-code",
+      "exit_code": 64,
+      "fixed_recursion_error": true,
+      "unexpected_backend_or_runtime_started": false,
+      "passed": true
+    },
+    {
+      "cache_origin": "codex-installation",
+      "entry": "delegate-exec.sh",
+      "mode": "run",
+      "backend": "codex",
+      "exit_code": 64,
+      "fixed_recursion_error": true,
+      "unexpected_backend_or_runtime_started": false,
+      "passed": true
+    },
+    {
+      "cache_origin": "codex-installation",
+      "entry": "delegate-exec.sh",
+      "mode": "run",
+      "backend": "claude-code",
+      "exit_code": 64,
+      "fixed_recursion_error": true,
+      "unexpected_backend_or_runtime_started": false,
+      "passed": true
+    },
+    {
+      "cache_origin": "codex-installation",
+      "entry": "codex-exec.sh",
+      "mode": "legacy",
+      "backend": "codex",
+      "exit_code": 64,
+      "fixed_recursion_error": true,
+      "unexpected_backend_or_runtime_started": false,
+      "passed": true
+    },
+    {
+      "cache_origin": "claude-installation",
+      "entry": "delegate-exec.sh",
+      "mode": "review",
+      "backend": "codex",
+      "exit_code": 64,
+      "fixed_recursion_error": true,
+      "unexpected_backend_or_runtime_started": false,
+      "passed": true
+    },
+    {
+      "cache_origin": "claude-installation",
+      "entry": "delegate-exec.sh",
+      "mode": "review",
+      "backend": "claude-code",
+      "exit_code": 64,
+      "fixed_recursion_error": true,
+      "unexpected_backend_or_runtime_started": false,
+      "passed": true
+    },
+    {
+      "cache_origin": "claude-installation",
+      "entry": "delegate-exec.sh",
+      "mode": "run",
+      "backend": "codex",
+      "exit_code": 64,
+      "fixed_recursion_error": true,
+      "unexpected_backend_or_runtime_started": false,
+      "passed": true
+    },
+    {
+      "cache_origin": "claude-installation",
+      "entry": "delegate-exec.sh",
+      "mode": "run",
+      "backend": "claude-code",
+      "exit_code": 64,
+      "fixed_recursion_error": true,
+      "unexpected_backend_or_runtime_started": false,
+      "passed": true
+    },
+    {
+      "cache_origin": "claude-installation",
+      "entry": "codex-exec.sh",
+      "mode": "legacy",
+      "backend": "codex",
+      "exit_code": 64,
+      "fixed_recursion_error": true,
+      "unexpected_backend_or_runtime_started": false,
+      "passed": true
+    }
+  ],
+  "cases_passed": 10,
+  "model_calls": 0,
+  "real_model_recursive_tool_event_verified": false,
+  "backend_auth_or_runtime_probes_started": false,
+  "source_both_caches_runtime_and_inputs_unchanged": true,
+  "settings_changed": [],
+  "source_or_global_config_changes": false,
+  "boundary_limit": "depth marker is a cooperative entry guard, not an OS security boundary",
+  "temporary_fixture_removed": true,
+  "harness_python": "/path/to/user-home/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3.12",
+  "harness_python_sha256": "39bf33dd80ffd5e8c087cbd52164cbe0d8485f73b44687d0d466b0f49e197129",
+  "prior_harness_failure": "strict stderr equality; targeted reproduction showed Xcode shim warnings plus correct exit64/recursion rejection; no assertion weakened",
+  "prior_initial_detailed_result_retained": false,
+  "targeted_reproduction_retained": true,
+  "ui_selection": {
+    "session_name": "Claude验收会话",
+    "surface": "Claude Code Desktop",
+    "current_session_cli_version": "unknown",
+    "observed_command_menu": [
+      "delegate:run",
+      "delegate:help",
+      "delegate:doctor",
+      "delegate:review",
+      "delegate:delegate-routing"
+    ],
+    "menu_review_selected_with_tab": true,
+    "review_argument_hint_observed": true,
+    "selected_composer_node": "review",
+    "input_restored_empty": true,
+    "send_disabled_after_cleanup": true,
+    "original_visible_conversation_restored": true,
+    "commands_submitted": 0,
+    "models_started_by_this_ui_check": 0,
+    "raw_conversation_or_screenshot_retained": false
+  },
+  "s7_preparation": {
+    "date": "2026-10-14",
+    "target_session": "Claude验收会话",
+    "mode": "prepared_not_authorized",
+    "commands": [
+      "/delegate:help",
+      "/delegate:review --backend codex --context /path/to/delegate-plugin/.agent/acceptance/s6-read-boundary/context.json --dry-run -- 只预览固定范围，不执行审查。"
+    ],
+    "child_model_calls": 0,
+    "main_host_usage": "unknown; may consume Claude host quota",
+    "maximum_submitted_commands": 2,
+    "per_command_observation_timeout_seconds": 180,
+    "context_sha256": "7e807061edc6a4d57f811dc1a6345ada507e35f5403e738467276223335ac09b",
+    "help_preview": {
+      "exit_code": 0,
+      "stdout_sha256": "a89620ae5f49e90ab8f7b49944168b719264ae3ebe3273cf11d2491eef28fef4",
+      "raw_stderr_retained": false
+    },
+    "review_preview": {
+      "repository": "/path/to/delegate-plugin/.agent/acceptance/s2-recovery/repo",
+      "working_directory": "/path/to/delegate-plugin/.agent/acceptance/s2-recovery/repo",
+      "review_type": "module",
+      "scope": {
+        "include": [
+          "src/pricing.py",
+          "REVIEW_DATA.md"
+        ],
+        "exclude": [
+          "excluded.py"
+        ],
+        "module": "synthetic-pricing"
+      },
+      "baseline": {
+        "mode": "commits",
+        "from": "dcb56fcd2f1c16f675657dc274ccfc7f6cbf2d36",
+        "to": "dcb56fcd2f1c16f675657dc274ccfc7f6cbf2d36"
+      },
+      "context_files": [
+        "SPEC.md",
+        "PLAN.md"
+      ],
+      "acceptance_criteria": [
+        "Read one in-scope file, then perform exactly one denied Read boundary diagnostic on the excluded synthetic canary; stop at denial and identify unreviewed scope.",
+        "No write, shell, network, runtime-credential reads or further delegation."
+      ],
+      "uncommitted_changes": {
+        "staged": false,
+        "unstaged": false,
+        "untracked": false
+      },
+      "allowed_tools": [
+        "Read"
+      ],
+      "stop_conditions": [
+        "scope_complete",
+        "permission_denied",
+        "context_missing",
+        "limit_reached",
+        "input_changed"
+      ],
+      "head": "dcb56fcd2f1c16f675657dc274ccfc7f6cbf2d36",
+      "diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "file_sha256": {
+        "PLAN.md": "3aca8139eee83d62dd3010c27e789559c86f5c28fa2eed2fcb3d3fb6994739e2",
+        "REVIEW_DATA.md": "0c2479d560188388c843bca7b9356822ffda226fdb05454d7c6d7e4fe6fed3c6",
+        "SPEC.md": "36ca49b484014ad74005de1b0e180a396c69d1e65a405987aa9e1f1ecf8a246e",
+        "src/pricing.py": "e6412dd030e5221d8e38ab743f3a1277c188cac6420e7dedd688971e01571064"
+      },
+      "unreviewed": [],
+      "dirty": {
+        "staged": [],
+        "unstaged": [],
+        "untracked": []
+      },
+      "repository_dirty": {
+        "staged": false,
+        "unstaged": false,
+        "untracked": false
+      },
+      "kind": "review_preview",
+      "backend": "codex",
+      "backend_started": false,
+      "host": "unknown",
+      "requested_model": null,
+      "observed_models": [],
+      "capabilities": {
+        "review": true,
+        "run": true,
+        "write": true,
+        "options": [
+          "--model",
+          "--effort"
+        ]
+      },
+      "permission": "read-only",
+      "timeout_seconds": 540,
+      "backend_preflight": "not_performed",
+      "requested_effort": null,
+      "requested_limits": {},
+      "input_transport": "inline_files",
+      "prompt_bytes": 4385,
+      "max_prompt_bytes": 1048576
+    },
+    "ui_before": {
+      "session_name": "Claude验收会话",
+      "surface": "Claude Code Desktop",
+      "current_session_cli_version": "unknown",
+      "observed_command_menu": [
+        "delegate:run",
+        "delegate:help",
+        "delegate:doctor",
+        "delegate:review",
+        "delegate:delegate-routing"
+      ],
+      "menu_review_selected_with_tab": true,
+      "review_argument_hint_observed": true,
+      "selected_composer_node": "review",
+      "input_restored_empty": true,
+      "send_disabled_after_cleanup": true,
+      "original_visible_conversation_restored": true,
+      "commands_submitted": 0,
+      "models_started_by_this_ui_check": 0,
+      "raw_conversation_or_screenshot_retained": false
+    },
+    "permission_changes": false,
+    "retry_allowed": false
+  },
+  "current_contract_changed": false,
+  "remaining_tasks": [
+    2,
+    6,
+    8
+  ],
+  "_publication_note": "本机身份与路径已脱敏；原始本地证据私有保留，结论及产品/输入摘要未改。"
+}

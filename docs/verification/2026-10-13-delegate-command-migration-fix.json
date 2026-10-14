@@ -1,0 +1,88 @@
+{
+  "date": "2026-10-13",
+  "repository": "/path/to/delegate-plugin",
+  "branch": "codex/spec-guard-conventions-public",
+  "root_cause": "Codex0.162.1 plugin command migration skips rendered UTF-8 skills above4000bytes without installation failure.",
+  "official_release_tag": "rust-v0.162.1",
+  "official_release_commit": "092d3acd6bec3e3a14bdc7e7a2810ab628ab759d",
+  "official_sources": {
+    "command_migration/plugin.rs": {
+      "url": "https://github.com/openai/codex/blob/092d3acd6bec3e3a14bdc7e7a2810ab628ab759d/codex-rs/core-plugins/src/command_migration/plugin.rs",
+      "sha256": "71fc3da6a8049064ffd2921e3c4eb89e8c41e448ff6b24a384162de52806e879"
+    },
+    "command_migration.rs": {
+      "url": "https://github.com/openai/codex/blob/092d3acd6bec3e3a14bdc7e7a2810ab628ab759d/codex-rs/core-plugins/src/command_migration.rs",
+      "sha256": "7edfdfbbdaabf72ad5e5e8174516a115e4bb472134ba34773b6f50c49138dd6f"
+    },
+    "command_migration/render.rs": {
+      "url": "https://github.com/openai/codex/blob/092d3acd6bec3e3a14bdc7e7a2810ab628ab759d/codex-rs/core-plugins/src/command_migration/render.rs",
+      "sha256": "30c4376d43c6d4dc55818dda50fc2b50f6d2887430c23a76fee676bf4f994be8"
+    },
+    "command_migration_tests.rs": {
+      "url": "https://github.com/openai/codex/blob/092d3acd6bec3e3a14bdc7e7a2810ab628ab759d/codex-rs/core-plugins/src/command_migration_tests.rs",
+      "sha256": "873ebb02da534aae062b8d06ff954b0f5b242bccc85179561e241a5eaed70e1b"
+    }
+  },
+  "historical_frozen_rendered_bytes": {
+    "doctor": 1038,
+    "help": 4043,
+    "run": 1843,
+    "review": 3528
+  },
+  "matched_actual_native_skills": {
+    "doctor": true,
+    "run": true,
+    "review": true
+  },
+  "new_rendered_bytes": {
+    "doctor": 1038,
+    "help": 3586,
+    "run": 1843,
+    "review": 3528
+  },
+  "regression_red": {
+    "failing_command": "help",
+    "bytes": 4073,
+    "limit": 4000,
+    "tests": 2,
+    "failures": 1,
+    "log": "/path/to/private-evidence",
+    "note": "The source help status was updated after the original native batch;that frozen batch rendered4043bytes."
+  },
+  "regression_green": {
+    "tests": 2,
+    "exit": 0
+  },
+  "full_free_validation": {
+    "exit": 0,
+    "python_tests": 140,
+    "shell_assertions": 53,
+    "eval_assertions": 19,
+    "log": "/path/to/private-evidence",
+    "execution_environment": "outside tool sandbox;fake executors and temporary fixtures only"
+  },
+  "initial_free_validation": {
+    "exit": 1,
+    "log": "/path/to/private-evidence",
+    "error": "PermissionError EPERM executing /bin/ps in test_manager_helper_cleanup_preserves_an_unrelated_session",
+    "assertions_unchanged": true,
+    "targeted_outside_recheck_exit": 0
+  },
+  "changed_files": {
+    "plugins/delegate/commands/help.md": "337621c2c506241f51ecf5a14d8d435618306651c730f30848859e4620b98f63",
+    "plugins/delegate/tests/test-command-migration.py": "c5bd2fea9e0d6a971fc72a8f90cf1f40c4354fe776f72075a7cf362425a192de",
+    "scripts/validate.sh": "78adfd51a4be503b87f218add058f34cf115c674effa2e71aec09cb7a34e64ca",
+    "CONTRIBUTING.md": "804e896819222625ab3df7b6e916da0625e26526475d571930bc55051ed002b7",
+    "CONTRIBUTING.en.md": "7f08e4887c14c226f532c5a3c641e338c124741d4f76b3c1b65cec63b27e6eae"
+  },
+  "native_reinstallation": "not authorized or executed this turn;new fixed preview pending",
+  "model_calls": 0,
+  "runtime_logic_changed": false,
+  "closing_checks": {
+    "local_file_links": 692,
+    "invalid_links": 0,
+    "diff_check": 0,
+    "python_ast": "passed"
+  },
+  "_publication_note": "本机身份与路径已脱敏；原始本地证据私有保留，结论及产品/输入摘要未改。"
+}

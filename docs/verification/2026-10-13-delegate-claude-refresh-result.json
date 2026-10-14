@@ -1,0 +1,217 @@
+{
+  "date": "2026-10-13",
+  "repository": "/path/to/delegate-plugin",
+  "branch": "codex/spec-guard-conventions-public",
+  "finding_id": "UI-001",
+  "human_authorization": "批准仅刷新 Claude delegate",
+  "state": "failed_stopped_before_install",
+  "backup": "/path/to/private-evidence",
+  "update": {
+    "execution_status": "completed",
+    "cleanup": "confirmed",
+    "execution_environment": "native",
+    "cleanup_scope": "kernel_coalition",
+    "backend_started": true,
+    "diagnostics": [],
+    "launcher_exit_code": 0,
+    "cli_result": {
+      "plugin": "delegate@delegate-marketplace",
+      "pluginId": "delegate@delegate-marketplace",
+      "message": "delegate is already at the latest version (0.4.0).",
+      "scope": "user"
+    },
+    "parsed_keys": [
+      "command",
+      "outcome",
+      "plugin",
+      "pluginId",
+      "scope",
+      "message",
+      "updateOutcome",
+      "oldVersion",
+      "newVersion"
+    ],
+    "known_success": true,
+    "unrelated_semantics_unchanged": true,
+    "after": {
+      "entries": [
+        {
+          "scope": "user",
+          "installPath": "/path/to/user-home/.claude/plugins/cache/delegate-marketplace/delegate/0.4.0",
+          "version": "0.4.0",
+          "installedAt": "2026-08-29T10:35:10.751Z",
+          "lastUpdated": "2026-10-08T05:42:39.681Z",
+          "gitCommitSha": "38172b7ef333165ef9f33576d3a363fcd7e43839"
+        }
+      ],
+      "enabled": true,
+      "marketplace": {
+        "source": {
+          "source": "directory",
+          "path": "/path/to/delegate-plugin"
+        },
+        "installLocation": "/path/to/delegate-plugin",
+        "lastUpdated": "2026-10-08T03:24:00.698Z"
+      },
+      "unrelated_semantics_sha256": "095264746fbd6680118a7d7e47658d373f1f3b3700c7f1f702bccdfd4c79d3b1"
+    },
+    "content": {
+      "matched_source": false,
+      "path": "/path/to/user-home/.claude/plugins/cache/delegate-marketplace/delegate/0.4.0",
+      "file_count": 20,
+      "commands": [
+        "delegate.md",
+        "doctor.md",
+        "help.md"
+      ],
+      "files": {
+        "tests/test-backend.py": "a981949d849e31835fddf3c965133dfb70f933891d70c3234b0b4c522dce7f04",
+        "tests/test-routing.sh": "0e7ff4b2d51615d726c73d2f6f67ae3fd1c2dff739112e3d9dda863876653eef",
+        "tests/stub-codex": "8dc61a9b8b3a10cba2d8cf6515d67f3d01ade152a169b16c5b212bd66b3d6975",
+        "tests/test-channel-regressions.py": "9ad02c3e8a6e53866cbecab3773b2dcd954bbcc83088e91fdf0e43efd1cc9005",
+        "tests/test-channel.sh": "c9eaaf272e118ceedd3b350d71f7b7c98acace81a48651038619bdbc1e566f02",
+        "tests/test-detection.sh": "f6ae86ea30ac149fe4638a132021ca1e063ca027e869a059ea459b93c60cf081",
+        "hooks/prompt.sh": "0740361f811c048dcd6ed715920deb5c63b24577718fc3b01b91a5009fcf6027",
+        "hooks/doctor.sh": "ab206f2ad5bbe1e6e3ee31638d9d0eb2f58c6469c321e4892be2d16eda179bf5",
+        "hooks/detect.sh": "acf85d86cfabf2380bc55792c2b45b3d26ffd0c24c41ec59adc692a23cc3d33d",
+        "hooks/hooks.json": "822d1fed0b4febdfcc46ac17db2c832ba38d48e842aad69a32db7ecf78ab7483",
+        "hooks/route.sh": "518911694a0d308090387e5c5d76472841849fe519468463235190faa12101f5",
+        "hooks/detect.py": "18d2436079e01dca7af4f06b39c38ee2f03bf1ecc91b90898acb6128a54ab0e9",
+        "scripts/codex-exec.sh": "cdc0392b917ef7815abfc243f9ce987a7a67fa2512336bcd09db116754a46dec",
+        "scripts/backend.py": "5862704d46bf565dcb4be7f3e1d6959a3a46c9ad3052d0854722ae9a7ac036db",
+        "scripts/run_codex.py": "ba4d0b29338e0b8756b4f1a920e6ef8877a058b42f1c28a44e8da3cc56e432d7",
+        ".claude-plugin/plugin.json": "afcdb7e7545221b397a6f2ff011c0d1a8a6d37c766a8eba74f3287144ddb7692",
+        "commands/doctor.md": "d05026b0ee276eb2d1a3406d5798f8ed778d584d2ae4195c3e3df696e05fdd0e",
+        "commands/help.md": "1100ba609955f646ba5bf908001835eb5d4dfd455811a628c6c67492383c472a",
+        "commands/delegate.md": "a5b36f9942e65c891901cdd26da729590461cd4bd89cca1aeee5b9ddd63144ba",
+        "skills/delegate-routing/SKILL.md": "3b47cec2483dbeece36d78f530db32c3e09dfa6d67c12b69c63de34cc6d12bf2"
+      }
+    },
+    "models_called": 0,
+    "network_denied": true,
+    "persistent_data_write_denied": true,
+    "initial_classifier_known_success": false,
+    "classification_correction": "Successful no-op explicitly reported by original CLI; initial helper expected a success/status key, but CLI uses outcome/updateOutcome. No update rerun."
+  },
+  "uninstall": {
+    "execution_status": "failed",
+    "cleanup": "confirmed",
+    "execution_environment": "native",
+    "cleanup_scope": "kernel_coalition",
+    "backend_started": true,
+    "diagnostics": [],
+    "launcher_exit_code": 1,
+    "cli_result": {
+      "command": "uninstall",
+      "outcome": "failed",
+      "plugin": "delegate@delegate-marketplace",
+      "pluginId": "delegate@delegate-marketplace",
+      "message": "\"delegate\" was not uninstalled: it is still switched on in /path/to/user-home/.claude/settings.json, and the settings change failed (Failed to read raw settings from /path/to/user-home/.claude/settings.json: Error: EPERM: operation not permitted, open '/path/to/user-home/.claude/.cc-writes/settings.json.tmp.55195.94c1271e45c5'). It is still installed. Once that file can be saved, uninstall it again.",
+      "scope": "user"
+    },
+    "parsed_keys": [
+      "command",
+      "outcome",
+      "plugin",
+      "pluginId",
+      "scope",
+      "message",
+      "failureCode"
+    ],
+    "known_success": false,
+    "unrelated_semantics_unchanged": true,
+    "after": {
+      "entries": [
+        {
+          "scope": "user",
+          "installPath": "/path/to/user-home/.claude/plugins/cache/delegate-marketplace/delegate/0.4.0",
+          "version": "0.4.0",
+          "installedAt": "2026-08-29T10:35:10.751Z",
+          "lastUpdated": "2026-10-08T05:42:39.681Z",
+          "gitCommitSha": "38172b7ef333165ef9f33576d3a363fcd7e43839"
+        }
+      ],
+      "enabled": true,
+      "marketplace": {
+        "source": {
+          "source": "directory",
+          "path": "/path/to/delegate-plugin"
+        },
+        "installLocation": "/path/to/delegate-plugin",
+        "lastUpdated": "2026-10-08T03:24:00.698Z"
+      },
+      "unrelated_semantics_sha256": "095264746fbd6680118a7d7e47658d373f1f3b3700c7f1f702bccdfd4c79d3b1"
+    },
+    "content": {
+      "matched_source": false,
+      "path": "/path/to/user-home/.claude/plugins/cache/delegate-marketplace/delegate/0.4.0",
+      "file_count": 20,
+      "commands": [
+        "delegate.md",
+        "doctor.md",
+        "help.md"
+      ],
+      "files": {
+        "tests/test-backend.py": "a981949d849e31835fddf3c965133dfb70f933891d70c3234b0b4c522dce7f04",
+        "tests/test-routing.sh": "0e7ff4b2d51615d726c73d2f6f67ae3fd1c2dff739112e3d9dda863876653eef",
+        "tests/stub-codex": "8dc61a9b8b3a10cba2d8cf6515d67f3d01ade152a169b16c5b212bd66b3d6975",
+        "tests/test-channel-regressions.py": "9ad02c3e8a6e53866cbecab3773b2dcd954bbcc83088e91fdf0e43efd1cc9005",
+        "tests/test-channel.sh": "c9eaaf272e118ceedd3b350d71f7b7c98acace81a48651038619bdbc1e566f02",
+        "tests/test-detection.sh": "f6ae86ea30ac149fe4638a132021ca1e063ca027e869a059ea459b93c60cf081",
+        "hooks/prompt.sh": "0740361f811c048dcd6ed715920deb5c63b24577718fc3b01b91a5009fcf6027",
+        "hooks/doctor.sh": "ab206f2ad5bbe1e6e3ee31638d9d0eb2f58c6469c321e4892be2d16eda179bf5",
+        "hooks/detect.sh": "acf85d86cfabf2380bc55792c2b45b3d26ffd0c24c41ec59adc692a23cc3d33d",
+        "hooks/hooks.json": "822d1fed0b4febdfcc46ac17db2c832ba38d48e842aad69a32db7ecf78ab7483",
+        "hooks/route.sh": "518911694a0d308090387e5c5d76472841849fe519468463235190faa12101f5",
+        "hooks/detect.py": "18d2436079e01dca7af4f06b39c38ee2f03bf1ecc91b90898acb6128a54ab0e9",
+        "scripts/codex-exec.sh": "cdc0392b917ef7815abfc243f9ce987a7a67fa2512336bcd09db116754a46dec",
+        "scripts/backend.py": "5862704d46bf565dcb4be7f3e1d6959a3a46c9ad3052d0854722ae9a7ac036db",
+        "scripts/run_codex.py": "ba4d0b29338e0b8756b4f1a920e6ef8877a058b42f1c28a44e8da3cc56e432d7",
+        ".claude-plugin/plugin.json": "afcdb7e7545221b397a6f2ff011c0d1a8a6d37c766a8eba74f3287144ddb7692",
+        "commands/doctor.md": "d05026b0ee276eb2d1a3406d5798f8ed778d584d2ae4195c3e3df696e05fdd0e",
+        "commands/help.md": "1100ba609955f646ba5bf908001835eb5d4dfd455811a628c6c67492383c472a",
+        "commands/delegate.md": "a5b36f9942e65c891901cdd26da729590461cd4bd89cca1aeee5b9ddd63144ba",
+        "skills/delegate-routing/SKILL.md": "3b47cec2483dbeece36d78f530db32c3e09dfa6d67c12b69c63de34cc6d12bf2"
+      }
+    },
+    "models_called": 0,
+    "network_denied": true,
+    "persistent_data_write_denied": true
+  },
+  "install_attempted": false,
+  "reload_attempted_after_batch": false,
+  "selected_registration_and_enabled_unchanged": true,
+  "cache_matches_original_relevant_files": true,
+  "ui_after_failure": {
+    "session": "Claude验收会话",
+    "entries": [
+      "delegate:help",
+      "delegate:doctor",
+      "delegate:delegate",
+      "delegate:delegate-routing"
+    ],
+    "review_run_present": false,
+    "no_command_submitted": true,
+    "input_restored_empty": true
+  },
+  "root_cause": "Batch OS write policy omitted the original CLI settings atomic-write staging path ~/.claude/.cc-writes/settings.json.tmp.<pid>.<suffix>. Uninstall failed with EPERM and explicitly reported the plugin still installed. This is an installer batch boundary issue, not a delegate backend failure.",
+  "new_atomic_policy_fake_home_probe": {
+    "execution_status": "completed",
+    "cleanup": "confirmed",
+    "execution_environment": "native",
+    "cleanup_scope": "kernel_coalition",
+    "backend_started": true,
+    "diagnostics": [],
+    "launcher_exit_code": 0,
+    "probe": {
+      "atomic_settings_write": true,
+      "unrelated_writes_denied": true
+    },
+    "global_home_write_attempted": false
+  },
+  "new_models_called": 0,
+  "corrected_preview_root": "/path/to/private-evidence",
+  "new_batch_authorized": false,
+  "next_batch": "After separate approval: backup/recheck selected state, uninstall --keep-data once, only after verified success install once; no update repeat; normal reload and UI check. Any failure or unknown stops.",
+  "_publication_note": "本机身份与路径已脱敏；原始本地证据私有保留，结论及产品/输入摘要未改。"
+}

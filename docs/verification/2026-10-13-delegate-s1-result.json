@@ -1,0 +1,260 @@
+{
+  "date": "2026-10-13",
+  "repository": "/path/to/delegate-plugin",
+  "branch": "codex/spec-guard-conventions-public",
+  "human_authorization": "批准S1",
+  "state": "forward_conditions_missing_stopped_reverse_not_started",
+  "forward": {
+    "execution_status": "conditions_missing",
+    "review_outcome": "inconclusive",
+    "backend": "claude-code",
+    "backend_started": false,
+    "host": "unknown",
+    "requested_model": "sonnet",
+    "observed_models": [],
+    "cleanup": "confirmed",
+    "diagnostics": [
+      "anchor_start_unverified"
+    ],
+    "reviewed": [],
+    "unreviewed": [
+      {
+        "path": "PLAN.md",
+        "reason": "review_not_completed"
+      },
+      {
+        "path": "REVIEW_DATA.md",
+        "reason": "review_not_completed"
+      },
+      {
+        "path": "SPEC.md",
+        "reason": "review_not_completed"
+      },
+      {
+        "path": "src/pricing.py",
+        "reason": "review_not_completed"
+      }
+    ],
+    "wrapper_exit_code": 127,
+    "elapsed_seconds": 4.405,
+    "entry_skill": "/path/to/user-home/.codex/plugins/cache/delegate-marketplace/delegate/0.4.0/.codex-plugin/migrated-command-skills/source-command-review/SKILL.md",
+    "entry_skill_sha256": "fcbd3a71dff11ab1e95deec30ade1ebc5f9c5d7b8374e28eca30b31056185454",
+    "resolved_plugin_root": "/path/to/delegate-plugin/plugins/delegate",
+    "entry_method": "current Codex main agent applied migrated review skill command template; root from enabled plugin list",
+    "native_codex_ui_selection": false,
+    "invocations": 1,
+    "input_files_unchanged": true,
+    "source_files_unchanged": true,
+    "observed_settings_changed": [],
+    "findings": []
+  },
+  "reverse_review_invocations": 0,
+  "outbound_handoff_messages": 0,
+  "model_review_started": false,
+  "usage_and_cost": "not provided; do not report zero dollars",
+  "finding": {
+    "id": "NATIVE-START-001",
+    "category": "Required",
+    "priority": "P2",
+    "root_cause_confirmed": "launchd-launched Xcode Python cannot open trusted review_macos.py under Documents (EPERM); same Python succeeds using staged trusted plugin code",
+    "exact_OS_denial_mechanism": "unknown; no permission database or global policy changed",
+    "earlier_incidents_same_root_cause": "not established",
+    "fixed_in_source": true,
+    "fixed_cache_installation": false
+  },
+  "zero_model_probes": {
+    "python-xcode-probe.json": {
+      "execution_status": "failed",
+      "cleanup": "confirmed",
+      "execution_environment": "native",
+      "cleanup_scope": "kernel_coalition",
+      "backend_started": false,
+      "diagnostics": [
+        "anchor_start_unverified"
+      ],
+      "python_version": "3.9.6",
+      "python_executable": "/Applications/Xcode.app/Contents/Developer/usr/bin/python3",
+      "resolved_executable": "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/bin/python3.9",
+      "elapsed_seconds": 4.052,
+      "launchd_observations": [
+        {
+          "phase": "before_bootout",
+          "print_exit": 0,
+          "safe_fields": [
+            "state = not running",
+            "runs = 1",
+            "last exit code = 2"
+          ]
+        }
+      ],
+      "claude_or_model_or_authentication_calls": 0
+    },
+    "python-local-probe.json": {
+      "execution_status": "completed",
+      "cleanup": "confirmed",
+      "execution_environment": "native",
+      "cleanup_scope": "kernel_coalition",
+      "backend_started": true,
+      "diagnostics": [],
+      "launcher_exit_code": 0,
+      "python_version": "3.10.7",
+      "python_executable": "/usr/local/bin/python3",
+      "resolved_executable": "/Library/Frameworks/Python.framework/Versions/3.10/bin/python3.10",
+      "elapsed_seconds": 0.408,
+      "launchd_observations": [
+        {
+          "phase": "before_bootout",
+          "print_exit": 0,
+          "safe_fields": [
+            "state = not running",
+            "runs = 1",
+            "last terminating signal = Killed: 9"
+          ]
+        }
+      ],
+      "claude_or_model_or_authentication_calls": 0
+    },
+    "python-xcode-capture-probe.json": {
+      "execution_status": "failed",
+      "cleanup": "confirmed",
+      "execution_environment": "native",
+      "cleanup_scope": "kernel_coalition",
+      "backend_started": false,
+      "diagnostics": [
+        "anchor_start_unverified"
+      ],
+      "python_version": "3.9.6",
+      "python_executable": "/Applications/Xcode.app/Contents/Developer/usr/bin/python3",
+      "resolved_executable": "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/bin/python3.9",
+      "elapsed_seconds": 4.063,
+      "launchd_observations": [
+        {
+          "phase": "before_bootout",
+          "print_exit": 0,
+          "safe_fields": [
+            "state = not running",
+            "runs = 1",
+            "last exit code = 2"
+          ]
+        }
+      ],
+      "claude_or_model_or_authentication_calls": 0,
+      "trusted_anchor_startup_error": "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/bin/python3.9: can't open file '/path/to/delegate-plugin/plugins/delegate/scripts/review_macos.py': [Errno 1] Operation not permitted\n"
+    },
+    "python-xcode-staged-probe.json": {
+      "execution_status": "completed",
+      "cleanup": "confirmed",
+      "execution_environment": "native",
+      "cleanup_scope": "kernel_coalition",
+      "backend_started": true,
+      "diagnostics": [],
+      "launcher_exit_code": 0,
+      "python_version": "3.9.6",
+      "python_executable": "/Applications/Xcode.app/Contents/Developer/usr/bin/python3",
+      "resolved_executable": "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/bin/python3.9",
+      "elapsed_seconds": 0.317,
+      "launchd_observations": [
+        {
+          "phase": "before_bootout",
+          "print_exit": 0,
+          "safe_fields": [
+            "state = not running",
+            "runs = 1",
+            "last terminating signal = Killed: 9"
+          ]
+        }
+      ],
+      "claude_or_model_or_authentication_calls": 0
+    },
+    "python-xcode-fixed-probe.json": {
+      "execution_status": "completed",
+      "cleanup": "confirmed",
+      "execution_environment": "native",
+      "cleanup_scope": "kernel_coalition",
+      "backend_started": true,
+      "diagnostics": [],
+      "launcher_exit_code": 0,
+      "python_version": "3.9.6",
+      "python_executable": "/Applications/Xcode.app/Contents/Developer/usr/bin/python3",
+      "resolved_executable": "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/bin/python3.9",
+      "elapsed_seconds": 0.183,
+      "launchd_observations": [
+        {
+          "phase": "before_bootout",
+          "print_exit": 0,
+          "safe_fields": [
+            "state = not running",
+            "runs = 1",
+            "last terminating signal = Killed: 9"
+          ]
+        }
+      ],
+      "claude_or_model_or_authentication_calls": 0
+    },
+    "public-cancel-timing.json": {
+      "model_stub_observed": true,
+      "ready_seconds": 3.224,
+      "phase_events": [
+        {
+          "phase": "probe",
+          "elapsed": 1.195,
+          "control": "2"
+        },
+        {
+          "phase": "probe",
+          "elapsed": 1.976,
+          "control": "3"
+        },
+        {
+          "phase": "probe",
+          "elapsed": 2.471,
+          "control": "4"
+        },
+        {
+          "phase": "model",
+          "elapsed": 2.896,
+          "control": "5"
+        }
+      ],
+      "wrapper_exit_code": 143,
+      "execution_status": "cancelled",
+      "cleanup": "confirmed",
+      "diagnostics": [
+        "terminal_result_missing_or_duplicate"
+      ],
+      "real_models": 0
+    }
+  },
+  "free_verification": {
+    "focused_native_contracts_tests": 9,
+    "full_free_host_exit": 0,
+    "python_tests": 143,
+    "shell_assertions": 53,
+    "eval_assertions": 19,
+    "actual_macos_tests": 14,
+    "actual_macos_exit": 0,
+    "public_first_full_suite_exit": 1,
+    "public_first_failures": 2,
+    "public_first_errors": 1,
+    "public_failed_methods_focused_exit": 1,
+    "public_focused_remaining_failures": 1,
+    "public_cancel_serial_exit": 0,
+    "public_final_method_coverage": "serial full suite6 methods passed; initial failed runs preserved, exact timing-failure cause remains unknown",
+    "first_public_timing_failure_cause": "unknown; concurrent full validation is a candidate only",
+    "default_sandbox_full_suite_exit": 1,
+    "default_sandbox_failure": "service test /bin/ps denied by tool sandbox; host rerun passed",
+    "public_serial_full_exit": 0,
+    "public_serial_full_methods": 6,
+    "public_serial_full_seconds": 23.28
+  },
+  "changed_product_files_after_S1_stopped": [
+    "tests/test-review-native.py",
+    "tests/test-review-macos.py",
+    "scripts/review_macos.py"
+  ],
+  "current_Claude_cache_matches_pre_S1_source": true,
+  "new_real_model_reviews_after_failure": 0,
+  "original_S1_may_not_be_replayed": true,
+  "no_install_global_configuration_git_delivery": true,
+  "_publication_note": "本机身份与路径已脱敏；原始本地证据私有保留，结论及产品/输入摘要未改。"
+}

@@ -1,0 +1,58 @@
+{
+  "baseline": "dc59b5423cfd4a2b780a4ac91f7264b6404e541e",
+  "files": {
+    "PLAN.md": "6d85ab45f111eb48e70b0314d4ea95ab97cb471950d3c4ce06bbd0e8a48df7d9",
+    "REVIEW_DATA.md": "0b72ece1aac918e6181f948aaf10b53d39ed02fe8df383e9cc6bc1a3a8157197",
+    "SPEC.md": "4aec45be28610692b67c654ba4bc55769a41c582c7839484bfc2b4e1359cab8b",
+    "src/pricing.py": "ab49425a96b6eca9fc7564623b11ce9b02e95cac751191c1376d59b378159a10"
+  },
+  "excluded_paths": [
+    "excluded.py"
+  ],
+  "known_fixture_trigger": {
+    "input": [
+      10000,
+      20
+    ],
+    "actual": 2000,
+    "expected": 8000,
+    "line": 7
+  },
+  "root": "/path/to/private-evidence",
+  "repository": "/path/to/private-evidence",
+  "context": "/path/to/private-evidence",
+  "context_sha256": "a01fe1364ec269d73d57c725ae4da9d86e80fcd7f790897da2c8f90b17bbc7d1",
+  "codex_binary": "/path/to/user-home/Library/pnpm/bin/codex",
+  "codex_sha256": "d2ecdc1d54870805cc4e160f2e171f837b478c9218c70b483debacd942372126",
+  "codex_version": "0.160.1",
+  "state": "prepared_not_authorized_not_executed",
+  "model_runs": 0,
+  "backend": "codex",
+  "parent_host_candidate": {
+    "session_name": "Claude验收会话",
+    "reported_version": "2.1.295"
+  },
+  "source_sha256": {
+    "backend.py": "5862704d46bf565dcb4be7f3e1d6959a3a46c9ad3052d0854722ae9a7ac036db",
+    "review_native.py": "aaead63f317e26e78b66ff5023ab91442b45b5cd3e2858fd44506ab0c7d0d552",
+    "review_service.py": "8c76145c624bf6890f3ebcf115ff68b3eeb7da6b11b264d9c28549a951b6f602",
+    "delegate_backend.py": "88f4698c27387113d0cec69a9cd6a3dc46ea2a71655a05df6e192efe65765ccd",
+    "review_macos.py": "028f35bdab20f2cf0730f611dc2ff95a725b2279982ad847b7319ff7bf6e65d1",
+    "review_transport.py": "33371942d3b699b998d432d202e2800833779f4738f84277c85e549d377318a8",
+    "review_execution.py": "d391540eca825d7c8dbec894afdb91bb2108c9ae2f7567617789dfca0b2b0f57",
+    "review_guest_entry.py": "613f2353ae921527c8bdcadedfb756b0459b9af495775869f9f834a38b2d2da3",
+    "review_isolation.py": "96c6ac119cc812bafe109f0647838f1c6308f49ebb183721014854aeb922e307",
+    "review_network.py": "b835bc9aa4ba1019895a1eefe667ae7d74a57b6da51c9e1ce10a8477c4ed5d44",
+    "review_guest.py": "9014b34c9c027a6b3706e413c2b9d767b7969e8de7f2fcad6920defa7a785aa1",
+    "review_context.py": "1b4437f5d14c739030f727ba1b900cf1e38dff3a486f274c194581c654d866a2",
+    "review_doctor.py": "e69248d212837218c31f7edaa848df6553e790abc625053482d1504b14db1a8b",
+    "review_result.py": "43a31da35b3723ae180ea930a504d273e26478f752c7524439385ce35d1e9130",
+    "claude_review.py": "6208364fcbd0a5fcdb9061c34a308c73a5c9ea67b6bc3f929576ae6de365c85c",
+    "run_codex.py": "ba4d0b29338e0b8756b4f1a920e6ef8877a058b42f1c28a44e8da3cc56e432d7"
+  },
+  "source_shell_sha256": {
+    "codex-exec.sh": "98f06790366f169f3639fe249a3634a3892ebf22b43374aff504dede12b6aad8",
+    "delegate-exec.sh": "6f671a25982169f40e3993af1261ecfc9915d7f659731c67b2c10735b7b07059"
+  },
+  "_publication_note": "本机身份与路径已脱敏；原始本地证据私有保留，结论及产品/输入摘要未改。"
+}

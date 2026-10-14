@@ -2,11 +2,17 @@
 
 [简体中文](README.md) | English
 
-A Claude Code plugin that delegates execution and investigation to **Codex CLI** once the scope, approach, and acceptance criteria are settled. The main session receives the final answer; process logs stay on the local machine.
+A review and delegation plugin with shared Claude Code / Codex source command entry points. v0.5.0 provides **Codex / Claude Code read-only review** and the existing **Codex general execution** mode; Codex remains the default backend. The main session receives the final answer; process logs stay locally.
 
-The main session handles requirements, design decisions, and final verification. The plugin accepts only Codex authenticated through ChatGPT. It aims to reduce process context carried by the main session; usage is charged against the account signed into Codex, and lower total cost or token usage is not guaranteed.
+Four entries separate responsibilities: `/delegate:review` performs scoped read-only review, `/delegate:run` executes general Codex tasks, `/delegate:doctor` checks integration prerequisites, and `/delegate:help` explains capabilities and migration. Codex exposes the corresponding `source-command-*` skills.
 
-Repository: [haigeerlab/delegate-plugin](https://github.com/haigeerlab/delegate-plugin) · Current release: [v0.4.0](https://github.com/haigeerlab/delegate-plugin/releases/tag/v0.4.0) · [Documentation index](docs/en/README.md)
+See the [delivery and acceptance record](docs/verification/2026-10-13-delegate-delivery-status.md) (Chinese) for current verification. S2 completed real Codex→Claude Code and Claude Code→Codex reviews against the same frozen source and four-file scope, with the fixture defect and process cleanup checked. Normal installation and all four command entries were also verified. Subsequent command fixes and the Task9l diagnostic fix were synchronized into both hosts by S5, with 16 model-free checks and 48 installed result regressions passing. The S6 diagnostic follow-up directly verified the specified out-of-snapshot Read tool denial, exact target attribution, and process cleanup. The review stopped at 1/4 files with failed/inconclusive. Task2/6/8 were subsequently completed under the explicitly approved layered criteria: two current OS permission tests, six lifecycle methods and 19 evidence checks passed, with S7 actual script execution and the complete dry-run output verified. Final local acceptance is complete and the module is DONE; this does not prove every security behavior. The specific causes of S4 and the original S6 authentication failure are not retroactively established. Existing sessions were not reloaded in this batch.
+
+v0.5.0 includes these dual-backend and command migration changes. Full security acceptance for active model write/recursive attempts, authentication refresh and abnormal natural helpers remains incomplete. Claude requires an existing srt path per invocation. A different model does not guarantee a more accurate review.
+
+The main session handles requirements, design decisions, and final verification. The Codex backend accepts only ChatGPT authentication. It aims to reduce process context carried by the main session; usage is charged against the account signed into Codex, and lower total cost or token usage is not guaranteed.
+
+Repository: [haigeerlab/delegate-plugin](https://github.com/haigeerlab/delegate-plugin) · Current release: [v0.5.0](https://github.com/haigeerlab/delegate-plugin/releases/tag/v0.5.0) · [Documentation index](docs/en/README.md)
 
 ## Contents
 
@@ -35,13 +41,13 @@ Set the scope before execution. Writing files requires explicit user authorizati
 | Batch renaming, migration, or mechanical edits | `--write`; specify files and exclusions |
 | Requirements, architectural trade-offs, final verification, or a one-line edit | Keep the work in the main session |
 
-Flow: basic readiness check → Claude proposes a specific task → user confirms → Codex executes → review the answer and Git evidence → verify in the main session.
+Flow: explicit delegation request → establish scope and backend → use existing authorization or confirm a new proposal → review the answer and Git evidence → verify in the main session. Ordinary continuations add no delegation gate; settled decisions do not require delegation.
 
 Directly entering a delegation command with a specific task also authorizes that task. Commands and the skill instruct the model to request confirmation; the wrapper does not enforce this through an authorization token that cannot be bypassed.
 
 The plugin supports a single, non-interactive, synchronous delegation, model and reasoning-effort selection, read-only defaults, authorized writes, log separation, failure diagnostics, and a Git change summary. **Both modes require a Git working tree.**
 
-It does not provide background jobs, queues, resumption, automatic retries, multiple backends, or team quota management. It does not handle automatic commits, pushes, or publishing, and does not guarantee correct results or adherence to every instruction.
+It does not provide background jobs, queues, resumption, automatic retries, a third backend, or team quota management. It does not handle automatic commits, pushes, or publishing, and does not guarantee correct results or adherence to every instruction.
 
 ## Prerequisites
 
@@ -102,10 +108,12 @@ doctor refreshes local installation and authentication checks and inspects some 
 
 ### 4. Run your first read-only delegation
 
+v0.5.0 uses `/delegate:run`. When upgrading from v0.4.0, migrate `/delegate:delegate` to run or review.
+
 Enter this in the Claude Code session:
 
 ```text
-/delegate:delegate Read git status --short for this project and explain the working-tree state; do not modify files
+/delegate:run Read git status --short for this project and explain the working-tree state; do not modify files
 ```
 
 This makes a real Codex model request and consumes the signed-in account's quota. On successful completion, expect the final answer, model/effort hints, a process-log path, and byte counts. If no model is specified, the wrapper displays `配置默认` (configuration default); this does not mean it has discovered the actual model name.
@@ -116,17 +124,31 @@ For writes, explicitly authorize the current task before using `--write`, then r
 
 Terminal commands beginning with `claude plugin ...` manage installation. The `/delegate:...` entries below run inside Claude Code. Use the full namespace and the command inventory actually loaded by your host. [Official component documentation](https://code.claude.com/docs/en/plugins/components)
 
-| Entry | Purpose | Executes a Codex task? |
+Codex 0.162.1 converts the four source commands to skills:
+
+| Claude Code entry | Migrated Codex skill name |
+|---|---|
+| `/delegate:review` | `source-command-review` |
+| `/delegate:run` | `source-command-run` |
+| `/delegate:doctor` | `source-command-doctor` |
+| `/delegate:help` | `source-command-help` |
+
+Select the corresponding delegate skill in the Codex skill picker and provide the same arguments. The CLI opens that picker with `/skills` ([official documentation](https://learn.chatgpt.com/docs/developer-commands#use-skills-with-skills)). Codex's built-in `/review` is a separate entry and does not establish that delegate ran. Both hosts share the scripts; identical slash aliases are not required. Use the host's loaded inventory.
+
+All four Codex migration artifacts and Claude Code 2.1.296 session-only source initialization have been checked. Interactive display/invocation remains unverified; see the [loading evidence](docs/verification/2026-10-13-delegate-host-command-loading.md) (Chinese). The table describes execution-backend model calls only; interpreting a command can consume the primary host's model usage.
+
+| Entry | Purpose | Calls an execution-backend model? |
 |---|---|---|
-| `/delegate:delegate [options] <task>` | Delegate one specific task | Yes |
-| `/delegate:doctor` | Refresh basic checks and inspect some global Chinese rules | No; CLI status checks only |
+| `/delegate:review` | Scoped read-only review through codex/claude-code | Yes, except dry-run |
+| `/delegate:run [options] <task>` | Codex general task | Yes |
+| `/delegate:doctor --backend <backend>` | Selected-backend diagnostics and capability description | No; CLI status checks only |
 | `/delegate:help` | Options, examples, limitations, and troubleshooting | No |
 | `/delegate:delegate-routing` | Routing-criteria skill, callable when supported by the host | Criteria only; confirmation is still required |
 
 ```text
-/delegate:delegate Review error handling in src/payments; report only findings supported by code evidence
-/delegate:delegate --write Fix the null dereference using the agreed approach; run relevant tests and report results
-/delegate:delegate --model <model-slug> --effort high Trace the login flow
+/delegate:review --backend claude-code --paths src/payments --model sonnet
+/delegate:run --write Fix the null dereference using the agreed approach; run relevant tests and report results
+/delegate:run --model <model-slug> --effort high Trace the login flow
 ```
 
 | Option | Contract |
@@ -145,6 +167,33 @@ bash /path/to/delegate-plugin/plugins/delegate/scripts/codex-exec.sh --write "Ap
 ```
 
 Set the Claude Bash tool timeout to `600000` milliseconds. The wrapper's Codex execution deadline defaults to, and is capped at, **540 seconds**. `DELEGATE_TIMEOUT_SECONDS` accepts a shorter positive integer; larger values are capped at 540, and invalid or non-positive values fall back to 540. Each authentication probe has a 5-second limit. Process-group cleanup waits at most 2 seconds before forced termination. The execution deadline excludes preflight checks and subsequent Git inspection. Processes that detach from the group are not guaranteed to be reclaimed.
+
+## Dual-backend read-only review (v0.5.0)
+
+v0.5.0 commands are review/run/doctor/help. Both hosts share their definitions; actual host names follow the loaded command list. The old v0.4.0 `/delegate:delegate` is removed: migrate general tasks to run and structured reviews to review. Legacy script calls remain valid; source changes do not update caches.
+
+```text
+/delegate:review --backend claude-code --paths src/payments --model sonnet
+/delegate:review --backend codex --base main --head HEAD
+/delegate:review --paths src/payments --module payments --spec spec/payments.md --plan tasks/payments/plan.md --dry-run
+/delegate:review --context /path/review.json
+```
+
+Paths/module default to HEAD; workspace content requires explicit changes (staged/unstaged/working-tree). Untracked requires include-untracked with working-tree. Base/head selects a fixed commit diff; without paths, only changed files are selected. Paths/exclude/spec/plan/criterion are repeatable and root-relative; repo selects the worktree. Context is mutually exclusive with scope shortcuts. Dry-run shows hashes/scope/permissions without models, authentication checks or review conclusions. Terminal entry is `delegate-exec.sh review [options]`. See the [interface contract](spec/claude-review.md).
+
+
+Select backend independently of model and host:
+
+```bash
+/bin/bash /path/to/delegate-plugin/plugins/delegate/scripts/delegate-exec.sh --backend claude-code --review-context /path/review.json --model sonnet "Review the specified scope"
+/bin/bash /path/to/delegate-plugin/plugins/delegate/scripts/delegate-exec.sh --backend codex --review-context /path/review.json "Review the same scope"
+```
+
+Claude requires explicit scope through review shortcuts or advanced context JSON, supports read-only review only, rejects `--write` / `--effort`, defaults to 12 turns, and accepts an optional estimated budget. Both backends receive the same fixed context, snapshot and result contract. The current path is Mac native only, requiring original Claude ≥2.1.295 (the inspected baseline), Node ≥22.12.0, srt 0.0.79 and an available user GUI launchd domain. macOS 15.7.3 arm64 was tested; kernel capability failures stop execution without reduced cleanup.
+
+Resolve `claude`, `node` and `srt` from PATH, or specify existing absolute executables with `DELEGATE_CLAUDE_BIN`, `DELEGATE_NODE_BIN` and `DELEGATE_SRT_BIN`, for example prefixing the command with `DELEGATE_SRT_BIN=/absolute/existing/srt`. Reuse original local CLI authentication without credential copying, installation, upgrades, login or global changes. Old guest configuration is explicitly rejected. V1 rejects custom auth directories, API/provider environment overrides and local managed configuration instead of silently changing authentication. Missing conditions never switch backend. See the [claude-review contract](docs/en/SPEC-claude-review.md#executable-json-examples-and-configuration). `/delegate:doctor --backend claude-code` checks runtime dependencies, CLI and existing authentication inside the same Mac read-only boundary, without a model and Codex authentication cannot block this path.
+
+Common reports separate execution status from review outcome and include reviewed/unreviewed scope and locatable evidence. Empty/invalid output, denials, limits or partial coverage never mean no findings. Final reports and safe diagnostic logs are separate under private `${TMPDIR:-/tmp}/delegate-review/`, retaining at most 50 groups; normal returns exclude raw process output. Normal real reviews succeeded in both directions; menu-to-script execution and dry-run were verified. Active model Write/recursion, auth refresh, natural abnormal helpers and long-term stability remain unverified. Additional live acceptance requires separate authorization.
 
 ## Output and verification
 
@@ -233,11 +282,11 @@ doctor refreshes the temporary cache and does not modify project files. Its heur
 |---|---|---|
 | channel | Invocation, sandbox, process-group deadline/cleanup, answers and logs, Git evidence | `codex-exec.sh` + `run_codex.py` |
 | detection | Shared basic checks, identity-bound cache, atomic writes, doctor | `backend.py` + `detect.py` + shell entry points |
-| routing | Inject confirmation requirements and a skill pointer based on valid cache | `prompt.sh` → `detect.sh --warm` → `route.sh` + skill |
+| routing | Optional criteria and confirmation rules for explicit delegation requests | Commands + delegate-routing skill; silent legacy prompt/route entries |
 
-UserPromptSubmit uses one sequential entry point. The cache lasts 8 hours and is bound to the CLI path, Codex home, plugin root, and version. Future timestamps, old formats, identity changes, and invalid files invalidate it. Cached readiness does not guarantee current authentication; execution always checks login again.
+Unreleased source does not register UserPromptSubmit or probe/remind on every prompt. SessionStart silently refreshes readiness; doctor reports it on demand. The cache lasts 8 hours and is bound to the CLI path, Codex home, plugin root, and version. Future timestamps, old formats, identity changes, and invalid files invalidate it. Cached readiness does not guarantee current authentication; execution always checks login again.
 
-See the [documentation index](docs/en/README.md) for reading order and language pairs. Read [Design](docs/en/DESIGN.md) for rationale and the [capability map](docs/en/capability-map.md) for module responsibilities. Exact contracts are in the [channel](docs/en/SPEC-channel.md), [detection](docs/en/SPEC-detection.md), and [routing](docs/en/SPEC-routing.md) specifications. Release changes are in [v0.4.0](docs/en/releases/v0.4.0.md); subsequent changes are in [Unreleased](docs/en/releases/unreleased.md).
+See the [documentation index](docs/en/README.md) for reading order and language pairs. Read [Design](docs/en/DESIGN.md) for rationale and the [capability map](docs/en/capability-map.md) for module responsibilities. Exact contracts are in the [channel](docs/en/SPEC-channel.md), [detection](docs/en/SPEC-detection.md), and [routing](docs/en/SPEC-routing.md) specifications. Release changes are in [v0.5.0](docs/en/releases/v0.5.0.md); subsequent changes are in [Unreleased](docs/en/releases/unreleased.md).
 
 ## Development, contributions, and feedback
 
@@ -280,3 +329,5 @@ Commands such as `claude --version` and `codex --version` show versions. Remove 
 The project source and accompanying documentation are licensed under the [MIT License](LICENSE), with `Copyright (c) 2026 haigeerlab and contributors`. Commercial use, modification, and distribution are permitted; copyright and permission notices must be retained in distributions. The software is provided as is, without warranty. This is a summary; the standard English text in LICENSE governs.
 
 An identical [LICENSE](plugins/delegate/LICENSE) is included in the plugin directory so standalone distribution or installation also carries the license.
+
+The first real reverse run started Codex from Claude but reviewed no files. Codex review now receives bounded inline file data, with a 1 MiB serialized input limit and verified disabled shell/apps/plugins/multi-agent features. The repaired real reverse review completed4/4; see the [latest evidence and limits](docs/verification/2026-10-12-claude-review-mac-reverse-fourth-success.md) (Chinese). The first failed run remains historical.

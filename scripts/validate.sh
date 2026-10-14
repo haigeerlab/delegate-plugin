@@ -53,7 +53,7 @@ PY
 
 while IFS= read -r -d '' JSON_FILE; do
   check_json "${JSON_FILE}"
-done < <(find "${ROOT_DIR}" -path "${ROOT_DIR}/.git" -prune -o -type f -name '*.json' -print0)
+done < <(find "${ROOT_DIR}" \( -path "${ROOT_DIR}/.git" -o -path "${ROOT_DIR}/.agent/acceptance" \) -prune -o -type f -name '*.json' -print0)
 
 # 只按 .sh 后缀找会漏掉 stub-codex 这类没有扩展名的 shell 脚本 ——
 # 它照样是 bash，照样会踩 bash 3.2 的坑，必须一起查。
@@ -72,7 +72,7 @@ while IFS= read -r -d '' CANDIDATE_FILE; do
   if is_shell "${CANDIDATE_FILE}"; then
     check_shell "${CANDIDATE_FILE}"
   fi
-done < <(find "${ROOT_DIR}" -path "${ROOT_DIR}/.git" -prune -o -type f -print0)
+done < <(find "${ROOT_DIR}" \( -path "${ROOT_DIR}/.git" -o -path "${ROOT_DIR}/.agent/acceptance" \) -prune -o -type f -print0)
 
 # 只查 JSON 语法是不够的：0.1.0 的 marketplace.json 语法完全合法、
 # 却因为缺 owner 字段而**装不上**（claude plugin marketplace add 报 Invalid schema）。
@@ -100,12 +100,17 @@ if ! python3 -B - "${ROOT_DIR}" <<'PYTHON'
 import ast
 from pathlib import Path
 import sys
-for path in Path(sys.argv[1]).rglob('*.py'):
-    if '.git' not in path.parts:
+root = Path(sys.argv[1])
+for path in root.rglob('*.py'):
+    if '.git' not in path.parts and path.relative_to(root).parts[:2] != ('.agent', 'acceptance'):
         ast.parse(path.read_bytes(), filename=str(path))
 PYTHON
 then
   fail "Python 语法校验未通过"
+fi
+
+if ! python3 -B "${ROOT_DIR}/scripts/tests/test-validation-discovery.py"; then
+  fail "验证文件发现回归未通过"
 fi
 
 for SUITE in channel detection routing; do
@@ -113,11 +118,16 @@ for SUITE in channel detection routing; do
     fail "${SUITE} 产品测试未通过"
   fi
 done
-for SUITE in backend channel-regressions; do
+for SUITE in backend channel-regressions command-migration review-backends review-cli claude-review review-context review-result review-execution review-native review-transport review-guest-entry review-artifacts review-service review-guest; do
   if ! python3 -B "${ROOT_DIR}/plugins/delegate/tests/test-${SUITE}.py"; then
     fail "${SUITE} 回归测试未通过"
   fi
 done
+if ! python3 -B "${ROOT_DIR}/plugins/delegate/tests/test-claude-isolation.py" --policy-only; then
+  fail "Claude 隔离策略基础测试未通过"
+fi
+# Actual OS/SSH/live suites require a separately prepared and authorized guest.
+# Keep their red/actual evidence separate; never relabel them as offline passes.
 
 if [ "${STATUS}" -ne 0 ]; then
   exit 1

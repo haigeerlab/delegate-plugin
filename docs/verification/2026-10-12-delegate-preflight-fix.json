@@ -1,0 +1,46 @@
+{
+  "date": "2026-10-12",
+  "scope": "trusted Codex preflight stage diagnostics;legacy two-value API retained;fixed Node24 in next acceptance driver only",
+  "source_sha256": {
+    "plugins/delegate/scripts/backend.py": "21af43d0e1022b3f79e79fc1da027dd79cd84482d05fc5eedbacdaa70830748a",
+    "plugins/delegate/scripts/review_execution.py": "1158eba093ea99c0a20e58b019f9893431fc5abace86f0b6088d72fb2fcb51b3",
+    "plugins/delegate/tests/test-review-execution.py": "3da1b042f744886b2a1a57bebeccbf34f1b9dd36b80c54bcd71cb3b95f6d320c",
+    "plugins/delegate/commands/help.md": "a736702d4b7f23173b3ebf9c8ca7f992b5fd464921f83435ec3ee01103c4844f"
+  },
+  "new_test_red": "3 stage cases failed before fix",
+  "targeted_common_execution": {
+    "tests": 9,
+    "exit_code": 0,
+    "seconds": 8.63
+  },
+  "full_free_validation": {
+    "exit_code": 0,
+    "python_tests": 138,
+    "shell_assertions": 53,
+    "eval_assertions": 19,
+    "log": "/path/to/private-evidence"
+  },
+  "live_this_turn": {
+    "driver_attempts": 1,
+    "review_backend_starts": 0,
+    "scope": "third batch",
+    "automatic_retry": false
+  },
+  "runtime_fix": "acceptance child PATH pins existing Node24.18.0 path/hash;no installation or global config mutation",
+  "real_acceptance": "successful repaired reverse remains unverified;fourth preview prepared only",
+  "static_checks": {
+    "python_ast": 43,
+    "local_file_links": 644,
+    "invalid_links": 0,
+    "diff_check": 0,
+    "historical_navigation": "removed Agent-Relay0.6.2 cache link preserved as original literal path plus current0.6.3 navigation;historical permissions unchanged"
+  },
+  "workflow": {
+    "phase": "BUILDING",
+    "unchecked": 5,
+    "artifact_pass": 3,
+    "artifact_warn": 0,
+    "artifact_fail": 0
+  },
+  "_publication_note": "本机身份与路径已脱敏；原始本地证据私有保留，结论及产品/输入摘要未改。"
+}

@@ -1,0 +1,58 @@
+{
+  "message_id": 249,
+  "sender": "codex-delegate-review-92631c",
+  "recipient": "coord-r2",
+  "idempotency_key": "delegate-reverse-second-ttu99t8a-20261010",
+  "send_attempts": 1,
+  "transport": "agent-relay-bridge",
+  "dispatch": "enqueued",
+  "wake": "unknown",
+  "receipt": "unknown",
+  "response": "pending",
+  "model_runs": "unknown",
+  "created_at": "2026-10-10T08:05:11.701Z",
+  "authorization_human_reply": "继续",
+  "last_observed_outcome": "pending",
+  "new_marker_present": false,
+  "new_result_present": false,
+  "model_runs_observed": 0,
+  "marker_exists": false,
+  "result_exists": false,
+  "bounded_waits": 2,
+  "wait_seconds_each": 50,
+  "target_unread": 1,
+  "observed_at": "2026-10-10T08:07:52.927911+00:00",
+  "acceptance_status": "not_executed_at_last_observation",
+  "delivery_state": "unknown",
+  "public_outcome": {
+    "transport": "agent-relay-bridge",
+    "target": {
+      "host": "claude",
+      "name": "Claude验收会话",
+      "project": "delegate-plugin acceptance"
+    },
+    "dispatch": "enqueued",
+    "wake": "unknown",
+    "receipt": "unknown",
+    "response": "pending"
+  },
+  "public_outcome_validation_exit": 0,
+  "limits": [
+    "Enqueued does not prove Claude receipt/wake/execution.",
+    "The single user-approved dispatch is not replayed or replaced.",
+    "No marker/result existed at observation; delivery remains unknown and late processing is possible.",
+    "Target must satisfy its own human authorization and permission requirements.",
+    "New slash commands not installed/loaded; this batch uses direct current source wrapper."
+  ],
+  "later_observation_2026_10_12": {
+    "receipt": "acknowledged",
+    "response": "received",
+    "reply_id": 250,
+    "driver_attempts_reported": 1,
+    "backend_started": false,
+    "model_runs_observed": 0,
+    "result": "conditions_missing/inconclusive; fixed host identity stale",
+    "evidence": "2026-10-12-claude-review-mac-reverse-second-result.json"
+  },
+  "_publication_note": "本机身份与路径已脱敏；原始本地证据私有保留，结论及产品/输入摘要未改。"
+}

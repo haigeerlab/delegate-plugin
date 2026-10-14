@@ -1,0 +1,54 @@
+{
+  "date": "2026-10-13",
+  "repository": "/path/to/delegate-plugin",
+  "branch": "codex/spec-guard-conventions-public",
+  "state": "prepared_not_executed",
+  "plugin_file_count": 62,
+  "frozen_file_count": 63,
+  "bundle_sha256": "7b4dd67c8814d94f41da1d37850205d9ad171c0a6cf29314661485a24f5b6a07",
+  "cache_difference_counts": {
+    "codex": 10,
+    "claude_code": 7
+  },
+  "commands": {
+    "codex": [
+      "plugin",
+      "add",
+      "delegate@delegate-marketplace",
+      "--json"
+    ],
+    "claude_code": [
+      [
+        "plugin",
+        "uninstall",
+        "delegate@delegate-marketplace",
+        "--scope",
+        "user",
+        "--keep-data",
+        "--json"
+      ],
+      [
+        "plugin",
+        "install",
+        "delegate@delegate-marketplace",
+        "--scope",
+        "user",
+        "--json"
+      ]
+    ]
+  },
+  "max_seconds_per_command": 30,
+  "models": 0,
+  "retry": false,
+  "auth_files_copied": false,
+  "execute_authorized": false,
+  "controller_python_version": "3.12.14",
+  "source_final_checkpoint": {
+    "reply": "继续",
+    "context": "Response to the concrete request to accept current source and remaining unverified conditions",
+    "scope": "current-source partial acceptance only; no install/model/git authorization",
+    "frozen_manifest_sha256": "5e2065ec9a09a05c0114f41f227bbf6ead878cac2a5765fda962e35119132b49",
+    "accepted_current_source": true
+  },
+  "_publication_note": "本机身份与路径已脱敏；原始本地证据私有保留，结论及产品/输入摘要未改。"
+}

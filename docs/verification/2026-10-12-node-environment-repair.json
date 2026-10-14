@@ -1,0 +1,61 @@
+{
+  "date": "2026-10-12",
+  "user_request": "resolve current Mac environment selecting obsolete Node12;separate from delegate paid review authorization",
+  "observed_root_cause": {
+    "nvm_default": "24.18.0",
+    "claude_latest_shell_snapshots": "Node12.22.12 directory precedes other installed NVM Node directories",
+    "login_bash_before": "Node12 inherited;profile did not initialize NVM",
+    "interactive_zsh_before": "Node24.18.0 selected",
+    "upstream_path_population": "not independently attributed;observed selection and snapshot persistence verified"
+  },
+  "repair": {
+    "targets": [
+      "/path/to/user-home/.bash_profile",
+      "/path/to/user-home/.claude/settings.json",
+      "/path/to/user-home/.claude/hooks/node-default-env.sh"
+    ],
+    "backup_directory": "/path/to/user-home/.claude/backups/node-env-20261012-uh9v9lxn",
+    "behavior": "login Bash loads installed NVM default;Claude SessionStart persists PATH/NVM_BIN/NVM_INC through official CLAUDE_ENV_FILE",
+    "preserved": [
+      "old Node installations",
+      "NVM default alias",
+      "original Claude hooks",
+      "plugin state",
+      "permissions",
+      "authentication",
+      "all unrelated Claude settings"
+    ],
+    "global_config_mutation_authorized_for_this_repair": true
+  },
+  "checks": {
+    "installed_login_bash_from_stale_node12_path": "Node24.18.0 and Codex version command successful",
+    "installed_hook_under_bash_and_zsh": "Node24.18.0 and Codex version command successful",
+    "existing_env_preserved": true,
+    "secret_sentinel_not_persisted": true,
+    "hook_registered_once": true,
+    "unrelated_settings_preserved": true
+  },
+  "current_codex_version": "0.162.1",
+  "real_model_calls": 0,
+  "limit": "existing live Claude session must resume/reopen to load SessionStart changes;real tool invocation after activation not yet observed",
+  "delegate_acceptance": "fourth preview pinned Codex0.160.1 is stale after independently observed CLI update;do not run old driver",
+  "official_source": "https://code.claude.com/docs/en/hooks#persist-environment-variables",
+  "post_restart": {
+    "date": "2026-10-12",
+    "host": "Claude Code Claude验收会话",
+    "supported_directory": "new process, same session;reported CLI2.1.295",
+    "actual_sessionstart_env_file": "present; only controlled PATH/NVM_BIN/NVM_INC assignments",
+    "node_selected": "24.18.0",
+    "codex_version": "0.162.1",
+    "old_node12_path_overridden": true,
+    "real_claude_bash_tool_invocation": "not observed;source executed the actual hook-written environment file according to documented loading semantics",
+    "model_calls": 0,
+    "codex_entry": "/path/to/user-home/.nvm/versions/node/v24.18.0/bin/codex"
+  },
+  "cli_coexistence": {
+    "pnpm_entry_version": "0.160.1",
+    "node24_entry_version": "0.162.1",
+    "selection": "Node24 prefix selects its Codex0.162.1;not evidence that pnpm install upgraded"
+  },
+  "_publication_note": "本机身份与路径已脱敏；原始本地证据私有保留，结论及产品/输入摘要未改。"
+}

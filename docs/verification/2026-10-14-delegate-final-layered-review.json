@@ -1,0 +1,1509 @@
+{
+  "date": "2026-10-14",
+  "repository": "/path/to/delegate-plugin",
+  "branch": "codex/spec-guard-conventions-public",
+  "base": "823c42383cf055ea8af99256618daf6212d10735",
+  "scope": "all current uncommitted workspace changes versus HEAD; not all introduced this turn",
+  "counts": {
+    "M": 42,
+    "A": 190,
+    "D": 1
+  },
+  "total_files": 233,
+  "groups": {
+    "其他仓库文件": {
+      "A": 1,
+      "M": 15,
+      "D": 0,
+      "added": 204,
+      "deleted": 54
+    },
+    "docs/decisions": {
+      "A": 3,
+      "M": 0,
+      "D": 0,
+      "added": 142,
+      "deleted": 0
+    },
+    "docs/en": {
+      "A": 4,
+      "M": 8,
+      "D": 0,
+      "added": 500,
+      "deleted": 34
+    },
+    "docs/verification": {
+      "A": 136,
+      "M": 2,
+      "D": 0,
+      "added": 13713,
+      "deleted": 4
+    },
+    "plugins/delegate/commands": {
+      "A": 2,
+      "M": 2,
+      "D": 1,
+      "added": 73,
+      "deleted": 53
+    },
+    "plugins/delegate/hooks": {
+      "A": 0,
+      "M": 3,
+      "D": 0,
+      "added": 4,
+      "deleted": 33
+    },
+    "plugins/delegate/scripts": {
+      "A": 18,
+      "M": 2,
+      "D": 0,
+      "added": 3096,
+      "deleted": 9
+    },
+    "plugins/delegate/skills": {
+      "A": 0,
+      "M": 1,
+      "D": 0,
+      "added": 24,
+      "deleted": 8
+    },
+    "plugins/delegate/tests": {
+      "A": 22,
+      "M": 2,
+      "D": 0,
+      "added": 3863,
+      "deleted": 24
+    },
+    "scripts": {
+      "A": 1,
+      "M": 1,
+      "D": 0,
+      "added": 113,
+      "deleted": 5
+    },
+    "spec": {
+      "A": 1,
+      "M": 4,
+      "D": 0,
+      "added": 322,
+      "deleted": 30
+    },
+    "tasks/claude-review": {
+      "A": 2,
+      "M": 0,
+      "D": 0,
+      "added": 1027,
+      "deleted": 0
+    },
+    "tasks/routing": {
+      "A": 0,
+      "M": 2,
+      "D": 0,
+      "added": 24,
+      "deleted": 0
+    }
+  },
+  "files": [
+    {
+      "path": ".agent/state.json",
+      "status": "M",
+      "added": 1,
+      "deleted": 1
+    },
+    {
+      "path": ".claude-plugin/marketplace.json",
+      "status": "M",
+      "added": 2,
+      "deleted": 2
+    },
+    {
+      "path": ".gitignore",
+      "status": "A",
+      "added": 1,
+      "deleted": 0
+    },
+    {
+      "path": "AGENTS.md",
+      "status": "M",
+      "added": 2,
+      "deleted": 0
+    },
+    {
+      "path": "CLAUDE.md",
+      "status": "M",
+      "added": 2,
+      "deleted": 0
+    },
+    {
+      "path": "CONTRIBUTING.en.md",
+      "status": "M",
+      "added": 6,
+      "deleted": 1
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "status": "M",
+      "added": 6,
+      "deleted": 1
+    },
+    {
+      "path": "DESIGN.md",
+      "status": "M",
+      "added": 10,
+      "deleted": 2
+    },
+    {
+      "path": "README.en.md",
+      "status": "M",
+      "added": 64,
+      "deleted": 13
+    },
+    {
+      "path": "README.md",
+      "status": "M",
+      "added": 67,
+      "deleted": 16
+    },
+    {
+      "path": "docs/README.md",
+      "status": "M",
+      "added": 6,
+      "deleted": 1
+    },
+    {
+      "path": "docs/decisions/ADR-002-claude-review-isolation.md",
+      "status": "A",
+      "added": 32,
+      "deleted": 0
+    },
+    {
+      "path": "docs/decisions/ADR-003-review-process-boundary.md",
+      "status": "A",
+      "added": 76,
+      "deleted": 0
+    },
+    {
+      "path": "docs/decisions/ADR-004-native-mac-review.md",
+      "status": "A",
+      "added": 34,
+      "deleted": 0
+    },
+    {
+      "path": "docs/development-workflow.md",
+      "status": "M",
+      "added": 1,
+      "deleted": 0
+    },
+    {
+      "path": "docs/en/DESIGN.md",
+      "status": "M",
+      "added": 10,
+      "deleted": 2
+    },
+    {
+      "path": "docs/en/README.md",
+      "status": "M",
+      "added": 6,
+      "deleted": 1
+    },
+    {
+      "path": "docs/en/SPEC-channel.md",
+      "status": "M",
+      "added": 5,
+      "deleted": 0
+    },
+    {
+      "path": "docs/en/SPEC-claude-review.md",
+      "status": "A",
+      "added": 277,
+      "deleted": 0
+    },
+    {
+      "path": "docs/en/SPEC-detection.md",
+      "status": "M",
+      "added": 6,
+      "deleted": 1
+    },
+    {
+      "path": "docs/en/SPEC-routing.md",
+      "status": "M",
+      "added": 18,
+      "deleted": 22
+    },
+    {
+      "path": "docs/en/capability-map.md",
+      "status": "M",
+      "added": 12,
+      "deleted": 7
+    },
+    {
+      "path": "docs/en/decisions/ADR-002-claude-review-isolation.md",
+      "status": "A",
+      "added": 32,
+      "deleted": 0
+    },
+    {
+      "path": "docs/en/decisions/ADR-003-review-process-boundary.md",
+      "status": "A",
+      "added": 72,
+      "deleted": 0
+    },
+    {
+      "path": "docs/en/decisions/ADR-004-native-mac-review.md",
+      "status": "A",
+      "added": 34,
+      "deleted": 0
+    },
+    {
+      "path": "docs/en/development-workflow.md",
+      "status": "M",
+      "added": 1,
+      "deleted": 0
+    },
+    {
+      "path": "docs/en/releases/unreleased.md",
+      "status": "M",
+      "added": 27,
+      "deleted": 1
+    },
+    {
+      "path": "docs/releases/unreleased.md",
+      "status": "M",
+      "added": 27,
+      "deleted": 1
+    },
+    {
+      "path": "docs/verification/2026-10-08-contract-matrix.md",
+      "status": "M",
+      "added": 3,
+      "deleted": 3
+    },
+    {
+      "path": "docs/verification/2026-10-08-historical-reconciliation.md",
+      "status": "M",
+      "added": 1,
+      "deleted": 1
+    },
+    {
+      "path": "docs/verification/2026-10-09-claude-review-linux.md",
+      "status": "A",
+      "added": 70,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-09-claude-review-vm-preflight.md",
+      "status": "A",
+      "added": 91,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-09-claude-review.md",
+      "status": "A",
+      "added": 90,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-10-claude-review-guest-cli.json",
+      "status": "A",
+      "added": 324,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-10-claude-review-guest-cli.md",
+      "status": "A",
+      "added": 55,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-10-claude-review-integration.md",
+      "status": "A",
+      "added": 105,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-10-claude-review-mac-live-first.json",
+      "status": "A",
+      "added": 59,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-10-claude-review-mac-live-followup-preview.json",
+      "status": "A",
+      "added": 40,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-10-claude-review-mac-live-fourth-preview.json",
+      "status": "A",
+      "added": 41,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-10-claude-review-mac-live-fourth.json",
+      "status": "A",
+      "added": 117,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-10-claude-review-mac-live-plan.md",
+      "status": "A",
+      "added": 131,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-10-claude-review-mac-live-second.json",
+      "status": "A",
+      "added": 60,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-10-claude-review-mac-live-third-preview.json",
+      "status": "A",
+      "added": 41,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-10-claude-review-mac-live-third.json",
+      "status": "A",
+      "added": 59,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-10-claude-review-mac-native.md",
+      "status": "A",
+      "added": 164,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-10-claude-review-mac-preflight.md",
+      "status": "A",
+      "added": 30,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-10-claude-review-mac-reverse-current-preview.json",
+      "status": "A",
+      "added": 110,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-10-claude-review-mac-reverse-first.json",
+      "status": "A",
+      "added": 136,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-10-claude-review-mac-reverse-handoff.json",
+      "status": "A",
+      "added": 78,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-10-claude-review-mac-reverse-plan.md",
+      "status": "A",
+      "added": 47,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-10-claude-review-mac-reverse-preview.json",
+      "status": "A",
+      "added": 57,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-10-claude-review-mac-reverse-second-handoff.json",
+      "status": "A",
+      "added": 57,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-10-claude-review-mac-reverse-second-plan.md",
+      "status": "A",
+      "added": 36,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-10-claude-review-mac-reverse-second-preview.json",
+      "status": "A",
+      "added": 174,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-10-claude-review-mac-startup.json",
+      "status": "A",
+      "added": 40,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-10-delegate-interface.json",
+      "status": "A",
+      "added": 81,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-10-delegate-interface.md",
+      "status": "A",
+      "added": 47,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-12-claude-review-mac-reverse-fourth-current-plan.md",
+      "status": "A",
+      "added": 34,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-12-claude-review-mac-reverse-fourth-current-preview.json",
+      "status": "A",
+      "added": 183,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-12-claude-review-mac-reverse-fourth-driver-result.json",
+      "status": "A",
+      "added": 40,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-12-claude-review-mac-reverse-fourth-fixed-plan.md",
+      "status": "A",
+      "added": 24,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-12-claude-review-mac-reverse-fourth-fixed-preview.json",
+      "status": "A",
+      "added": 175,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-12-claude-review-mac-reverse-fourth-plan.md",
+      "status": "A",
+      "added": 32,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-12-claude-review-mac-reverse-fourth-preview.json",
+      "status": "A",
+      "added": 163,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-12-claude-review-mac-reverse-fourth-success.json",
+      "status": "A",
+      "added": 256,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-12-claude-review-mac-reverse-fourth-success.md",
+      "status": "A",
+      "added": 32,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-12-claude-review-mac-reverse-second-result.json",
+      "status": "A",
+      "added": 49,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-12-claude-review-mac-reverse-third-handoff.json",
+      "status": "A",
+      "added": 24,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-12-claude-review-mac-reverse-third-plan.md",
+      "status": "A",
+      "added": 30,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-12-claude-review-mac-reverse-third-preview.json",
+      "status": "A",
+      "added": 177,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-12-claude-review-mac-reverse-third-result.json",
+      "status": "A",
+      "added": 151,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-12-delegate-final-review.json",
+      "status": "A",
+      "added": 382,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-12-delegate-final-review.md",
+      "status": "A",
+      "added": 38,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-12-delegate-preflight-fix.json",
+      "status": "A",
+      "added": 45,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-12-delegate-source-load-plan.md",
+      "status": "A",
+      "added": 34,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-12-delegate-source-load-preview.json",
+      "status": "A",
+      "added": 93,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-12-delegate-source-load-result.json",
+      "status": "A",
+      "added": 135,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-12-delegate-source-load-result.md",
+      "status": "A",
+      "added": 25,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-12-node-environment-repair.json",
+      "status": "A",
+      "added": 60,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-delegate-checkpoint3-review.json",
+      "status": "A",
+      "added": 34,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-delegate-checkpoint3-review.md",
+      "status": "A",
+      "added": 37,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-delegate-claude-desktop-entry-mismatch.json",
+      "status": "A",
+      "added": 82,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-delegate-claude-desktop-entry-mismatch.md",
+      "status": "A",
+      "added": 53,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-delegate-claude-install-staged-result.json",
+      "status": "A",
+      "added": 169,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-delegate-claude-install-staged-result.md",
+      "status": "A",
+      "added": 13,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-delegate-claude-refresh-fixed-result.json",
+      "status": "A",
+      "added": 141,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-delegate-claude-refresh-fixed-result.md",
+      "status": "A",
+      "added": 25,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-delegate-claude-refresh-result.json",
+      "status": "A",
+      "added": 216,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-delegate-claude-refresh-result.md",
+      "status": "A",
+      "added": 21,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-delegate-command-fixes-result.json",
+      "status": "A",
+      "added": 38,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-delegate-command-fixes-result.md",
+      "status": "A",
+      "added": 26,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-delegate-command-migration-fix.json",
+      "status": "A",
+      "added": 87,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-delegate-command-migration-fix.md",
+      "status": "A",
+      "added": 23,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-delegate-command-multiaxis-review.json",
+      "status": "A",
+      "added": 156,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-delegate-command-multiaxis-review.md",
+      "status": "A",
+      "added": 92,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-delegate-delivery-status.md",
+      "status": "A",
+      "added": 48,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-delegate-host-command-loading.json",
+      "status": "A",
+      "added": 181,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-delegate-host-command-loading.md",
+      "status": "A",
+      "added": 30,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-delegate-installed-preview-result.json",
+      "status": "A",
+      "added": 215,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-delegate-local-activation-plan.md",
+      "status": "A",
+      "added": 49,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-delegate-local-activation-preview.json",
+      "status": "A",
+      "added": 270,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-delegate-local-activation-result.json",
+      "status": "A",
+      "added": 468,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-delegate-local-activation-result.md",
+      "status": "A",
+      "added": 45,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-delegate-post-review-sync-complete-result.json",
+      "status": "A",
+      "added": 271,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-delegate-post-review-sync-complete-result.md",
+      "status": "A",
+      "added": 29,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-delegate-post-review-sync-plan.md",
+      "status": "A",
+      "added": 43,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-delegate-post-review-sync-preview.json",
+      "status": "A",
+      "added": 53,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-delegate-post-review-sync-result.json",
+      "status": "A",
+      "added": 109,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-delegate-post-review-sync-result.md",
+      "status": "A",
+      "added": 36,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-delegate-post-review-sync-resume-result.json",
+      "status": "A",
+      "added": 125,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-delegate-post-review-sync-resume-result.md",
+      "status": "A",
+      "added": 33,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-delegate-remaining-acceptance-plan.md",
+      "status": "A",
+      "added": 52,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-delegate-remaining-acceptance-result.json",
+      "status": "A",
+      "added": 373,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-delegate-remaining-acceptance-result.md",
+      "status": "A",
+      "added": 68,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-delegate-remaining-gap-plan.md",
+      "status": "A",
+      "added": 43,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-delegate-routing-host-fix.json",
+      "status": "A",
+      "added": 158,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-delegate-routing-host-fix.md",
+      "status": "A",
+      "added": 26,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-delegate-s1-result.json",
+      "status": "A",
+      "added": 259,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-delegate-s1-result.md",
+      "status": "A",
+      "added": 37,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-delegate-s2-plan.md",
+      "status": "A",
+      "added": 24,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-delegate-s2-recovery-result.json",
+      "status": "A",
+      "added": 199,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-delegate-s2-recovery-result.md",
+      "status": "A",
+      "added": 36,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-delegate-s2-result.json",
+      "status": "A",
+      "added": 93,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-delegate-s2-result.md",
+      "status": "A",
+      "added": 29,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-delegate-s2-resume-result.json",
+      "status": "A",
+      "added": 484,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-delegate-s2-resume-result.md",
+      "status": "A",
+      "added": 33,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-delegate-source-load-fixed-plan.md",
+      "status": "A",
+      "added": 25,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-delegate-source-load-fixed-preview.json",
+      "status": "A",
+      "added": 100,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-delegate-source-load-fixed-result.json",
+      "status": "A",
+      "added": 238,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-delegate-source-load-fixed-result.md",
+      "status": "A",
+      "added": 34,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-spec-guard-workflow-check.json",
+      "status": "A",
+      "added": 161,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-13-spec-guard-workflow-check.md",
+      "status": "A",
+      "added": 46,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-14-delegate-acceptance-decision.md",
+      "status": "A",
+      "added": 62,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-14-delegate-error-diagnostics-result.json",
+      "status": "A",
+      "added": 72,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-14-delegate-error-diagnostics-result.md",
+      "status": "A",
+      "added": 27,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-14-delegate-final-layered-review.json",
+      "status": "A",
+      "added": 1508,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-14-delegate-final-layered-review.md",
+      "status": "A",
+      "added": 74,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-14-delegate-layered-acceptance-result.json",
+      "status": "A",
+      "added": 63,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-14-delegate-layered-acceptance-result.md",
+      "status": "A",
+      "added": 29,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-14-delegate-remaining-acceptance-feasibility.json",
+      "status": "A",
+      "added": 274,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-14-delegate-remaining-acceptance-feasibility.md",
+      "status": "A",
+      "added": 43,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-14-delegate-s4-read-boundary-plan.md",
+      "status": "A",
+      "added": 45,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-14-delegate-s4-read-boundary-result.json",
+      "status": "A",
+      "added": 69,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-14-delegate-s4-read-boundary-result.md",
+      "status": "A",
+      "added": 27,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-14-delegate-s5-sync-plan.md",
+      "status": "A",
+      "added": 30,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-14-delegate-s5-sync-result.json",
+      "status": "A",
+      "added": 94,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-14-delegate-s5-sync-result.md",
+      "status": "A",
+      "added": 23,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-14-delegate-s6-auth-diagnosis.json",
+      "status": "A",
+      "added": 47,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-14-delegate-s6-auth-diagnosis.md",
+      "status": "A",
+      "added": 30,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-14-delegate-s6-diagnostic-followup-plan.json",
+      "status": "A",
+      "added": 45,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-14-delegate-s6-diagnostic-followup-plan.md",
+      "status": "A",
+      "added": 41,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-14-delegate-s6-diagnostic-followup-result.json",
+      "status": "A",
+      "added": 187,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-14-delegate-s6-diagnostic-followup-result.md",
+      "status": "A",
+      "added": 37,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-14-delegate-s6-read-boundary-plan.md",
+      "status": "A",
+      "added": 50,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-14-delegate-s6-read-boundary-result.json",
+      "status": "A",
+      "added": 125,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-14-delegate-s6-read-boundary-result.md",
+      "status": "A",
+      "added": 37,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-14-delegate-s7-menu-plan.md",
+      "status": "A",
+      "added": 32,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-14-delegate-s7-menu-result.json",
+      "status": "A",
+      "added": 38,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-14-delegate-s7-menu-result.md",
+      "status": "A",
+      "added": 26,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-14-delegate-s7-output-readback-result.json",
+      "status": "A",
+      "added": 26,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-14-delegate-s7-output-readback-result.md",
+      "status": "A",
+      "added": 23,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-14-delegate-task6-runtime-timing-result.json",
+      "status": "A",
+      "added": 158,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-14-delegate-task6-runtime-timing-result.md",
+      "status": "A",
+      "added": 22,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-14-delegate-ui-and-s4-preview.md",
+      "status": "A",
+      "added": 11,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-14-delegate-validator-discovery-result.json",
+      "status": "A",
+      "added": 53,
+      "deleted": 0
+    },
+    {
+      "path": "docs/verification/2026-10-14-delegate-validator-discovery-result.md",
+      "status": "A",
+      "added": 23,
+      "deleted": 0
+    },
+    {
+      "path": "evals/propose-not-auto.sh",
+      "status": "M",
+      "added": 4,
+      "deleted": 7
+    },
+    {
+      "path": "evals/routing-fitness.sh",
+      "status": "M",
+      "added": 4,
+      "deleted": 8
+    },
+    {
+      "path": "plugins/delegate/.claude-plugin/plugin.json",
+      "status": "M",
+      "added": 1,
+      "deleted": 1
+    },
+    {
+      "path": "plugins/delegate/commands/delegate.md",
+      "status": "D",
+      "added": 0,
+      "deleted": 23
+    },
+    {
+      "path": "plugins/delegate/commands/doctor.md",
+      "status": "M",
+      "added": 7,
+      "deleted": 4
+    },
+    {
+      "path": "plugins/delegate/commands/help.md",
+      "status": "M",
+      "added": 20,
+      "deleted": 26
+    },
+    {
+      "path": "plugins/delegate/commands/review.md",
+      "status": "A",
+      "added": 27,
+      "deleted": 0
+    },
+    {
+      "path": "plugins/delegate/commands/run.md",
+      "status": "A",
+      "added": 19,
+      "deleted": 0
+    },
+    {
+      "path": "plugins/delegate/hooks/hooks.json",
+      "status": "M",
+      "added": 0,
+      "deleted": 10
+    },
+    {
+      "path": "plugins/delegate/hooks/prompt.sh",
+      "status": "M",
+      "added": 2,
+      "deleted": 4
+    },
+    {
+      "path": "plugins/delegate/hooks/route.sh",
+      "status": "M",
+      "added": 2,
+      "deleted": 19
+    },
+    {
+      "path": "plugins/delegate/scripts/backend.py",
+      "status": "M",
+      "added": 16,
+      "deleted": 8
+    },
+    {
+      "path": "plugins/delegate/scripts/claude_review.py",
+      "status": "A",
+      "added": 134,
+      "deleted": 0
+    },
+    {
+      "path": "plugins/delegate/scripts/codex-exec.sh",
+      "status": "M",
+      "added": 7,
+      "deleted": 1
+    },
+    {
+      "path": "plugins/delegate/scripts/delegate-exec.sh",
+      "status": "A",
+      "added": 9,
+      "deleted": 0
+    },
+    {
+      "path": "plugins/delegate/scripts/delegate_backend.py",
+      "status": "A",
+      "added": 149,
+      "deleted": 0
+    },
+    {
+      "path": "plugins/delegate/scripts/delegate_capabilities.py",
+      "status": "A",
+      "added": 14,
+      "deleted": 0
+    },
+    {
+      "path": "plugins/delegate/scripts/delegate_cli.py",
+      "status": "A",
+      "added": 170,
+      "deleted": 0
+    },
+    {
+      "path": "plugins/delegate/scripts/delegate_model.py",
+      "status": "A",
+      "added": 33,
+      "deleted": 0
+    },
+    {
+      "path": "plugins/delegate/scripts/review_context.py",
+      "status": "A",
+      "added": 332,
+      "deleted": 0
+    },
+    {
+      "path": "plugins/delegate/scripts/review_doctor.py",
+      "status": "A",
+      "added": 54,
+      "deleted": 0
+    },
+    {
+      "path": "plugins/delegate/scripts/review_execution.py",
+      "status": "A",
+      "added": 233,
+      "deleted": 0
+    },
+    {
+      "path": "plugins/delegate/scripts/review_guest.py",
+      "status": "A",
+      "added": 188,
+      "deleted": 0
+    },
+    {
+      "path": "plugins/delegate/scripts/review_guest_entry.py",
+      "status": "A",
+      "added": 203,
+      "deleted": 0
+    },
+    {
+      "path": "plugins/delegate/scripts/review_isolation.py",
+      "status": "A",
+      "added": 92,
+      "deleted": 0
+    },
+    {
+      "path": "plugins/delegate/scripts/review_macos.py",
+      "status": "A",
+      "added": 394,
+      "deleted": 0
+    },
+    {
+      "path": "plugins/delegate/scripts/review_native.py",
+      "status": "A",
+      "added": 175,
+      "deleted": 0
+    },
+    {
+      "path": "plugins/delegate/scripts/review_network.py",
+      "status": "A",
+      "added": 47,
+      "deleted": 0
+    },
+    {
+      "path": "plugins/delegate/scripts/review_result.py",
+      "status": "A",
+      "added": 258,
+      "deleted": 0
+    },
+    {
+      "path": "plugins/delegate/scripts/review_service.py",
+      "status": "A",
+      "added": 361,
+      "deleted": 0
+    },
+    {
+      "path": "plugins/delegate/scripts/review_transport.py",
+      "status": "A",
+      "added": 227,
+      "deleted": 0
+    },
+    {
+      "path": "plugins/delegate/skills/delegate-routing/SKILL.md",
+      "status": "M",
+      "added": 24,
+      "deleted": 8
+    },
+    {
+      "path": "plugins/delegate/tests/test-backend.py",
+      "status": "M",
+      "added": 47,
+      "deleted": 7
+    },
+    {
+      "path": "plugins/delegate/tests/test-claude-isolation.py",
+      "status": "A",
+      "added": 319,
+      "deleted": 0
+    },
+    {
+      "path": "plugins/delegate/tests/test-claude-mac-probes.py",
+      "status": "A",
+      "added": 84,
+      "deleted": 0
+    },
+    {
+      "path": "plugins/delegate/tests/test-claude-native-probes.py",
+      "status": "A",
+      "added": 115,
+      "deleted": 0
+    },
+    {
+      "path": "plugins/delegate/tests/test-claude-review.py",
+      "status": "A",
+      "added": 164,
+      "deleted": 0
+    },
+    {
+      "path": "plugins/delegate/tests/test-command-migration.py",
+      "status": "A",
+      "added": 56,
+      "deleted": 0
+    },
+    {
+      "path": "plugins/delegate/tests/test-review-artifacts.py",
+      "status": "A",
+      "added": 55,
+      "deleted": 0
+    },
+    {
+      "path": "plugins/delegate/tests/test-review-backends.py",
+      "status": "A",
+      "added": 162,
+      "deleted": 0
+    },
+    {
+      "path": "plugins/delegate/tests/test-review-cli.py",
+      "status": "A",
+      "added": 218,
+      "deleted": 0
+    },
+    {
+      "path": "plugins/delegate/tests/test-review-context.py",
+      "status": "A",
+      "added": 192,
+      "deleted": 0
+    },
+    {
+      "path": "plugins/delegate/tests/test-review-execution.py",
+      "status": "A",
+      "added": 246,
+      "deleted": 0
+    },
+    {
+      "path": "plugins/delegate/tests/test-review-guest-entry.py",
+      "status": "A",
+      "added": 82,
+      "deleted": 0
+    },
+    {
+      "path": "plugins/delegate/tests/test-review-guest-integration.py",
+      "status": "A",
+      "added": 223,
+      "deleted": 0
+    },
+    {
+      "path": "plugins/delegate/tests/test-review-guest.py",
+      "status": "A",
+      "added": 133,
+      "deleted": 0
+    },
+    {
+      "path": "plugins/delegate/tests/test-review-lifecycle.py",
+      "status": "A",
+      "added": 172,
+      "deleted": 0
+    },
+    {
+      "path": "plugins/delegate/tests/test-review-linux.py",
+      "status": "A",
+      "added": 269,
+      "deleted": 0
+    },
+    {
+      "path": "plugins/delegate/tests/test-review-mac-integration.py",
+      "status": "A",
+      "added": 171,
+      "deleted": 0
+    },
+    {
+      "path": "plugins/delegate/tests/test-review-macos.py",
+      "status": "A",
+      "added": 226,
+      "deleted": 0
+    },
+    {
+      "path": "plugins/delegate/tests/test-review-native.py",
+      "status": "A",
+      "added": 125,
+      "deleted": 0
+    },
+    {
+      "path": "plugins/delegate/tests/test-review-result.py",
+      "status": "A",
+      "added": 288,
+      "deleted": 0
+    },
+    {
+      "path": "plugins/delegate/tests/test-review-service.py",
+      "status": "A",
+      "added": 236,
+      "deleted": 0
+    },
+    {
+      "path": "plugins/delegate/tests/test-review-ssh.py",
+      "status": "A",
+      "added": 141,
+      "deleted": 0
+    },
+    {
+      "path": "plugins/delegate/tests/test-review-transport.py",
+      "status": "A",
+      "added": 99,
+      "deleted": 0
+    },
+    {
+      "path": "plugins/delegate/tests/test-routing.sh",
+      "status": "M",
+      "added": 40,
+      "deleted": 17
+    },
+    {
+      "path": "scripts/tests/test-validation-discovery.py",
+      "status": "A",
+      "added": 98,
+      "deleted": 0
+    },
+    {
+      "path": "scripts/validate.sh",
+      "status": "M",
+      "added": 15,
+      "deleted": 5
+    },
+    {
+      "path": "spec/CAPABILITY-MAP.md",
+      "status": "M",
+      "added": 12,
+      "deleted": 7
+    },
+    {
+      "path": "spec/channel.md",
+      "status": "M",
+      "added": 5,
+      "deleted": 0
+    },
+    {
+      "path": "spec/claude-review.md",
+      "status": "A",
+      "added": 281,
+      "deleted": 0
+    },
+    {
+      "path": "spec/detection.md",
+      "status": "M",
+      "added": 6,
+      "deleted": 1
+    },
+    {
+      "path": "spec/routing.md",
+      "status": "M",
+      "added": 18,
+      "deleted": 22
+    },
+    {
+      "path": "tasks/claude-review/plan.md",
+      "status": "A",
+      "added": 544,
+      "deleted": 0
+    },
+    {
+      "path": "tasks/claude-review/todo.md",
+      "status": "A",
+      "added": 483,
+      "deleted": 0
+    },
+    {
+      "path": "tasks/routing/plan.md",
+      "status": "M",
+      "added": 11,
+      "deleted": 0
+    },
+    {
+      "path": "tasks/routing/todo.md",
+      "status": "M",
+      "added": 13,
+      "deleted": 0
+    }
+  ],
+  "final_acceptance_pending": true,
+  "commits_pushes_releases": 0,
+  "_publication_note": "本机身份与路径已脱敏；原始本地证据私有保留，结论及产品/输入摘要未改。"
+}

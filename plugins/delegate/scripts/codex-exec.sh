@@ -2,6 +2,11 @@
 
 set -u
 
+if [ "${DELEGATE_REVIEW_DEPTH:-0}" != '0' ]; then
+  printf 'delegate: recursive delegation is not supported.\n' >&2
+  exit 64
+fi
+
 usage() {
   printf '用法：%s [--write] [--model <slug>] [--effort <level>] [--] <任务>\n' "${0}" >&2
 }
@@ -72,6 +77,7 @@ if ! command -v python3 >/dev/null 2>&1; then
   printf 'delegate: 找不到 python3；请安装 Python 3 后重试。\n' >&2
   exit 127
 fi
+python3 -B "${SCRIPT_DIR}/delegate_model.py" codex "${MODEL}" || exit "$?"
 BACKEND_OUTPUT="$(python3 -B "${SCRIPT_DIR}/backend.py")"
 BACKEND_STATUS=$?
 if [ "${BACKEND_STATUS}" -ne 0 ]; then
@@ -194,7 +200,7 @@ trap 'interrupted 129' HUP
 
 EXEC_STARTED=1
 python3 -B "${SCRIPT_DIR}/run_codex.py" "${DELEGATE_TIMEOUT_SECONDS}" \
-  env -u OPENAI_API_KEY -u CODEX_API_KEY codex exec \
+  env -u OPENAI_API_KEY -u CODEX_API_KEY DELEGATE_REVIEW_DEPTH=1 codex exec \
   ${EXTRA[@]+"${EXTRA[@]}"} \
   -c 'forced_login_method="chatgpt"' -c 'model_provider="openai"' \
   --ephemeral --sandbox "${SANDBOX}" --color never \

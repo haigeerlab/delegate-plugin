@@ -2,6 +2,11 @@
 
 简体中文 | [English](../docs/en/SPEC-channel.md)
 
+
+本批命令接口改为 run/review，run 继续遵循本页既有 Codex 合同；共同审查快捷范围和无模型预览见 [claude-review](claude-review.md)。
+
+本页保留 Codex `codex-exec.sh` 自由文本合同。公共 `delegate-exec.sh` 默认分派该路径；显式后端、共同只读审查及 stdin 快照输入由 [claude-review](claude-review.md) 管理。旧入口新增递归拒绝和已知 Claude 模型族拒绝，不改变既有 read/write、ChatGPT 认证、期限或日志含义。
+
 当前合同：2026-10-08。历史原文见 [归档索引](../docs/archive/pre-spec-guard/README.md)。当前 `tasks/channel/` 只跟踪维护核对，不追认历史验收，也不覆盖本规格。
 
 

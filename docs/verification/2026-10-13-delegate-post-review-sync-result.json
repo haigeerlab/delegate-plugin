@@ -1,0 +1,110 @@
+{
+  "date": "2026-10-13",
+  "repository": "/path/to/delegate-plugin",
+  "branch": "codex/spec-guard-conventions-public",
+  "state": "failed_stopped",
+  "authorization_reply": "批准S3仅同步delegate",
+  "attempts": {
+    "codex_add": 1,
+    "claude_uninstall": 0,
+    "claude_install": 0
+  },
+  "execution": {
+    "status": "failed",
+    "exit_code": 1,
+    "cleanup": "confirmed",
+    "parsed_stdout_keys": []
+  },
+  "effects": {
+    "state": "failed_stopped",
+    "actions_executed": [
+      "codex add"
+    ],
+    "source_and_binaries_unchanged": true,
+    "selected_and_unrelated_configuration_facts_unchanged": true,
+    "cache_checks": {
+      "codex": {
+        "backup_file_count": 65,
+        "current_file_count": 65,
+        "cache_equals_backup": true,
+        "differences": []
+      },
+      "claude": {
+        "backup_file_count": 61,
+        "current_file_count": 61,
+        "cache_equals_backup": true,
+        "differences": []
+      }
+    },
+    "models_called": 0,
+    "claude_installation_started": false,
+    "retries": 0,
+    "raw_cli_error_retained": false,
+    "failure_reason": "unknown",
+    "process_cleanup": "confirmed"
+  },
+  "diagnostic_limit": "Original controller deleted raw stderr on failure; precise CLI error unavailable. Narrow system log events are time/path correlation, not retained command-PID proof.",
+  "sandbox_events": [
+    {
+      "pid": "[本机身份已脱敏]",
+      "deny": 1,
+      "operation": "file-write-mode",
+      "path": "/path/to/user-home/.codex/tmp/arg0",
+      "timestamp": "2026-10-13 20:55:33.886663+0800"
+    },
+    {
+      "pid": "[本机身份已脱敏]",
+      "deny": 1,
+      "operation": "file-read-data",
+      "path": "/path/to/user-home/.codex/auth.json",
+      "timestamp": "2026-10-13 20:55:33.892228+0800"
+    },
+    {
+      "pid": "[本机身份已脱敏]",
+      "deny": 1,
+      "operation": "file-write-create",
+      "path": "/path/to/user-home/.codex/plugins/cache/delegate-marketplace/plugin-install-D9z7XE",
+      "timestamp": "2026-10-13 20:55:33.897955+0800"
+    }
+  ],
+  "candidate_correction": {
+    "path_pattern": ".codex/plugins/cache/delegate-marketplace/plugin-install-[A-Za-z0-9]+(/.*)?",
+    "global_credential_read": "still_denied",
+    "global_arg0_write": "still_denied",
+    "fake_home_probe": {
+      "passed": true,
+      "cases": [
+        {
+          "candidate": false,
+          "actual": [
+            "denied",
+            "denied",
+            "denied",
+            "denied"
+          ]
+        },
+        {
+          "candidate": true,
+          "actual": [
+            "allowed",
+            "denied",
+            "denied",
+            "denied"
+          ]
+        }
+      ],
+      "write_cases": 8,
+      "fake_home_only": true,
+      "models_called": 0,
+      "installer_invoked": false
+    },
+    "new_install_authorized": false,
+    "actual_corrected_install": "not_performed"
+  },
+  "model_calls": 0,
+  "new_dependency_installs": 0,
+  "ui_reload": false,
+  "external_messages": 0,
+  "git_delivery": false,
+  "_publication_note": "本机身份与路径已脱敏；原始本地证据私有保留，结论及产品/输入摘要未改。"
+}

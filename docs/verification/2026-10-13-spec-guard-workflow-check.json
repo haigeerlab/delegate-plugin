@@ -1,0 +1,162 @@
+{
+  "date": "2026-10-13",
+  "repository": "/path/to/delegate-plugin",
+  "branch": "codex/spec-guard-conventions-public",
+  "module": "claude-review",
+  "phase": "BUILDING",
+  "initialization": {
+    "plugin_version": "0.56.0",
+    "official_setup_exit_codes": [
+      0,
+      0
+    ],
+    "template_additions_only": true,
+    "state_unchanged": true,
+    "optional_configuration_created": false
+  },
+  "executor_files_match_reverse_review_pins": {
+    "python": 18,
+    "shell": 2,
+    "mismatches": []
+  },
+  "installed_plugin_source_comparison": {
+    "files": 61,
+    "mismatches": []
+  },
+  "offline_original_cli_batch": {
+    "driver_exit_code": 1,
+    "attempts": 2,
+    "retries": 0,
+    "cli_version": "2.1.296",
+    "cli_sha256": "c9b5341637becbd423ddffc5b254afb645682a3868cb708bbc6cc0e7bb419937",
+    "network_allowed_domains": [],
+    "model_requests_delivered": 0,
+    "result": {
+      "results": [
+        {
+          "execution_status": "timed_out",
+          "cleanup": "confirmed",
+          "execution_environment": "native",
+          "cleanup_scope": "kernel_coalition",
+          "backend_started": true,
+          "diagnostics": [],
+          "launcher_exit_code": -9,
+          "scenario": "timeout",
+          "elapsed_seconds": 12.776,
+          "init_validated": true,
+          "stdout_bytes": 2411,
+          "stdout_sha256": "f54a7f8406c35e1f487eecd1ae8ebcb82d664a463652c8cdaa42cdf9f5ccac5e",
+          "job_absent": true,
+          "coalition_empty": true,
+          "network_allowed_domains": [],
+          "model_requests_delivered": 0,
+          "model_answer_generated": false
+        },
+        {
+          "execution_status": "cancelled",
+          "cleanup": "confirmed",
+          "execution_environment": "native",
+          "cleanup_scope": "kernel_coalition",
+          "backend_started": true,
+          "diagnostics": [],
+          "launcher_exit_code": -9,
+          "cancel_signal": 15,
+          "scenario": "cancel",
+          "elapsed_seconds": 9.161,
+          "init_validated": true,
+          "stdout_bytes": 1276,
+          "stdout_sha256": "049114ec11e6e953c4759caf718985d82aa6fd2342f975c96f880338036cf017",
+          "job_absent": true,
+          "coalition_empty": true,
+          "network_allowed_domains": [],
+          "model_requests_delivered": 0,
+          "model_answer_generated": false
+        }
+      ],
+      "source_fixture_unchanged": true,
+      "settings_unchanged": false,
+      "limitations": [
+        "Network-denied original CLI fault injection, not a successful model review or authentication refresh.",
+        "No claim that natural helper topology or all future runtime versions were exercised."
+      ]
+    },
+    "driver_sha256": "cb8298f13e65e352351599f3b80d1279dc924f4a7d3cee7db91074c41aadbf98",
+    "diagnostic": {
+      "execution_status": "completed",
+      "cleanup": "confirmed",
+      "execution_environment": "native",
+      "cleanup_scope": "kernel_coalition",
+      "backend_started": true,
+      "diagnostics": [],
+      "launcher_exit_code": 0,
+      "write_open_denied": true,
+      "target_bytes_unchanged_during_diagnostic": false,
+      "scope": "same SRT policy; attempt to open existing .claude.json for append; no bytes written",
+      "does_not_attribute_previous_change": true
+    },
+    "diagnostic_driver_sha256": "445cf061cd2f002d327cdcbc7d5649be664c67cb109e14d2377a0497a048d7f6",
+    "configuration_change_attribution": "unknown",
+    "before_hashes_persisted": false,
+    "raw_streams_removed": true
+  },
+  "next_task": "Task 2 remaining safety evidence; then Task 6, Task 8 and Checkpoint 3",
+  "unchecked_items": 4,
+  "limitations": [
+    "Offline CLI faults do not prove a successful model review, token refresh or natural helper behavior.",
+    "Whole-batch configuration-integrity assertion failed; component cleanup evidence is not whole-batch success.",
+    "Settings may change independently in concurrent sessions, but writer attribution is not proven.",
+    "No new paid/delegated review, installation, global configuration mutation, commit or publication authorized by this record."
+  ],
+  "passive_followup": {
+    "method": "20-second passive read-only observation; no Claude or SRT CLI started",
+    "prior_jobs": [
+      {
+        "control": "timeout/control/execution",
+        "job_present": false,
+        "launchctl_exit": 113
+      },
+      {
+        "control": "cancel/control/execution",
+        "job_present": false,
+        "launchctl_exit": 113
+      },
+      {
+        "control": "write-open-check",
+        "job_present": false,
+        "launchctl_exit": 113
+      }
+    ],
+    "review_processes_started": 0,
+    "elapsed_seconds": 20.13,
+    "changes": [],
+    "change_observed_without_review_cli": false,
+    "writer_identity": "unknown",
+    "values_saved": false,
+    "credential_files_read": false
+  },
+  "remaining_acceptance_packet": {
+    "state": "prepared_not_authorized_not_started",
+    "root": "/path/to/private-evidence",
+    "plugin_files": 61,
+    "review_scope_files": 4,
+    "excluded_files": 1,
+    "driver_sha256": "665925432299124d2d5bc48665d70e0ab231076990f281fc0903a73ca139dba8",
+    "runtime_versions": {
+      "node": "v24.18.0",
+      "codex": "codex-cli 0.162.1"
+    },
+    "dry_run_backends": [
+      "codex",
+      "claude-code"
+    ],
+    "preflight_directions": [
+      "forward",
+      "reverse"
+    ],
+    "model_reviews_started": 0,
+    "messages_sent": 0,
+    "reverse_host_name": "Claude验收会话",
+    "reverse_host_ancestry": "must verify at actual execution, not preflight"
+  },
+  "_publication_note": "本机身份与路径已脱敏；原始本地证据私有保留，结论及产品/输入摘要未改。"
+}

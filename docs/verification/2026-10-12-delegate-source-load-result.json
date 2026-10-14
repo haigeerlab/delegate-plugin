@@ -1,0 +1,136 @@
+{
+  "date": "2026-10-12",
+  "repository": "/path/to/delegate-plugin",
+  "branch": "codex/spec-guard-conventions-public",
+  "authorization_human_reply": "批准这批临时加载",
+  "state": "failed_acceptance",
+  "installation_commands": "completed_once",
+  "model_calls": 0,
+  "install_attempts": 1,
+  "automatic_retry": false,
+  "preflight": {
+    "passed": true,
+    "boundary": {
+      "write_allowed": true,
+      "outside_write_denied": true,
+      "network_denied": true
+    },
+    "stages": [
+      {
+        "stage": "boundary-probe",
+        "exit_code": 0,
+        "timed_out": false,
+        "cancelled": false,
+        "output_bounded": true
+      },
+      {
+        "stage": "node-version",
+        "exit_code": 0,
+        "timed_out": false,
+        "cancelled": false,
+        "output_bounded": true
+      },
+      {
+        "stage": "codex-version",
+        "exit_code": 0,
+        "timed_out": false,
+        "cancelled": false,
+        "output_bounded": true
+      }
+    ],
+    "model_calls": 0
+  },
+  "command_stages": [
+    {
+      "stage": "marketplace-add",
+      "exit_code": 0,
+      "timed_out": false,
+      "cancelled": false,
+      "output_bounded": true
+    },
+    {
+      "stage": "plugin-add",
+      "exit_code": 0,
+      "timed_out": false,
+      "cancelled": false,
+      "output_bounded": true
+    },
+    {
+      "stage": "plugin-list",
+      "exit_code": 0,
+      "timed_out": false,
+      "cancelled": false,
+      "output_bounded": true
+    }
+  ],
+  "driver_failure": {
+    "state": "failed",
+    "stage": {
+      "stage": "plugin-list",
+      "exit_code": 0,
+      "timed_out": false,
+      "cancelled": false,
+      "output_bounded": true
+    },
+    "reason": "AssertionError",
+    "model_calls": 0,
+    "retries": 0
+  },
+  "cli_version": "0.162.1",
+  "node_version": "24.18.0",
+  "expected_migration_commands": [
+    "source-command-doctor",
+    "source-command-help",
+    "source-command-review",
+    "source-command-run"
+  ],
+  "actual_migration_commands": [
+    "source-command-doctor",
+    "source-command-review",
+    "source-command-run"
+  ],
+  "missing_migration_commands": [
+    "source-command-help"
+  ],
+  "obsolete_migration_command_absent": true,
+  "generated_skill_sha256": {
+    "source-command-review": "fcbd3a71dff11ab1e95deec30ade1ebc5f9c5d7b8374e28eca30b31056185454",
+    "source-command-run": "535662b4256ead862e5e96e478926f3c82ed92fff0c46977b3cba51f41ce1c11",
+    "source-command-doctor": "fab8650827e74a637c24cc11ef78ae6f95c9820a0491b84bdc1dcf37235ab900"
+  },
+  "generated_skills": {
+    "source-command-review": "---\nname: \"source-command-review\"\ndescription: \"通过 Codex 或 Claude Code 对明确范围执行只读审查\"\n---\n\n# source-command-review\n\nUse this skill when the user asks to run the migrated source command `review`.\n\n## Command Template\n\n用户直接输入本命令授权其明确的审查；模型主动提议后须等待肯定答复。不要扩展用户范围，也不要再次索取同一范围已有的授权。付费执行和项目规则仍按会话中实际授权判断。\n\n```bash\n/bin/bash \"${CLAUDE_PLUGIN_ROOT}/scripts/delegate-exec.sh\" review [选项] -- \"<任务>\"\n```\n\n原样传递明确参数，任务作为完整参数并安全引用；Bash timeout 设为 600000。`--backend` 默认 codex，与主会话宿主无关。显式 `--backend claude-code` 实际调用 Claude；不能混用模型/专属参数或在失败时换后端。两个后端都只读，`--write` 明确拒绝，不自动转换为修复。\n\n常用范围：`--paths <仓库根相对路径>` 可重复，`--exclude`、`--spec`、`--plan`、`--criterion` 可重复；模块加 `--module <名称>`。纯路径/模块默认读取 HEAD，排除未提交内容并展示工作区改动；需要工作区版本必须明确 `--changes staged|unstaged|working-tree`。只有 working-tree 可加 `--include-untracked`。`--repo` 可指定目标 Git 工作区。\n\n固定 diff 用 `--base <提交> [--head <提交>]`，head 默认 HEAD；不能与 changes 混用。没指定 paths 的 diff 只选该比较的变更文件，不扩大为全项目；空比较不启动模型。缺范围先报告，不自行添加 `.`、整个项目或未跟踪文件。\n\n高级 `--context <JSON>` 复用严格的范围合同，与所有快捷范围参数互斥。`--dry-run` 只做无模型输入预览：列出解析后的基准、文件摘要、排除/未审范围、未提交改动策略、权限和停止条件；不检查后端认证、不写审查产物，不代表审查通过。\n\n模型用 `--model`，推理/限制参数按后端验证：Codex 支持 effort；Claude 首版拒绝 effort，支持 max-turns（默认 12）/max-budget-usd（客户端估算，非账单硬上限）。参数错误先失败，不重试。无可靠模型或宿主证据时输出 unknown。\n\nClaude 当前仅 Mac 本机 CLI ≥2.1.295、Node ≥22.12.0、srt 0.0.79 和可用 GUI launchd 域；沿用原有认证。不安装、升级、登录或改全局配置。工具权限、上下文限制及包围整个 CLI 的 OS 隔离落实只读；allowedTools/Plan/提示词不是文件系统沙箱。递归 delegate 被拒绝。Codex 保留原进程组清理，detached 子进程限制仍存在。\n\nCodex review 直接接收已校验的有限文件内容和摘要，不依赖命令读取文件；序列化输入上限 1 MiB，超限明确报告 codex_inline_input_limit，不截断或自动分批。启动前核实 shell/apps/plugins/multi_agent 关闭，禁用网络搜索并清空 MCP 配置；无法核实则停止。该工具设置核验不替代只读沙箱，也不证明真实模型全部行为。dry-run 显示输入方式、字节数和上限。\n\n返回共同报告；退出 0 不等于无缺陷。权限拒绝、空/坏输出、部分覆盖、达限与失败不能当作通过；核对发现的触发条件、行号与证据。结论不授权修改、合并或交付。最终答复、JSON 报告与过滤日志分别保存为私有产物；只按需用 `sed -n` 读片段，不倾倒全过程。帮助用 `/delegate:help`，条件检查用 `/delegate:doctor --backend claude-code`。\n",
+    "source-command-run": "---\nname: \"source-command-run\"\ndescription: \"把已明确任务交给 Codex 执行，默认只读，显式 write 才可改文件\"\n---\n\n# source-command-run\n\nUse this skill when the user asks to run the migrated source command `run`.\n\n## Command Template\n\n用户直接输入本命令授权其明确任务；模型主动提议后须等待肯定答复。只委托已决策且用户明确交代的范围，不补充任务、不重复索取已有的同范围授权。\n\n```bash\n/bin/bash \"${CLAUDE_PLUGIN_ROOT}/scripts/delegate-exec.sh\" run [选项] -- \"<任务>\"\n```\n\n任务作为一个完整参数安全引用；Bash timeout 设为 600000。在业务 Git 工作区执行。run 当前只支持 codex，默认只读；`--backend claude-code` 明确拒绝，Claude 仅通过 `/delegate:review` 提供只读审查。需要共同结构化审查时也使用 review；run 不接受 review-context 或范围快捷参数。\n\n只有用户在该轮明确要求写文件才能加 `--write`，不自行升级权限。写入返回后无论成功、失败、超时或空答复，都核对 Git 验收块和真实 diff；失败不自动回滚，不能只相信执行器自述。沿用 Codex 原有认证、沙箱、期限和日志合同，不自动重试、切后端或切模型，不提交、推送或发布。\n\n默认/上限 540 秒；Codex 保留原进程组清理，不证明 detached 后代已回收。旧过程日志位于 `${TMPDIR:-/tmp}/delegate/`，最终答复分开返回；只按需用 `sed -n` 读取必要片段，不 `cat` 整个日志。递归调用 delegate 被拒绝。实际宿主/模型无法核实时标 unknown。\n\n原 `/delegate:delegate` 源命令已替换为 run/review；旧 codex-exec.sh 和 delegate-exec.sh 无子命令调用继续有效。安装缓存不会随源码更新，加载/安装另行处理。帮助见 `/delegate:help`。\n",
+    "source-command-doctor": "---\nname: \"source-command-doctor\"\ndescription: \"delegate 所选后端的无模型接入体检\"\n---\n\n# source-command-doctor\n\nUse this skill when the user asks to run the migrated source command `doctor`.\n\n## Command Template\n\n按用户选定后端运行，默认 Codex；先展示共享能力定义，再检查条件，能力说明不代表已可用：\n\n```bash\npython3 -B \"${CLAUDE_PLUGIN_ROOT}/scripts/review_doctor.py\" [--backend codex|claude-code]\n```\n\nCodex 路径保留原 `hooks/doctor.sh`：刷新本地基础探测和临时缓存，检查部分中文全局 AGENTS.md 规则，不修改业务文件。\nClaude 路径在本机 Mac 的同一只读边界检查已有 srt/Node、CLI 版本/参数及原有认证；不调用 Codex或模型、不安装、不登录、不改全局设置。仅保留安全认证方法/提供商，模型、额度、实际审查工具及双向宿主仍未验证。\n退出 0 表示诊断完成，以文本的问题数量和未验证项为准；不代表远端、额度、模型权限或完整审查可用。\n"
+  },
+  "observed_installed_path": "/path/to/private-evidence",
+  "native_cli_hash_after": "74c6a6d263f40d65f99c27a815275f5b4ed0bcc2baecc396b4cf3255498bdfc0",
+  "independent_checks": {
+    "source_unchanged": true,
+    "frozen_source_unchanged": true,
+    "installed_command_files_match_frozen_source": true,
+    "observed_settings_unchanged": true
+  },
+  "cause": "unknown;missing help migration confirmed without inferring a reserved name,argument-hint requirement or product runtime defect",
+  "limitations": [
+    "All three installation/list commands exited0;that does not prove complete command migration.",
+    "CLI migration/loading only;no native desktop slash execution,review backend or active model permission test.",
+    "Version and source snapshots are specific to this run;no CLI upgrade or fallback.",
+    "Original settings hashes cover the explicitly recorded four paths;the OS write policy separately denied paths outside this disposable writable area."
+  ],
+  "next": "Diagnose missing help conversion from supported evidence;no reinstall or source workaround claimed tested.",
+  "temporary_cleanup": {
+    "writable_root": "/path/to/private-evidence",
+    "removed": true,
+    "source_snapshot_and_small_evidence_preserved": true
+  },
+  "post_batch_documentation_change": "After pre/post checks and disposable installation cleanup,source help historical-status paragraph was corrected;this text change was not part of the installed frozen snapshot and does not repair or revalidate missing help migration.",
+  "closing_checks": {
+    "local_file_links": 684,
+    "invalid_links": 0,
+    "diff_check": 0,
+    "full_suite_rerun": false,
+    "reason": "No runtime code changes;only status evidence/documents updated."
+  },
+  "_publication_note": "本机身份与路径已脱敏；原始本地证据私有保留，结论及产品/输入摘要未改。"
+}

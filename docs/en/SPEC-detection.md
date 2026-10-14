@@ -2,6 +2,11 @@
 
 [简体中文](../../spec/detection.md) | English
 
+
+This cache and original doctor remain Codex-specific. New `review_doctor.py --backend claude-code` checks srt/Node, CLI version/capabilities and existing authentication in the same native Mac read-only/process boundary. It never invokes Codex, alters its cache, installs/logs in or calls a model. Real models/tools/quota remain unverified; reviews use the same boundary; see [claude-review](SPEC-claude-review.md). Codex auth failure cannot block explicit selection.
+
+Doctor describes the shared dual-backend capabilities without claiming readiness. Existing Codex cache/authentication contracts remain intact. Help reads local option help without diagnostics.
+
 Current contract: 2026-10-08. Earlier records are preserved in the [historical archive](../archive/pre-spec-guard/README.md). Current `tasks/detection/` tracks maintenance reconciliation only; it neither retroactively accepts historical work nor overrides this specification.
 
 
@@ -86,7 +91,7 @@ Write a temporary file in the same directory with mode 0600, then use `os.replac
 - `--warm`: reuse valid cache or probe, silently.
 - `--print`: force probing and print readiness or a safe reason; used by doctor. Direct probe results may still be reported if the cache is unwritable.
 - Default: if cache is available, emit valid UserPromptSubmit JSON identifying only local readiness. Unavailability or internal failure produces no output and exits 0.
-- Actual UserPromptSubmit uses `prompt.sh` to warm then route sequentially, avoiding races between parallel handlers.
+- Unreleased source no longer registers UserPromptSubmit. prompt.sh/route.sh are silent compatibility entries; ordinary prompts trigger neither readiness probes nor routing reminders. SessionStart and on-demand doctor behavior remain.
 
 ## doctor
 

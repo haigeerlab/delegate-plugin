@@ -1,0 +1,324 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-10",
+  "environment": "disposable_lima_2.2.1_vz_linux_arm64",
+  "original_cli_version": "2.1.295",
+  "original_cli_binary_sha256": "cfb9dc1332fb6f92a683f835823e91b3179a803398ca7852cd2381a3cb1dea3b",
+  "model_calls": false,
+  "guest_login_performed": false,
+  "host_credentials_copied": false,
+  "source_sha256": {
+    "plugins/delegate/scripts/review_context.py": "bfcb452c60d01e116cad9156c487ed87e2ccd76fba37c58b65745952681efc87",
+    "plugins/delegate/scripts/review_doctor.py": "748a06e06bf6dbd1c6c0e1af3943bd41b5515a6dba313d7dc37d919abfca0439",
+    "plugins/delegate/scripts/review_execution.py": "9fe9dc5a104f531474c42026d599bf803ef4e98ea9feb414de08ac0ef76cf98c",
+    "plugins/delegate/scripts/review_guest.py": "9014b34c9c027a6b3706e413c2b9d767b7969e8de7f2fcad6920defa7a785aa1",
+    "plugins/delegate/scripts/review_guest_entry.py": "613f2353ae921527c8bdcadedfb756b0459b9af495775869f9f834a38b2d2da3",
+    "plugins/delegate/scripts/review_isolation.py": "16cee5ab304b40c85299a7e8e7340d8fdfe8902d6472bcad1968ea7336c923b1",
+    "plugins/delegate/scripts/review_network.py": "b835bc9aa4ba1019895a1eefe667ae7d74a57b6da51c9e1ce10a8477c4ed5d44",
+    "plugins/delegate/scripts/review_result.py": "7555af3210ac011215c032985e7c48aa44aed950626b660c3aa6ca167e79b77a",
+    "plugins/delegate/scripts/review_service.py": "8c76145c624bf6890f3ebcf115ff68b3eeb7da6b11b264d9c28549a951b6f602",
+    "plugins/delegate/scripts/review_transport.py": "33371942d3b699b998d432d202e2800833779f4738f84277c85e549d377318a8",
+    "plugins/delegate/scripts/claude_review.py": "a69c579c3fa3fa74d76ad4941a485b988119e5db3a11f66c4b9660006b747ac9",
+    "plugins/delegate/scripts/delegate_backend.py": "7c621a0d4f655669d96df0852a4591531a48db5014fe8eeec966c50bdd780ecb"
+  },
+  "native_probes": [
+    {
+      "probe": "auth_status",
+      "logged_in": false,
+      "cleanup": "confirmed"
+    },
+    {
+      "probe": "adapter_preflight",
+      "refused": true,
+      "diagnostic": "authentication_missing"
+    },
+    {
+      "probe": "invalid_option",
+      "exit": 1,
+      "rejected": true,
+      "cleanup": "confirmed"
+    },
+    {
+      "probe": "version",
+      "version": "2.1.295",
+      "cleanup": "confirmed"
+    },
+    {
+      "probe": "help",
+      "required_flags_present": true,
+      "cleanup": "confirmed"
+    }
+  ],
+  "public_integration_final": [
+    {
+      "mode": "denied",
+      "execution_status": "failed",
+      "cleanup": "confirmed",
+      "review_outcome": "inconclusive",
+      "diagnostics": [
+        "permission_denied"
+      ],
+      "backend": "claude-code",
+      "executor": "pinned_fake_cli_in_actual_guest"
+    },
+    {
+      "mode": "empty",
+      "execution_status": "failed",
+      "cleanup": "confirmed",
+      "review_outcome": "inconclusive",
+      "diagnostics": [
+        "tool_boundary_unverified",
+        "stream_empty_or_oversized"
+      ],
+      "backend": "claude-code",
+      "executor": "pinned_fake_cli_in_actual_guest"
+    },
+    {
+      "mode": "malformed",
+      "execution_status": "failed",
+      "cleanup": "confirmed",
+      "review_outcome": "inconclusive",
+      "diagnostics": [
+        "tool_boundary_unverified",
+        "stream_invalid"
+      ],
+      "backend": "claude-code",
+      "executor": "pinned_fake_cli_in_actual_guest"
+    },
+    {
+      "mode": "SIGINT",
+      "execution_status": "cancelled",
+      "cleanup": "confirmed",
+      "review_outcome": "inconclusive",
+      "diagnostics": [
+        "transport_cancelled"
+      ],
+      "backend": "claude-code",
+      "executor": "pinned_fake_cli_in_actual_guest"
+    },
+    {
+      "mode": "SIGTERM",
+      "execution_status": "cancelled",
+      "cleanup": "confirmed",
+      "review_outcome": "inconclusive",
+      "diagnostics": [
+        "transport_cancelled"
+      ],
+      "backend": "claude-code",
+      "executor": "pinned_fake_cli_in_actual_guest"
+    },
+    {
+      "mode": "SIGHUP",
+      "execution_status": "cancelled",
+      "cleanup": "confirmed",
+      "review_outcome": "inconclusive",
+      "diagnostics": [
+        "transport_cancelled"
+      ],
+      "backend": "claude-code",
+      "executor": "pinned_fake_cli_in_actual_guest"
+    },
+    {
+      "mode": "normal",
+      "execution_status": "completed",
+      "cleanup": "confirmed",
+      "review_outcome": "no_findings_in_scope",
+      "diagnostics": [],
+      "backend": "claude-code",
+      "executor": "pinned_fake_cli_in_actual_guest"
+    },
+    {
+      "mode": "findings",
+      "execution_status": "completed",
+      "cleanup": "confirmed",
+      "review_outcome": "findings",
+      "diagnostics": [],
+      "backend": "claude-code",
+      "executor": "pinned_fake_cli_in_actual_guest"
+    },
+    {
+      "mode": "timeout",
+      "execution_status": "timed_out",
+      "cleanup": "confirmed",
+      "review_outcome": "inconclusive",
+      "diagnostics": [
+        "terminal_result_missing_or_duplicate"
+      ],
+      "backend": "claude-code",
+      "executor": "pinned_fake_cli_in_actual_guest"
+    },
+    {
+      "mode": "unsafe_tools",
+      "execution_status": "failed",
+      "cleanup": "confirmed",
+      "review_outcome": "inconclusive",
+      "diagnostics": [
+        "tool_boundary_unverified",
+        "tool_boundary_unverified"
+      ],
+      "backend": "claude-code",
+      "executor": "pinned_fake_cli_in_actual_guest"
+    }
+  ],
+  "srt_lock": {
+    "sha256": "756dcc412a9dcf95fe15c125177bc286964b314a27a1a56c626d26eed45a8db7",
+    "packages": {
+      "node_modules/@anthropic-ai/sandbox-runtime": {
+        "version": "0.0.79",
+        "integrity": "sha512-WjBmS9fbTpnQwQkM9SU+JjhM2CcXo9eWEELktY1100RMvTy/jPhP44yZ3NXhh+GHB350OgPbM3+FubE5WVRtSA=="
+      },
+      "node_modules/@pondwader/socks5-server": {
+        "version": "1.0.10",
+        "integrity": "sha512-bQY06wzzR8D2+vVCUoBsr5QS2U6UgPUQRmErNwtsuI6vLcyRKkafjkr3KxbtGFf9aBBIV2mcvlsKD1UYaIV+sg=="
+      },
+      "node_modules/commander": {
+        "version": "12.1.0",
+        "integrity": "sha512-Vw8qHK3bZM9y/P10u3Vib8o/DdkvA2OtPtZvD871QKjy74Wj1WSKFILMPRPSdUSx5RFK1arlJzEtA4PkFgnbuA=="
+      },
+      "node_modules/node-forge": {
+        "version": "1.4.0",
+        "integrity": "sha512-LarFH0+6VfriEhqMMcLX2F7SwSXeWwnEAJEsYm5QKWchiVYVvJyV9v7UDvUv+w5HO23ZpQTXDv/GxdDdMyOuoQ=="
+      },
+      "node_modules/zod": {
+        "version": "3.25.76",
+        "integrity": "sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ=="
+      }
+    }
+  },
+  "final_guest_facts": {
+    "native_probes": [
+      {
+        "probe": "auth_status",
+        "logged_in": false,
+        "cleanup": "confirmed"
+      },
+      {
+        "probe": "adapter_preflight",
+        "refused": true,
+        "diagnostic": "authentication_missing"
+      },
+      {
+        "probe": "invalid_option",
+        "exit": 1,
+        "rejected": true,
+        "cleanup": "confirmed"
+      },
+      {
+        "probe": "version",
+        "version": "2.1.295",
+        "cleanup": "confirmed"
+      },
+      {
+        "probe": "help",
+        "required_flags_present": true,
+        "cleanup": "confirmed"
+      }
+    ],
+    "owned_units": [
+      {
+        "state": "failed",
+        "empty": true
+      },
+      {
+        "state": "failed",
+        "empty": true
+      },
+      {
+        "state": "failed",
+        "empty": true
+      },
+      {
+        "state": "failed",
+        "empty": true
+      },
+      {
+        "state": "failed",
+        "empty": true
+      },
+      {
+        "state": "failed",
+        "empty": true
+      },
+      {
+        "state": "failed",
+        "empty": true
+      },
+      {
+        "state": "failed",
+        "empty": true
+      },
+      {
+        "state": "failed",
+        "empty": true
+      },
+      {
+        "state": "failed",
+        "empty": true
+      },
+      {
+        "state": "failed",
+        "empty": true
+      },
+      {
+        "state": "failed",
+        "empty": true
+      },
+      {
+        "state": "failed",
+        "empty": true
+      }
+    ],
+    "control_runs": [],
+    "guest_auth_files_created": false
+  },
+  "run_history": [
+    {
+      "suite": "public_guest_integration",
+      "run": 1,
+      "passed": 7,
+      "failed": 0
+    },
+    {
+      "suite": "public_guest_integration",
+      "run": 2,
+      "passed": 6,
+      "failed": 1,
+      "failure": "independent_ssh_control_probe_failed_after_SIGHUP",
+      "root_cause": "unknown"
+    },
+    {
+      "suite": "public_guest_integration",
+      "run": 3,
+      "passed": 6,
+      "failed": 1,
+      "failure": "independent_ssh_readiness_probe_exit_255_connection_timed_out",
+      "root_cause": "unknown"
+    },
+    {
+      "suite": "public_guest_integration",
+      "run": 4,
+      "passed": 7,
+      "failed": 0,
+      "change": "single_independent_connection_for_bounded_readiness_poll_no_retries"
+    }
+  ],
+  "cleanup": {
+    "status": "confirmed",
+    "stop_exit": 0,
+    "delete_exit": 0,
+    "remaining_instances": 0,
+    "owned_host_processes": 0,
+    "open_file_holders": 0,
+    "lsof_exit": 1,
+    "temporary_root_deleted": true
+  },
+  "test_sha256_at_execution": {
+    "plugins/delegate/tests/test-review-guest-integration.py": "3c382d7f1c59f676d85a44ba9fe6e517dbb694701d059f5b3202791e9ca526de",
+    "plugins/delegate/tests/test-claude-native-probes.py": "91a307cf13b3c238b6235a8256ae93cfa8e345d20b4f4addbbd1b3be7f9b2d84"
+  },
+  "final_test_source_sha256": {
+    "plugins/delegate/tests/test-review-guest-integration.py": "381dd3137c46c2e3dcbc7294e5f2b4ad49aeda04f2f6a5843a667274d43e02f7",
+    "plugins/delegate/tests/test-claude-native-probes.py": "91a307cf13b3c238b6235a8256ae93cfa8e345d20b4f4addbbd1b3be7f9b2d84"
+  },
+  "post_execution_test_change": "Removed unused host time import only; final AST checked. Product source hashes unchanged."
+}

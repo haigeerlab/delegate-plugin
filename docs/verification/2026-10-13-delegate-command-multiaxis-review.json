@@ -1,0 +1,157 @@
+{
+  "date": "2026-10-13",
+  "module": "claude-review",
+  "branch": "codex/spec-guard-conventions-public",
+  "baseline_head": "823c42383cf055ea8af99256618daf6212d10735",
+  "verdict": "request_changes",
+  "core_commands": "keep review/run/doctor/help",
+  "declared_scope_file_count": 28,
+  "scope_limit": "interface and execution-boundary touchpoints; not full security/ABI audit",
+  "findings": [
+    {
+      "id": "CMD-001",
+      "category": "Required",
+      "priority": "P1",
+      "state": "confirmed",
+      "file": "plugins/delegate/scripts/review_context.py",
+      "line": 196,
+      "title": "范围外方括号文件名阻断限定审查"
+    },
+    {
+      "id": "CMD-002",
+      "category": "Required",
+      "priority": "P2",
+      "state": "confirmed",
+      "file": "plugins/delegate/scripts/delegate_backend.py",
+      "line": 58,
+      "related_file": "plugins/delegate/scripts/codex-exec.sh",
+      "related_line": 76,
+      "title": "提供商前缀及旧入口大小写绕过模型归属校验"
+    },
+    {
+      "id": "DOC-001",
+      "category": "Required",
+      "priority": "P2",
+      "state": "confirmed",
+      "file": "README.md",
+      "line": 7,
+      "related_file": "README.en.md",
+      "related_line": 7,
+      "title": "首屏最新状态落后于S2真实结果"
+    }
+  ],
+  "optional_ids": [
+    "UX-001",
+    "UX-002",
+    "UX-003",
+    "ARC-001"
+  ],
+  "fyi_ids": [
+    "REL-001"
+  ],
+  "unresolved_candidates": 0,
+  "ticket_ids_assigned": false,
+  "verification": {
+    "baseline_tests": {
+      "test-review-cli.py": {
+        "exit_code": 0,
+        "summary": ".............\n----------------------------------------------------------------------\nRan 13 tests in 17.742s\n\nOK\n"
+      },
+      "test-review-backends.py": {
+        "exit_code": 0,
+        "summary": ".......\n----------------------------------------------------------------------\nRan 7 tests in 6.553s\n\nOK\n"
+      },
+      "test-command-migration.py": {
+        "exit_code": 0,
+        "summary": "..\n----------------------------------------------------------------------\nRan 2 tests in 0.001s\n\nOK\n"
+      }
+    },
+    "namespaced_claude_to_codex": {
+      "wrapper_exit": 0,
+      "fake_exec_model": "anthropic/claude-sonnet-5-5"
+    },
+    "namespaced_openai_to_claude": {
+      "parser_accepted": true,
+      "backend": "claude-code",
+      "model": "openai/gpt-5"
+    },
+    "dirty_state_visibility": {
+      "preview_repository_unstaged": true,
+      "preview_selected_unstaged": false,
+      "final_report_has_dirty_fields": false,
+      "final_scope_keys": [
+        "baseline",
+        "diff_sha256",
+        "files",
+        "paths"
+      ],
+      "stderr_has_uncommitted_warning": false
+    },
+    "outside_bracket_filename_breaks_bounded_review": [
+      {
+        "backend": "codex",
+        "exit_code": 127,
+        "diagnostics": [
+          "scope_path_invalid"
+        ],
+        "backend_started": false
+      },
+      {
+        "backend": "claude-code",
+        "exit_code": 127,
+        "diagnostics": [
+          "scope_path_invalid"
+        ],
+        "backend_started": false
+      }
+    ],
+    "mutation_default_backend": {
+      "exit_code": 1,
+      "summary": " last):\n  File \"/path/to/private-evidence\", line 172, in test_shortcuts_reach_real_public_codex_wrapper_with_structured_result\n    self.assertEqual(result.returncode, 0, result.stderr)\nAssertionError: 127 != 0 : delegate: host=unknown backend=claude-code model=unknown\ndelegate: artifacts=/path/to/private-evidence\ndelegate: status=conditions_missing backend=claude-code started=false reviewed=0/1 unreviewed=1 usage=unknown\n\n\n----------------------------------------------------------------------\nRan 1 test in 0.505s\n\nFAILED (failures=1)\n"
+    },
+    "restored_default_backend_test": {
+      "exit_code": 0,
+      "summary": ".\n----------------------------------------------------------------------\nRan 1 test in 0.666s\n\nOK\n"
+    },
+    "doctor_argument_consistency": {
+      "--help": 64,
+      "--backend=claude-code": 64
+    },
+    "models_called": 0,
+    "original_product_files_unchanged": true,
+    "copied_mutation_restored": true,
+    "known_missing_tests": [
+      "namespaced_other_backend_model",
+      "untracked_outside_bracket_filename"
+    ],
+    "legacy_uppercase_claude_model": {
+      "exit_code": 0,
+      "fake_exec_model": "SONNET",
+      "models_called": 0
+    },
+    "migration_bytes": {
+      "doctor": 1038,
+      "help": 3586,
+      "run": 1843,
+      "review": 3528
+    },
+    "mutation_scope_predicate": {
+      "inverted_in_source_copy_only": true,
+      "mutation_exit_code": 1,
+      "assertion": "127 != 0",
+      "restored_exit_code": 0,
+      "first_auxiliary_attempt": "failed assertion expected stdout diagnostic in unittest stderr; copy restored; not a product failure"
+    }
+  },
+  "source_manifest_sha256": "5c896f2f4fc97f8b9886ce20f2f66b9b53d627b43602aef8493a93ab0fafdfed",
+  "product_files_unchanged": true,
+  "models_called": 0,
+  "installation_invocations": 0,
+  "handoff_messages": 0,
+  "git_delivery": false,
+  "official_sources": [
+    "https://code.claude.com/docs/en/skills#control-who-invokes-a-skill"
+  ],
+  "next_step": "Handle CMD-001, CMD-002, DOC-001 within existing claude-review module; no renewed full scan or automatic optional refactor.",
+  "_publication_note": "本机身份与路径已脱敏；原始本地证据私有保留，结论及产品/输入摘要未改。"
+}

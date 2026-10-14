@@ -47,7 +47,11 @@ claude --plugin-dir /path/to/delegate-plugin/plugins/delegate
 /bin/bash scripts/validate.sh
 ```
 
-总入口检查 JSON/Python/Bash 语法、可执行位、清单必填字段、判决器自检、全部 3 个 shell 产品套和 2 个 Python 回归套。基线为 52 条产品断言和 17 个 Python 回归；免费总入口不调用模型；doctor 的四个规则检查通过 run_doctor 显式使用本套受控 CLI、合成登录状态和临时日志，不继承外层安装/认证判据。[本轮实际验证](docs/verification/2026-10-08-f8-applied.md)在无外层 Codex 环境通过整个总套，且无 CLI/外层拒绝登录两种场景的探测套各 19 条通过。
+总入口检查 JSON/Python/Bash 语法、可执行位、清单必填字段、判决器自检、已注册的 shell 产品套和 Python 回归套。v0.4.0 基线为 52 条产品断言和 17 个 Python 回归；免费总入口不调用模型；doctor 的四个规则检查通过 run_doctor 显式使用本套受控 CLI、合成登录状态和临时日志，不继承外层安装/认证判据。[本轮实际验证](docs/verification/2026-10-08-f8-applied.md)在无外层 Codex 环境通过整个总套，且无 CLI/外层拒绝登录两种场景的探测套各 19 条通过。
+
+文件语法发现仅排除根目录 `.git` 和已忽略的本机私有 `.agent/acceptance` 验收产物，避免把 0600 安装备份当作可执行源码；不忽略其他 `.agent` 文件、相似目录名或产品源码。私有证据按相应批次另行核对，产品套全部保留。发现规则回归为 `python3 -B scripts/tests/test-validation-discovery.py`，使用隔离夹具，不调用模型。
+
+修改源命令时，免费总套还检查 Codex 0.162.1 的自动迁移大小约束：生成 skill 的 UTF-8 正文和包装合计不能超过 4000 字节，超限会被跳过而不使安装失败。命令入口保持简洁，详细开发记录放在文档中；该离线检查不代替真实安装或宿主体验验收。
 
 需要定位失败时可单独运行：
 
@@ -57,6 +61,7 @@ claude --plugin-dir /path/to/delegate-plugin/plugins/delegate
 /bin/bash plugins/delegate/tests/test-routing.sh
 python3 -B plugins/delegate/tests/test-backend.py
 python3 -B plugins/delegate/tests/test-channel-regressions.py
+python3 -B plugins/delegate/tests/test-command-migration.py
 /bin/bash evals/propose-not-auto.sh --scaffold-only
 /bin/bash evals/routing-fitness.sh --scaffold-only
 ```

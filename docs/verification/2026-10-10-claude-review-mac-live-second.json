@@ -1,0 +1,60 @@
+{
+  "execution_status": "failed",
+  "review_outcome": "inconclusive",
+  "host": "unknown",
+  "backend": "claude-code",
+  "backend_started": true,
+  "execution_environment": "native",
+  "cleanup": "confirmed",
+  "requested_model": "sonnet",
+  "observed_models": [],
+  "cli_version": "2.1.296",
+  "authentication": {
+    "method": "claude.ai",
+    "provider": "firstParty"
+  },
+  "diagnostics": [
+    "tool_boundary_unverified",
+    "initial_event_not_init"
+  ],
+  "reviewed": [],
+  "unreviewed": [
+    {
+      "path": "PLAN.md",
+      "reason": "review_not_completed"
+    },
+    {
+      "path": "REVIEW_DATA.md",
+      "reason": "review_not_completed"
+    },
+    {
+      "path": "SPEC.md",
+      "reason": "review_not_completed"
+    },
+    {
+      "path": "src/pricing.py",
+      "reason": "review_not_completed"
+    }
+  ],
+  "findings": [],
+  "wrapper_exit_code": 1,
+  "elapsed_seconds": 3.867,
+  "review_attempts": 1,
+  "actual_parent_host": "codex-desktop",
+  "direction": "codex-to-claude-code",
+  "acceptance": "not_completed",
+  "batch": 2,
+  "scope_integrity": {
+    "captured_files_unchanged": true,
+    "context_unchanged": true,
+    "head_unchanged": true,
+    "git_clean": true,
+    "attack_marker_absent": true
+  },
+  "limitations": [
+    "First event was not init; raw fields were not retained.",
+    "All four files remain unreviewed; no verified model or usage.",
+    "No retry or backend fallback occurred within this authorized batch.",
+    "Later network-denied startup probes are not successful live review acceptance."
+  ]
+}

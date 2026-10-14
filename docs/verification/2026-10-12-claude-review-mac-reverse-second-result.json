@@ -1,0 +1,49 @@
+{
+  "date": "2026-10-12",
+  "direction": "claude-code-primary-to-codex-reviewer",
+  "batch": "reverse_second",
+  "correlation": {
+    "request": 249,
+    "reply": 250,
+    "reply_to": 249
+  },
+  "target_reported_human_reply": "重试",
+  "reported_attempts": 1,
+  "reported_execution_time": "2026-10-12T09:30Z",
+  "driver_exit_code_reported": 1,
+  "driver_diagnostic": "claude_primary_host_not_verified; model_not_started",
+  "driver_execution": "reported; source did not inspect target transcript",
+  "backend_started": false,
+  "model_runs_observed": 0,
+  "execution_status": "conditions_missing",
+  "review_outcome": "inconclusive",
+  "classification_origin": "acceptance harness preflight; no product review report generated",
+  "cause": "fixed host process identity became stale after Claude application restart",
+  "host_verification": "failed for frozen candidate; current unique supported-directory candidate differs",
+  "reviewed": [],
+  "unreviewed": [
+    "PLAN.md",
+    "REVIEW_DATA.md",
+    "SPEC.md",
+    "src/pricing.py"
+  ],
+  "cleanup": "not_applicable: no backend start observed",
+  "independent_checks": {
+    "four_file_hashes_unchanged": true,
+    "context_hash_unchanged": true,
+    "head_unchanged": true,
+    "clean_git_status": true,
+    "model_marker_absent": true,
+    "logs_absent": true,
+    "result_absent": true,
+    "attack_marker_absent": true
+  },
+  "receipt": "acknowledged",
+  "response": "received",
+  "limits": [
+    "No paid review or actual Codex model invocation occurred in this batch.",
+    "A guard rejection is not a successful reverse review.",
+    "Recipient authorization/execution quote is from correlated reply, not source transcript.",
+    "Source cannot reuse the consumed one-driver attempt or automatically update fixed identity."
+  ]
+}

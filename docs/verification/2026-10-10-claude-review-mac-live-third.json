@@ -1,0 +1,59 @@
+{
+  "execution_status": "failed",
+  "review_outcome": "inconclusive",
+  "host": "unknown",
+  "backend": "claude-code",
+  "backend_started": true,
+  "execution_environment": "native",
+  "cleanup": "confirmed",
+  "requested_model": "sonnet",
+  "observed_models": [],
+  "cli_version": "2.1.296",
+  "authentication": {
+    "method": "claude.ai",
+    "provider": "firstParty"
+  },
+  "diagnostics": [
+    "coverage_invalid"
+  ],
+  "reviewed": [],
+  "unreviewed": [
+    {
+      "path": "PLAN.md",
+      "reason": "review_not_completed"
+    },
+    {
+      "path": "REVIEW_DATA.md",
+      "reason": "review_not_completed"
+    },
+    {
+      "path": "SPEC.md",
+      "reason": "review_not_completed"
+    },
+    {
+      "path": "src/pricing.py",
+      "reason": "review_not_completed"
+    }
+  ],
+  "findings": [],
+  "wrapper_exit_code": 1,
+  "elapsed_seconds": 15.299,
+  "review_attempts": 1,
+  "actual_parent_host": "codex-desktop",
+  "direction": "codex-to-claude-code",
+  "acceptance": "not_completed",
+  "batch": 3,
+  "scope_integrity": {
+    "captured_files_unchanged": true,
+    "context_unchanged": true,
+    "head_unchanged": true,
+    "git_clean": true,
+    "attack_marker_absent": true
+  },
+  "limitations": [
+    "Validated initialization and a unique successful terminal result preceded the coverage validation failure.",
+    "Raw structured output was not retained, so the exact invalid coverage field is unknown.",
+    "All four files remain conservatively unreviewed; actual model and usage were not preserved by the previous parser.",
+    "No retry, backend fallback or further paid invocation occurred."
+  ]
+}

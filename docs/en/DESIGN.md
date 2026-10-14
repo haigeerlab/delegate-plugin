@@ -2,7 +2,7 @@
 
 [简体中文](../../DESIGN.md) | English
 
-Run execution and investigation for a settled approach through a separate Codex CLI invocation, returning only the final answer to Claude Code. The main session handles requirements, trade-offs, authorization, and verification. Separate execution reduces the process-log volume carried by that session, without guaranteeing lower total token usage or cost.
+Run scoped read-only reviews through Codex or Claude Code CLI, and settled general tasks through Codex. Both hosts share the source entry points and receive the final answer. The main session handles requirements, trade-offs, authorization, and verification. Separate execution reduces the process-log volume carried by that session, without guaranteeing lower total token usage or cost.
 
 ## Are the decisions settled?
 
@@ -17,6 +17,12 @@ Claude proposes a specific task → user confirms → command → wrapper checks
 ```
 
 ## Responsibilities
+
+Source commands are review/run/doctor/help. delegate_cli.py owns shortcut inputs and model-free previews; delegate_capabilities.py describes two explicit backends. The backend preserves legacy scripts. Review is always read-only; run currently supports Codex only. Shortcuts reuse common context capture, permissions and result validation. The new interface is not installed or released; migration is specified in the [module contract](../../spec/claude-review.md).
+
+The public `delegate-exec.sh` selects the backend and validates its parameters, retaining the `codex-exec.sh` compatibility path. The `claude-review` module manages common context/snapshots/results, Claude preflight and native Mac execution boundaries; it does not extend Spec Guard executors. Detection cache and hooks still describe default Codex readiness; explicit Claude selection bypasses that Codex authentication gate.
+
+Claude is read-only review: tool restrictions narrow capabilities, safe/restricted narrow project/plugin context, srt constrains the entire CLI filesystem/network access; a temporary launchd job supplies an independent kernel resource coalition, with a STOP barrier, PID-generation signals and task-count checks for helper cleanup. Use only existing local CLI/authentication and dependencies, without installing LaunchAgents or changing global settings. Fixed snapshots retain original-path/hash mappings and treat content as data. The wrapper owns execution identity, so denials, parsing errors or insufficient coverage cannot mean no findings. Original local model-free interfaces have been checked; the latest CLI 2.1.296 authentication passed under the strict boundary, while the cause of earlier failures remains unknown. The fourth Codex→Claude run completed a real four-file read-only review, with a checked core fixture defect, unchanged inputs and confirmed cleanup. Claude primary-session→Codex ran once but failed to read the four files; repaired successful review remains unverified; active model write/recursive-delegation attempts were not observed; see the [module contract](SPEC-claude-review.md).
 
 - `backend.py` provides shared checks for channel and detection: PATH, a working version command, and CLI-reported ChatGPT authentication.
 - `channel` manages invocation, sandbox selection, logs, execution deadline, and process-group cleanup. It does not decide whether delegation is worthwhile.
@@ -42,6 +48,8 @@ The cache represents recent local readiness only. Expiration, identity changes, 
 
 ## Trade-offs
 
-Keep one Codex backend without prematurely introducing a provider abstraction. There is no background control plane, queue, resumption, or automatic retry. Reject non-Git directories in both modes to keep execution conditions and verification consistent. Preserve existing user changes and determine their attribution through diff review.
+Support exactly Codex and an optional Claude Code review backend, defaulting to Codex without automatic host-based selection. There is no background control plane, queue, resumption, or automatic retry. Reject non-Git directories in both modes to keep execution conditions and verification consistent. Preserve existing user changes and determine their attribution through diff review.
 
 Free stub tests verify deterministic contracts. Live verification of real sandbox behavior, remote requests, and interactive model behavior is a deliberate user choice. Evaluations explicitly load source, distinguish PASS/FAIL/NORUN, and require a fixed first-line verdict to avoid false positives from body text. The [capability map](capability-map.md) and [README](../../README.en.md) provide module and usage entry points.
+
+The first real reverse run started Codex from Claude but reviewed no files. Codex review now receives bounded inline file data, with a 1 MiB serialized input limit and verified disabled shell/apps/plugins/multi-agent features. The repaired real reverse review completed 4/4; see the [latest evidence and limits](../verification/2026-10-12-claude-review-mac-reverse-fourth-success.md) (Chinese). The first failed run remains historical.

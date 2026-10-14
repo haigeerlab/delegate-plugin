@@ -148,16 +148,56 @@ class BackendTests(unittest.TestCase):
         self.run_script(self.detect)
         self.assertTrue(self.calls.read_text(), 'future timestamps must not extend cache freshness')
 
-    def test_prompt_cold_cache_injects_one_confirmation_pointer(self):
+    def test_prompt_cold_cache_never_injects_or_probes(self):
         output = self.run_script(ROOT / 'plugins/delegate/hooks/prompt.sh')
         self.assertEqual(output.returncode, 0)
-        self.assertEqual(len(output.stdout.splitlines()), 1)
-        context = json.loads(output.stdout)['hookSpecificOutput']['additionalContext']
-        self.assertIn('等用户确认', context)
+        self.assertEqual(output.stdout, '')
+        self.assertFalse(self.calls.exists(), 'ordinary prompts must not check authentication')
         hooks = json.loads((ROOT / 'plugins/delegate/hooks/hooks.json').read_text())
-        handlers = hooks['hooks']['UserPromptSubmit'][0]['hooks']
-        self.assertEqual(len(handlers), 1)
-        self.assertIn('/hooks/prompt.sh', handlers[0]['command'])
+        self.assertNotIn('UserPromptSubmit', hooks['hooks'])
+
+    def test_readiness_never_becomes_delegation_for_any_host_or_prompt(self):
+        self.run_script(self.detect, '--session-start')
+        cache = self.base / 'tmp/delegate/detection.json'
+        original = cache.read_bytes()
+        self.calls.write_text('')
+        for host in ('claude', 'codex', 'unknown', 'conflicting'):
+            env = dict(self.env)
+            for name in ('CLAUDECODE', 'CLAUDE_PROJECT_DIR', 'CODEX_THREAD_ID'):
+                env.pop(name, None)
+            if host in ('claude', 'conflicting'):
+                env.update(CLAUDECODE='1', CLAUDE_PROJECT_DIR=str(self.repo))
+            if host in ('codex', 'conflicting'):
+                env['CODEX_THREAD_ID'] = 'fixture-thread'
+            for prompt in ('继续', 'continue', '帮我审查这段代码',
+                           '/delegate:review --backend claude-code --paths src',
+                           '/delegate:run 检查状态'):
+                for handler in ('prompt.sh', 'route.sh'):
+                    with self.subTest(host=host, prompt=prompt, handler=handler):
+                        for _ in range(2):
+                            output = subprocess.run(['/bin/bash', str(ROOT / 'plugins/delegate/hooks' / handler)],
+                                input=json.dumps({'hook_event_name': 'UserPromptSubmit',
+                                    'session_id': 'fixture-session', 'prompt': prompt}),
+                                env=env, cwd=self.repo, capture_output=True, text=True, timeout=10)
+                            self.assertEqual(output.returncode, 0)
+                            self.assertEqual(output.stdout, '')
+                            self.assertEqual(output.stderr, '')
+        self.assertEqual(cache.read_bytes(), original)
+        self.assertEqual(self.calls.read_text(), '', 'prompt callbacks must not launch any CLI')
+
+    def test_explicit_codex_run_remains_available_without_a_routing_hook(self):
+        for host in ('claude', 'codex'):
+            env = dict(self.env)
+            for name in ('DELEGATE_REVIEW_DEPTH', 'CLAUDECODE', 'CODEX_THREAD_ID'):
+                env.pop(name, None)
+            env['CLAUDECODE' if host == 'claude' else 'CODEX_THREAD_ID'] = 'fixture'
+            self.calls.write_text('')
+            output = self.run_script(ROOT / 'plugins/delegate/scripts/delegate-exec.sh',
+                'run', '--backend', 'codex', 'Inspect this fixture without writing', env=env)
+            self.assertEqual(output.returncode, 0, output.stderr)
+            self.assertIn('answer', output.stdout)
+            calls = [json.loads(line) for line in self.calls.read_text().splitlines()]
+            self.assertEqual(sum(bool(args) and args[0] == 'exec' for args in calls), 1)
 
 
 if __name__ == '__main__':

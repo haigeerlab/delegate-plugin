@@ -82,13 +82,10 @@ with open(sys.argv[1], "w") as cache_file:
     cache_file.write("\n")
 PY
   PATH="${SCAFFOLD_BIN}:${PATH}" TMPDIR="${SCAFFOLD_TMPDIR}" "${ROUTE_SCRIPT}" > "${SCAFFOLD_ROUTE_OUTPUT}" || return 1
-  python3 - "${SCAFFOLD_ROUTE_OUTPUT}" <<'PY' || return 1
-import json
+  python3 -B - "${SCAFFOLD_ROUTE_OUTPUT}" <<'PY' || return 1
+from pathlib import Path
 import sys
-with open(sys.argv[1]) as route_output:
-    payload = json.load(route_output)
-context = payload["hookSpecificOutput"]["additionalContext"]
-sys.exit(0 if "等用户确认" in context else 1)
+sys.exit(0 if Path(sys.argv[1]).read_bytes() == b'' else 1)
 PY
 }
 
@@ -98,7 +95,7 @@ run_scaffold_only() {
     return 2
   fi
   printf '脚手架: %s\n' "${SCAFFOLD_DIR}"
-  printf 'route.sh 确实注入了那行 JSON: %s\n' "${SCAFFOLD_ROUTE_OUTPUT}"
+  printf '退役 route.sh 已核实零注入: %s\n' "${SCAFFOLD_ROUTE_OUTPUT}"
 }
 
 SELFTEST_PASS=0

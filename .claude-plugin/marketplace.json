@@ -8,8 +8,8 @@
     {
       "name": "delegate",
       "source": "./plugins/delegate",
-      "description": "把已决策的执行与查证工作委托给 Codex CLI，只带回结论；默认只读、必须确认、绝不自动派。"
+      "description": "通过 Codex 或 Claude Code 执行只读审查，或将已确认任务交给 Codex；后端显式选择，不自动派活。"
     }
   ],
-  "description": "将已决策的执行与查证委托给 Codex CLI，隔离过程日志并提供 Git 验收。"
+  "description": "明确范围的双后端审查与 Codex 通用委托；隔离过程日志，保留结果证据和写入验收。"
 }
