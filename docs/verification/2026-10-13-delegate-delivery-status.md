@@ -15,7 +15,7 @@
 | 宿主入口显示 | Codex 四入口由用户确认；Claude 四入口由 AI 直接观察，2026-10-14 再次可见。未执行本轮重载或新审查 | [本轮 UI 核对](2026-10-14-delegate-ui-and-s4-preview.md) |
 | 人工接受 | Checkpoint3源码部分接受保留历史范围；Checkpoint5接受当前Mac功能、分层证据及未验证限制，不含Git交付 | [最终供审对象](2026-10-14-delegate-final-layered-review.md) |
 | 分层工程验收 | 按明确批准的CR-03/06/09判据分别关闭Task2/6/8；非安全行为穷举，历史未知保留 | [分层结果](2026-10-14-delegate-layered-acceptance-result.md) |
-| 提交、推送、发布 | 用户另行明确授权后已完成：提交c59b370，main与开发分支及v0.5.0标签目标一致，正式非预发布版本已创建 | [发行页](https://github.com/haigeerlab/delegate-plugin/releases/tag/v0.5.0)、[提交](https://github.com/haigeerlab/delegate-plugin/commit/c59b370b7e64c9a0f88024ecdfda8a371174ea89) |
+| 提交、推送、发布 | 用户另行明确授权后已完成：发布提交c59b370已进入main与开发分支，v0.5.0标签固定该发布提交；后续文档提交继续更新分支，不移动发行标签，正式非预发布版本已创建 | [发行页](https://github.com/haigeerlab/delegate-plugin/releases/tag/v0.5.0)、[提交](https://github.com/haigeerlab/delegate-plugin/commit/c59b370b7e64c9a0f88024ecdfda8a371174ea89) |
 
 ## 已实现与使用方式
 
