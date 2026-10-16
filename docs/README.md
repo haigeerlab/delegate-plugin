@@ -10,7 +10,7 @@ delegate 的默认文档语言为简体中文。英文对应页覆盖当前维�
 - 日常使用与排障：查 README 的命令、输出验收和故障排查；会话内可用 `/delegate:help`。
 - 理解设计：先读 [设计与边界](../DESIGN.md)，再看 [能力图](../spec/CAPABILITY-MAP.md)。
 - 开发与审查：先读模块规格和[贡献指南](../CONTRIBUTING.md)，从仓库根运行免费验证。[Claude 审查合同](../spec/claude-review.md)包含v0.5.0 双后端、review/run 接口与快捷范围预览；两方向普通真实审查均有成功记录，菜单实际执行已核对；主动模型越界、认证刷新与自然异常 helper 仍未验证。
-- 升级：读 [v0.5.0 版本说明](releases/v0.5.0.md)；后续变化看 [未发布记录](releases/unreleased.md)。
+- 升级：读 [v0.5.1 版本说明](releases/v0.5.1.md)；从 v0.4.0 升级还需读 [v0.5.0](releases/v0.5.0.md) 的命令迁移；后续变化看 [未发布记录](releases/unreleased.md)。
 
 ## 当前维护的双语文档
 
@@ -26,9 +26,9 @@ delegate 的默认文档语言为简体中文。英文对应页覆盖当前维�
 | 探测与缓存 | [探测规格](../spec/detection.md) | [Detection specification](en/SPEC-detection.md) |
 | 路由与行为评估 | [路由规格](../spec/routing.md) | [Routing specification](en/SPEC-routing.md) |
 | Claude 审查 | [审查规格](../spec/claude-review.md) | [Review specification](en/SPEC-claude-review.md) |
-| 当前发行 | [v0.5.0](releases/v0.5.0.md) | [v0.5.0](en/releases/v0.5.0.md) |
+| 当前发行 | [v0.5.1](releases/v0.5.1.md) | [v0.5.1](en/releases/v0.5.1.md) |
 | 后续变化 | [未发布记录](releases/unreleased.md) | [Unreleased](en/releases/unreleased.md) |
-| 旧版发行记录 | [v0.4.0](releases/v0.4.0.md)、[v0.3.1（历史）](releases/v0.3.1.md) | [v0.4.0](en/releases/v0.4.0.md), [v0.3.1 (historical)](en/releases/v0.3.1.md) |
+| 旧版发行记录 | [v0.5.0](releases/v0.5.0.md)、[v0.4.0](releases/v0.4.0.md)、[v0.3.1（历史）](releases/v0.3.1.md) | [v0.5.0](en/releases/v0.5.0.md), [v0.4.0](en/releases/v0.4.0.md), [v0.3.1 (historical)](en/releases/v0.3.1.md) |
 
 安装和日常使用以 README 为入口；精确的实现与测试合同以当前 `spec/<id>.md` 为准。英文版与中文版应同步维护；发现差异时请提交问题，以当前实现和验证结果核对后同时修正。
 

@@ -2,7 +2,9 @@
 
 [简体中文](../../spec/claude-review.md) | English
 
-**Current release, 2026-10-14:** v0.5.0 is published. Commit `c59b370` is on main and the development branch, with both local 0.5.0 installations matching source. Free release validation passed 157 Python / 53 shell / 19 eval cases, followed by 16 installed-entry checks and 48 result regressions. Release added no model runs; S2/S6/S7 retain their frozen source scopes. See the [delivery status](../verification/2026-10-13-delegate-delivery-status.md) (Chinese).
+**Current release, 2026-10-16:** v0.5.1 fixes the Claude backend being refused when a Claude Desktop session injects the official `ANTHROPIC_BASE_URL`; see the [release notes](releases/v0.5.1.md). Free validation passed 162 Python / 53 shell / 19 eval with no new model calls; a complete Claude backend doctor run and real reviews inside Desktop remain unverified.
+
+**v0.5.0 release, 2026-10-14:** v0.5.0 is published. Commit `c59b370` is on main and the development branch, with both local 0.5.0 installations matching source. Free release validation passed 157 Python / 53 shell / 19 eval cases, followed by 16 installed-entry checks and 48 result regressions. Release added no model runs; S2/S6/S7 retain their frozen source scopes. See the [delivery status](../verification/2026-10-13-delegate-delivery-status.md) (Chinese).
 
 **Current acceptance criteria, 2026-10-14:** The user explicitly approved the layered acceptance revision. CR-03/06/09 follow the layers below, with production permissions, tool sets and product tests unchanged. Active model Write/recursion, auth refresh, natural helper variants, unresolved historical causes and long-term stability remain individually unverified; this does not retroactively pass the old criteria. S7 menu-to-script execution and the complete dry-run output are verified, with the failed automatic input/concurrent submission retained. Earlier status paragraphs retain their original versions/criteria; the module todo and evidence mapping contain current conclusions.
 
