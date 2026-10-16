@@ -2,7 +2,9 @@
 
 [简体中文](../../spec/claude-review.md) | English
 
-**Current release, 2026-10-16:** v0.5.1 fixes the Claude backend being refused when a Claude Desktop session injects the official `ANTHROPIC_BASE_URL`; see the [release notes](releases/v0.5.1.md). Free validation passed 162 Python / 53 shell / 19 eval with no new model calls; a complete Claude backend doctor run and real reviews inside Desktop remain unverified.
+**Current release, 2026-10-16:** v0.5.2 attaches line numbers to every line of file contents sent to Codex reviews, fixing real reviews whose findings lacked line numbers and were marked failed, and corrects README guidance; see the [release notes](releases/v0.5.2.md). Free validation passed 166 Python / 53 shell / 19 eval, and after the fix a real Codex review from `main` source completed 6/6 with verifiable finding line numbers.
+
+**v0.5.1 release, 2026-10-16:** v0.5.1 fixes the Claude backend being refused when a Claude Desktop session injects the official `ANTHROPIC_BASE_URL`; see the [release notes](releases/v0.5.1.md). Free validation passed 162 Python / 53 shell / 19 eval with no new model calls; a complete Claude backend doctor run and real reviews inside Desktop remain unverified.
 
 **v0.5.0 release, 2026-10-14:** v0.5.0 is published. Commit `c59b370` is on main and the development branch, with both local 0.5.0 installations matching source. Free release validation passed 157 Python / 53 shell / 19 eval cases, followed by 16 installed-entry checks and 48 result regressions. Release added no model runs; S2/S6/S7 retain their frozen source scopes. See the [delivery status](../verification/2026-10-13-delegate-delivery-status.md) (Chinese).
 
