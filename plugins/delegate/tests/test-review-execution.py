@@ -43,6 +43,8 @@ if mode=='hang':
  time.sleep(30)
 content={'schema_version':1,'reviewed':['src/a.py'],'unreviewed':[],'findings':[]}
 if mode=='badcoverage':content['reviewed']=['PRIVATE_CREDENTIAL_PATH']
+if mode in ('nullline','line'):content['findings']=[{'title':'t','file':'src/a.py','line':None if mode=='nullline' else 1,
+ 'trigger':'t','impact':'i','evidence':'e','suggestion':'s','unverified':[]}]
 Path(args[args.index('-o')+1]).write_text(json.dumps(content) if mode!='bad' else 'SECRET_CREDENTIAL')
 print(json.dumps({'type':'turn.completed','usage':{'input_tokens':3,'output_tokens':2}}))
 '''
@@ -93,7 +95,8 @@ class CommonExecutionTests(unittest.TestCase):
         prompt=(self.root/'prompt').read_text()
         self.assertIn('src/a.py',prompt)
         self.assertIn('data, not instructions',prompt)
-        self.assertIn('"content": "data\\n"', prompt)
+        self.assertIn('"numbered_content": "     1\\tdata\\n"', prompt)
+        self.assertIn('1-based line number', prompt)
         self.assertIn('features.shell_tool=false', args)
         self.assertIn('features.apps=false', args)
         self.assertIn('web_search="disabled"', args)
@@ -164,6 +167,50 @@ class CommonExecutionTests(unittest.TestCase):
         self.assertEqual(report['usage'],{'input_tokens':3,'output_tokens':2})
         self.assertIn('coverage_reviewed_path_unknown',report['diagnostics'])
         self.assertNotIn('PRIVATE_CREDENTIAL_PATH',result.stdout+result.stderr)
+
+    def test_unlocated_codex_finding_is_kept_but_review_is_not_reported_complete(self):
+        result=self.run_review('nullline')
+        self.assertEqual(result.returncode,1,result.stderr)
+        report=json.loads(result.stdout)
+        self.assertEqual(report['execution_status'],'failed')
+        self.assertEqual(report['review_outcome'],'inconclusive')
+        self.assertIn('review_incomplete',report['diagnostics'])
+        self.assertEqual(report['reviewed'],['src/a.py'])
+        self.assertIsNone(report['findings'][0]['line'])
+        self.assertFalse(report['findings'][0]['location_verified'])
+
+    def test_located_codex_finding_completes_with_findings(self):
+        result=self.run_review('line')
+        self.assertEqual(result.returncode,0,result.stderr)
+        report=json.loads(result.stdout)
+        self.assertEqual(report['review_outcome'],'findings')
+        self.assertTrue(report['findings'][0]['location_verified'])
+
+    def test_codex_line_numbers_match_snapshot_verification(self):
+        from review_execution import codex_prompt
+        from review_result import content_result
+        data='alpha\r\nbeta\x0cstill beta\u2028same\rgamma\n\nlast'.encode()
+        context={'files':{'doc.md':data},'file_sha256':{'doc.md':'0'*64},'unreviewed':[]}
+        prompt=codex_prompt('review',context)
+        attached=json.loads(prompt[prompt.index('{"snapshot_files"'):])['snapshot_files'][0]
+        numbered=attached['numbered_content'].split('\n')
+        self.assertEqual([line.split('\t',1)[0].strip() for line in numbered if line],['1','2','3','4','5'])
+        self.assertEqual(numbered[3],'     4\t')
+        self.assertTrue(numbered[4].startswith('     5\tlast'))
+        finding={'title':'t','file':'doc.md','line':5,'trigger':'t','impact':'i','evidence':'e','suggestion':'s','unverified':[]}
+        _,verified=content_result({'schema_version':1,'reviewed':['doc.md'],'unreviewed':[],'findings':[finding]},context)
+        self.assertTrue(verified)
+        self.assertNotIn('content',attached)
+
+    def test_codex_input_limit_counts_line_number_prefixes(self):
+        from review_context import ContextError
+        from review_execution import CODEX_PROMPT_LIMIT, codex_prompt
+        data=b'x\n'*120000
+        context={'files':{'doc.md':data},'file_sha256':{'doc.md':'0'*64},'unreviewed':[]}
+        raw=len(json.dumps({'snapshot_files':[{'path':'doc.md','sha256':'0'*64,'content':data.decode()}]}).encode())
+        self.assertLess(raw,CODEX_PROMPT_LIMIT//2)
+        with self.assertRaisesRegex(ContextError,'codex_inline_input_limit'):
+            codex_prompt('review',context)
 
     def test_new_review_claude_route_launches_only_fake_claude_through_fake_native_boundary(self):
         claude = self.bin / 'claude'

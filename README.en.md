@@ -54,21 +54,21 @@ It does not provide background jobs, queues, resumption, automatic retries, a th
 | Dependency | Requirement |
 |---|---|
 | Claude Code | Plugin support and a working `claude` command in the terminal |
-| Codex CLI | A working `codex` command on PATH in the same environment, authenticated through ChatGPT |
+| Codex CLI | Needed only for the Codex backend (`/delegate:run` and the default review backend): a working `codex` command on PATH in the same environment, authenticated through ChatGPT |
 | Python 3, Git, Bash | Required by the scripts; compatible with macOS Bash 3.2 |
-| Target project | A Git working tree; existing uncommitted changes and repositories without commits are allowed |
+| Target project | A Git working tree; existing uncommitted changes are allowed. `/delegate:review` requires at least one commit (HEAD); repositories without commits work only with `/delegate:run` |
 | Node.js, npm | Required if you use the npm installation method below |
 | Claude Code review backend (optional) | Needed only for `--backend claude-code`: macOS, the official Claude Code ≥2.1.295 already signed in, Node.js ≥22.12.0, an installed srt 0.0.79, and an available user GUI launchd domain; the plugin installs and signs in to nothing |
 
 The Codex execution path keeps the v0.4.0 verified environment: Claude Code 2.1.291, Codex CLI 0.160.0, Python 3.10, and Bash 3.2. The v0.5.0 Claude review backend was tested on macOS 15.7.3 arm64 with the official Claude Code 2.1.296. These are tested versions, not a minimum compatibility guarantee. Windows and Linux have not been verified. The Quick start below installs whatever Codex is latest at the time with `@latest` rather than pinning these versions; `codex --version` reports what you actually have.
 
-Authentication is checked through CLI status rather than the existence of `auth.json`. API-key and unrecognized authentication states are rejected. Execution removes `OPENAI_API_KEY` and `CODEX_API_KEY` and selects ChatGPT authentication and the OpenAI provider. Codex CLI manages credential storage, which may use a file under `CODEX_HOME` or the system keychain. [Codex authentication documentation](https://learn.chatgpt.com/docs/auth)
+Codex backend authentication is checked through CLI status rather than the existence of `auth.json`. API-key and unrecognized authentication states are rejected. Execution removes `OPENAI_API_KEY` and `CODEX_API_KEY` and selects ChatGPT authentication and the OpenAI provider. Codex CLI manages credential storage, which may use a file under `CODEX_HOME` or the system keychain. [Codex authentication documentation](https://learn.chatgpt.com/docs/auth)
 
 ## Quick start
 
-### 1. Install Codex and sign in
+### 1. Install Codex and sign in (Codex backend only)
 
-Run in your terminal:
+Skip this step if you only review with `--backend claude-code`; prepare the Claude review backend dependencies listed under [Prerequisites](#prerequisites) instead. `/delegate:run` and the default Codex review need this step. Run in your terminal:
 
 ```bash
 npm install -g @openai/codex@latest

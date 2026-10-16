@@ -60,7 +60,7 @@ Git 状态可以报告全仓库是否有改动，但只对指定范围及显式�
 
 真实 Claude→Codex 已运行一次，但审查失败：Codex 没有获准的本地 Read 工具，又遵守禁止命令的要求，四文件全部未审。宿主祖先/代际通过，backend_started=true、usage 已报告，不能再记作“未运行”；证据见 [反向首批](../docs/verification/2026-10-10-claude-review-mac-reverse-first.json)。2026-10-12修复后反向真实审查已完成4/4并核对核心缺陷，见[最新证据](../docs/verification/2026-10-12-claude-review-mac-reverse-fourth-success.json)；首批失败仍为历史事实。
 
-Codex 共同审查改为从已校验的有限快照直接附带原路径、SHA-256 和 UTF-8 文件内容，以 JSON 待审数据放入 stdin；不用 Bash/MCP 取得内容，不扩大范围、不执行项目代码。Claude 仍由受限 Read/Glob/Grep 读取相同快照，两后端接收等价的实际文件信息。Codex 最终序列化输入上限为 1 MiB（含任务、元数据、diff 和文件），超限在 CLI/模型启动前报告 codex_inline_input_limit，不截断或自动分批。dry-run 展示输入方式、实际 prompt 字节数与上限，不输出内容。
+Codex 共同审查改为从已校验的有限快照直接附带原路径、SHA-256 和 UTF-8 文件内容，以 JSON 待审数据放入 stdin；内容逐行加 1 起始行号前缀（与定位核验相同的分行规则），提示要求 findings.line 填对应文件行号，SHA-256 仍对应原始字节，快照文件不变；不用 Bash/MCP 取得内容，不扩大范围、不执行项目代码。Claude 仍由受限 Read/Glob/Grep 读取相同快照，两后端接收等价的实际文件信息。Codex 最终序列化输入上限为 1 MiB（含任务、元数据、diff 和带行号的文件），超限在 CLI/模型启动前报告 codex_inline_input_limit，不截断或自动分批。dry-run 展示输入方式、实际 prompt 字节数与上限，不输出内容。
 
 Codex 审查明确关闭 shell_tool、apps、plugins、multi_agent，禁用 web_search，MCP 配置为空；保留 read-only 沙箱。用同一配置的无模型 features list 核对四个功能开关各唯一且 false；不支持、未关闭、坏输出或失败时 codex_review_tools_unverified，模型不启动。当前 0.160.1 已只读核实开关输出；这不是实际模型工具清单验收，不声称关闭所有控制工具。旧 Codex run/free-text 行为不变。过程日志仍不保留真实输入内容。
 
