@@ -68,10 +68,10 @@ The new `claude-review` [plan](../../tasks/claude-review/plan.md) / [tasks](../.
 These records preserve earlier approaches, checklists, and trade-offs. They are not current installation or behavior contracts. Old options, authentication criteria, performance figures, and unchecked boxes do not establish the state of the current version.
 
 - Original module plans/tasks and bilingual-revision records: [byte-preserved archive](../archive/pre-spec-guard/README.md), retaining original paths, checkboxes, and SHA-256.
-- Documentation designs from 2026-08-30, originally in English: [public positioning](../superpowers/specs/2026-08-30-public-positioning-design.md), [Chinese marketplace positioning](../superpowers/specs/2026-08-30-chinese-marketplace-positioning-design.md), [v0.3.0 release-note draft](../superpowers/specs/2026-08-30-v030-release-notes-design.md).
-- Corresponding implementation records, originally in English: [public positioning](../superpowers/plans/2026-08-30-public-positioning-docs.md), [Chinese marketplace positioning](../superpowers/plans/2026-08-30-chinese-marketplace-positioning.md), [v0.3.0 release-note draft](../superpowers/plans/2026-08-30-v030-release-notes.md).
+- Documentation designs from 2026-08-30 and their implementation records (public positioning, Chinese marketplace positioning, v0.3.0 release-note draft), originally in English: [byte-preserved archive](../archive/superpowers-2026-08-30/README.md), retaining original paths and SHA-256.
 - This Spec Guard adoption's administrative records, in Chinese: [plan](../process/2026-10-08-adoption/plan.md) / [tasks and verification](../process/2026-10-08-adoption/todo.md) / [findings](../process/2026-10-08-adoption/report.md).
 - Earlier repairs and live validation: [sanitized summary and exact local evidence index](../verification/2026-10-08-history.md), in Chinese.
+- All verification records: [index grouped by series](verification/README.md), separating results/records from plans/previews; files stay in place.
 
 Historical and implementation records retain their original language rather than receiving individual translations. Maintained documents have complete bilingual reading paths through the table above.
 

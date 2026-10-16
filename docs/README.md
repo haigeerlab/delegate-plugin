@@ -68,10 +68,10 @@ evals/                              行为判决器和按需模型评估
 这些资料保留当时的方案、检查清单和取舍，不是当前安装或行为合同。旧参数、认证判据、性能数字和未完成勾选不能直接用于判断当前版本。
 
 - 早期模块计划、任务及双语修订记录：[按字节归档的原始资料](archive/pre-spec-guard/README.md)，保留原路径、勾选和 SHA-256。
-- 2026-08-30 文档设计：[公开定位](superpowers/specs/2026-08-30-public-positioning-design.md)、[中文 marketplace 定位](superpowers/specs/2026-08-30-chinese-marketplace-positioning-design.md)、[v0.3.0 发布说明草案](superpowers/specs/2026-08-30-v030-release-notes-design.md)。
-- 对应实施记录：[公开定位](superpowers/plans/2026-08-30-public-positioning-docs.md)、[中文 marketplace 定位](superpowers/plans/2026-08-30-chinese-marketplace-positioning.md)、[v0.3.0 发布说明草案](superpowers/plans/2026-08-30-v030-release-notes.md)。
+- 2026-08-30 文档设计与对应实施记录（公开定位、中文 marketplace 定位、v0.3.0 发布说明草案）：[按字节归档的原始资料](archive/superpowers-2026-08-30/README.md)，保留原路径与 SHA-256。
 - 本轮 Spec Guard 接入：[计划](process/2026-10-08-adoption/plan.md) / [任务与验收](process/2026-10-08-adoption/todo.md) / [检查结果](process/2026-10-08-adoption/report.md)。
 - 既有修复与真实验证：[脱敏摘要及原始本地证据索引](verification/2026-10-08-history.md)。
+- 全部验证记录：[按系列分组的验证记录索引](verification/README.md)，区分结果/记录与方案/预览，文件原位保留。
 
 历史和实施记录保留原有语言，不逐篇翻译；当前维护文档通过上表提供双语阅读路径。
 

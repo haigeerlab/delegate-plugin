@@ -9,3 +9,5 @@ v0.4.0 之后的本轮变化已归入 [v0.5.0 版本说明](v0.5.0.md)。以下�
 修正当前发行/安装状态、已退役Hook流程、真实及菜单验收口径、本地源码与缓存加载说明、验证套数量和英文遗漏。产品版本仍为0.5.0，运行代码、权限和历史原始证据不变；不新增模型验收。
 
 2026-10-16 文档核对：中文文档索引与英文版对齐并补 ADR-003/004、v0.4.0 链接；README 补 Claude 审查后端的前置条件、诊断和故障排查条目；移除 README、DESIGN、能力图和文档索引末尾错位的验收流水段；澄清探测规格的默认模式。新增插件目录 README、安全政策 SECURITY.md（GitHub 私密漏洞报告）、GitHub Issue 模板（Bug 报告、需求建议），README 的报告步骤改为指向模板。README 开头、DESIGN 和能力图中的内部批次流水改写为面向用户的验证状态，并更正 srt 默认从 PATH 解析；claude-review 规格开头的历史接续记录原样移到文末附录。不改运行代码。
+
+2026-10-16 文档归档：`docs/superpowers/` 下 6 份 2026-08-30 定位设计与计划按字节移入 [`docs/archive/superpowers-2026-08-30/`](../archive/superpowers-2026-08-30/README.md)，附原路径与 SHA-256 清单；新增 [验证记录索引](../verification/README.md)（[English](../en/verification/README.md)），`docs/verification/` 下的记录不移动、不改写。不改运行代码。
