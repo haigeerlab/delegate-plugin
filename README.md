@@ -54,21 +54,21 @@ Claude 后端使用本机已有的 srt，默认从 PATH 解析，也可用 `DELE
 | 依赖 | 要求 |
 |---|---|
 | Claude Code | 支持插件，且可在终端运行 `claude` |
-| Codex CLI | 可在同一环境的 PATH 中运行 `codex`，使用 ChatGPT 登录 |
+| Codex CLI | 仅 Codex 后端需要（`/delegate:run` 与默认的 review 后端）：可在同一环境的 PATH 中运行 `codex`，使用 ChatGPT 登录 |
 | Python 3、Git、Bash | 运行脚本所需；兼容 macOS 自带 Bash 3.2 |
-| 业务项目 | Git 工作区；允许已有未提交修改，也允许尚无提交的仓库 |
+| 业务项目 | Git 工作区；允许已有未提交修改。`/delegate:review` 要求仓库已有提交（HEAD），尚无提交的仓库只能使用 `/delegate:run` |
 | Node.js、npm | 使用下方 npm 安装 Codex 的方式时需要 |
 | Claude Code 审查后端（可选） | 仅 `--backend claude-code` 需要：macOS、原版 Claude Code ≥2.1.295 且已登录、Node.js ≥22.12.0、已安装的 srt 0.0.79、可用的用户 GUI launchd 域；插件不自动安装或登录 |
 
 Codex 执行路径沿用 v0.4.0 的验证环境：Claude Code 2.1.291、Codex CLI 0.160.0、Python 3.10、Bash 3.2。v0.5.0 的 Claude 审查后端实测 macOS 15.7.3 arm64 与原版 Claude Code 2.1.296。这些是已验证环境，未声明更早版本的最低兼容线，也未验证 Windows 或 Linux。下方快速开始用 `@latest` 安装当时的最新 Codex，不固定到上述版本；实际版本以 `codex --version` 为准。
 
-认证状态通过 CLI 检查，不以 `auth.json` 是否存在为依据。API key 登录和未知认证状态会被拒绝；执行时清除 `OPENAI_API_KEY`、`CODEX_API_KEY`，并指定 ChatGPT 认证和 OpenAI provider。凭据存储由 Codex CLI 管理，可能使用 `CODEX_HOME` 下的文件或系统钥匙串。[Codex 认证说明](https://learn.chatgpt.com/docs/auth)
+Codex 后端的认证状态通过 CLI 检查，不以 `auth.json` 是否存在为依据。API key 登录和未知认证状态会被拒绝；执行时清除 `OPENAI_API_KEY`、`CODEX_API_KEY`，并指定 ChatGPT 认证和 OpenAI provider。凭据存储由 Codex CLI 管理，可能使用 `CODEX_HOME` 下的文件或系统钥匙串。[Codex 认证说明](https://learn.chatgpt.com/docs/auth)
 
 ## 快速开始
 
-### 1. 安装 Codex 并登录
+### 1. 安装 Codex 并登录（仅 Codex 后端）
 
-在终端运行：
+只用 `--backend claude-code` 做审查时可跳过本步，按[前置条件](#前置条件)准备 Claude 审查后端依赖即可；`/delegate:run` 和默认的 Codex 审查需要本步。在终端运行：
 
 ```bash
 npm install -g @openai/codex@latest
