@@ -8,6 +8,7 @@ import re
 import shutil
 import sys
 import tempfile
+from urllib.parse import urlsplit
 
 from claude_review import execute
 from review_context import write_snapshot
@@ -25,6 +26,23 @@ def executable(name, variable):
     if not path.is_absolute() or not path.is_file() or not os.access(path, os.X_OK):
         raise BoundaryError('runtime_path_invalid')
     return path.resolve(strict=True)
+
+
+def official_base_url(value):
+    # Claude Desktop sets the official endpoint in every Code session. The
+    # child environment never inherits it, so only a value equal to the
+    # default the CLI uses anyway is accepted; anything else stays refused.
+    if not re.fullmatch(r'[!-~]+', value):
+        return False
+    try:
+        parts = urlsplit(value)
+        port = parts.port
+    except ValueError:
+        return False
+    return (parts.scheme == 'https' and parts.hostname == 'api.anthropic.com'
+        and parts.username is None and parts.password is None and port in (None, 443)
+        and parts.path in ('', '/') and not parts.query and not parts.fragment
+        and '?' not in value and '#' not in value)
 
 
 def native_temporary(context, prefix):
@@ -46,7 +64,10 @@ class NativeRunner:
         # Never silently ignore explicitly configured alternative authentication.
         if any(os.environ.get(name) for name in ('CLAUDE_CONFIG_DIR', 'ANTHROPIC_API_KEY',
                 'ANTHROPIC_AUTH_TOKEN', 'CLAUDE_CODE_OAUTH_TOKEN', 'CLAUDE_CODE_USE_BEDROCK',
-                'CLAUDE_CODE_USE_VERTEX', 'CLAUDE_CODE_USE_FOUNDRY', 'ANTHROPIC_BASE_URL')):
+                'CLAUDE_CODE_USE_VERTEX', 'CLAUDE_CODE_USE_FOUNDRY')):
+            raise BoundaryError('native_authentication_environment_unverified')
+        base_url = os.environ.get('ANTHROPIC_BASE_URL')
+        if base_url and not official_base_url(base_url):
             raise BoundaryError('native_authentication_environment_unverified')
         self.claude = executable('claude', 'DELEGATE_CLAUDE_BIN')
         self.srt = executable('srt', 'DELEGATE_SRT_BIN')

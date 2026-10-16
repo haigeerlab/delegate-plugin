@@ -154,7 +154,7 @@ Claude 运行在本次快照目录，拟使用 `-p --safe-mode --restricted --pe
 初始化失败只保存固定原因码，区分空输出、非 JSON、超过大小限制、首事件不是 init、工具字段无效、工具集合不符和 MCP 未核实，不保存原始字段、路径、错误原文或工具输入。
 原版 2.1.296 的全网络拒绝启动探针已复现 init 前的被动 `system/ui_invalidate`（event=`ui.render`）。初始化序列只容许至多 8 个这种事件，字段限 type/subtype/event 及可选 UUID 格式的 uuid/session_id，总序列至 init 最多 64 KiB；随后必须取得唯一合法 init 并校验工具/MCP。Hook、插件安装、控制请求、模型消息、未知事件或额外载荷均不能跳过。运行时与最终解析使用同一校验；超时/取消/缺少 init 仍不能通过。
 上下文层关闭自动加载的 CLAUDE.md、skills、插件、memory 和项目定制；明确提供的规则/代码/diff/Issue/网页/日志一律是待审查数据，不是执行指令。
-Mac 本机原版 CLI 自行使用既有认证，不读取或复制凭据、不自动登录。srt 仅给 CLI 原生认证运行时只读访问 `.claude`、`.claude.json` 和 Keychains；工具层对全部运行时读取路径设置精确/递归 Read deny，并启用 blockReadsOutsideWorkingDirectories。官方对 Read 规则应用于 Grep/Glob 的表述为 best effort，不能当作完整 OS 白名单；真实工具行为仍需模型验收。首版拒绝自定义认证目录、API/provider 环境覆盖和本地管理配置，不静默丢弃它们或改用另一认证。
+Mac 本机原版 CLI 自行使用既有认证，不读取或复制凭据、不自动登录。srt 仅给 CLI 原生认证运行时只读访问 `.claude`、`.claude.json` 和 Keychains；工具层对全部运行时读取路径设置精确/递归 Read deny，并启用 blockReadsOutsideWorkingDirectories。官方对 Read 规则应用于 Grep/Glob 的表述为 best effort，不能当作完整 OS 白名单；真实工具行为仍需模型验收。首版拒绝自定义认证目录、API/provider 环境覆盖和本地管理配置，不静默丢弃它们或改用另一认证。唯一例外：Claude Desktop 的 Code 会话会注入 `ANTHROPIC_BASE_URL=https://api.anthropic.com`；该值规范化后（scheme 为 https、主机名不区分大小写等于 api.anthropic.com、端口为空或 443、路径为空或 `/`，且无 userinfo、query、fragment 或空白）与 CLI 默认端点相同时放行。子进程环境本就不继承该变量，放行不改变实际端点；其他任何值仍报 native_authentication_environment_unverified。
 OS 层用 srt 包围本机整个 Claude 进程；源仓库/Git、用户配置、Keychains 和快照不可写，仅专用 writable 目录及必要标准输出描述符可写。控制目录不向 reviewer 开放。关闭 srt 额外可写路径；不以 chmod/执行后哈希代替权限强制。
 网络只允许当前选定的三个 first-party 443 端点；普通模型请求已在第四批通过；认证刷新、各端点覆盖和异常 TLS 尚未验收，不给审查任务网络工具，不继承宽泛代理或服务器配置放宽权限。隔离初始化失败、未知提供商策略、管理员 Hook/helper 或管理配置妨碍证明边界时返回条件不足，不绕过管理员策略或扩大权限。
 认证通过同一执行环境中的 CLI 状态检查，不读/复制凭据文件、不打印认证原文或凭据片段；只有登录方法、提供商和状态等安全字段可保留。API key、用户登录及其他认证方式不能相互猜测或自动切换。预检成功不保证远端、额度或模型权限，隔离阻止刷新时明确失败。
@@ -252,7 +252,7 @@ Linux 的 srt 根 denyRead 保留 kernel 目录，因此必须额外掩蔽 `/sys
 DELEGATE_SRT_BIN=/absolute/existing/srt DELEGATE_NODE_BIN=/absolute/existing/node /bin/bash /path/to/delegate-plugin/plugins/delegate/scripts/delegate-exec.sh --backend claude-code --review-context /path/review.json --model sonnet "审查指定范围"
 ```
 
-`DELEGATE_CLAUDE_BIN` 可指定已有 CLI；三个路径都须为已有可执行绝对路径，规范化后调用。旧 `DELEGATE_CLAUDE_GUEST_CONFIG` 明确报 guest_configuration_no_longer_supported，不静默转成本机执行。auth status 与审查在同一文件边界运行，只保存方法/提供商等安全字段。最新 2.1.296 的 claude.ai 认证预检通过；此前 2.1.295 的 authentication_missing 原因未定，不推断用户曾退出登录，也不把版本变化认定为修复根因。刷新及其他认证方式尚未验收；明确配置的 API key/token/provider/CLAUDE_CONFIG_DIR 环境首版拒绝，不自动回退登录。仅允许 api.anthropic.com:443、claude.ai:443、platform.claude.com:443；不开放审查网络工具或其他端点。管理配置无法核实即条件不足，不绕过策略。
+`DELEGATE_CLAUDE_BIN` 可指定已有 CLI；三个路径都须为已有可执行绝对路径，规范化后调用。旧 `DELEGATE_CLAUDE_GUEST_CONFIG` 明确报 guest_configuration_no_longer_supported，不静默转成本机执行。auth status 与审查在同一文件边界运行，只保存方法/提供商等安全字段。最新 2.1.296 的 claude.ai 认证预检通过；此前 2.1.295 的 authentication_missing 原因未定，不推断用户曾退出登录，也不把版本变化认定为修复根因。刷新及其他认证方式尚未验收；明确配置的 API key/token/provider/CLAUDE_CONFIG_DIR 环境首版拒绝，不自动回退登录；仅与官方默认端点等价的 `ANTHROPIC_BASE_URL` 放行（规则见“权限、上下文及认证”）。仅允许 api.anthropic.com:443、claude.ai:443、platform.claude.com:443；不开放审查网络工具或其他端点。管理配置无法核实即条件不足，不绕过策略。
 
 模型 slug/别名按后端分开，明确拒绝另一模型族、opusplan 自动切换模式及非法语法；未知合法 slug 由选定 CLI 报错，不删参数重跑。Claude `--effort` 拒绝；Codex 允许 none/minimal/low/medium/high/xhigh，具体模型支持情况由其 CLI 明确失败。请求模型与实际模型分开；多模型证据或全 ID 不匹配使报告未完成。没有实际模型字段则未知，不根据别名猜版本。
 
