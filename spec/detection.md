@@ -90,7 +90,7 @@ identity 包含：实际 CLI 路径、有效 Codex home、插件根目录、插�
 - `--session-start`：强制探测写缓存，静默。
 - `--warm`：命中缓存则复用，否则探测；静默。
 - `--print`：强制探测，输出可用或安全的不可用原因；用于 doctor。即使缓存不可写，仍可报告当前直接探测结果。
-- 默认：缓存可用时输出合法 UserPromptSubmit JSON，说明仅本地基础条件；不可用或内部异常零输出、退出 0。
+- 默认（不带参数直接运行 `detect.py`）：缓存可用时输出合法 UserPromptSubmit JSON，说明仅本地基础条件；不可用或内部异常零输出、退出 0。这是脚本保留的行为，v0.5.0 的宿主已不调用该模式，见下一条。
 - v0.5.0 不再注册UserPromptSubmit；prompt.sh/route.sh静默兼容，普通提示不触发基础探测或路由提醒。SessionStart和按需doctor行为保留。
 
 ## doctor

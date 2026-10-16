@@ -6,7 +6,7 @@
 
 The current implementation delegates settled execution and investigation to Codex CLI, separates process logs, and returns the final answer with Git evidence for writes. This independent marketplace does not depend on Spec Guard or agent-skills at runtime.
 
-The optional Claude Code read-only review backend was approved on 2026-10-09; see [claude-review](SPEC-claude-review.md). Mac source and free checks are connected, and strict original authentication plus a limited Codex→Claude real review passed. Normal real reviews succeeded in both directions; active model boundary attempts and complete abnormal-case acceptance remain incomplete. v0.5.0 includes review/run, scope shortcuts and model-free previews, with both local installations checked. S7 verified menu-to-script execution and dry-run. Layered acceptance is complete while unverified safety events and historical unknowns remain; see the [release notes](releases/v0.5.0.md).
+The optional Claude Code read-only review backend was approved on 2026-10-09; see [claude-review](SPEC-claude-review.md). v0.5.0 includes review/run, scope shortcuts and model-free previews, with both local installations checked. Real reviews have succeeded in both directions and the module has completed acceptance under layered criteria; active model boundary attempts and complete abnormal-case scenarios remain unverified; see the [release notes](releases/v0.5.0.md).
 
 The project adoption scope confirmed on 2026-10-08 standardizes file locations. See the [historical archive](../archive/pre-spec-guard/README.md). This confirmation does not retroactively approve earlier module gates.
 
@@ -40,5 +40,3 @@ explicit request → delegate-routing skill → review/run
 - Read-only is the default. Writes require explicit authorization in the current turn; command confirmation rules are not a technical lock that cannot be bypassed.
 
 See [channel](SPEC-channel.md), [detection](SPEC-detection.md), and [routing](SPEC-routing.md) for existing contracts and validation. The new module is tracked separately in [claude-review](SPEC-claude-review.md). No non-Git support, background orchestration, committing/pushing/publishing, or self-updating installation cache is introduced.
-
-The first real reverse run started Codex from Claude but reviewed no files. Codex review now receives bounded inline file data, with a 1 MiB serialized input limit and verified disabled shell/apps/plugins/multi-agent features. The repaired real reverse review completed 4/4; see the [latest evidence and limits](../verification/2026-10-12-claude-review-mac-reverse-fourth-success.md) (Chinese). The first failed run remains historical.

@@ -6,9 +6,9 @@ Claude Code / Codex 共享的审查与委托插件。v0.5.0 提供 **Codex / Cla
 
 四个入口按职责划分：`/delegate:review` 做限定范围的只读审查，`/delegate:run` 执行 Codex 通用任务，`/delegate:doctor` 检查接入条件，`/delegate:help` 说明能力与迁移。Codex 使用对应的 `source-command-*` 技能入口。
 
-当前验证状态见[交付与验收记录](docs/verification/2026-10-13-delegate-delivery-status.md)。S2 在同一固定源码和四文件范围完成了 Codex→Claude Code、Claude Code→Codex 的真实审查，并核对了夹具缺陷及进程回收；正常安装和四入口显示也已验证。后续命令修复与Task9l诊断修复已由S5同步两宿主，16项无模型读回及48项安装结果回归通过。S6诊断接续已真实验证指定快照外Read工具拒权、精确目标归属和进程回收；审查1/4后停止，failed/inconclusive。随后按用户明确批准的分层标准完成Task2/6/8：当前2项OS权限/6个生命周期方法及19项证据对账通过，S7菜单实际脚本与完整dry-run已核对；最终本地验收已收束，模块DONE；不代表全部安全行为已证明。此前S4及原S6认证失败的具体根因不追认；本批没有重载现有会话。
+验证状态：两个方向（Codex→Claude Code、Claude Code→Codex）的真实审查都有成功记录；正常安装、四个入口的显示、从菜单到脚本的实际执行和无模型预览均已核对；模块已按分层标准完成本地验收。主动诱导模型写入或递归调用、认证刷新、异常的自然 helper 进程等安全场景仍未验证，现有真实记录也只对应各自当时的源码版本。详见[交付与验收记录](docs/verification/2026-10-13-delegate-delivery-status.md)和[分层验收结果](docs/verification/2026-10-14-delegate-layered-acceptance-result.md)。
 
-v0.5.0 包含上述双后端与命令迁移功能。主动模型写入/递归尝试、认证刷新及异常自然 helper 的完整安全验收仍未完成。Claude 后端需要已有 srt 路径按次提供。换模型不保证审查更准确。
+Claude 后端使用本机已有的 srt，默认从 PATH 解析，也可用 `DELEGATE_SRT_BIN` 指定绝对路径。换模型不保证审查更准确。
 
 主会话负责需求澄清、方案判断与最终验收。Codex 后端只接受 ChatGPT 登录，目的是减少主会话携带的过程上下文；实际使用哪个账号的额度取决于 Codex 登录账号，不保证节省总费用或总 token。
 
@@ -58,8 +58,9 @@ v0.5.0 包含上述双后端与命令迁移功能。主动模型写入/递归尝
 | Python 3、Git、Bash | 运行脚本所需；兼容 macOS 自带 Bash 3.2 |
 | 业务项目 | Git 工作区；允许已有未提交修改，也允许尚无提交的仓库 |
 | Node.js、npm | 使用下方 npm 安装 Codex 的方式时需要 |
+| Claude Code 审查后端（可选） | 仅 `--backend claude-code` 需要：macOS、原版 Claude Code ≥2.1.295 且已登录、Node.js ≥22.12.0、已安装的 srt 0.0.79、可用的用户 GUI launchd 域；插件不自动安装或登录 |
 
-v0.4.0 的验证环境为 Claude Code 2.1.291、Codex CLI 0.160.0、Python 3.10、Bash 3.2。这是已验证环境，未声明更早版本的最低兼容线，也未验证 Windows。
+Codex 执行路径沿用 v0.4.0 的验证环境：Claude Code 2.1.291、Codex CLI 0.160.0、Python 3.10、Bash 3.2。v0.5.0 的 Claude 审查后端实测 macOS 15.7.3 arm64 与原版 Claude Code 2.1.296。这些是已验证环境，未声明更早版本的最低兼容线，也未验证 Windows 或 Linux。
 
 认证状态通过 CLI 检查，不以 `auth.json` 是否存在为依据。API key 登录和未知认证状态会被拒绝；执行时清除 `OPENAI_API_KEY`、`CODEX_API_KEY`，并指定 ChatGPT 认证和 OpenAI provider。凭据存储由 Codex CLI 管理，可能使用 `CODEX_HOME` 下的文件或系统钥匙串。[Codex 认证说明](https://learn.chatgpt.com/docs/auth)
 
@@ -104,7 +105,9 @@ claude
 /delegate:doctor
 ```
 
-doctor 会刷新本地安装与登录状态，检查部分中文全局 AGENTS.md 规则。它不发起模型任务；退出 0 表示诊断完成，应阅读问题数量和文字原因。基础条件可用不等于远端、额度或模型权限已验证。
+不带参数时检查默认的 Codex 后端；准备使用 Claude 审查后端时改为输入 `/delegate:doctor --backend claude-code`，核对 srt、Node、CLI 版本与已有认证。
+
+Codex 路径的 doctor 会刷新本地安装与登录状态，检查部分中文全局 AGENTS.md 规则。两种后端的 doctor 都不发起模型任务；退出 0 表示诊断完成，应阅读问题数量和文字原因。基础条件可用不等于远端、额度或模型权限已验证。
 
 ### 4. 执行首次只读委托
 
@@ -271,8 +274,12 @@ claude plugin marketplace remove delegate-marketplace
 | 超时（124） | 看日志尾部和 Git 状态，核实任务规模；人工决定是否重试 |
 | 失败或空答复 | 查错误、日志路径和真实 diff；失败修改不会自动撤销 |
 | 停在等待确认 | 检查实际生效的全局/项目 AGENTS.md，给仅用于交互的流程章节注明非交互豁免 |
+| review 报缺少范围（64） | 提供 `--paths`、`--base`、`--changes` 或 `--context` 之一；不会自动扫描整个项目。可先加 `--dry-run` 预览解析结果 |
+| Claude 后端条件不足（127） | 运行 `/delegate:doctor --backend claude-code`；核对 `claude`、`node`、`srt` 版本，必要时用 `DELEGATE_CLAUDE_BIN`、`DELEGATE_NODE_BIN`、`DELEGATE_SRT_BIN` 指定已有绝对路径。不会自动改用 Codex |
+| Codex 审查报 `codex_inline_input_limit` | 审查输入超过 1 MiB，不会截断或自动分批；用更小的 `--paths` 或加 `--exclude` 分次审查 |
+| 审查报告为 failed、inconclusive 或部分覆盖 | 查看报告列出的未审范围与原因（权限拒绝、达到轮次或预算上限、输出无效等）；这些都不算审查通过 |
 
-wrapper 退出状态：64=参数/非 Git 工作区；127=CLI/Python 基础条件失败；124=执行超时；129/130/143=HUP/INT/TERM 中断；空答复为 1，其他执行失败保留其非零状态。doctor 始终退出 0，按文字中的问题数量判断。
+wrapper 退出状态：64=参数/非 Git 工作区；127=CLI/Python 基础条件失败；124=执行超时；129/130/143=HUP/INT/TERM 中断；空答复为 1，其他执行失败保留其非零状态。review 使用相同的 64/127/124/129/130/143 约定；正常完成退出 0，即使报告了问题也是 0。doctor 始终退出 0，按文字中的问题数量判断。
 
 doctor 会刷新临时缓存，不修改业务文件。它只做部分中文全局规则的启发式检查，不覆盖英文或全部项目级规则，也不验证远端连接、额度、模型权限或 token 是否仍有效。当前运行时诊断和 skill 指令以中文为主；双语文档不改变这些输出。
 
@@ -304,11 +311,11 @@ v0.5.0 不注册UserPromptSubmit，不按每轮输入自动提醒或探测。Ses
 
 ## 报告 Bug
 
-遇到插件异常时，请在本仓库的 GitHub Issues 中报告：
+遇到插件异常时，请在本仓库的 GitHub Issues 中报告。安全问题不要公开提交，请按[安全政策](SECURITY.md)私下报告。
 
 1. 先[搜索已有问题](https://github.com/haigeerlab/delegate-plugin/issues)，看是否有相同现象或解决方法；已有相同问题时，可补充你的复现信息。
-2. 登录 GitHub，打开[新建 Issue](https://github.com/haigeerlab/delegate-plugin/issues/new)，用一句话概括故障作为标题。
-3. 复制下方清单，填写能复现问题的信息后提交。中文或英文均可。
+2. 登录 GitHub，打开[新建 Issue](https://github.com/haigeerlab/delegate-plugin/issues/new/choose)，选择“Bug 报告 / Bug report”模板，用一句话概括故障作为标题。
+3. 按模板填写能复现问题的信息后提交；不用模板时可复制下方清单。中文或英文均可。
 
 ```text
 环境：操作系统、插件、Claude Code、Codex CLI、Python 和 Bash 版本
@@ -329,5 +336,3 @@ v0.5.0 不注册UserPromptSubmit，不按每轮输入自动提醒或探测。Ses
 本项目源码及随附文档采用 [MIT 许可证](LICENSE)，版权声明为 `Copyright (c) 2026 haigeerlab and contributors`。允许商业使用、修改和分发，分发时须保留版权声明与许可声明；软件按原样提供，不作担保。此处为中文摘要，以 LICENSE 中的英文标准全文为准。
 
 插件目录内附有同文 [LICENSE](plugins/delegate/LICENSE)，确保单独分发或安装插件时也携带许可。
-
-真实反向首批已启动 Codex，但四文件均未审；免费修复改为有界 inline 文件输入（总输入1MiB）及核实的 shell/apps/plugins/multi_agent 禁用开关，不增加 Bash/MCP 读取权限。修复后已完成真实反向审查4/4，见[最新证据与限制](docs/verification/2026-10-12-claude-review-mac-reverse-fourth-success.md)；首批失败保留为历史事实。

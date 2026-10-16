@@ -22,7 +22,7 @@ UserPromptSubmit 已退役，不按每轮输入探测、提醒或要求重复确
 
 公共 `delegate-exec.sh` 分派后端与专属参数，保留 `codex-exec.sh` 兼容路径。新 `claude-review` 模块独立管理共同上下文/快照/结果、Claude 预检与本机 Mac 运行边界，不扩展 Spec Guard 执行器。detection 缓存与 Hook 仍只表明默认 Codex 基础状态，显式 Claude 不经过该认证闸门。
 
-Claude 仅只读审查：工具限制收敛能力，safe/restricted 收敛项目/插件上下文，srt 收敛整个 CLI 的文件/网络访问；临时 launchd 任务提供独立的内核 resource coalition，STOP 屏障、PID 代际信号及成员计数负责本次 helper 清理。只使用已存在的本机 CLI/认证和运行依赖，不安装 LaunchAgent 或修改全局设置。固定快照有原路径/哈希映射；数据不是执行指令。共同报告由 wrapper 持有执行身份，权限/解析/覆盖不足不能变成无问题。原版本机 CLI 的无模型接口已复验；最新 CLI 2.1.296 的严格边界认证通过，此前失败原因未定，第四批 Codex→Claude 已完成四文件真实只读审查，核心夹具缺陷核对通过、输入不变且回收确认；首批 Claude 主会话→Codex 未读到文件，后续修复版本与 S2 固定源码均有真实反向 4/4 成功记录；S7 已核对菜单到公共脚本及完整 dry-run。证据分别绑定当时源码，不代表本次发布重新双向 live 验收；主动模型写入/递归、认证刷新、自然异常 helper 和长期稳定性仍未验证。当前状态见 [模块合同](spec/claude-review.md)。
+Claude 仅只读审查：工具限制收敛能力，safe/restricted 收敛项目/插件上下文，srt 收敛整个 CLI 的文件/网络访问；临时 launchd 任务提供独立的内核 resource coalition，STOP 屏障、PID 代际信号及成员计数负责本次 helper 清理。只使用已存在的本机 CLI/认证和运行依赖，不安装 LaunchAgent 或修改全局设置。固定快照有原路径/哈希映射；数据不是执行指令。共同报告由 wrapper 持有执行身份，权限/解析/覆盖不足不能变成无问题。两个方向的真实审查都有成功记录，菜单到公共脚本的实际执行和完整 dry-run 已核对；这些证据只对应各自当时的源码版本，发布时没有重新做双向真实验收。主动诱导模型写入或递归、认证刷新、异常的自然 helper 进程和长期稳定性仍未验证，详见 [模块合同](spec/claude-review.md)。
 
 - `backend.py` 是 channel 与 detection 共用的基础检查：PATH、可执行版本命令、CLI 报告的 ChatGPT 登录。
 - `channel` 管理调用、沙箱选择、日志、执行期限与进程组清理；不判断任务是否值得委托。
@@ -51,5 +51,3 @@ stdin 从 `/dev/null` 输入；`-o` 最终答复和合并 stdout/stderr 过程�
 仅支持 Codex 和可选 Claude Code 两个明确执行后端，默认 Codex，不自动识别宿主并换执行者；无后台控制面、排队、断点恢复或自动重试。两种模式统一拒绝非 Git 目录，使可执行条件与验收方式一致。用户已有修改被保留，归属需通过 diff 人工判断。
 
 确定性合同以免费桩测试验证；真实沙箱、远端请求和交互模型行为需要用户决定进行 live 验证。eval 显式加载源码，PASS/FAIL/NORUN 分开；首行固定格式判决避免正文误报。[能力图](spec/CAPABILITY-MAP.md)和 [README](README.md)提供模块与使用入口。
-
-真实反向首批已启动 Codex，但四文件均未审；免费修复改为有界 inline 文件输入（总输入1MiB）及核实的 shell/apps/plugins/multi_agent 禁用开关，不增加 Bash/MCP 读取权限。修复后已完成真实反向审查4/4，见[最新证据与限制](docs/verification/2026-10-12-claude-review-mac-reverse-fourth-success.md)；首批失败保持历史结论。

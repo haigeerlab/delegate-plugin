@@ -90,7 +90,7 @@ Write a temporary file in the same directory with mode 0600, then use `os.replac
 - `--session-start`: force probing and write cache, silently.
 - `--warm`: reuse valid cache or probe, silently.
 - `--print`: force probing and print readiness or a safe reason; used by doctor. Direct probe results may still be reported if the cache is unwritable.
-- Default: if cache is available, emit valid UserPromptSubmit JSON identifying only local readiness. Unavailability or internal failure produces no output and exits 0.
+- Default (running `detect.py` with no option): if cache is available, emit valid UserPromptSubmit JSON identifying only local readiness. Unavailability or internal failure produces no output and exits 0. The script keeps this behavior, but v0.5.0 hosts no longer invoke this mode; see the next item.
 - v0.5.0 no longer registers UserPromptSubmit. prompt.sh/route.sh are silent compatibility entries; ordinary prompts trigger neither readiness probes nor routing reminders. SessionStart and on-demand doctor behavior remain.
 
 ## doctor
