@@ -6,7 +6,7 @@
 
 当前实现将已定方案的执行与查证交给 Codex CLI，隔离过程日志，并返回最终答复与写模式 Git 证据。独立 marketplace；产品运行不依赖 Spec Guard 或 agent-skills。
 
-2026-10-09 已确认可选 Claude Code 只读审查后端，见 [claude-review](claude-review.md)。当前源码已接通 Mac 本机路径与免费验证，原版 CLI 严格边界认证及有限 Codex→Claude 真实审查通过；两方向普通真实审查已有成功记录；主动模型越界和完整异常验收仍未完成。review/run、快捷范围与无模型预览已随 v0.5.0 发布；两宿主安装已核对。S7 菜单实际脚本与 dry-run 功能证据已取得；分层验收完成，未验证的安全事件与历史未知保留，详见[版本说明](../docs/releases/v0.5.0.md)。
+2026-10-09 已确认可选 Claude Code 只读审查后端，见 [claude-review](claude-review.md)。review/run、快捷范围与无模型预览已随 v0.5.0 发布，两宿主安装已核对。两方向真实审查已有成功记录，模块已按分层标准完成验收；主动模型越界和完整异常场景仍未验证，详见[版本说明](../docs/releases/v0.5.0.md)。
 
 2026-10-08 按已确认的项目接入范围规范化文件布局。历史原文见 [归档索引](../docs/archive/pre-spec-guard/README.md)。本次确认不追认早期模块的人工审批。
 

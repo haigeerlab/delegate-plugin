@@ -6,9 +6,9 @@ Claude Code / Codex 共享的审查与委托插件。v0.5.0 提供 **Codex / Cla
 
 四个入口按职责划分：`/delegate:review` 做限定范围的只读审查，`/delegate:run` 执行 Codex 通用任务，`/delegate:doctor` 检查接入条件，`/delegate:help` 说明能力与迁移。Codex 使用对应的 `source-command-*` 技能入口。
 
-当前验证状态见[交付与验收记录](docs/verification/2026-10-13-delegate-delivery-status.md)。S2 在同一固定源码和四文件范围完成了 Codex→Claude Code、Claude Code→Codex 的真实审查，并核对了夹具缺陷及进程回收；正常安装和四入口显示也已验证。后续命令修复与Task9l诊断修复已由S5同步两宿主，16项无模型读回及48项安装结果回归通过。S6诊断接续已真实验证指定快照外Read工具拒权、精确目标归属和进程回收；审查1/4后停止，failed/inconclusive。随后按用户明确批准的分层标准完成Task2/6/8：当前2项OS权限/6个生命周期方法及19项证据对账通过，S7菜单实际脚本与完整dry-run已核对；最终本地验收已收束，模块DONE；不代表全部安全行为已证明。此前S4及原S6认证失败的具体根因不追认；本批没有重载现有会话。
+验证状态：两个方向（Codex→Claude Code、Claude Code→Codex）的真实审查都有成功记录；正常安装、四个入口的显示、从菜单到脚本的实际执行和无模型预览均已核对；模块已按分层标准完成本地验收。主动诱导模型写入或递归调用、认证刷新、异常的自然 helper 进程等安全场景仍未验证，现有真实记录也只对应各自当时的源码版本。详见[交付与验收记录](docs/verification/2026-10-13-delegate-delivery-status.md)和[分层验收结果](docs/verification/2026-10-14-delegate-layered-acceptance-result.md)。
 
-v0.5.0 包含上述双后端与命令迁移功能。主动模型写入/递归尝试、认证刷新及异常自然 helper 的完整安全验收仍未完成。Claude 后端需要已有 srt 路径按次提供。换模型不保证审查更准确。
+Claude 后端使用本机已有的 srt，默认从 PATH 解析，也可用 `DELEGATE_SRT_BIN` 指定绝对路径。换模型不保证审查更准确。
 
 主会话负责需求澄清、方案判断与最终验收。Codex 后端只接受 ChatGPT 登录，目的是减少主会话携带的过程上下文；实际使用哪个账号的额度取决于 Codex 登录账号，不保证节省总费用或总 token。
 

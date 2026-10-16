@@ -6,16 +6,6 @@
 
 **当前验收口径（2026-10-14）：** 用户明确“批准分层验收修订”，CR-03/06/09按下表分层判定。生产权限、工具集与产品测试不变；模型主动Write/递归、认证刷新、自然helper类型、历史未定根因和长期稳定性仍单独标未验证，不能追认为旧标准通过。S7菜单到脚本及完整dry-run输出已核对，原自动输入/并发提交失败保留。下方早期状态按当时版本/判据保留；当前逐项结论以本模块todo及证据对账为准。
 
-## 历史接续记录（保留当时状态，不覆盖当前结论）
-
-**2026-10-14 S5/S6批次：** Task9l诊断修复已由S5同步两宿主，16项读回/48项安装结果回归通过；Task9n标准工作区免费157/53/19通过。S6诊断接续取得指定快照外Read工具拒权及精确目标归属，回收confirmed；审查1/4、failed/inconclusive，Task2/6/8完整条件仍未完成。S4及原S6认证失败根因未知，不追认修复。见[接续结果](../docs/verification/2026-10-14-delegate-s6-diagnostic-followup-result.md)。
-
-**2026-10-13修复批次：** S2固定源码普通双向审查及四入口显示已通过；随后CMD-001/CMD-002/DOC-001三批修复免费总148/53/19通过，已同步两宿主正常安装并通过16项无模型读回，尚未真实模型复验或本批会话重载，完整安全条件仍未完成。见[最新修复结果](../docs/verification/2026-10-13-delegate-command-fixes-result.md)。下方早期日期状态保留当时证据，不代表新增修复已live验证。
-
-日期：2026-10-13。状态：当前Mac功能代码和免费验证已完成；两方向普通真实四文件审查各有成功记录。最新Claude主会话→Codex0.162.1/Node24.18.0完成4/4，核心缺陷核对通过、输入/Git/源码未变，见[收束证据](../docs/verification/2026-10-12-claude-review-mac-reverse-fourth-success.md)。先前Codex→Claude2.1.296仅覆盖其固定历史源码/版本。新斜杠宿主体验、主动模型写入/递归企图、认证刷新和异常helper仍未验收；完整验收未完成。最新严格边界认证通过，此前失败原因未定。目标仅当前Mac；VM为历史证据。安装、新增模型调用、提交、推送、发布继续分别授权。 2026-10-12临时Codex源码安装成功，但原生命令迁移仅生成review/run/doctor，help缺失；已修正4000字节超限并由单次原生CLI安装核对四入口转换产物通过；桌面/Claude新命令体验仍待验，见[复验结果](../docs/verification/2026-10-13-delegate-source-load-fixed-result.md)。
-
-2026-10-13本机已按独立批准切换正常Codex到本地源码并重装，4skill/61文件匹配、仅SessionStart；Claude2.1.296实际按现有user配置原地加载4命令，无本批安装/设置变更；安装的预检函数核实已有CLI/claude.ai认证及回收（收紧为禁网）。SRT仍须按次指定临时绝对路径，既有主会话UI和模型/额度未验。[本批证据](../docs/verification/2026-10-13-delegate-local-activation-result.md)不追认完整Task2/6/8。
-
 计划：[plan.md](../tasks/claude-review/plan.md)；任务及真实结果：[todo.md](../tasks/claude-review/todo.md)；取舍：[ADR-002](../docs/decisions/ADR-002-claude-review-isolation.md)。本规格中的新命令、文件及条款是实施合同，不能当作当前安装能力或已通过测试。
 
 ## 目标与范围
@@ -285,3 +275,13 @@ DELEGATE_SRT_BIN=/absolute/existing/srt DELEGATE_NODE_BIN=/absolute/existing/nod
 launchd的解释器不一定能重新打开Documents中的插件安装文件。主会话仅将review_macos.py、review_result.py、claude_review.py三个受信监督/解析代码文件复制到既有私有control子目录（目录0700、文件0600），临时任务从该处启动。源码快照、凭据与其他用户数据不在这一步复制；reviewer仍被OS禁止读写整个control树，工具、网络、身份证明、期限与清理规则不变。不修改系统权限、全局配置或认证，不换后端。实际路径拒绝及零模型修复证据另记；不能由启动探针推导真实模型审查通过。
 
 > 对外说明：本机身份与路径已脱敏；原始记录在私有验收目录保留，未改变原结论或追认历史验收。
+
+## 附录：历史接续记录（保留当时状态，不覆盖当前结论）
+
+**2026-10-14 S5/S6批次：** Task9l诊断修复已由S5同步两宿主，16项读回/48项安装结果回归通过；Task9n标准工作区免费157/53/19通过。S6诊断接续取得指定快照外Read工具拒权及精确目标归属，回收confirmed；审查1/4、failed/inconclusive，Task2/6/8完整条件仍未完成。S4及原S6认证失败根因未知，不追认修复。见[接续结果](../docs/verification/2026-10-14-delegate-s6-diagnostic-followup-result.md)。
+
+**2026-10-13修复批次：** S2固定源码普通双向审查及四入口显示已通过；随后CMD-001/CMD-002/DOC-001三批修复免费总148/53/19通过，已同步两宿主正常安装并通过16项无模型读回，尚未真实模型复验或本批会话重载，完整安全条件仍未完成。见[最新修复结果](../docs/verification/2026-10-13-delegate-command-fixes-result.md)。下方早期日期状态保留当时证据，不代表新增修复已live验证。
+
+日期：2026-10-13。状态：当前Mac功能代码和免费验证已完成；两方向普通真实四文件审查各有成功记录。最新Claude主会话→Codex0.162.1/Node24.18.0完成4/4，核心缺陷核对通过、输入/Git/源码未变，见[收束证据](../docs/verification/2026-10-12-claude-review-mac-reverse-fourth-success.md)。先前Codex→Claude2.1.296仅覆盖其固定历史源码/版本。新斜杠宿主体验、主动模型写入/递归企图、认证刷新和异常helper仍未验收；完整验收未完成。最新严格边界认证通过，此前失败原因未定。目标仅当前Mac；VM为历史证据。安装、新增模型调用、提交、推送、发布继续分别授权。 2026-10-12临时Codex源码安装成功，但原生命令迁移仅生成review/run/doctor，help缺失；已修正4000字节超限并由单次原生CLI安装核对四入口转换产物通过；桌面/Claude新命令体验仍待验，见[复验结果](../docs/verification/2026-10-13-delegate-source-load-fixed-result.md)。
+
+2026-10-13本机已按独立批准切换正常Codex到本地源码并重装，4skill/61文件匹配、仅SessionStart；Claude2.1.296实际按现有user配置原地加载4命令，无本批安装/设置变更；安装的预检函数核实已有CLI/claude.ai认证及回收（收紧为禁网）。SRT仍须按次指定临时绝对路径，既有主会话UI和模型/额度未验。[本批证据](../docs/verification/2026-10-13-delegate-local-activation-result.md)不追认完整Task2/6/8。
