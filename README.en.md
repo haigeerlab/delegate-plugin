@@ -311,11 +311,11 @@ See [Contributing](CONTRIBUTING.en.md) for development conventions, individual t
 
 ## Reporting a bug
 
-Report plugin failures through this repository's GitHub Issues:
+Report plugin failures through this repository's GitHub Issues. Do not file security problems publicly; report them privately as described in the [security policy](SECURITY.en.md).
 
 1. [Search existing issues](https://github.com/haigeerlab/delegate-plugin/issues) for the same symptoms or a solution. If a matching issue exists, add your reproduction details there.
-2. Sign in to GitHub, open [a new issue](https://github.com/haigeerlab/delegate-plugin/issues/new), and summarize the failure in a one-sentence title.
-3. Copy the checklist below, fill in enough information to reproduce the problem, and submit it. Reports in Chinese or English are welcome.
+2. Sign in to GitHub, open [a new issue](https://github.com/haigeerlab/delegate-plugin/issues/new/choose), choose the "Bug 报告 / Bug report" template, and summarize the failure in a one-sentence title.
+3. Fill in the template with enough information to reproduce the problem and submit it; without the template, copy the checklist below. Reports in Chinese or English are welcome.
 
 ```text
 Environment: OS, plugin, Claude Code, Codex CLI, Python, and Bash versions

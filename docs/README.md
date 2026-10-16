@@ -19,6 +19,7 @@ delegate 的默认文档语言为简体中文。英文对应页覆盖当前维�
 | 安装、使用与排障 | [README](../README.md) | [README](../README.en.md) |
 | 文档索引 | 本页 | [Documentation index](en/README.md) |
 | 贡献与验证 | [贡献指南](../CONTRIBUTING.md) | [Contributing](../CONTRIBUTING.en.md) |
+| 安全问题报告 | [安全政策](../SECURITY.md) | [Security policy](../SECURITY.en.md) |
 | 设计与边界 | [设计](../DESIGN.md) | [Design](en/DESIGN.md) |
 | 模块职责 | [能力图](../spec/CAPABILITY-MAP.md) | [Capability map](en/capability-map.md) |
 | 执行合同 | [通道规格](../spec/channel.md) | [Channel specification](en/SPEC-channel.md) |
@@ -41,6 +42,7 @@ delegate 的默认文档语言为简体中文。英文对应页覆盖当前维�
 .claude-plugin/marketplace.json       marketplace 清单
 plugins/delegate/
   .claude-plugin/plugin.json         插件清单
+  README.md                         插件目录说明，随安装缓存分发
   commands/                         review、run、doctor、help 会话入口
   skills/delegate-routing/          分流判据
   hooks/                            SessionStart 基础探测、缓存与 doctor 入口
@@ -48,6 +50,7 @@ plugins/delegate/
   tests/                            离线桩测试与回归
 scripts/                            仓库验证
 evals/                              行为判决器和按需模型评估
+.github/ISSUE_TEMPLATE/             Bug 报告与需求建议模板
 ```
 
 命令文件和 skill 是宿主执行的指令，当前以中文编写；本页链接的英文文档解释其完整使用合同，不会注册第二套插件命令。

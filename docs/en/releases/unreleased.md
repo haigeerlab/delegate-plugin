@@ -7,3 +7,5 @@ Changes from this batch after v0.4.0 are recorded in [v0.5.0 release notes](v0.5
 ## Post-release documentation maintenance
 
 Correct current release/installation state, retired hook flow, version-scoped real/menu evidence, source-versus-cache loading, validation suite counts and English omissions. Product version remains 0.5.0; runtime code, permissions and historical raw evidence are unchanged, without new model acceptance.
+
+2026-10-16 documentation review: align the Chinese documentation index with the English one and add ADR-003/004 and v0.4.0 links; add Claude review backend prerequisites, diagnostics, and troubleshooting entries to README; remove the misplaced acceptance-log paragraph from the end of README, DESIGN, the capability map, and the documentation index; clarify the default mode in the detection specification. Add a plugin-directory README, a SECURITY.md security policy (GitHub private vulnerability reporting), and GitHub issue templates (bug report, feature request), and point the README reporting steps to them. Runtime code is unchanged.

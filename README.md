@@ -311,11 +311,11 @@ v0.5.0 不注册UserPromptSubmit，不按每轮输入自动提醒或探测。Ses
 
 ## 报告 Bug
 
-遇到插件异常时，请在本仓库的 GitHub Issues 中报告：
+遇到插件异常时，请在本仓库的 GitHub Issues 中报告。安全问题不要公开提交，请按[安全政策](SECURITY.md)私下报告。
 
 1. 先[搜索已有问题](https://github.com/haigeerlab/delegate-plugin/issues)，看是否有相同现象或解决方法；已有相同问题时，可补充你的复现信息。
-2. 登录 GitHub，打开[新建 Issue](https://github.com/haigeerlab/delegate-plugin/issues/new)，用一句话概括故障作为标题。
-3. 复制下方清单，填写能复现问题的信息后提交。中文或英文均可。
+2. 登录 GitHub，打开[新建 Issue](https://github.com/haigeerlab/delegate-plugin/issues/new/choose)，选择“Bug 报告 / Bug report”模板，用一句话概括故障作为标题。
+3. 按模板填写能复现问题的信息后提交；不用模板时可复制下方清单。中文或英文均可。
 
 ```text
 环境：操作系统、插件、Claude Code、Codex CLI、Python 和 Bash 版本

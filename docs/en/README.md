@@ -19,6 +19,7 @@ Simplified Chinese is delegate's default documentation language. English counter
 | Installation, usage, and troubleshooting | [README](../../README.md) | [README](../../README.en.md) |
 | Documentation index | [文档索引](../README.md) | This page |
 | Contributions and validation | [贡献指南](../../CONTRIBUTING.md) | [Contributing](../../CONTRIBUTING.en.md) |
+| Security reporting | [安全政策](../../SECURITY.md) | [Security policy](../../SECURITY.en.md) |
 | Design and boundaries | [设计](../../DESIGN.md) | [Design](DESIGN.md) |
 | Module responsibilities | [能力图](../../spec/CAPABILITY-MAP.md) | [Capability map](capability-map.md) |
 | Execution contract | [通道规格](../../spec/channel.md) | [Channel specification](SPEC-channel.md) |
@@ -41,6 +42,7 @@ The repository contains both marketplace and plugin source:
 .claude-plugin/marketplace.json       Marketplace manifest
 plugins/delegate/
   .claude-plugin/plugin.json         Plugin manifest
+  README.md                         Plugin-directory guide shipped with the installation cache
   commands/                         review, run, doctor, help session entries
   skills/delegate-routing/          Routing criteria
   hooks/                            SessionStart readiness checks, cache, doctor entry
@@ -48,6 +50,7 @@ plugins/delegate/
   tests/                            Offline stub tests and regressions
 scripts/                            Repository validation
 evals/                              Behavior evaluators and optional model runs
+.github/ISSUE_TEMPLATE/             Bug report and feature request templates
 ```
 
 Command files and the skill are host-executed instructions, currently written in Chinese. The English documents linked here explain their complete usage contract and do not register a second set of plugin commands.
