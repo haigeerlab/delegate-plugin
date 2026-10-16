@@ -51,5 +51,3 @@ stdin 从 `/dev/null` 输入；`-o` 最终答复和合并 stdout/stderr 过程�
 仅支持 Codex 和可选 Claude Code 两个明确执行后端，默认 Codex，不自动识别宿主并换执行者；无后台控制面、排队、断点恢复或自动重试。两种模式统一拒绝非 Git 目录，使可执行条件与验收方式一致。用户已有修改被保留，归属需通过 diff 人工判断。
 
 确定性合同以免费桩测试验证；真实沙箱、远端请求和交互模型行为需要用户决定进行 live 验证。eval 显式加载源码，PASS/FAIL/NORUN 分开；首行固定格式判决避免正文误报。[能力图](spec/CAPABILITY-MAP.md)和 [README](README.md)提供模块与使用入口。
-
-真实反向首批已启动 Codex，但四文件均未审；免费修复改为有界 inline 文件输入（总输入1MiB）及核实的 shell/apps/plugins/multi_agent 禁用开关，不增加 Bash/MCP 读取权限。修复后已完成真实反向审查4/4，见[最新证据与限制](docs/verification/2026-10-12-claude-review-mac-reverse-fourth-success.md)；首批失败保持历史结论。

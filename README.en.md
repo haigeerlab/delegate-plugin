@@ -58,8 +58,9 @@ It does not provide background jobs, queues, resumption, automatic retries, a th
 | Python 3, Git, Bash | Required by the scripts; compatible with macOS Bash 3.2 |
 | Target project | A Git working tree; existing uncommitted changes and repositories without commits are allowed |
 | Node.js, npm | Required if you use the npm installation method below |
+| Claude Code review backend (optional) | Needed only for `--backend claude-code`: macOS, the official Claude Code ≥2.1.295 already signed in, Node.js ≥22.12.0, an installed srt 0.0.79, and an available user GUI launchd domain; the plugin installs and signs in to nothing |
 
-v0.4.0 was verified with Claude Code 2.1.291, Codex CLI 0.160.0, Python 3.10, and Bash 3.2. These are tested versions, not a minimum compatibility guarantee. Windows has not been verified.
+The Codex execution path keeps the v0.4.0 verified environment: Claude Code 2.1.291, Codex CLI 0.160.0, Python 3.10, and Bash 3.2. The v0.5.0 Claude review backend was tested on macOS 15.7.3 arm64 with the official Claude Code 2.1.296. These are tested versions, not a minimum compatibility guarantee. Windows and Linux have not been verified.
 
 Authentication is checked through CLI status rather than the existence of `auth.json`. API-key and unrecognized authentication states are rejected. Execution removes `OPENAI_API_KEY` and `CODEX_API_KEY` and selects ChatGPT authentication and the OpenAI provider. Codex CLI manages credential storage, which may use a file under `CODEX_HOME` or the system keychain. [Codex authentication documentation](https://learn.chatgpt.com/docs/auth)
 
@@ -104,7 +105,9 @@ Enter this in the **Claude Code session**:
 /delegate:doctor
 ```
 
-doctor refreshes local installation and authentication checks and inspects some Chinese-language rules in the global AGENTS.md. It makes no model request. Exit status 0 means diagnostics completed; read the issue count and reasons. Basic readiness does not verify remote connectivity, available quota, or model access.
+Without options it checks the default Codex backend. Before using the Claude review backend, enter `/delegate:doctor --backend claude-code` instead to check srt, Node, the CLI version, and existing authentication.
+
+On the Codex path, doctor refreshes local installation and authentication checks and inspects some Chinese-language rules in the global AGENTS.md. Neither backend's doctor makes a model request. Exit status 0 means diagnostics completed; read the issue count and reasons. Basic readiness does not verify remote connectivity, available quota, or model access.
 
 ### 4. Run your first read-only delegation
 
@@ -271,8 +274,12 @@ Uninstalling does not roll back previous changes to your project. Temporary logs
 | Timeout (124) | Inspect the log tail and Git state, check task size, and decide manually whether to retry |
 | Failure or empty answer | Inspect errors, log paths, and actual diffs; failed-task edits are not automatically reverted |
 | Waiting for confirmation without doing the task | Inspect effective global/project AGENTS.md rules and exempt non-interactive execution from workflow sections intended only for interactive sessions |
+| review reports a missing scope (64) | Provide one of `--paths`, `--base`, `--changes`, or `--context`; the whole project is never scanned automatically. Add `--dry-run` first to preview the resolved scope |
+| Claude backend preconditions fail (127) | Run `/delegate:doctor --backend claude-code`; check the `claude`, `node`, and `srt` versions, and if needed set existing absolute paths with `DELEGATE_CLAUDE_BIN`, `DELEGATE_NODE_BIN`, or `DELEGATE_SRT_BIN`. It never falls back to Codex |
+| Codex review reports `codex_inline_input_limit` | Review input exceeds 1 MiB and is neither truncated nor split automatically; review in smaller runs with narrower `--paths` or added `--exclude` |
+| Review report is failed, inconclusive, or partially covered | Read the unreviewed scope and reasons in the report (permission denial, turn or budget limit, invalid output, and so on); none of these counts as a passing review |
 
-Wrapper exit statuses: 64 for arguments/non-Git directories; 127 for basic CLI/Python failures; 124 for execution timeout; 129/130/143 for HUP/INT/TERM interruptions. An empty answer exits 1; other execution failures retain their nonzero status. doctor always exits 0; assess the reported issue count.
+Wrapper exit statuses: 64 for arguments/non-Git directories; 127 for basic CLI/Python failures; 124 for execution timeout; 129/130/143 for HUP/INT/TERM interruptions. An empty answer exits 1; other execution failures retain their nonzero status. review uses the same 64/127/124/129/130/143 conventions; a completed review exits 0 even when it reports findings. doctor always exits 0; assess the reported issue count.
 
 doctor refreshes the temporary cache and does not modify project files. Its heuristics inspect only some Chinese global rules, not English or all project rules. It does not verify remote connectivity, quota, model access, or whether a token remains valid. Runtime diagnostics and skill instructions currently use mainly Chinese; bilingual documentation does not change these outputs.
 
@@ -329,5 +336,3 @@ Commands such as `claude --version` and `codex --version` show versions. Remove 
 The project source and accompanying documentation are licensed under the [MIT License](LICENSE), with `Copyright (c) 2026 haigeerlab and contributors`. Commercial use, modification, and distribution are permitted; copyright and permission notices must be retained in distributions. The software is provided as is, without warranty. This is a summary; the standard English text in LICENSE governs.
 
 An identical [LICENSE](plugins/delegate/LICENSE) is included in the plugin directory so standalone distribution or installation also carries the license.
-
-The first real reverse run started Codex from Claude but reviewed no files. Codex review now receives bounded inline file data, with a 1 MiB serialized input limit and verified disabled shell/apps/plugins/multi-agent features. The repaired real reverse review completed4/4; see the [latest evidence and limits](docs/verification/2026-10-12-claude-review-mac-reverse-fourth-success.md) (Chinese). The first failed run remains historical.
