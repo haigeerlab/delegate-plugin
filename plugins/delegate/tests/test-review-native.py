@@ -121,5 +121,85 @@ class NativeContracts(unittest.TestCase):
         self.assertEqual(kernel.signal.call_count, 1)
 
 
+AUTHENTICATION_VARIABLES = ('CLAUDE_CONFIG_DIR', 'ANTHROPIC_API_KEY', 'ANTHROPIC_AUTH_TOKEN',
+    'CLAUDE_CODE_OAUTH_TOKEN', 'CLAUDE_CODE_USE_BEDROCK', 'CLAUDE_CODE_USE_VERTEX',
+    'CLAUDE_CODE_USE_FOUNDRY', 'ANTHROPIC_BASE_URL', 'DELEGATE_CLAUDE_GUEST_CONFIG')
+
+
+class DesktopBaseUrl(unittest.TestCase):
+    """Claude Desktop injects the official endpoint into every Code session."""
+
+    def setUp(self):
+        self.temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temporary.cleanup)
+        self.root = Path(self.temporary.name).resolve()
+        self.context = {'repository': str(self.root), 'files': {'src/a.py': b'fixture\n'},
+            'allowed_tools': ['Read'], 'scope': {}, 'baseline': {}, 'diff_sha256': None,
+            'file_sha256': {}, 'unreviewed': []}
+        self.args = SimpleNamespace(model='sonnet', task='fixture', max_turns=12, max_budget_usd=None)
+
+    def environment(self, base_url, extra=None):
+        values = {name: '' for name in AUTHENTICATION_VARIABLES}
+        values.update({'ANTHROPIC_BASE_URL': base_url, 'CLAUDE_CODE_ENTRYPOINT': 'claude-desktop',
+                       'DELEGATE_REVIEW_DEPTH': '0'}, **(extra or {}))
+        return patch.dict('os.environ', values)
+
+    def review(self, base_url, extra=None):
+        # The CLI lookup is the first step after the authentication check; a
+        # sentinel there proves which side of the check was reached.
+        with self.environment(base_url, extra), patch('sys.platform', 'darwin'), \
+                patch.object(review_native, 'executable', side_effect=BoundaryError('claude_cli_missing')):
+            report, _ = review_native.native_review(self.args, self.context)
+        return report['diagnostics']
+
+    def doctor(self, base_url):
+        import contextlib, io, os, review_doctor
+        output = io.StringIO()
+        previous = os.getcwd()
+        os.chdir(self.root)
+        self.addCleanup(os.chdir, previous)
+        with self.environment(base_url), patch('sys.platform', 'darwin'), \
+                patch('sys.argv', ['review_doctor.py', '--backend', 'claude-code']), \
+                patch.object(review_native, 'executable', side_effect=BoundaryError('claude_cli_missing')), \
+                contextlib.redirect_stdout(output):
+            review_doctor.main()
+        return output.getvalue()
+
+    def test_desktop_official_base_url_passes_review_authentication_check(self):
+        self.assertEqual(self.review('https://api.anthropic.com'), ['claude_cli_missing'])
+
+    def test_desktop_official_base_url_passes_doctor_authentication_check(self):
+        output = self.doctor('https://api.anthropic.com')
+        self.assertIn('条件不足：claude_cli_missing', output)
+        self.assertNotIn('native_authentication_environment_unverified', output)
+
+    def test_official_base_url_variants_pass(self):
+        for value in ('https://api.anthropic.com', 'https://api.anthropic.com/',
+                      'HTTPS://API.Anthropic.COM', 'https://api.anthropic.com:443/'):
+            with self.subTest(value=value):
+                self.assertEqual(self.review(value), ['claude_cli_missing'])
+
+    def test_other_base_urls_stay_refused(self):
+        for value in ('https://proxy.example.com', 'http://api.anthropic.com',
+                      'https://api.anthropic.com.evil.example', 'https://evil.api.anthropic.com',
+                      'https://api.anthropic.com./', 'https://api.anthropic.com/v1',
+                      'https://api.anthropic.com//', 'https://api.anthropic.com:8443',
+                      'https://api.anthropic.com:abc', 'https://user@api.anthropic.com',
+                      'https://api.anthropic.com@evil.example', 'https://api.anthropic.com?',
+                      'https://api.anthropic.com/?x=1', 'https://api.anthropic.com#',
+                      ' https://api.anthropic.com', 'https://api.anthropic.com\n',
+                      'api.anthropic.com', 'https://api.anthropic.com\\@evil.example'):
+            with self.subTest(value=value):
+                self.assertEqual(self.review(value), ['native_authentication_environment_unverified'])
+                self.assertIn('条件不足：native_authentication_environment_unverified',
+                              self.doctor(value))
+
+    def test_other_authentication_variables_still_refused_with_official_base_url(self):
+        for name in AUTHENTICATION_VARIABLES[:7]:
+            with self.subTest(name=name):
+                self.assertEqual(self.review('https://api.anthropic.com', {name: 'x'}),
+                                 ['native_authentication_environment_unverified'])
+
+
 if __name__ == '__main__':
     unittest.main()

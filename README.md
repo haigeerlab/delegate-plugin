@@ -276,6 +276,7 @@ claude plugin marketplace remove delegate-marketplace
 | 停在等待确认 | 检查实际生效的全局/项目 AGENTS.md，给仅用于交互的流程章节注明非交互豁免 |
 | review 报缺少范围（64） | 提供 `--paths`、`--base`、`--changes` 或 `--context` 之一；不会自动扫描整个项目。可先加 `--dry-run` 预览解析结果 |
 | Claude 后端条件不足（127） | 运行 `/delegate:doctor --backend claude-code`；核对 `claude`、`node`、`srt` 版本，必要时用 `DELEGATE_CLAUDE_BIN`、`DELEGATE_NODE_BIN`、`DELEGATE_SRT_BIN` 指定已有绝对路径。不会自动改用 Codex |
+| Claude 后端报 `native_authentication_environment_unverified` | 当前环境设置了自定义认证目录、API key/token、第三方 provider，或指向非官方地址的 `ANTHROPIC_BASE_URL`。用 `env \| grep -E '^(ANTHROPIC_\|CLAUDE_)'` 核对后在终端里去掉这些变量再运行。Claude Desktop 会话自带的 `ANTHROPIC_BASE_URL=https://api.anthropic.com`（官方默认地址）会被放行，不会触发此错误 |
 | Codex 审查报 `codex_inline_input_limit` | 审查输入超过 1 MiB，不会截断或自动分批；用更小的 `--paths` 或加 `--exclude` 分次审查 |
 | 审查报告为 failed、inconclusive 或部分覆盖 | 查看报告列出的未审范围与原因（权限拒绝、达到轮次或预算上限、输出无效等）；这些都不算审查通过 |
 
