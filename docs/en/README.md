@@ -10,7 +10,7 @@ Simplified Chinese is delegate's default documentation language. English counter
 - Daily use and troubleshooting: see README commands, output verification, and troubleshooting; `/delegate:help` is available inside a session.
 - Design: read [Design and boundaries](DESIGN.md), then the [capability map](capability-map.md).
 - Development and review: read the module specifications and [Contributing](../../CONTRIBUTING.en.md), and run offline validation from the repository root. The new [Claude review specification](SPEC-claude-review.md) describes v0.5.0. Native Mac boundaries and isolated regressions passed; normal real reviews succeeded in both directions on their frozen source. Menu-to-script execution and dry-run were verified. Active model boundary attempts, authentication refresh and natural abnormal helpers remain unverified.
-- Upgrading: read [v0.5.0 release notes](releases/v0.5.0.md); see [Unreleased](releases/unreleased.md) for later changes.
+- Upgrading: read [v0.5.1 release notes](releases/v0.5.1.md); when upgrading from v0.4.0, also read the command migration in [v0.5.0](releases/v0.5.0.md); see [Unreleased](releases/unreleased.md) for later changes.
 
 ## Maintained bilingual documentation
 
@@ -26,9 +26,9 @@ Simplified Chinese is delegate's default documentation language. English counter
 | Detection and cache | [探测规格](../../spec/detection.md) | [Detection specification](SPEC-detection.md) |
 | Routing and behavior evaluation | [路由规格](../../spec/routing.md) | [Routing specification](SPEC-routing.md) |
 | Claude reviews | [审查规格](../../spec/claude-review.md) | [Review specification](SPEC-claude-review.md) |
-| Current release | [v0.5.0](../releases/v0.5.0.md) | [v0.5.0](releases/v0.5.0.md) |
+| Current release | [v0.5.1](../releases/v0.5.1.md) | [v0.5.1](releases/v0.5.1.md) |
 | Subsequent changes | [未发布记录](../releases/unreleased.md) | [Unreleased](releases/unreleased.md) |
-| Previous release records | [v0.4.0](../releases/v0.4.0.md)、[v0.3.1（历史）](../releases/v0.3.1.md) | [v0.4.0](releases/v0.4.0.md), [v0.3.1 (historical)](releases/v0.3.1.md) |
+| Previous release records | [v0.5.0](../releases/v0.5.0.md)、[v0.4.0](../releases/v0.4.0.md)、[v0.3.1（历史）](../releases/v0.3.1.md) | [v0.5.0](releases/v0.5.0.md), [v0.4.0](releases/v0.4.0.md), [v0.3.1 (historical)](releases/v0.3.1.md) |
 
 Start with README for installation and use. Chinese `spec/<id>.md` contracts and their English counterparts define exact implementation and test contracts. Maintain both languages together. Report discrepancies so they can be checked against current implementation and validation results and corrected in both versions.
 
