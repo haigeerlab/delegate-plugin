@@ -60,7 +60,7 @@ Claude 后端使用本机已有的 srt，默认从 PATH 解析，也可用 `DELE
 | Node.js、npm | 使用下方 npm 安装 Codex 的方式时需要 |
 | Claude Code 审查后端（可选） | 仅 `--backend claude-code` 需要：macOS、原版 Claude Code ≥2.1.295 且已登录、Node.js ≥22.12.0、已安装的 srt 0.0.79、可用的用户 GUI launchd 域；插件不自动安装或登录 |
 
-Codex 执行路径沿用 v0.4.0 的验证环境：Claude Code 2.1.291、Codex CLI 0.160.0、Python 3.10、Bash 3.2。v0.5.0 的 Claude 审查后端实测 macOS 15.7.3 arm64 与原版 Claude Code 2.1.296。这些是已验证环境，未声明更早版本的最低兼容线，也未验证 Windows 或 Linux。
+Codex 执行路径沿用 v0.4.0 的验证环境：Claude Code 2.1.291、Codex CLI 0.160.0、Python 3.10、Bash 3.2。v0.5.0 的 Claude 审查后端实测 macOS 15.7.3 arm64 与原版 Claude Code 2.1.296。这些是已验证环境，未声明更早版本的最低兼容线，也未验证 Windows 或 Linux。下方快速开始用 `@latest` 安装当时的最新 Codex，不固定到上述版本；实际版本以 `codex --version` 为准。
 
 认证状态通过 CLI 检查，不以 `auth.json` 是否存在为依据。API key 登录和未知认证状态会被拒绝；执行时清除 `OPENAI_API_KEY`、`CODEX_API_KEY`，并指定 ChatGPT 认证和 OpenAI provider。凭据存储由 Codex CLI 管理，可能使用 `CODEX_HOME` 下的文件或系统钥匙串。[Codex 认证说明](https://learn.chatgpt.com/docs/auth)
 
@@ -125,7 +125,7 @@ v0.5.0 使用 `/delegate:run`；从 v0.4.0 升级时，旧 `/delegate:delegate` 
 
 终端中的 `claude plugin ...` 是安装管理命令；下表 `/delegate:...` 是 Claude Code 会话入口。插件使用完整命名空间，以当前宿主加载的命令列表为准。[官方组件说明](https://code.claude.com/docs/en/plugins/components)
 
-Codex 0.162.1 将这四条源命令转换为 skill：
+Codex 0.162.1 将这四条源命令转换为 skill（0.162.1 是核对此转换时使用的版本，与上文 v0.4.0 执行路径验证的 0.160.0 不同；其他版本的转换名称未核对）：
 
 | Claude Code 入口 | Codex 迁移 skill 名称 |
 |---|---|
@@ -268,7 +268,7 @@ claude plugin marketplace remove delegate-marketplace
 | 命令找不到 | 检查已加载插件、命名空间和安装来源；更新后启动新会话，开发时可用 `--plugin-dir` |
 | Codex 缺失或版本命令失败 | `codex --version`；修复安装与 PATH |
 | 未登录、API key 登录或未知认证 | `codex login status`；执行 `codex login` 选择 ChatGPT 登录 |
-| 登录后仍不提议 | `/delegate:doctor` 强制刷新缓存；是否提议还取决于任务与模型规则 |
+| 没有自动出现委托提议 | 不是故障：v0.5.0 起不按每轮输入自动提醒，提议只在你明确请求委托时出现。直接说明要委托的任务，或使用 `/delegate:run`、`/delegate:review`；怀疑基础条件有问题时运行 `/delegate:doctor` 刷新缓存并查看报告 |
 | 不是 Git 工作区（64） | 进入业务 Git 仓库；没有非 Git 绕过开关 |
 | 参数错误（64） | 查 `/delegate:help` 或脚本 `--help`；直接运行脚本时把任务作为一个参数 |
 | 超时（124） | 看日志尾部和 Git 状态，核实任务规模；人工决定是否重试 |
@@ -276,7 +276,8 @@ claude plugin marketplace remove delegate-marketplace
 | 停在等待确认 | 检查实际生效的全局/项目 AGENTS.md，给仅用于交互的流程章节注明非交互豁免 |
 | review 报缺少范围（64） | 提供 `--paths`、`--base`、`--changes` 或 `--context` 之一；不会自动扫描整个项目。可先加 `--dry-run` 预览解析结果 |
 | Claude 后端条件不足（127） | 运行 `/delegate:doctor --backend claude-code`；核对 `claude`、`node`、`srt` 版本，必要时用 `DELEGATE_CLAUDE_BIN`、`DELEGATE_NODE_BIN`、`DELEGATE_SRT_BIN` 指定已有绝对路径。不会自动改用 Codex |
-| Claude 后端报 `native_authentication_environment_unverified` | 当前环境设置了自定义认证目录、API key/token、第三方 provider，或指向非官方地址的 `ANTHROPIC_BASE_URL`。用 `env \| grep -E '^(ANTHROPIC_\|CLAUDE_)'` 核对后在终端里去掉这些变量再运行。Claude Desktop 会话自带的 `ANTHROPIC_BASE_URL=https://api.anthropic.com`（官方默认地址）会被放行，不会触发此错误 |
+| Claude 后端报 `native_authentication_environment_unverified` | 当前环境设置了自定义认证目录、API key/token、第三方 provider，或指向非官方地址的 `ANTHROPIC_BASE_URL`。用 `env \| cut -d= -f1 \| grep -E '^(ANTHROPIC_\|CLAUDE_)'` 只列出变量名核对（不要直接 `env \| grep`，会把密钥值打到终端；也不要把环境变量输出贴进 Issue），然后在终端里去掉这些变量再运行。Claude Desktop 会话自带的 `ANTHROPIC_BASE_URL=https://api.anthropic.com`（官方默认地址）会被放行，不会触发此错误 |
+| Claude 后端报 `macos_required`、`launchd_` 开头或 `macos_process_api_` 开头的诊断 | Claude 后端只支持 macOS，并要在当前用户的 GUI launchd 域里启动临时任务、用内核进程接口核对进程边界。非 macOS 报 `macos_required`；`launchctl` 无法调用、无法观测或启动任务失败（例如在缺少图形登录的 SSH、tmux 等会话中可能出现；具体由哪一项触发未逐一实测）报 `launchd_control_unavailable`、`launchd_observation_unverified` 或 `launchd_start_failed`；内核接口检查失败报 `macos_process_api_unavailable`、`macos_process_api_unverified` 或 `process_identity_unverified`。review 退出 127，`/delegate:doctor --backend claude-code` 显示 `条件不足：<诊断码>`。在已登录图形界面的 Mac 本机终端或 Claude Code 中重试，或改用 `--backend codex`；不会自动回退 |
 | Codex 审查报 `codex_inline_input_limit` | 审查输入超过 1 MiB，不会截断或自动分批；用更小的 `--paths` 或加 `--exclude` 分次审查 |
 | 审查报告为 failed、inconclusive 或部分覆盖 | 查看报告列出的未审范围与原因（权限拒绝、达到轮次或预算上限、输出无效等）；这些都不算审查通过 |
 

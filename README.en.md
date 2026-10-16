@@ -60,7 +60,7 @@ It does not provide background jobs, queues, resumption, automatic retries, a th
 | Node.js, npm | Required if you use the npm installation method below |
 | Claude Code review backend (optional) | Needed only for `--backend claude-code`: macOS, the official Claude Code ≥2.1.295 already signed in, Node.js ≥22.12.0, an installed srt 0.0.79, and an available user GUI launchd domain; the plugin installs and signs in to nothing |
 
-The Codex execution path keeps the v0.4.0 verified environment: Claude Code 2.1.291, Codex CLI 0.160.0, Python 3.10, and Bash 3.2. The v0.5.0 Claude review backend was tested on macOS 15.7.3 arm64 with the official Claude Code 2.1.296. These are tested versions, not a minimum compatibility guarantee. Windows and Linux have not been verified.
+The Codex execution path keeps the v0.4.0 verified environment: Claude Code 2.1.291, Codex CLI 0.160.0, Python 3.10, and Bash 3.2. The v0.5.0 Claude review backend was tested on macOS 15.7.3 arm64 with the official Claude Code 2.1.296. These are tested versions, not a minimum compatibility guarantee. Windows and Linux have not been verified. The Quick start below installs whatever Codex is latest at the time with `@latest` rather than pinning these versions; `codex --version` reports what you actually have.
 
 Authentication is checked through CLI status rather than the existence of `auth.json`. API-key and unrecognized authentication states are rejected. Execution removes `OPENAI_API_KEY` and `CODEX_API_KEY` and selects ChatGPT authentication and the OpenAI provider. Codex CLI manages credential storage, which may use a file under `CODEX_HOME` or the system keychain. [Codex authentication documentation](https://learn.chatgpt.com/docs/auth)
 
@@ -127,7 +127,7 @@ For writes, explicitly authorize the current task before using `--write`, then r
 
 Terminal commands beginning with `claude plugin ...` manage installation. The `/delegate:...` entries below run inside Claude Code. Use the full namespace and the command inventory actually loaded by your host. [Official component documentation](https://code.claude.com/docs/en/plugins/components)
 
-Codex 0.162.1 converts the four source commands to skills:
+Codex 0.162.1 converts the four source commands to skills (0.162.1 is the version used to check this conversion, distinct from the 0.160.0 verified above for the v0.4.0 execution path; names under other versions are unchecked):
 
 | Claude Code entry | Migrated Codex skill name |
 |---|---|
@@ -268,7 +268,7 @@ Uninstalling does not roll back previous changes to your project. Temporary logs
 | Command not found | Check loaded plugins, namespaces, and installation source; start a new session after updating, or load source with `--plugin-dir` during development |
 | Codex missing or version command fails | Run `codex --version`; fix installation and PATH |
 | Not signed in, API-key login, or unrecognized authentication | Run `codex login status`, then `codex login` to sign in with ChatGPT |
-| No proposal after signing in | Refresh the cache with `/delegate:doctor`; proposals also depend on the task and model instructions |
+| No delegation proposal appears automatically | Not a fault: since v0.5.0 the plugin does not remind on every prompt, and a proposal appears only when you explicitly ask to delegate. State the task you want delegated, or use `/delegate:run` or `/delegate:review`; if you suspect a readiness problem, run `/delegate:doctor` to refresh the cache and read its report |
 | Not a Git working tree (64) | Enter the target Git repository; there is no non-Git bypass option |
 | Invalid arguments (64) | Read `/delegate:help` or script `--help`; pass the task as one argument when running the script directly |
 | Timeout (124) | Inspect the log tail and Git state, check task size, and decide manually whether to retry |
@@ -276,7 +276,8 @@ Uninstalling does not roll back previous changes to your project. Temporary logs
 | Waiting for confirmation without doing the task | Inspect effective global/project AGENTS.md rules and exempt non-interactive execution from workflow sections intended only for interactive sessions |
 | review reports a missing scope (64) | Provide one of `--paths`, `--base`, `--changes`, or `--context`; the whole project is never scanned automatically. Add `--dry-run` first to preview the resolved scope |
 | Claude backend preconditions fail (127) | Run `/delegate:doctor --backend claude-code`; check the `claude`, `node`, and `srt` versions, and if needed set existing absolute paths with `DELEGATE_CLAUDE_BIN`, `DELEGATE_NODE_BIN`, or `DELEGATE_SRT_BIN`. It never falls back to Codex |
-| Claude backend reports `native_authentication_environment_unverified` | The environment sets a custom auth directory, API key/token, third-party provider, or an `ANTHROPIC_BASE_URL` pointing anywhere other than the official endpoint. Check with `env \| grep -E '^(ANTHROPIC_\|CLAUDE_)'` and unset them in your terminal before rerunning. The `ANTHROPIC_BASE_URL=https://api.anthropic.com` (official default) that Claude Desktop sessions carry is accepted and does not trigger this error |
+| Claude backend reports `native_authentication_environment_unverified` | The environment sets a custom auth directory, API key/token, third-party provider, or an `ANTHROPIC_BASE_URL` pointing anywhere other than the official endpoint. List only the variable names with `env \| cut -d= -f1 \| grep -E '^(ANTHROPIC_\|CLAUDE_)'` (a plain `env \| grep` prints secret values to the terminal; do not paste environment output into an Issue either), then unset them in your terminal before rerunning. The `ANTHROPIC_BASE_URL=https://api.anthropic.com` (official default) that Claude Desktop sessions carry is accepted and does not trigger this error |
+| Claude backend reports `macos_required` or a diagnostic starting with `launchd_` or `macos_process_api_` | The Claude backend supports only macOS, starts a temporary job in the current user's GUI launchd domain, and checks the process boundary through kernel process interfaces. Non-macOS reports `macos_required`; when `launchctl` cannot be called, cannot observe, or fails to start the job (possible in SSH, tmux, or other sessions without a graphical login; which code each case yields has not been tested individually) it reports `launchd_control_unavailable`, `launchd_observation_unverified`, or `launchd_start_failed`; a failed kernel interface check reports `macos_process_api_unavailable`, `macos_process_api_unverified`, or `process_identity_unverified`. review exits 127, and `/delegate:doctor --backend claude-code` prints `条件不足：<diagnostic>` (conditions missing). Retry from a terminal or Claude Code on a Mac with a graphical login, or use `--backend codex`; there is no automatic fallback |
 | Codex review reports `codex_inline_input_limit` | Review input exceeds 1 MiB and is neither truncated nor split automatically; review in smaller runs with narrower `--paths` or added `--exclude` |
 | Review report is failed, inconclusive, or partially covered | Read the unreviewed scope and reasons in the report (permission denial, turn or budget limit, invalid output, and so on); none of these counts as a passing review |
 
