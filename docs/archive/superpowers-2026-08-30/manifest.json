@@ -1,0 +1,41 @@
+{
+  "sourceCommit": "cf81d8a8c05e0f27172f307f461cfc9760310b24",
+  "records": [
+    {
+      "originalPath": "docs/superpowers/specs/2026-08-30-public-positioning-design.md",
+      "archivePath": "docs/archive/superpowers-2026-08-30/specs/2026-08-30-public-positioning-design.md.txt",
+      "sourceCommit": "cf81d8a8c05e0f27172f307f461cfc9760310b24",
+      "sha256": "dd28da0d31f0515b4850129a184579c2291325c6e995b29d12b02937f0c6ca0c"
+    },
+    {
+      "originalPath": "docs/superpowers/plans/2026-08-30-public-positioning-docs.md",
+      "archivePath": "docs/archive/superpowers-2026-08-30/plans/2026-08-30-public-positioning-docs.md.txt",
+      "sourceCommit": "cf81d8a8c05e0f27172f307f461cfc9760310b24",
+      "sha256": "f6991cbfd9c8bbde57e2bddebbeb4ec347dcb5d55b279d3ed5c75e0aa34af85a"
+    },
+    {
+      "originalPath": "docs/superpowers/specs/2026-08-30-chinese-marketplace-positioning-design.md",
+      "archivePath": "docs/archive/superpowers-2026-08-30/specs/2026-08-30-chinese-marketplace-positioning-design.md.txt",
+      "sourceCommit": "cf81d8a8c05e0f27172f307f461cfc9760310b24",
+      "sha256": "502a7a7900aa7e3a807f250482beebafc67e8ad27b70e990af1699617528265f"
+    },
+    {
+      "originalPath": "docs/superpowers/plans/2026-08-30-chinese-marketplace-positioning.md",
+      "archivePath": "docs/archive/superpowers-2026-08-30/plans/2026-08-30-chinese-marketplace-positioning.md.txt",
+      "sourceCommit": "cf81d8a8c05e0f27172f307f461cfc9760310b24",
+      "sha256": "cc96fb31a0379ba06c45027a267f6c7fa7aa592560af32fa3f5c2d8784e667b6"
+    },
+    {
+      "originalPath": "docs/superpowers/specs/2026-08-30-v030-release-notes-design.md",
+      "archivePath": "docs/archive/superpowers-2026-08-30/specs/2026-08-30-v030-release-notes-design.md.txt",
+      "sourceCommit": "cf81d8a8c05e0f27172f307f461cfc9760310b24",
+      "sha256": "750c65be6134b5c0e28f602264cb20c09adf124bf5a6babf5f89439718ea7fdc"
+    },
+    {
+      "originalPath": "docs/superpowers/plans/2026-08-30-v030-release-notes.md",
+      "archivePath": "docs/archive/superpowers-2026-08-30/plans/2026-08-30-v030-release-notes.md.txt",
+      "sourceCommit": "cf81d8a8c05e0f27172f307f461cfc9760310b24",
+      "sha256": "4d88237782c57c2fe5e3a10e7eba636812e712f671e2243dda92a0e6331c89aa"
+    }
+  ]
+}
