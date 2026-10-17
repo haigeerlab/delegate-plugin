@@ -18,8 +18,9 @@
 | detection | CLI 基础检查、身份绑定缓存、原子写入、静默降级、doctor | — |
 | routing | 显式委托请求的可选判据与确认纪律，不自动注入提醒 | channel, detection |
 | claude-review | 为 delegate 增加显式后端选择、Claude Code 只读审查和统一审查结果，保持现有 Codex 行为兼容 | channel, detection, routing |
+| integration-interface | 发布静态 interface.json 声明对外能力与接口版本，并把审查报告 schema_version 1 写成对外兼容合同 | claude-review |
 
-Build order: channel → detection → routing → claude-review
+Build order: channel → detection → routing → claude-review → integration-interface
 
 channel 与 detection 共用 `backend.py`，该共享代码不是独立模块依赖。routing 按显式请求结合 detection 体检，授权后使用 channel；构建顺序保留既有实施顺序，不新增运行职责。
 

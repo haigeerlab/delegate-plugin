@@ -29,12 +29,33 @@ Codex 中对应的 skill 为 `source-command-review`、`source-command-run`、`s
 
 ```text
 .claude-plugin/plugin.json   插件清单
+interface.json               对外接口版本与能力声明
 commands/                    review、run、doctor、help 会话入口
 skills/delegate-routing/     显式委托请求的分流判据
 hooks/                       SessionStart 基础探测、缓存与 doctor 入口
 scripts/                     后端调用（Codex / Claude Code）与进程管理
 tests/                       离线桩测试与回归
 ```
+
+## 对外接口
+
+供其他插件按版本对接，不读本插件内部文件。
+
+- **`interface.json`**：位于插件根目录。`interface` 是接口版本；`review.backends`、`run.backends` 是本版本**支持**的后端，不代表本机已安装、已登录或有额度，能否运行仍以 `/delegate:doctor` 为准。只增加可选字段升次版本，删除、改名或改变含义升主版本；使用方按主版本范围检查，如 `>=1.0,<2.0`。
+- **审查报告（`review.report.schemaVersion: 1`）**：`/delegate:review` 的标准输出是一份 JSON 报告（`--dry-run` 输出的是预览，不是报告）。标准错误中的私有副本路径不属于接口。稳定字段：
+
+| 字段 | 含义 |
+|---|---|
+| `schema_version` | 固定 `1` |
+| `execution_status` | `completed` / `conditions_missing` / `failed` / `timed_out` / `cancelled` |
+| `review_outcome` | `findings` / `no_findings_in_scope` / `inconclusive` |
+| `backend` | `codex` / `claude-code` |
+| `scope.paths`、`scope.baseline`、`scope.diff_sha256`、`scope.files` | 审查对象与指纹 |
+| `reviewed`、`unreviewed[]`（`{path, reason}`） | 已审与未审文件 |
+| `findings[]` | `{title, file, line, trigger, impact, evidence, suggestion, unverified}`，`line` 可为 `null` |
+| `limitations` | 限制说明 |
+
+其他字段属于诊断信息，可能变化。只有 `execution_status=completed` 且 `review_outcome` 为 `findings` 或 `no_findings_in_scope` 才算有结论；`no_findings_in_scope` 不等于没有缺陷。报告是第三方参考意见，不是用户批准；引用时注明 delegate、后端与指纹。
 
 ## 反馈与许可
 

@@ -1,0 +1,11 @@
+{
+  "interface": "1.0",
+  "review": {
+    "command": "/delegate:review",
+    "backends": ["codex", "claude-code"],
+    "readOnly": true,
+    "report": {"schemaVersion": 1}
+  },
+  "run": {"command": "/delegate:run", "backends": ["codex"], "write": "explicit"},
+  "doctor": {"command": "/delegate:doctor"}
+}
