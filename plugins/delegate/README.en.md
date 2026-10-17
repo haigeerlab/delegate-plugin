@@ -29,12 +29,33 @@ The plugin installs no dependencies, signs in to nothing, and changes no global 
 
 ```text
 .claude-plugin/plugin.json   Plugin manifest
+interface.json               External interface version and capability declaration
 commands/                    review, run, doctor, help session entries
 skills/delegate-routing/     Routing criteria for explicit delegation requests
 hooks/                       SessionStart readiness checks, cache, doctor entry
 scripts/                     Backend invocation (Codex / Claude Code) and process management
 tests/                       Offline stub tests and regressions
 ```
+
+## External interface
+
+For other plugins to integrate by version without reading this plugin's internals.
+
+- **`interface.json`**: at the plugin root. `interface` is the interface version; `review.backends` and `run.backends` are the backends this version **supports**, not ones installed, signed in or funded on this machine; whether they run is still decided by `/delegate:doctor`. Adding optional fields bumps the minor version; removing, renaming or changing a field's meaning bumps the major version. Consumers check a major range such as `>=1.0,<2.0`.
+- **Review report (`review.report.schemaVersion: 1`)**: the standard output of `/delegate:review` is one JSON report (`--dry-run` prints a preview, not a report). The private copy path on standard error is not part of the interface. Stable fields:
+
+| Field | Meaning |
+|---|---|
+| `schema_version` | Always `1` |
+| `execution_status` | `completed` / `conditions_missing` / `failed` / `timed_out` / `cancelled` |
+| `review_outcome` | `findings` / `no_findings_in_scope` / `inconclusive` |
+| `backend` | `codex` / `claude-code` |
+| `scope.paths`, `scope.baseline`, `scope.diff_sha256`, `scope.files` | Review target and fingerprint |
+| `reviewed`, `unreviewed[]` (`{path, reason}`) | Reviewed and unreviewed files |
+| `findings[]` | `{title, file, line, trigger, impact, evidence, suggestion, unverified}`; `line` may be `null` |
+| `limitations` | Limitation statements |
+
+Other fields are diagnostics and may change. A review has a conclusion only when `execution_status=completed` and `review_outcome` is `findings` or `no_findings_in_scope`; `no_findings_in_scope` does not mean there are no defects. A report is a third-party opinion, not user approval; cite it with delegate, the backend and the fingerprint.
 
 ## Feedback and license
 
