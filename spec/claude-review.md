@@ -2,7 +2,9 @@
 
 简体中文 | [English](../docs/en/SPEC-claude-review.md)
 
-**当前发行（2026-10-16）：** v0.5.2 让 Codex 审查附带的文件内容逐行带行号，解决真实审查中发现缺少行号、整次被判失败的问题，并修正 README 说明，见[版本说明](../docs/releases/v0.5.2.md)；免费验证 166 Python / 53 shell / 19 eval，修复后用 main 源码做了一次真实 Codex 审查，6/6 完成且发现带可核实行号。
+**当前发行（2026-10-17）：** v0.5.3 发布插件根目录 `interface.json`，并把本模块的统一审查报告 `schema_version: 1` 写成对外合同（见 [integration-interface](integration-interface.md)），报告生成不变，见[版本说明](../docs/releases/v0.5.3.md)；免费验证 173 Python / 53 shell / 19 eval，未新增模型调用。
+
+**v0.5.2 发行（2026-10-16）：** v0.5.2 让 Codex 审查附带的文件内容逐行带行号，解决真实审查中发现缺少行号、整次被判失败的问题，并修正 README 说明，见[版本说明](../docs/releases/v0.5.2.md)；免费验证 166 Python / 53 shell / 19 eval，修复后用 main 源码做了一次真实 Codex 审查，6/6 完成且发现带可核实行号。
 
 **v0.5.1 发行（2026-10-16）：** v0.5.1 修复 Claude Desktop 会话注入官方 `ANTHROPIC_BASE_URL` 时 Claude 后端被误拒的问题，见[版本说明](../docs/releases/v0.5.1.md)；免费验证 162 Python / 53 shell / 19 eval，未新增模型调用，Desktop 中 Claude 后端完整 doctor 与真实审查未验证。
 

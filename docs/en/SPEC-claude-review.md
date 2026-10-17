@@ -2,7 +2,9 @@
 
 [简体中文](../../spec/claude-review.md) | English
 
-**Current release, 2026-10-16:** v0.5.2 attaches line numbers to every line of file contents sent to Codex reviews, fixing real reviews whose findings lacked line numbers and were marked failed, and corrects README guidance; see the [release notes](releases/v0.5.2.md). Free validation passed 166 Python / 53 shell / 19 eval, and after the fix a real Codex review from `main` source completed 6/6 with verifiable finding line numbers.
+**Current release, 2026-10-17:** v0.5.3 publishes `interface.json` at the plugin root and documents this module's shared review report `schema_version: 1` as an external contract (see [integration-interface](SPEC-integration-interface.md)); report generation is unchanged; see the [release notes](releases/v0.5.3.md). Free validation passed 173 Python / 53 shell / 19 eval, with no new model calls.
+
+**v0.5.2 release, 2026-10-16:** v0.5.2 attaches line numbers to every line of file contents sent to Codex reviews, fixing real reviews whose findings lacked line numbers and were marked failed, and corrects README guidance; see the [release notes](releases/v0.5.2.md). Free validation passed 166 Python / 53 shell / 19 eval, and after the fix a real Codex review from `main` source completed 6/6 with verifiable finding line numbers.
 
 **v0.5.1 release, 2026-10-16:** v0.5.1 fixes the Claude backend being refused when a Claude Desktop session injects the official `ANTHROPIC_BASE_URL`; see the [release notes](releases/v0.5.1.md). Free validation passed 162 Python / 53 shell / 19 eval with no new model calls; a complete Claude backend doctor run and real reviews inside Desktop remain unverified.
 
