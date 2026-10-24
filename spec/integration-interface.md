@@ -1,6 +1,6 @@
 # 规格：integration-interface（对外接口说明与审查报告合同）
 
-<!-- spec-guard: review approved 21ceaa25742a -->
+<!-- spec-guard: review approved 38ed8b511f37 -->
 
 简体中文 | [English](../docs/en/SPEC-integration-interface.md)
 
@@ -60,6 +60,7 @@ docs/releases/unreleased.md                → 记一条待发行说明
 - `backends` 表示该版本**支持**的后端，不表示本机已安装、已认证或有额度。使用方要提示“可以用 delegate 复核”时，不得据此断言能跑通。
 - 版本规则：只增加可选字段为次版本（`1.x`）；删除、改名或改变字段含义为主版本（`2.0`）。使用方按主版本范围检查，如 `>=1.0,<2.0`。
 - 文件读不到或解析失败，使用方应报“未知”，不当作没装；这是使用方的探测规则，delegate 只保证文件存在且有效。
+- 接口 1.1 起 `run` 下新增可选字段 `resume`，合同见 [run-resume](run-resume.md)；本页首版内容与版本规则不变。
 
 ## 审查报告合同（`schemaVersion: 1`）
 

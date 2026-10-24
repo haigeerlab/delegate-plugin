@@ -136,7 +136,7 @@ def codex_review(args, context):
         command = [sys.executable, '-B', str(SCRIPTS / 'run_codex.py'), str(deadline()),
             shutil.which('codex'), 'exec', '--ephemeral', '--sandbox', 'read-only', '--color', 'never',
             '--skip-git-repo-check', '--ignore-user-config', '--ignore-rules',
-            '-c', 'forced_login_method="chatgpt"', '-c', 'model_provider="openai"',
+            '-c', 'forced_login_method="chatgpt"', '-c', 'model_provider="openai"', '-c', 'approval_policy="never"',
             '-c', 'project_doc_max_bytes=0', '-c', 'features.multi_agent=false',
             '--output-schema', str(schema), '--json', '-o', str(answer)]
         command += config

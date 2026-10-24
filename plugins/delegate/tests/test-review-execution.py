@@ -80,6 +80,12 @@ class CommonExecutionTests(unittest.TestCase):
             '--review-context',str(self.context),'review fixture'],cwd=self.repo,
             env=dict(self.env,FIXTURE_MODE=mode,DELEGATE_TIMEOUT_SECONDS='1'),capture_output=True,text=True,timeout=timeout)
 
+    def test_codex_review_never_uses_a_configured_approver(self):
+        result=self.run_review()
+        self.assertEqual(result.returncode,0,result.stderr)
+        args=json.loads((self.root/'args').read_text())
+        self.assertIn(['-c','approval_policy="never"'],[args[i:i+2] for i in range(len(args)-1)])
+
     def test_public_common_mode_uses_fixed_snapshot_and_structured_contract(self):
         result=self.run_review()
         self.assertEqual(result.returncode,0,result.stderr)

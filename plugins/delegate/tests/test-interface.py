@@ -75,6 +75,16 @@ class InterfaceTests(unittest.TestCase):
                          [name for name, value in backends.items() if value['run']])
         self.assertIs(self.interface['review']['readOnly'], True)
 
+    def test_resume_is_an_additive_minor_version(self):
+        self.assertEqual(self.interface['interface'], '1.1')
+        # spec-guard reads these two fields; they must never change within major version 1.
+        self.assertEqual(self.interface['review']['command'], '/delegate:review')
+        self.assertEqual(self.interface['doctor']['command'], '/delegate:doctor')
+        self.assertEqual(self.interface['run']['resume'], {
+            'optIn': '--resumable', 'option': '--resume',
+            'backends': [name for name, value in delegate_capabilities.BACKENDS.items() if value['resume']],
+            'statuses': ['done', 'needs-input']})
+
     def test_report_schema_version(self):
         self.assertEqual(self.interface['review']['report']['schemaVersion'], self.report['schema_version'])
 

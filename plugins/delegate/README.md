@@ -23,7 +23,7 @@ Codex 中对应的 skill 为 `source-command-review`、`source-command-run`、`s
 - Codex 后端：PATH 中可运行的 `codex`，使用 ChatGPT 登录。
 - Claude Code 审查后端（可选）：macOS、原版 Claude Code ≥2.1.295 且已登录、Node.js ≥22.12.0、已安装的 srt 0.0.79、可用的用户 GUI launchd 域。
 
-插件不安装依赖、不登录、不修改全局配置。首次使用前运行 `/delegate:doctor`，使用 Claude 后端前运行 `/delegate:doctor --backend claude-code`。
+插件不安装依赖、不登录、不修改全局配置。所有 run 与 Codex 审查固定 `approval_policy="never"`，不用本机配置的审批方式：越出沙箱的命令（如 worktree 里 `git commit`、网络访问）直接被拒，提交靠前缀放行规则或由调用方完成。首次使用前运行 `/delegate:doctor`，使用 Claude 后端前运行 `/delegate:doctor --backend claude-code`。
 
 ## 目录
 
@@ -37,11 +37,21 @@ scripts/                     后端调用（Codex / Claude Code）与进程管�
 tests/                       离线桩测试与回归
 ```
 
+## 可续跑委托
+
+`/delegate:run --resumable` 让 Codex 先做不受待定决策影响的任务，碰到需要用户拍板的事再停下。默认不开启；开启后 Codex 会话保存在它自己的会话目录。
+
+- 每次成功返回的最后一行：`delegate: run_id=<id> status=<done|needs-input> resumable=<true|false>`。
+- `needs-input` 退出码为 0，答复以 `NEED_USER:` 开头，标记之后是要问用户的问题原文。
+- 用户答复后：`/delegate:run --resume <runId> [--write] -- "<用户答复>"`。答复须是用户原话或其同意的转述；只续跑最近一轮 needs-input，同一仓库、写模式一致，沿用原模型与推理档；每轮新 runId。
+- 已知限制：模型漏写标记会判为 done；超时或失败的运行不能续跑；续跑状态随最近 50 组日志一起清理。
+
 ## 对外接口
 
 供其他插件按版本对接，不读本插件内部文件。
 
 - **`interface.json`**：位于插件根目录。`interface` 是接口版本；`review.backends`、`run.backends` 是本版本**支持**的后端，不代表本机已安装、已登录或有额度，能否运行仍以 `/delegate:doctor` 为准。只增加可选字段升次版本，删除、改名或改变含义升主版本；使用方按主版本范围检查，如 `>=1.0,<2.0`。
+- **续跑（接口 1.1 起）**：`run.resume` 为 `{"optIn": "--resumable", "option": "--resume", "backends": ["codex"], "statuses": ["done", "needs-input"]}`。使用方按 `>=1.1,<2.0` 判断能否续跑；读到 1.0 或没有该字段时按原做法处理，不续跑。
 - **审查报告（`review.report.schemaVersion: 1`）**：`/delegate:review` 的标准输出是一份 JSON 报告（`--dry-run` 输出的是预览，不是报告）。标准错误中的私有副本路径不属于接口。稳定字段：
 
 | 字段 | 含义 |

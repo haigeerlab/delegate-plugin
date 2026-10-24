@@ -64,6 +64,15 @@ class BackendRoutingTests(unittest.TestCase):
                 invocation = next(c for c in reversed(self.recorded()) if c[0] == 'exec')
                 self.assertEqual(invocation[invocation.index('--sandbox') + 1], 'read-only')
 
+    def test_codex_run_never_uses_a_configured_approver(self):
+        for args in [('read task',), ('--write', 'write task')]:
+            with self.subTest(args=args):
+                result = self.run_entry(*args)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                invocation = next(c for c in reversed(self.recorded()) if c[0] == 'exec')
+                self.assertIn(['-c', 'approval_policy="never"'],
+                              [invocation[i:i + 2] for i in range(len(invocation) - 1)])
+
     def test_codex_write_and_model_options_are_preserved(self):
         result = self.run_entry('--model', 'gpt-5.4', '--effort', 'high', '--write', 'fix fixture')
         self.assertEqual(result.returncode, 0, result.stderr)
