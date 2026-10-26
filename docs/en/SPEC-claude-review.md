@@ -4,7 +4,9 @@
 
 **Approval mode (2026-10-25):** the Codex review backend call always passes `-c approval_policy="never"`; see revision R2 in [run-resume](SPEC-run-resume.md). The rest of the review contract is unchanged.
 
-**Current release, 2026-10-17:** v0.5.3 publishes `interface.json` at the plugin root and documents this module's shared review report `schema_version: 1` as an external contract (see [integration-interface](SPEC-integration-interface.md)); report generation is unchanged; see the [release notes](releases/v0.5.3.md). Free validation passed 173 Python / 53 shell / 19 eval, with no new model calls.
+**Current release, 2026-10-26:** v0.6.0 adds resumable delegation (see [run-resume](SPEC-run-resume.md)); this module's Codex review backend now passes `approval_policy="never"`, while the review contract and report format are unchanged; see the [release notes](releases/v0.6.0.md). Free validation passed 196 Python / 53 shell / 19 eval.
+
+**v0.5.3 release, 2026-10-17:** v0.5.3 publishes `interface.json` at the plugin root and documents this module's shared review report `schema_version: 1` as an external contract (see [integration-interface](SPEC-integration-interface.md)); report generation is unchanged; see the [release notes](releases/v0.5.3.md). Free validation passed 173 Python / 53 shell / 19 eval, with no new model calls.
 
 **v0.5.2 release, 2026-10-16:** v0.5.2 attaches line numbers to every line of file contents sent to Codex reviews, fixing real reviews whose findings lacked line numbers and were marked failed, and corrects README guidance; see the [release notes](releases/v0.5.2.md). Free validation passed 166 Python / 53 shell / 19 eval, and after the fix a real Codex review from `main` source completed 6/6 with verifiable finding line numbers.
 
