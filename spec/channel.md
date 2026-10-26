@@ -82,7 +82,7 @@ bash /path/to/delegate-plugin/plugins/delegate/scripts/codex-exec.sh [--write] [
 
 ## 调用与生命周期
 
-- 默认 sandbox=read-only；用户当前轮明确授权 `--write` 才用 workspace-write。
+- 默认 sandbox=read-only；用户当前轮明确授权 `--write` 才用 workspace-write。写模式另加只对本次运行有效的项目信任覆盖，不让 Codex 写用户配置，见 [write-trust](write-trust.md)。
 - 删除 `OPENAI_API_KEY` 和 `CODEX_API_KEY`，CLI 配置指定 `forced_login_method="chatgpt"`、`model_provider="openai"`。
 - `--ephemeral`、无颜色、stdin=/dev/null，preamble 明确非交互任务与行为范围。
 - `-o` 写最终答复，合并 stdout/stderr 写过程日志。

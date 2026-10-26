@@ -82,7 +82,7 @@ Basic checks locate the CLI through PATH and run `codex --version` and `codex lo
 
 ## Invocation and lifecycle
 
-- Default sandbox is read-only; `--write` selects workspace-write only with explicit user authorization in the current turn.
+- Default sandbox is read-only; `--write` selects workspace-write only with explicit user authorization in the current turn. Write mode also adds a project-trust override valid for that run only, so Codex does not write user configuration; see [write-trust](SPEC-write-trust.md).
 - Remove `OPENAI_API_KEY` and `CODEX_API_KEY`; select CLI configuration `forced_login_method="chatgpt"` and `model_provider="openai"`.
 - Use `--ephemeral`, no color, stdin=/dev/null, and a preamble defining non-interactive work and behavioral scope.
 - `-o` writes the final answer; combined stdout/stderr goes to the process log.

@@ -23,7 +23,7 @@ In Codex the corresponding skills are `source-command-review`, `source-command-r
 - Codex backend: a working `codex` on PATH, signed in through ChatGPT.
 - Claude Code review backend (optional): macOS, the official Claude Code ≥2.1.295 already signed in, Node.js ≥22.12.0, an installed srt 0.0.79, and an available user GUI launchd domain.
 
-The plugin installs no dependencies, signs in to nothing, and changes no global configuration. Every run and Codex review uses `approval_policy="never"` instead of the local approval configuration: commands that leave the sandbox (such as `git commit` inside a worktree, or network access) are refused, and commits rely on prefix allow rules or the caller. Run `/delegate:doctor` before first use, and `/delegate:doctor --backend claude-code` before using the Claude backend.
+The plugin installs no dependencies, signs in to nothing, and changes no global configuration: `--write` runs trust the current repository for that run only through `-c`, so Codex does not write a trust entry to `~/.codex/config.toml` (except when the check is uncertain, which is reported on stderr; see the [root README](../../README.en.md#output-and-verification)). Every run and Codex review uses `approval_policy="never"` instead of the local approval configuration: commands that leave the sandbox (such as `git commit` inside a worktree, or network access) are refused, and commits rely on prefix allow rules or the caller. Run `/delegate:doctor` before first use, and `/delegate:doctor --backend claude-code` before using the Claude backend.
 
 ## Layout
 

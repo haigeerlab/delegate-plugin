@@ -4,6 +4,18 @@
 
 v0.5.3 之后的可续跑委托与审批方式变化已归入 [v0.6.0 版本说明](v0.6.0.md)。历史验收记录保留其发生时的版本和状态，不追认历史批准。
 
+## 写模式不再写入 Codex 项目信任（write-trust）
+
+合同见 [spec/write-trust.md](../../spec/write-trust.md)。接口版本与 `interface.json` 不变。
+
+- **不再改用户配置**：以前 `--write` 第一次在某个仓库运行时，Codex 会往 `~/.codex/config.toml` 追加 `[projects."<仓库路径>"] trust_level = "trusted"`。现在 delegate 在写模式运行（含可续跑与续跑）前只读检查该文件，没有本仓库条目时用 `-c projects={...}` 只对本次运行临时信任，不落盘。
+- **已有条目不动**：用户配置里已有本仓库的条目（包括 `untrusted`）时不加参数。
+- **worktree**：信任键是主仓库路径，与 Codex 自己的规则一致，从 worktree 子目录运行也有效。
+- **读不准时退回旧行为**：配置文件读不了或不是 UTF-8、路径含引号或反斜杠、非常规仓库布局时不加参数，stderr 提示一行，退出码不变。
+- 旧版留下的信任条目不清理；只读运行、审查参数不变。
+
+未验证：真实登录下的完整 `--write` 运行（付费实测，待授权）；系统级、托管与项目级配置里的 `projects` 条目；符号链接路径的规范化。
+
 ## run 超时保留进度（run-timeout，接口 1.2）
 
 合同见 [spec/run-timeout.md](../../spec/run-timeout.md)。

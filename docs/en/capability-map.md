@@ -21,8 +21,9 @@ The project adoption scope confirmed on 2026-10-08 standardizes file locations. 
 | integration-interface | Publish a static interface.json declaring external capabilities and the interface version, and document review report schema_version 1 as an external compatibility contract | claude-review |
 | run-resume | Add an opt-in resumable mode to run: return a runId and an end status of done/needs-input, and resume the original Codex session with the user's answer through --resume; interface 1.1 adds fields only | channel, integration-interface |
 | run-timeout | Keep progress on run timeout: every run gets a time budget in its prompt; a stopped resumable run gets one more read-only wrap-up round; when no progress is obtained, a model-free fallback is printed; new end status timeout (exit 124), and a timed-out resumable run can be --resume'd; fix killpg EPERM; interface 1.2 adds fields only | channel, integration-interface, run-resume |
+| write-trust | --write runs no longer let Codex write project trust to the user's ~/.codex/config.toml: when the user config has no trust entry for this repository, an inline -c table trusts it for that run only; existing entries (including untrusted) are left alone; when the check is uncertain, no override is added and a notice is printed | channel, run-resume |
 
-Build order: channel → detection → routing → claude-review → integration-interface → run-resume → run-timeout
+Build order: channel → detection → routing → claude-review → integration-interface → run-resume → run-timeout → write-trust
 
 channel and detection share `backend.py`; this shared code is not a separate module dependency. routing uses detection diagnostics for explicit requests and invokes channel after authorization. The build order preserves the existing implementation sequence without adding runtime responsibilities.
 

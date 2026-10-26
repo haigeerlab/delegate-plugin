@@ -212,6 +212,8 @@ Claude 需明确范围，可用 review 的快捷参数或高级 context JSON，�
 
 默认只读与可写权限由 Codex 沙箱及宿主配置实现。`workspace-write` 的可写范围可能包括临时目录和额外根目录；“不提交、不推送、不发布、不越范围访问网络”等是行为指令，不能替代 OS 沙箱或宿主权限配置。
 
+**`--write` 不写 Codex 的项目信任。** Codex 在 `workspace-write` 沙箱下第一次进入一个还没有信任级别的仓库时，会往 `~/.codex/config.toml`（设了 `CODEX_HOME` 时为其中的 `config.toml`）追加 `[projects."<仓库路径>"] trust_level = "trusted"`。为避免这一写入，delegate 在写模式运行（含可续跑与续跑）前只读检查该文件：没有本仓库的条目时，传 `-c projects={"<仓库路径>"={trust_level="trusted"}}` 只对本次运行临时信任，不落盘；已有条目（包括你标的 `untrusted`）时不加参数，按你的设置运行。键是 Git 仓库根目录，在 git worktree 里是主仓库路径。读不准时（配置文件读不了或不是 UTF-8、路径含引号或反斜杠、非常规仓库布局）不加参数并在 stderr 提示一行，此时 Codex 仍可能写入一条信任记录。只读运行与审查不加参数。旧版 delegate 运行时留下的信任条目不会被清理，不需要时可手动删除。详见 [write-trust 合同](spec/write-trust.md)。
+
 ## 更新与卸载
 
 ### 从远程 marketplace 安装

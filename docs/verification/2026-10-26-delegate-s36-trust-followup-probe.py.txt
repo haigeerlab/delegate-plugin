@@ -1,0 +1,58 @@
+import os, subprocess, sys, shutil, json, pathlib, re
+base = pathlib.Path(sys.argv[1]).resolve()
+work = base / "w"
+if work.exists(): shutil.rmtree(work)
+work.mkdir()
+def git(cwd, *a): subprocess.run(["git", "-C", str(cwd), *a], check=True, capture_output=True)
+A = work / "repoA"; B = work / "repoB"; M = work / "main"; WT = work / "main-wt"
+for r in (A, B, M):
+    r.mkdir(); git(r, "init", "-q"); (r/"f").write_text("x\n"); git(r, "add", "f")
+    git(r, "-c", "user.name=p", "-c", "user.email=p@p", "commit", "-qm", "init")
+git(M, "worktree", "add", "-q", str(WT)); (WT/"sub").mkdir()
+def toml_key(p): return json.dumps(str(p))
+def run(name, cwd, cfg, extra):
+    home = work / ("home-" + name); home.mkdir()
+    (home / "config.toml").write_text('model = "gpt-6.1-sol"\n' + cfg)
+    before = (home / "config.toml").read_text()
+    env = {k: v for k, v in os.environ.items() if not k.startswith(("OPENAI", "CODEX"))}
+    env["CODEX_HOME"] = str(home)
+    cmd = ["codex", "exec", "-c", 'approval_policy="never"', "--ephemeral", "--sandbox", "workspace-write",
+           "--color", "never", *extra, "--", "hi"]
+    try:
+        p = subprocess.run(cmd, cwd=cwd, env=env, stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=90)
+        out = p.stdout + p.stderr; rc = p.returncode
+    except subprocess.TimeoutExpired as e:
+        out = "TIMEOUT"; rc = None
+    after = (home / "config.toml").read_text()
+    added = after[len(before):] if after.startswith(before) else "REWRITTEN:\n" + after
+    m401 = "401" in out
+    print(f"=== {name}  cwd={cwd.relative_to(work)}  rc={rc}  401={m401}")
+    print("extra:", extra)
+    print("added:", repr(added.strip()) if added.strip() else "(none)")
+    if not m401: print("tail:", out[-600:])
+cases = sys.argv[2:] or None
+B_un = f'\n[projects.{toml_key(B)}]\ntrust_level = "untrusted"\n'
+inline = lambda p, lvl="trusted": ["-c", f'projects={{{toml_key(p)}={{trust_level="{lvl}"}}}}']
+plan = {
+  # ① replace vs merge
+  "R0": (B, B_un, []),                 # control: B untrusted in user cfg, no override -> expect no write
+  "R1": (B, "", []),                   # control: no entry -> expect write B
+  "R2": (B, B_un, inline(A)),          # override only A; merge -> B still untrusted -> no write; replace -> write B
+  "R3": (A, B_un, inline(A)),          # override A run in A -> no write expected (sanity)
+  # ② worktree
+  "W0": (WT, "", []),                  # which key gets written
+  "W1": (WT, "", inline(WT)),          # override with worktree path
+  "W2": (WT, "", inline(M)),           # override with main repo path
+  "W3": (M, "", []),
+  "W4": (WT/"sub", "", inline(WT)),    # subdir of worktree, override worktree path
+  "W5": (WT/"sub", "", inline(M)),     # subdir of worktree, override main repo path
+  "W6": (WT/"sub", "", []),            # subdir control
+  "W7": (WT, f'\n[projects.{toml_key(WT)}]\ntrust_level = "untrusted"\n', []),  # user cfg keyed by worktree path
+  "W8": (WT, f'\n[projects.{toml_key(M)}]\ntrust_level = "untrusted"\n', []),   # user cfg keyed by main path                   # main checkout, for comparison
+}
+for k, (cwd, cfg, extra) in plan.items():
+    if cases and k not in cases: continue
+    run(k, cwd, cfg, extra)
+print("paths:", {"A": str(A), "B": str(B), "M": str(M), "WT": str(WT)})
+print("git toplevel in WT:", subprocess.run(["git","-C",str(WT),"rev-parse","--show-toplevel"],capture_output=True,text=True).stdout.strip())
+print("git common dir in WT:", subprocess.run(["git","-C",str(WT),"rev-parse","--path-format=absolute","--git-common-dir"],capture_output=True,text=True).stdout.strip())

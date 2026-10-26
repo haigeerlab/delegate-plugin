@@ -23,7 +23,7 @@ Codex 中对应的 skill 为 `source-command-review`、`source-command-run`、`s
 - Codex 后端：PATH 中可运行的 `codex`，使用 ChatGPT 登录。
 - Claude Code 审查后端（可选）：macOS、原版 Claude Code ≥2.1.295 且已登录、Node.js ≥22.12.0、已安装的 srt 0.0.79、可用的用户 GUI launchd 域。
 
-插件不安装依赖、不登录、不修改全局配置。所有 run 与 Codex 审查固定 `approval_policy="never"`，不用本机配置的审批方式：越出沙箱的命令（如 worktree 里 `git commit`、网络访问）直接被拒，提交靠前缀放行规则或由调用方完成。首次使用前运行 `/delegate:doctor`，使用 Claude 后端前运行 `/delegate:doctor --backend claude-code`。
+插件不安装依赖、不登录、不修改全局配置：`--write` 运行用 `-c` 只对本次运行临时信任当前仓库，不让 Codex 往 `~/.codex/config.toml` 写信任记录（读不准时除外，会在 stderr 提示），详见[根 README](../../README.md#输出与验收)。所有 run 与 Codex 审查固定 `approval_policy="never"`，不用本机配置的审批方式：越出沙箱的命令（如 worktree 里 `git commit`、网络访问）直接被拒，提交靠前缀放行规则或由调用方完成。首次使用前运行 `/delegate:doctor`，使用 Claude 后端前运行 `/delegate:doctor --backend claude-code`。
 
 ## 目录
 
