@@ -6,6 +6,17 @@
 
 delegate 把范围明确的只读审查交给 Codex 或 Claude Code，把已定方案的通用任务交给 Codex。后端用 `--backend` 显式选择，默认 Codex；插件只在用户明确请求或确认后执行，不自动派活。
 
+## 安装
+
+在终端运行：
+
+```bash
+claude plugin marketplace add haigeerlab/delegate-plugin
+claude plugin install delegate@delegate-marketplace
+```
+
+安装后打开新会话或执行 `/reload-plugins`。更新用 `claude plugin update delegate@delegate-marketplace`。
+
 ## 命令
 
 | 命令 | 作用 | 是否调用后端模型 |

@@ -6,6 +6,17 @@ This directory is the delegate plugin itself and is what the installation cache 
 
 delegate sends scoped read-only reviews to Codex or Claude Code and sends general tasks with a settled plan to Codex. Choose the backend explicitly with `--backend`; Codex is the default. The plugin runs only on an explicit user request or confirmation and never delegates automatically.
 
+## Installation
+
+Run in your terminal:
+
+```bash
+claude plugin marketplace add haigeerlab/delegate-plugin
+claude plugin install delegate@delegate-marketplace
+```
+
+After installing, open a new session or run `/reload-plugins`. To update, run `claude plugin update delegate@delegate-marketplace`.
+
 ## Commands
 
 | Command | Purpose | Calls a backend model |
