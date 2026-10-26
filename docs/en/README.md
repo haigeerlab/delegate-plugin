@@ -10,7 +10,7 @@ Simplified Chinese is delegate's default documentation language. English counter
 - Daily use and troubleshooting: see README commands, output verification, and troubleshooting; `/delegate:help` is available inside a session.
 - Design: read [Design and boundaries](DESIGN.md), then the [capability map](capability-map.md).
 - Development and review: read the module specifications and [Contributing](../../CONTRIBUTING.en.md), and run offline validation from the repository root. The new [Claude review specification](SPEC-claude-review.md) describes v0.5.0. Native Mac boundaries and isolated regressions passed; normal real reviews succeeded in both directions on their frozen source. Menu-to-script execution and dry-run were verified. Active model boundary attempts, authentication refresh and natural abnormal helpers remain unverified.
-- Upgrading: read [v0.6.0 release notes](releases/v0.6.0.md); when upgrading from v0.4.0, also read the command migration in [v0.5.0](releases/v0.5.0.md); see [Unreleased](releases/unreleased.md) for later changes.
+- Upgrading: read [v0.7.0 release notes](releases/v0.7.0.md); when upgrading from v0.4.0, also read the command migration in [v0.5.0](releases/v0.5.0.md); see [Unreleased](releases/unreleased.md) for later changes.
 
 ## Maintained bilingual documentation
 
@@ -28,9 +28,11 @@ Simplified Chinese is delegate's default documentation language. English counter
 | Claude reviews | [审查规格](../../spec/claude-review.md) | [Review specification](SPEC-claude-review.md) |
 | External interface | [接口规格](../../spec/integration-interface.md) | [Interface specification](SPEC-integration-interface.md) |
 | Resumable delegation | [续跑规格](../../spec/run-resume.md) | [Run-resume specification](SPEC-run-resume.md) |
-| Current release | [v0.6.0](../releases/v0.6.0.md) | [v0.6.0](releases/v0.6.0.md) |
+| Run timeout | [超时规格](../../spec/run-timeout.md) | [Run-timeout specification](SPEC-run-timeout.md) |
+| Write-mode trust | [信任规格](../../spec/write-trust.md) | [Write-trust specification](SPEC-write-trust.md) |
+| Current release | [v0.7.0](../releases/v0.7.0.md) | [v0.7.0](releases/v0.7.0.md) |
 | Subsequent changes | [未发布记录](../releases/unreleased.md) | [Unreleased](releases/unreleased.md) |
-| Previous release records | [v0.5.3](../releases/v0.5.3.md)、[v0.5.2](../releases/v0.5.2.md)、[v0.5.1](../releases/v0.5.1.md)、[v0.5.0](../releases/v0.5.0.md)、[v0.4.0](../releases/v0.4.0.md)、[v0.3.1（历史）](../releases/v0.3.1.md) | [v0.5.3](releases/v0.5.3.md), [v0.5.2](releases/v0.5.2.md), [v0.5.1](releases/v0.5.1.md), [v0.5.0](releases/v0.5.0.md), [v0.4.0](releases/v0.4.0.md), [v0.3.1 (historical)](releases/v0.3.1.md) |
+| Previous release records | [v0.6.0](../releases/v0.6.0.md)、[v0.5.3](../releases/v0.5.3.md)、[v0.5.2](../releases/v0.5.2.md)、[v0.5.1](../releases/v0.5.1.md)、[v0.5.0](../releases/v0.5.0.md)、[v0.4.0](../releases/v0.4.0.md)、[v0.3.1（历史）](../releases/v0.3.1.md) | [v0.6.0](releases/v0.6.0.md), [v0.5.3](releases/v0.5.3.md), [v0.5.2](releases/v0.5.2.md), [v0.5.1](releases/v0.5.1.md), [v0.5.0](releases/v0.5.0.md), [v0.4.0](releases/v0.4.0.md), [v0.3.1 (historical)](releases/v0.3.1.md) |
 
 Start with README for installation and use. Chinese `spec/<id>.md` contracts and their English counterparts define exact implementation and test contracts. Maintain both languages together. Report discrepancies so they can be checked against current implementation and validation results and corrected in both versions.
 
@@ -59,7 +61,7 @@ Command files and the skill are host-executed instructions, currently written in
 
 ## Current development workflow
 
-[Development workflow and AI instructions](development-workflow.md) ([简体中文](../development-workflow.md)) explains both hosts, standard paths, checkpoint confirmation, and verification limits. Current module checklists in Chinese: [channel](../../tasks/channel/todo.md), [detection](../../tasks/detection/todo.md), [routing](../../tasks/routing/todo.md), [claude-review](../../tasks/claude-review/todo.md), [integration-interface](../../tasks/integration-interface/todo.md), [run-resume](../../tasks/run-resume/todo.md). The first three track adoption reconciliation without retroactive historical acceptance.
+[Development workflow and AI instructions](development-workflow.md) ([简体中文](../development-workflow.md)) explains both hosts, standard paths, checkpoint confirmation, and verification limits. Current module checklists in Chinese: [channel](../../tasks/channel/todo.md), [detection](../../tasks/detection/todo.md), [routing](../../tasks/routing/todo.md), [claude-review](../../tasks/claude-review/todo.md), [integration-interface](../../tasks/integration-interface/todo.md), [run-resume](../../tasks/run-resume/todo.md), [run-timeout](../../tasks/run-timeout/todo.md), [write-trust](../../tasks/write-trust/todo.md). The first three track adoption reconciliation without retroactive historical acceptance.
 
 The [contract clause and evidence matrix](../verification/2026-10-08-contract-matrix.md), an administrative record in Chinese, maps 13 current clauses to source, tests, and gaps. Maintenance completion does not establish sufficient acceptance of every product clause.
 

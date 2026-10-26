@@ -122,3 +122,14 @@
 | [Task6：有限运行时启动诊断](2026-10-14-delegate-task6-runtime-timing-result.md) | 结果/记录 | [2026-10-14-delegate-task6-runtime-timing-result.json](2026-10-14-delegate-task6-runtime-timing-result.json) |
 | [当前入口与 S4 前置核对](2026-10-14-delegate-ui-and-s4-preview.md) | 方案/预览 | — |
 | [Task9n：标准工作区总验证恢复通过](2026-10-14-delegate-validator-discovery-result.md) | 结果/记录 | [2026-10-14-delegate-validator-discovery-result.json](2026-10-14-delegate-validator-discovery-result.json) |
+
+## run 超时与写模式信任：S35–S36（2026-10-26）
+
+| 记录 | 类型 | 配套数据 |
+|---|---|---|
+| [run-timeout Checkpoint 3：付费实测 H1–H5](2026-10-26-delegate-run-timeout-cp3.md) | 结果/记录 | — |
+| [S35 前置实测：中止后续跑与到期前收尾](2026-10-26-delegate-s35-timeout-probe.md) | 结果/记录 | [2026-10-26-delegate-s35-timeout-probe.py.txt](2026-10-26-delegate-s35-timeout-probe.py.txt) |
+| [S36 补测：内联表覆盖的合并方式与 worktree 的信任键](2026-10-26-delegate-s36-trust-followup-probe.md) | 结果/记录 | [2026-10-26-delegate-s36-trust-followup-probe.py.txt](2026-10-26-delegate-s36-trust-followup-probe.py.txt) |
+| [S36 调研：`--write` 运行能否不写入项目信任](2026-10-26-delegate-s36-trust-probe.md) | 结果/记录 | — |
+| [S36 免费真机核验：write-trust 生成的覆盖能阻止写入](2026-10-26-delegate-s36-write-trust-check.md) | 结果/记录 | [2026-10-26-delegate-s36-write-trust-check.py.txt](2026-10-26-delegate-s36-write-trust-check.py.txt) |
+| [S36 付费实测：真实 `--write` 不再改用户配置](2026-10-26-delegate-s36-write-trust-live.md) | 结果/记录 | — |

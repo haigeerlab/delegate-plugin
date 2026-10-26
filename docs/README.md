@@ -10,7 +10,7 @@ delegate 的默认文档语言为简体中文。英文对应页覆盖当前维�
 - 日常使用与排障：查 README 的命令、输出验收和故障排查；会话内可用 `/delegate:help`。
 - 理解设计：先读 [设计与边界](../DESIGN.md)，再看 [能力图](../spec/CAPABILITY-MAP.md)。
 - 开发与审查：先读模块规格和[贡献指南](../CONTRIBUTING.md)，从仓库根运行免费验证。[Claude 审查合同](../spec/claude-review.md)包含v0.5.0 双后端、review/run 接口与快捷范围预览；两方向普通真实审查均有成功记录，菜单实际执行已核对；主动模型越界、认证刷新与自然异常 helper 仍未验证。
-- 升级：读 [v0.6.0 版本说明](releases/v0.6.0.md)；从 v0.4.0 升级还需读 [v0.5.0](releases/v0.5.0.md) 的命令迁移；后续变化看 [未发布记录](releases/unreleased.md)。
+- 升级：读 [v0.7.0 版本说明](releases/v0.7.0.md)；从 v0.4.0 升级还需读 [v0.5.0](releases/v0.5.0.md) 的命令迁移；后续变化看 [未发布记录](releases/unreleased.md)。
 
 ## 当前维护的双语文档
 
@@ -28,9 +28,11 @@ delegate 的默认文档语言为简体中文。英文对应页覆盖当前维�
 | Claude 审查 | [审查规格](../spec/claude-review.md) | [Review specification](en/SPEC-claude-review.md) |
 | 对外接口 | [接口规格](../spec/integration-interface.md) | [Interface specification](en/SPEC-integration-interface.md) |
 | 可续跑委托 | [续跑规格](../spec/run-resume.md) | [Run-resume specification](en/SPEC-run-resume.md) |
-| 当前发行 | [v0.6.0](releases/v0.6.0.md) | [v0.6.0](en/releases/v0.6.0.md) |
+| run 超时 | [超时规格](../spec/run-timeout.md) | [Run-timeout specification](en/SPEC-run-timeout.md) |
+| 写模式信任 | [信任规格](../spec/write-trust.md) | [Write-trust specification](en/SPEC-write-trust.md) |
+| 当前发行 | [v0.7.0](releases/v0.7.0.md) | [v0.7.0](en/releases/v0.7.0.md) |
 | 后续变化 | [未发布记录](releases/unreleased.md) | [Unreleased](en/releases/unreleased.md) |
-| 旧版发行记录 | [v0.5.3](releases/v0.5.3.md)、[v0.5.2](releases/v0.5.2.md)、[v0.5.1](releases/v0.5.1.md)、[v0.5.0](releases/v0.5.0.md)、[v0.4.0](releases/v0.4.0.md)、[v0.3.1（历史）](releases/v0.3.1.md) | [v0.5.3](en/releases/v0.5.3.md), [v0.5.2](en/releases/v0.5.2.md), [v0.5.1](en/releases/v0.5.1.md), [v0.5.0](en/releases/v0.5.0.md), [v0.4.0](en/releases/v0.4.0.md), [v0.3.1 (historical)](en/releases/v0.3.1.md) |
+| 旧版发行记录 | [v0.6.0](releases/v0.6.0.md)、[v0.5.3](releases/v0.5.3.md)、[v0.5.2](releases/v0.5.2.md)、[v0.5.1](releases/v0.5.1.md)、[v0.5.0](releases/v0.5.0.md)、[v0.4.0](releases/v0.4.0.md)、[v0.3.1（历史）](releases/v0.3.1.md) | [v0.6.0](en/releases/v0.6.0.md), [v0.5.3](en/releases/v0.5.3.md), [v0.5.2](en/releases/v0.5.2.md), [v0.5.1](en/releases/v0.5.1.md), [v0.5.0](en/releases/v0.5.0.md), [v0.4.0](en/releases/v0.4.0.md), [v0.3.1 (historical)](en/releases/v0.3.1.md) |
 
 安装和日常使用以 README 为入口；精确的实现与测试合同以当前 `spec/<id>.md` 为准。英文版与中文版应同步维护；发现差异时请提交问题，以当前实现和验证结果核对后同时修正。
 
@@ -59,7 +61,7 @@ evals/                              行为判决器和按需模型评估
 
 ## 当前开发流程
 
-[开发流程与 AI 约定](development-workflow.md)（[English](en/development-workflow.md)）说明两种宿主规则、标准路径、阶段确认及验证边界。当前模块维护清单：[channel](../tasks/channel/todo.md)、[detection](../tasks/detection/todo.md)、[routing](../tasks/routing/todo.md)、[claude-review](../tasks/claude-review/todo.md)、[integration-interface](../tasks/integration-interface/todo.md)、[run-resume](../tasks/run-resume/todo.md)，前三个只记录接入核对，不追认历史验收。
+[开发流程与 AI 约定](development-workflow.md)（[English](en/development-workflow.md)）说明两种宿主规则、标准路径、阶段确认及验证边界。当前模块维护清单：[channel](../tasks/channel/todo.md)、[detection](../tasks/detection/todo.md)、[routing](../tasks/routing/todo.md)、[claude-review](../tasks/claude-review/todo.md)、[integration-interface](../tasks/integration-interface/todo.md)、[run-resume](../tasks/run-resume/todo.md)、[run-timeout](../tasks/run-timeout/todo.md)、[write-trust](../tasks/write-trust/todo.md)，前三个只记录接入核对，不追认历史验收。
 
 [合同条款与验证证据](verification/2026-10-08-contract-matrix.md) 把 13 条当前规格条件映射到源码、测试和缺口；当前维护完成不代表这些产品条件都得到充分验收。
 
