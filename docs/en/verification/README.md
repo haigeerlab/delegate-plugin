@@ -122,3 +122,14 @@ Data without a dedicated record page: [2026-10-13-delegate-installed-preview-res
 | [2026-10-14-delegate-task6-runtime-timing-result.md](../../verification/2026-10-14-delegate-task6-runtime-timing-result.md) | result/record | [2026-10-14-delegate-task6-runtime-timing-result.json](../../verification/2026-10-14-delegate-task6-runtime-timing-result.json) |
 | [2026-10-14-delegate-ui-and-s4-preview.md](../../verification/2026-10-14-delegate-ui-and-s4-preview.md) | plan/preview | — |
 | [2026-10-14-delegate-validator-discovery-result.md](../../verification/2026-10-14-delegate-validator-discovery-result.md) | result/record | [2026-10-14-delegate-validator-discovery-result.json](../../verification/2026-10-14-delegate-validator-discovery-result.json) |
+
+## Run timeout and write-mode trust: S35–S36 (2026-10-26)
+
+| Record | Kind | Companion data |
+|---|---|---|
+| [2026-10-26-delegate-run-timeout-cp3.md](../../verification/2026-10-26-delegate-run-timeout-cp3.md) | result/record | — |
+| [2026-10-26-delegate-s35-timeout-probe.md](../../verification/2026-10-26-delegate-s35-timeout-probe.md) | result/record | [2026-10-26-delegate-s35-timeout-probe.py.txt](../../verification/2026-10-26-delegate-s35-timeout-probe.py.txt) |
+| [2026-10-26-delegate-s36-trust-followup-probe.md](../../verification/2026-10-26-delegate-s36-trust-followup-probe.md) | result/record | [2026-10-26-delegate-s36-trust-followup-probe.py.txt](../../verification/2026-10-26-delegate-s36-trust-followup-probe.py.txt) |
+| [2026-10-26-delegate-s36-trust-probe.md](../../verification/2026-10-26-delegate-s36-trust-probe.md) | result/record | — |
+| [2026-10-26-delegate-s36-write-trust-check.md](../../verification/2026-10-26-delegate-s36-write-trust-check.md) | result/record | [2026-10-26-delegate-s36-write-trust-check.py.txt](../../verification/2026-10-26-delegate-s36-write-trust-check.py.txt) |
+| [2026-10-26-delegate-s36-write-trust-live.md](../../verification/2026-10-26-delegate-s36-write-trust-live.md) | result/record | — |

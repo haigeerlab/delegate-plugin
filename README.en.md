@@ -12,7 +12,7 @@ The Claude backend uses an existing local srt, resolved from PATH by default or 
 
 The main session handles requirements, design decisions, and final verification. The Codex backend accepts only ChatGPT authentication. It aims to reduce process context carried by the main session; usage is charged against the account signed into Codex, and lower total cost or token usage is not guaranteed.
 
-Repository: [haigeerlab/delegate-plugin](https://github.com/haigeerlab/delegate-plugin) · Current release: [v0.6.0](https://github.com/haigeerlab/delegate-plugin/releases/tag/v0.6.0) · [Documentation index](docs/en/README.md)
+Repository: [haigeerlab/delegate-plugin](https://github.com/haigeerlab/delegate-plugin) · Current release: [v0.7.0](https://github.com/haigeerlab/delegate-plugin/releases/tag/v0.7.0) · [Documentation index](docs/en/README.md)
 
 ## Contents
 
@@ -245,7 +245,7 @@ For development and evaluation, you can also explicitly load the source plugin d
 claude --plugin-dir /path/to/delegate-plugin/plugins/delegate
 ```
 
-If a marketplace with the same name is already registered, check its source first. Local loading and remote installation are alternatives; you do not need two installations. The `v0.6.0` tag fixes release source at one revision, while `main` continues to change.
+If a marketplace with the same name is already registered, check its source first. Local loading and remote installation are alternatives; you do not need two installations. The `v0.7.0` tag fixes release source at one revision, while `main` continues to change.
 
 ### Uninstall
 
@@ -297,7 +297,7 @@ doctor refreshes the temporary cache and does not modify project files. Its heur
 
 v0.5.0 does not register UserPromptSubmit or probe/remind on every prompt. SessionStart silently refreshes readiness; doctor reports it on demand. The cache lasts 8 hours and is bound to the CLI path, Codex home, plugin root, and version. Future timestamps, old formats, identity changes, and invalid files invalidate it. Cached readiness does not guarantee current authentication; execution always checks login again.
 
-See the [documentation index](docs/en/README.md) for reading order and language pairs. Read [Design](docs/en/DESIGN.md) for rationale and the [capability map](docs/en/capability-map.md) for module responsibilities. Exact contracts are in the [channel](docs/en/SPEC-channel.md), [detection](docs/en/SPEC-detection.md), and [routing](docs/en/SPEC-routing.md) specifications. Release changes are in [v0.6.0](docs/en/releases/v0.6.0.md), [v0.5.3](docs/en/releases/v0.5.3.md), [v0.5.2](docs/en/releases/v0.5.2.md), [v0.5.1](docs/en/releases/v0.5.1.md), and [v0.5.0](docs/en/releases/v0.5.0.md); subsequent changes are in [Unreleased](docs/en/releases/unreleased.md).
+See the [documentation index](docs/en/README.md) for reading order and language pairs. Read [Design](docs/en/DESIGN.md) for rationale and the [capability map](docs/en/capability-map.md) for module responsibilities. Exact contracts are in the [channel](docs/en/SPEC-channel.md), [detection](docs/en/SPEC-detection.md), and [routing](docs/en/SPEC-routing.md) specifications. Release changes are in [v0.7.0](docs/en/releases/v0.7.0.md), [v0.6.0](docs/en/releases/v0.6.0.md), [v0.5.3](docs/en/releases/v0.5.3.md), [v0.5.2](docs/en/releases/v0.5.2.md), [v0.5.1](docs/en/releases/v0.5.1.md), and [v0.5.0](docs/en/releases/v0.5.0.md); subsequent changes are in [Unreleased](docs/en/releases/unreleased.md).
 
 ## Development, contributions, and feedback
 
@@ -309,7 +309,7 @@ Run the free offline validation from the **repository root**:
 /bin/bash scripts/validate.sh
 ```
 
-The entry point covers syntax, manifest required fields, evaluator self-tests, three shell product suites, 17 loop-registered Python regression suites, the source-discovery regression and the isolation policy-only suite. v0.6.0 release validation passed 196 Python, 53 shell and 19 eval cases. Actual OS, host and live-model evidence is recorded separately, without labeling it as offline coverage. The free aggregate validation makes no model requests. Doctor rule tests now supply their own CLI stub, synthetic login state, and temporary log, without depending on an outer Codex installation or login. The [actual F8 fix verification in Chinese](docs/verification/2026-10-08-f8-applied.md) covers absent outer CLI and rejected outer login.
+The entry point covers syntax, manifest required fields, evaluator self-tests, three shell product suites, 19 loop-registered Python regression suites, the source-discovery regression and the isolation policy-only suite. v0.7.0 release validation passed 247 Python, 53 shell and 19 eval cases. Actual OS, host and live-model evidence is recorded separately, without labeling it as offline coverage. The free aggregate validation makes no model requests. Doctor rule tests now supply their own CLI stub, synthetic login state, and temporary log, without depending on an outer Codex installation or login. The [actual F8 fix verification in Chinese](docs/verification/2026-10-08-f8-applied.md) covers absent outer CLI and rejected outer login.
 
 See [Contributing](CONTRIBUTING.en.md) for development conventions, individual tests, paid live verification, and bilingual maintenance. Use [GitHub Issues](https://github.com/haigeerlab/delegate-plugin/issues) for problems and suggestions; follow the next section to report a bug.
 

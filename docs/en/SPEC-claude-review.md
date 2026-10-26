@@ -4,7 +4,9 @@
 
 **Approval mode (2026-10-25):** the Codex review backend call always passes `-c approval_policy="never"`; see revision R2 in [run-resume](SPEC-run-resume.md). The rest of the review contract is unchanged.
 
-**Current release, 2026-10-26:** v0.6.0 adds resumable delegation (see [run-resume](SPEC-run-resume.md)); this module's Codex review backend now passes `approval_policy="never"`, while the review contract and report format are unchanged; see the [release notes](releases/v0.6.0.md). Free validation passed 196 Python / 53 shell / 19 eval.
+**Current release, 2026-10-26:** v0.7.0 keeps progress on run timeouts (see [run-timeout](SPEC-run-timeout.md), interface 1.2) and stops write mode from writing Codex project trust (see [write-trust](SPEC-write-trust.md)); this module's review contract, arguments and report format are unchanged; see the [release notes](releases/v0.7.0.md). Free validation passed 247 Python / 53 shell / 19 eval.
+
+**v0.6.0 release, 2026-10-26:** v0.6.0 adds resumable delegation (see [run-resume](SPEC-run-resume.md)); this module's Codex review backend now passes `approval_policy="never"`, while the review contract and report format are unchanged; see the [release notes](releases/v0.6.0.md). Free validation passed 196 Python / 53 shell / 19 eval.
 
 **v0.5.3 release, 2026-10-17:** v0.5.3 publishes `interface.json` at the plugin root and documents this module's shared review report `schema_version: 1` as an external contract (see [integration-interface](SPEC-integration-interface.md)); report generation is unchanged; see the [release notes](releases/v0.5.3.md). Free validation passed 173 Python / 53 shell / 19 eval, with no new model calls.
 

@@ -12,7 +12,7 @@ Claude 后端使用本机已有的 srt，默认从 PATH 解析，也可用 `DELE
 
 主会话负责需求澄清、方案判断与最终验收。Codex 后端只接受 ChatGPT 登录，目的是减少主会话携带的过程上下文；实际使用哪个账号的额度取决于 Codex 登录账号，不保证节省总费用或总 token。
 
-仓库：[haigeerlab/delegate-plugin](https://github.com/haigeerlab/delegate-plugin) · 当前发行：[v0.6.0](https://github.com/haigeerlab/delegate-plugin/releases/tag/v0.6.0) · [文档索引](docs/README.md)
+仓库：[haigeerlab/delegate-plugin](https://github.com/haigeerlab/delegate-plugin) · 当前发行：[v0.7.0](https://github.com/haigeerlab/delegate-plugin/releases/tag/v0.7.0) · [文档索引](docs/README.md)
 
 ## 目录
 
@@ -245,7 +245,7 @@ claude plugin install delegate@delegate-marketplace
 claude --plugin-dir /path/to/delegate-plugin/plugins/delegate
 ```
 
-已注册同名 marketplace 时，应先检查现有来源；本地加载与远程安装是替代方式，不需要同时安装两份。发行源码由 `v0.6.0` 标签固定，`main` 会继续变化。
+已注册同名 marketplace 时，应先检查现有来源；本地加载与远程安装是替代方式，不需要同时安装两份。发行源码由 `v0.7.0` 标签固定，`main` 会继续变化。
 
 ### 卸载
 
@@ -297,7 +297,7 @@ doctor 会刷新临时缓存，不修改业务文件。它只做部分中文全�
 
 v0.5.0 不注册UserPromptSubmit，不按每轮输入自动提醒或探测。SessionStart静默刷新基础条件，doctor按需报告；缓存有效期 8 小时，绑定 CLI 路径、Codex home、插件根目录与版本；未来时间、旧格式、身份变化和坏文件都会失效。缓存不保证当前认证有效，真正执行前总会重新检查登录。
 
-阅读顺序和两种语言的对应页见[文档索引](docs/README.md)。设计见 [DESIGN.md](DESIGN.md)，模块职责见[能力图](spec/CAPABILITY-MAP.md)，精确合同见[通道](spec/channel.md)、[探测](spec/detection.md)和[路由](spec/routing.md)规格。发行变化见 [v0.6.0](docs/releases/v0.6.0.md)、[v0.5.3](docs/releases/v0.5.3.md)、[v0.5.2](docs/releases/v0.5.2.md)、[v0.5.1](docs/releases/v0.5.1.md) 与 [v0.5.0](docs/releases/v0.5.0.md)，后续修改见[未发布记录](docs/releases/unreleased.md)。
+阅读顺序和两种语言的对应页见[文档索引](docs/README.md)。设计见 [DESIGN.md](DESIGN.md)，模块职责见[能力图](spec/CAPABILITY-MAP.md)，精确合同见[通道](spec/channel.md)、[探测](spec/detection.md)和[路由](spec/routing.md)规格。发行变化见 [v0.7.0](docs/releases/v0.7.0.md)、[v0.6.0](docs/releases/v0.6.0.md)、[v0.5.3](docs/releases/v0.5.3.md)、[v0.5.2](docs/releases/v0.5.2.md)、[v0.5.1](docs/releases/v0.5.1.md) 与 [v0.5.0](docs/releases/v0.5.0.md)，后续修改见[未发布记录](docs/releases/unreleased.md)。
 
 ## 开发、贡献与反馈
 
@@ -309,7 +309,7 @@ v0.5.0 不注册UserPromptSubmit，不按每轮输入自动提醒或探测。Ses
 /bin/bash scripts/validate.sh
 ```
 
-总入口包含语法、清单必填字段、判决器自检、3 个 shell 产品套、17 个循环注册的 Python 回归套，以及源码发现回归和隔离策略 policy-only 套。v0.6.0 发布验证为 196 项 Python、53 项 shell 和 19 项 eval；实际 OS、宿主与真实模型证据另列，不计作离线通过。免费总验证不发起模型请求；doctor 规则测试已自行配置 CLI 桩、合成登录状态和临时日志，不再依赖外层 Codex 的安装或登录。[F8 实际修复验证](docs/verification/2026-10-08-f8-applied.md)包含无外层 CLI 和外层拒绝登录的结果。
+总入口包含语法、清单必填字段、判决器自检、3 个 shell 产品套、19 个循环注册的 Python 回归套，以及源码发现回归和隔离策略 policy-only 套。v0.7.0 发布验证为 247 项 Python、53 项 shell 和 19 项 eval；实际 OS、宿主与真实模型证据另列，不计作离线通过。免费总验证不发起模型请求；doctor 规则测试已自行配置 CLI 桩、合成登录状态和临时日志，不再依赖外层 Codex 的安装或登录。[F8 实际修复验证](docs/verification/2026-10-08-f8-applied.md)包含无外层 CLI 和外层拒绝登录的结果。
 
 开发约定、单独测试入口、付费 live 验证和双语维护规则见 [贡献指南](CONTRIBUTING.md)。问题和建议统一通过 [GitHub Issues](https://github.com/haigeerlab/delegate-plugin/issues) 反馈，Bug 提交步骤见下节。
 
