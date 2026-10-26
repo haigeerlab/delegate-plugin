@@ -1,6 +1,6 @@
 {
   "name": "delegate",
-  "version": "0.5.3",
+  "version": "0.6.0",
   "license": "MIT",
   "description": "通过 Codex 或 Claude Code 执行明确范围的只读审查；保留 Codex 通用委托和显式写入，不自动派活。",
   "author": {
