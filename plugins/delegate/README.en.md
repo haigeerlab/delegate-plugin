@@ -23,7 +23,7 @@ In Codex the corresponding skills are `source-command-review`, `source-command-r
 - Codex backend: a working `codex` on PATH, signed in through ChatGPT.
 - Claude Code review backend (optional): macOS, the official Claude Code ≥2.1.295 already signed in, Node.js ≥22.12.0, an installed srt 0.0.79, and an available user GUI launchd domain.
 
-The plugin installs no dependencies, signs in to nothing, and changes no global configuration. Run `/delegate:doctor` before first use, and `/delegate:doctor --backend claude-code` before using the Claude backend.
+The plugin installs no dependencies, signs in to nothing, and changes no global configuration. Every run and Codex review uses `approval_policy="never"` instead of the local approval configuration: commands that leave the sandbox (such as `git commit` inside a worktree, or network access) are refused, and commits rely on prefix allow rules or the caller. Run `/delegate:doctor` before first use, and `/delegate:doctor --backend claude-code` before using the Claude backend.
 
 ## Layout
 
@@ -37,11 +37,21 @@ scripts/                     Backend invocation (Codex / Claude Code) and proces
 tests/                       Offline stub tests and regressions
 ```
 
+## Resumable delegation
+
+`/delegate:run --resumable` tells Codex to finish the tasks not affected by pending decisions first and to stop only when the user must decide. It is off by default; when on, Codex keeps the session in its own session directory.
+
+- The last line of every successful return: `delegate: run_id=<id> status=<done|needs-input> resumable=<true|false>`.
+- `needs-input` exits 0; the answer starts with `NEED_USER:`, and everything after the marker is the question for the user.
+- After the user answers: `/delegate:run --resume <runId> [--write] -- "<user answer>"`. The answer must be the user's own words or a paraphrase they accepted. Only the latest needs-input round can be resumed, in the same repository with the same write mode; the original model and effort are reused, and each round gets a new runId.
+- Known limits: a missing marker is classified as done; timed-out or failed runs cannot be resumed; resume state is pruned together with the latest 50 logs.
+
 ## External interface
 
 For other plugins to integrate by version without reading this plugin's internals.
 
 - **`interface.json`**: at the plugin root. `interface` is the interface version; `review.backends` and `run.backends` are the backends this version **supports**, not ones installed, signed in or funded on this machine; whether they run is still decided by `/delegate:doctor`. Adding optional fields bumps the minor version; removing, renaming or changing a field's meaning bumps the major version. Consumers check a major range such as `>=1.0,<2.0`.
+- **Resume (since interface 1.1)**: `run.resume` is `{"optIn": "--resumable", "option": "--resume", "backends": ["codex"], "statuses": ["done", "needs-input"]}`. Consumers check `>=1.1,<2.0` before resuming; with 1.0 or without the field they behave as before and do not resume.
 - **Review report (`review.report.schemaVersion: 1`)**: the standard output of `/delegate:review` is one JSON report (`--dry-run` prints a preview, not a report). The private copy path on standard error is not part of the interface. Stable fields:
 
 | Field | Meaning |

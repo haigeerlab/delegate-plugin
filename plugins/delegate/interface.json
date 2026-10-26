@@ -1,11 +1,15 @@
 {
-  "interface": "1.0",
+  "interface": "1.1",
   "review": {
     "command": "/delegate:review",
     "backends": ["codex", "claude-code"],
     "readOnly": true,
     "report": {"schemaVersion": 1}
   },
-  "run": {"command": "/delegate:run", "backends": ["codex"], "write": "explicit"},
+  "run": {
+    "command": "/delegate:run", "backends": ["codex"], "write": "explicit",
+    "resume": {"optIn": "--resumable", "option": "--resume", "backends": ["codex"],
+               "statuses": ["done", "needs-input"]}
+  },
   "doctor": {"command": "/delegate:doctor"}
 }

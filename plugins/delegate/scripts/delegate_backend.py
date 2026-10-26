@@ -13,6 +13,7 @@ HELP = '''用法：delegate-exec.sh [--backend codex|claude-code] [选项] [--] 
 默认后端：codex；主会话宿主无法核实时显示 unknown。
 共同选项：--model <slug> --review-context <JSON 文件>
 Codex：--write --effort none|minimal|low|medium|high|xhigh
+      --resumable（可续跑）；--resume <runId> 带用户答复续跑
 Claude Code：必须提供 --review-context；--max-turns <正整数>（默认 12）
              --max-budget-usd <正数>；不支持 --write 或 --effort。
 Claude 审查目前仅支持 Mac 本机 CLI + srt 0.0.79；条件不足不会切换后端。
@@ -31,7 +32,7 @@ class Parser(argparse.ArgumentParser):
 def parse(arguments):
     # Duplicate selectors are errors rather than a silent last-option override.
     options = arguments[:arguments.index('--')] if '--' in arguments else arguments
-    for flag in ('--backend', '--model', '--effort', '--review-context', '--max-turns', '--max-budget-usd'):
+    for flag in ('--backend', '--model', '--effort', '--review-context', '--max-turns', '--max-budget-usd', '--resume'):
         if sum(a == flag or a.startswith(flag + '=') for a in options) > 1:
             raise ArgumentError('duplicate option: ' + flag)
     parser = Parser(add_help=False, allow_abbrev=False)
@@ -39,6 +40,8 @@ def parse(arguments):
     parser.add_argument('--model')
     parser.add_argument('--effort', choices=('none', 'minimal', 'low', 'medium', 'high', 'xhigh'))
     parser.add_argument('--write', action='store_true')
+    parser.add_argument('--resumable', action='store_true')
+    parser.add_argument('--resume')
     parser.add_argument('--review-context')
     parser.add_argument('--max-turns')
     parser.add_argument('--max-budget-usd')
@@ -51,6 +54,13 @@ def parse(arguments):
             raise ArgumentError(result.backend + ' does not support ' + flag)
     if result.write and not BACKENDS[result.backend]['write']:
         raise ArgumentError(result.backend + ' does not support --write')
+    if (result.resumable or result.resume is not None) and not BACKENDS[result.backend]['resume']:
+        raise ArgumentError(result.backend + ' does not support --resumable or --resume')
+    if result.resume is not None and (result.resumable or result.model is not None or result.effort is not None
+                                      or result.review_context is not None):
+        raise ArgumentError('--resume cannot be combined with --resumable, --model, --effort or --review-context')
+    if result.resumable and result.review_context is not None:
+        raise ArgumentError('--resumable cannot be combined with --review-context')
     error = model_error(result.backend, result.model)
     if error:
         raise ArgumentError(error)
@@ -102,6 +112,10 @@ def main(arguments=None, *, review_context=None):
         forwarded = []
         if args.write:
             forwarded.append('--write')
+        if args.resumable:
+            forwarded.append('--resumable')
+        if args.resume is not None:
+            forwarded.extend(('--resume', args.resume))
         for flag, value in (('--model', args.model), ('--effort', args.effort)):
             if value is not None:
                 forwarded.extend((flag, value))

@@ -8,7 +8,8 @@ if [ "${DELEGATE_REVIEW_DEPTH:-0}" != '0' ]; then
 fi
 
 usage() {
-  printf '用法：%s [--write] [--model <slug>] [--effort <level>] [--] <任务>\n' "${0}" >&2
+  printf '用法：%s [--write] [--model <slug>] [--effort <level>] [--resumable] [--] <任务>\n' "${0}" >&2
+  printf '      %s --resume <runId> [--write] [--] <用户答复>\n' "${0}" >&2
 }
 
 TASK=''
@@ -18,6 +19,9 @@ MODEL=''
 EFFORT=''
 EXTRA=()
 WRITE_MODE=0
+RESUMABLE=0
+RESUME_ID=''
+RESUME_GIVEN=0
 
 while [ "$#" -gt 0 ]; do
   ARG="${1}"
@@ -36,6 +40,20 @@ while [ "$#" -gt 0 ]; do
         ;;
       --write)
         WRITE_MODE=1
+        continue
+        ;;
+      --resumable)
+        RESUMABLE=1
+        continue
+        ;;
+      --resume)
+        if [ "$#" -eq 0 ] || [ "${RESUME_GIVEN}" -eq 1 ]; then
+          usage
+          exit 64
+        fi
+        RESUME_ID="${1}"
+        RESUME_GIVEN=1
+        shift
         continue
         ;;
       --model)
@@ -71,11 +89,30 @@ if [ "${TASK_COUNT}" -ne 1 ] || [ -z "${TASK}" ]; then
   usage
   exit 64
 fi
+if [ "${RESUME_GIVEN}" -eq 1 ] && { [ "${RESUMABLE}" -eq 1 ] || [ -n "${MODEL}" ] || [ -n "${EFFORT}" ]; }; then
+  printf 'delegate: --resume cannot be combined with --resumable, --model or --effort\n' >&2
+  exit 64
+fi
 
 SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 if ! command -v python3 >/dev/null 2>&1; then
   printf 'delegate: 找不到 python3；请安装 Python 3 后重试。\n' >&2
   exit 127
+fi
+TMP_ROOT="${TMPDIR:-/tmp}/delegate"
+SESSION_ID=''
+if [ "${RESUME_GIVEN}" -eq 1 ]; then
+  # Refuse before probing Codex so a stale or foreign runId never reaches the CLI.
+  if [ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" != true ]; then
+    printf 'delegate: 当前目录不是 Git 工作区；请进入业务 Git 项目后重试。\n' >&2
+    exit 64
+  fi
+  RESUME_STATE="$(python3 -B "${SCRIPT_DIR}/run_state.py" check "${TMP_ROOT}" "${RESUME_ID}" \
+    "$(git rev-parse --show-toplevel)" "${WRITE_MODE}")" || exit "$?"
+  SESSION_ID="$(printf '%s\n' "${RESUME_STATE}" | sed -n 1p)"
+  MODEL="$(printf '%s\n' "${RESUME_STATE}" | sed -n 2p)"
+  EFFORT="$(printf '%s\n' "${RESUME_STATE}" | sed -n 3p)"
+  RESUMABLE=1
 fi
 python3 -B "${SCRIPT_DIR}/delegate_model.py" codex "${MODEL}" || exit "$?"
 BACKEND_OUTPUT="$(python3 -B "${SCRIPT_DIR}/backend.py")"
@@ -122,6 +159,28 @@ if [ "${WRITE_MODE}" -eq 1 ]; then
   GIT_BASELINE_CHANGES="$(printf '%s' "${GIT_BASELINE_STATUS}" | python3 -c 'import sys; print(len(sys.stdin.read().splitlines()))')"
 fi
 
+EPHEMERAL=(--ephemeral)
+# Never let a configured approver let a delegated run leave its sandbox.
+APPROVAL=(-c 'approval_policy="never"')
+REPO_ROOT="$(git rev-parse --show-toplevel)" || exit 1
+PARENT_RUN_ID=''
+PROMPT="${PREAMBLE}
+
+${TASK}"
+if [ "${RESUMABLE}" -eq 1 ]; then
+  # Resumable sessions are persisted by Codex; keep the sandbox sentence and swap only the opening.
+  EPHEMERAL=()
+  PROMPT='【可续跑委托】你的最终答复会转给用户；用户答复后，会带着答复在本会话里接着跑。先做不受待定决策影响的任务，碰到需要用户拍板的决策（规格没覆盖的取舍、测试改不红、高风险不可逆操作）再停。要停时，最终答复第一行以 `NEED_USER:` 开头，后面写要问用户的问题，再写已完成的进度和可选项；不需要用户时照常做到底，第一行不要写 `NEED_USER:`。'"${PREAMBLE#*并把完整结论写进最终答复。}
+
+${TASK}"
+fi
+if [ "${RESUME_GIVEN}" -eq 1 ]; then
+  PARENT_RUN_ID="${RESUME_ID}"
+  PROMPT="【用户答复】${TASK}
+
+请按上次约定继续：先做不受待定决策影响的任务；还需要用户拍板时，最终答复第一行以 \`NEED_USER:\` 开头。"
+fi
+
 if [ -n "${MODEL}" ]; then
   EXTRA+=(-m "${MODEL}")
 fi
@@ -149,11 +208,11 @@ try:
             os.unlink(log)
         except OSError:
             continue
-        answer = log[:-4] + '.answer'
-        try:
-            os.unlink(answer)
-        except OSError:
-            pass
+        for suffix in ('.answer', '.state.json', '.resumed'):
+            try:
+                os.unlink(log[:-4] + suffix)
+            except OSError:
+                pass
 except OSError:
     pass
 PY
@@ -183,6 +242,9 @@ finish() {
   fi
   if [ "${EXIT_STATUS}" -eq 0 ]; then
     emit_git_acceptance
+    if [ -n "${RESULT_LINE}" ]; then
+      printf '%s\n' "${RESULT_LINE}"
+    fi
   else
     emit_git_acceptance >&2
   fi
@@ -198,15 +260,20 @@ trap 'interrupted 143' TERM
 trap 'interrupted 130' INT
 trap 'interrupted 129' HUP
 
+CODEX_ARGS=(exec ${EXTRA[@]+"${EXTRA[@]}"} -c 'forced_login_method="chatgpt"' -c 'model_provider="openai"' \
+  ${APPROVAL[@]+"${APPROVAL[@]}"} ${EPHEMERAL[@]+"${EPHEMERAL[@]}"} --sandbox "${SANDBOX}" --color never -o "${ANSWER}" -- "${PROMPT}")
+if [ "${RESUME_GIVEN}" -eq 1 ]; then
+  # `exec resume` has no --sandbox or --color; the sandbox is set through config instead.
+  CODEX_ARGS=(exec resume ${EXTRA[@]+"${EXTRA[@]}"} -c 'forced_login_method="chatgpt"' -c 'model_provider="openai"' \
+    ${APPROVAL[@]+"${APPROVAL[@]}"} -c "sandbox_mode=\"${SANDBOX}\"" -o "${ANSWER}" -- "${SESSION_ID}" "${PROMPT}")
+  python3 -B "${SCRIPT_DIR}/run_state.py" claim "${TMP_ROOT}" "${RESUME_ID}" || exit 64
+fi
+
+RESULT_LINE=''
 EXEC_STARTED=1
 python3 -B "${SCRIPT_DIR}/run_codex.py" "${DELEGATE_TIMEOUT_SECONDS}" \
-  env -u OPENAI_API_KEY -u CODEX_API_KEY DELEGATE_REVIEW_DEPTH=1 codex exec \
-  ${EXTRA[@]+"${EXTRA[@]}"} \
-  -c 'forced_login_method="chatgpt"' -c 'model_provider="openai"' \
-  --ephemeral --sandbox "${SANDBOX}" --color never \
-  -o "${ANSWER}" -- "${PREAMBLE}
-
-${TASK}" >"${LOG}" 2>&1 </dev/null &
+  env -u OPENAI_API_KEY -u CODEX_API_KEY DELEGATE_REVIEW_DEPTH=1 codex "${CODEX_ARGS[@]}" \
+  >"${LOG}" 2>&1 </dev/null &
 RUNNER_PID=$!
 wait "${RUNNER_PID}"
 CODEX_STATUS=$?
@@ -235,3 +302,5 @@ cat "${ANSWER}"
 printf '\n---\n'
 printf '模型：%s / 推理档：%s\n' "${MODEL:-配置默认}" "${EFFORT:-配置默认}"
 printf '过程日志（未进入本会话上下文）：%s（%s 字节；最终答复 %s 字节）\n' "${LOG}" "${LOG_BYTES}" "${ANSWER_BYTES}"
+RESULT_LINE="$(python3 -B "${SCRIPT_DIR}/run_state.py" record "${TMP_ROOT}" "${RUN_ID}" "${LOG}" "${ANSWER}" \
+  "${REPO_ROOT}" "${WRITE_MODE}" "${MODEL}" "${EFFORT}" "${PARENT_RUN_ID}" "${RESUMABLE}")"

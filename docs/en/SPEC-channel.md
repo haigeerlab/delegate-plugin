@@ -5,6 +5,8 @@
 
 Source commands now use run/review. Run follows this existing Codex contract; review shortcuts and model-free previews are specified in [claude-review](SPEC-claude-review.md).
 
+Resumable mode (`--resumable`), the run result line and `--resume` are specified in [run-resume](SPEC-run-resume.md); without those options this contract is unchanged.
+
 This page retains the Codex `codex-exec.sh` free-text contract. Public `delegate-exec.sh` defaults to that path; explicit backends, common read-only review and snapshot stdin are specified in [claude-review](SPEC-claude-review.md). Legacy adds recursive/known Claude-family rejection without changing existing read/write, ChatGPT auth, deadline or log semantics.
 
 Current contract: 2026-10-08. Earlier records are preserved in the [historical archive](../archive/pre-spec-guard/README.md). Current `tasks/channel/` tracks maintenance reconciliation only; it neither retroactively accepts historical work nor overrides this specification.

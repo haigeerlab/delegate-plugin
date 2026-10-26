@@ -58,6 +58,7 @@ Placed at the plugin root, following agent-relay: a consumer finds the enabled d
 - `backends` lists backends this version **supports**, not ones installed, authenticated or funded on this machine. A consumer suggesting a delegate review must not claim from it that the review will run.
 - Version rules: adding optional fields is a minor version (`1.x`); removing, renaming or changing the meaning of a field is a major version (`2.0`). Consumers check a major range such as `>=1.0,<2.0`.
 - If the file cannot be read or parsed, consumers should report "unknown", not "not installed". That is the consumer's probe rule; delegate only guarantees the file exists and is valid.
+- Since interface 1.1, `run` has the optional field `resume`, specified in [run-resume](SPEC-run-resume.md); the first version and the version rules on this page are unchanged.
 
 ## Review report contract (`schemaVersion: 1`)
 

@@ -19,8 +19,9 @@ The project adoption scope confirmed on 2026-10-08 standardizes file locations. 
 | routing | Optional criteria/confirmation for explicit delegation; no automatic reminders | channel, detection |
 | claude-review | Explicit backend selection, Claude Code read-only reviews, and a shared review result contract while preserving existing Codex behavior | channel, detection, routing |
 | integration-interface | Publish a static interface.json declaring external capabilities and the interface version, and document review report schema_version 1 as an external compatibility contract | claude-review |
+| run-resume | Add an opt-in resumable mode to run: return a runId and an end status of done/needs-input, and resume the original Codex session with the user's answer through --resume; interface 1.1 adds fields only | channel, integration-interface |
 
-Build order: channel → detection → routing → claude-review → integration-interface
+Build order: channel → detection → routing → claude-review → integration-interface → run-resume
 
 channel and detection share `backend.py`; this shared code is not a separate module dependency. routing uses detection diagnostics for explicit requests and invokes channel after authorization. The build order preserves the existing implementation sequence without adding runtime responsibilities.
 
