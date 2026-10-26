@@ -24,7 +24,7 @@ allowed-tools: Bash
 
 所有路径以目标仓库根为基准，可用 --repo 指定 Git 工作区。paths/module 默认读取 HEAD；工作区改动须明确 changes，只有 working-tree 可含 untracked。base/head 固定提交 diff，与 changes 互斥；无 paths 时仅选比较中的变更文件，不全项目扫描。exclude/spec/plan/criterion 可重复。高级 context 与快捷范围参数互斥；旧 CLI review-context 保留。dry-run 只是输入预览，不调用模型、检查认证或给出通过结论。
 
-review 永远只读，拒绝 write；run 当前仅 codex，Claude run 拒绝。run 成功末行给出 run_id/status/resumable；`--resumable` 才可停下问用户，`--resume <runId>` 只带用户原话续跑，细则见 run 命令。Claude 首版拒绝 effort，提供 max-turns（默认12）及 max-budget-usd（估算，非账单硬上限）；Codex 不支持这两个限制参数。参数不混传，未知实际模型/用量不猜、不填零。
+review 永远只读，拒绝 write；run 当前仅 codex，Claude run 拒绝。run 成功和超时时末行给出 run_id/status/resumable（先看退出码 0 再看 status=done；超时退出 124）；`--resumable` 才可停下问用户、超时可续跑，`--resume <runId>` 只带用户原话续跑，细则见 run 命令。Claude 首版拒绝 effort，提供 max-turns（默认12）及 max-budget-usd（估算，非账单硬上限）；Codex 不支持这两个限制参数。参数不混传，未知实际模型/用量不猜、不填零。
 
 Claude 当前仅 Mac 本机 CLI ≥2.1.295、Node ≥22.12.0、srt 0.0.79、GUI launchd；已有绝对路径可通过 DELEGATE_CLAUDE_BIN、DELEGATE_NODE_BIN、DELEGATE_SRT_BIN 指定。沿用原认证，不安装/升级/登录/改全局配置。两方向普通四文件真实审查已有成功记录，各自仅证明固定源码/版本及有限范围；真实模型主动越界及无差错自动UI输入仍未验证；菜单到公共脚本的功能证据已核对，不以安装/假 CLI 通过替代。
 

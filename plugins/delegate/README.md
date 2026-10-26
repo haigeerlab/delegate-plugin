@@ -41,17 +41,21 @@ tests/                       离线桩测试与回归
 
 `/delegate:run --resumable` 让 Codex 先做不受待定决策影响的任务，碰到需要用户拍板的事再停下。默认不开启；开启后 Codex 会话保存在它自己的会话目录。
 
-- 每次成功返回的最后一行：`delegate: run_id=<id> status=<done|needs-input> resumable=<true|false>`。
+- 每次成功返回和超时时的最后一行：`delegate: run_id=<id> status=<done|needs-input|timeout> resumable=<true|false>`。**判断成功先看退出码为 0，再看 `status=done`；有结果行不等于成功。**
 - `needs-input` 退出码为 0，答复以 `NEED_USER:` 开头，标记之后是要问用户的问题原文。
 - 用户答复后：`/delegate:run --resume <runId> [--write] -- "<用户答复>"`。答复须是用户原话或其同意的转述；只续跑最近一轮 needs-input，同一仓库、写模式一致，沿用原模型与推理档；每轮新 runId。
-- 已知限制：模型漏写标记会判为 done；超时或失败的运行不能续跑；续跑状态随最近 50 组日志一起清理。
+- 超时（`status=timeout`，退出 124）：提示词里有时间预算，模型应在到期前主动停下并写进度（答复首行 `TIME_UP:`）；被强制中止时再以只读沙箱续跑一轮只写进度的收尾，收尾也失败就输出不靠模型的兜底文字（会话 ID、可否续跑，写模式附改动文件）。超时后可用 `--resume` 续跑，由用户决定。
+- 普通 run（不带 `--resumable`）同样有时间预算和兜底，超时也是 `status=timeout`、退出 124，但会话不保留，不能续跑。
+- 已知限制：模型漏写标记会判为 done；失败的运行不能续跑；续跑状态随最近 50 组日志一起清理。
 
 ## 对外接口
 
 供其他插件按版本对接，不读本插件内部文件。
 
 - **`interface.json`**：位于插件根目录。`interface` 是接口版本；`review.backends`、`run.backends` 是本版本**支持**的后端，不代表本机已安装、已登录或有额度，能否运行仍以 `/delegate:doctor` 为准。只增加可选字段升次版本，删除、改名或改变含义升主版本；使用方按主版本范围检查，如 `>=1.0,<2.0`。
-- **续跑（接口 1.1 起）**：`run.resume` 为 `{"optIn": "--resumable", "option": "--resume", "backends": ["codex"], "statuses": ["done", "needs-input"]}`。使用方按 `>=1.1,<2.0` 判断能否续跑；读到 1.0 或没有该字段时按原做法处理，不续跑。
+- **续跑（接口 1.1 起）**：`run.resume` 为 `{"optIn": "--resumable", "option": "--resume", "backends": ["codex"], "statuses": [...]}`。使用方按 `>=1.1,<2.0` 判断能否续跑；读到 1.0 或没有该字段时按原做法处理，不续跑。
+- **超时（接口 1.2 起）**：`run.resume.statuses` 为 `["done", "needs-input", "timeout"]`，另有 `run.timeout` 为 `{"status": "timeout", "exitCode": 124}`。使用方按 `>=1.2,<2.0` 才使用 `timeout`；读到 1.1 时超时仍是退出 124，按失败处理。
+- **`statuses` 是开放集合**：以后的次版本可能追加新值。遇到不认识的值必须停下或当失败处理，不能当成完成；判断成功先看退出码为 0，再看 `status=done`。
 - **审查报告（`review.report.schemaVersion: 1`）**：`/delegate:review` 的标准输出是一份 JSON 报告（`--dry-run` 输出的是预览，不是报告）。标准错误中的私有副本路径不属于接口。稳定字段：
 
 | 字段 | 含义 |

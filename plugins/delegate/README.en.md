@@ -41,17 +41,21 @@ tests/                       Offline stub tests and regressions
 
 `/delegate:run --resumable` tells Codex to finish the tasks not affected by pending decisions first and to stop only when the user must decide. It is off by default; when on, Codex keeps the session in its own session directory.
 
-- The last line of every successful return: `delegate: run_id=<id> status=<done|needs-input> resumable=<true|false>`.
+- The last line of every successful return and of every timeout: `delegate: run_id=<id> status=<done|needs-input|timeout> resumable=<true|false>`. **To decide success, check exit code 0 first, then `status=done`; a result line does not mean success.**
 - `needs-input` exits 0; the answer starts with `NEED_USER:`, and everything after the marker is the question for the user.
 - After the user answers: `/delegate:run --resume <runId> [--write] -- "<user answer>"`. The answer must be the user's own words or a paraphrase they accepted. Only the latest needs-input round can be resumed, in the same repository with the same write mode; the original model and effort are reused, and each round gets a new runId.
-- Known limits: a missing marker is classified as done; timed-out or failed runs cannot be resumed; resume state is pruned together with the latest 50 logs.
+- Timeout (`status=timeout`, exit 124): the prompt carries a time budget, so the model should stop before the deadline and write its progress (first line `TIME_UP:`). If it is forcibly stopped, one more read-only round is resumed that only writes progress; if that also fails, a model-free fallback text is printed (session id, whether it can resume, and in write mode the changed files). A timed-out run can be continued with `--resume`, at the user's decision.
+- A plain run (without `--resumable`) gets the same time budget and fallback and also ends in `status=timeout` with exit 124, but its session is not kept and it cannot be resumed.
+- Known limits: a missing marker is classified as done; failed runs cannot be resumed; resume state is pruned together with the latest 50 logs.
 
 ## External interface
 
 For other plugins to integrate by version without reading this plugin's internals.
 
 - **`interface.json`**: at the plugin root. `interface` is the interface version; `review.backends` and `run.backends` are the backends this version **supports**, not ones installed, signed in or funded on this machine; whether they run is still decided by `/delegate:doctor`. Adding optional fields bumps the minor version; removing, renaming or changing a field's meaning bumps the major version. Consumers check a major range such as `>=1.0,<2.0`.
-- **Resume (since interface 1.1)**: `run.resume` is `{"optIn": "--resumable", "option": "--resume", "backends": ["codex"], "statuses": ["done", "needs-input"]}`. Consumers check `>=1.1,<2.0` before resuming; with 1.0 or without the field they behave as before and do not resume.
+- **Resume (since interface 1.1)**: `run.resume` is `{"optIn": "--resumable", "option": "--resume", "backends": ["codex"], "statuses": [...]}`. Consumers check `>=1.1,<2.0` before resuming; with 1.0 or without the field they behave as before and do not resume.
+- **Timeout (since interface 1.2)**: `run.resume.statuses` is `["done", "needs-input", "timeout"]`, and `run.timeout` is `{"status": "timeout", "exitCode": 124}`. Consumers use `timeout` only with `>=1.2,<2.0`; on 1.1 a timeout still exits 124 and is treated as failure.
+- **`statuses` is an open set**: later minor versions may append values. A consumer meeting an unknown value must stop or treat it as failure, never as completion; decide success by exit code 0 first, then `status=done`.
 - **Review report (`review.report.schemaVersion: 1`)**: the standard output of `/delegate:review` is one JSON report (`--dry-run` prints a preview, not a report). The private copy path on standard error is not part of the interface. Stable fields:
 
 | Field | Meaning |

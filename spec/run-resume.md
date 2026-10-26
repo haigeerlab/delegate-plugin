@@ -1,6 +1,6 @@
 # 规格：run-resume（可续跑委托）
 
-<!-- spec-guard: review approved ae640dc77692 -->
+<!-- spec-guard: review approved 7a023b6ee92a -->
 
 简体中文 | [English](../docs/en/SPEC-run-resume.md)
 
@@ -10,7 +10,7 @@
 
 - **A1** 新模块 `run-resume`，依赖 channel 与 integration-interface。channel、integration-interface 的原有条款一条不改，只各加一句指向本模块。
 - **A2** 可续跑模式要显式打开：run 新增 `--resumable`。不带它的 run 行为与今天逐字节相同（提示词、`--ephemeral`、Codex 参数），唯一增加的是 A3 的结果行。（R2 起另加固定审批参数，见修订记录。）
-- **A3** 每次成功返回的 run 在 stdout 末尾多一行 `delegate: run_id=<id> status=<done|needs-input> resumable=<true|false>`。`needs-input` 退出码仍为 0；超时、失败、空答复沿用现有退出码，不输出该行。
+- **A3** 每次成功返回的 run 在 stdout 末尾多一行 `delegate: run_id=<id> status=<done|needs-input> resumable=<true|false>`。`needs-input` 退出码仍为 0；超时、失败、空答复沿用现有退出码，不输出该行。（R3：超时现在也输出该行、状态为 `timeout`，见 [run-timeout](run-timeout.md)。）
 - **A4** 续跑写法 `--resume <runId> [--write] -- "<用户答复>"`。只接受最近一轮、状态为 `needs-input` 的 runId；同一仓库根目录；`--write` 与原运行一致；不接受 `--model`、`--effort`，沿用原设置；每轮新 runId；状态文件随日志保留策略清理；不删 Codex 自己的会话文件。
 - **A5** `needs-input` 只靠提示词约定的 `NEED_USER:` 标记识别，不用 `--output-schema`。模型漏写标记会被判成 `done`，这是已知限制。
 - **A6** `interface.json` 升到 `1.1`，`run` 下只新增可选字段 `resume`。`review.command`、`doctor.command` 及其他已有字段不动，主版本不变。
@@ -23,6 +23,7 @@
 - **R2（2026-10-25，用户经 delegate 负责人转达的原话：「让子会话把 approval_policy="never" 的修订扩大到 run、resume、review 全部调用路径，并实测现有只读路径是否会被放行。」，在本会话复审批准后生效）：** R1 扩大到 delegate 所有让 Codex 执行任务的调用：普通 run（只读与写入）、可续跑 run、续跑、Codex 后端 review，一律固定 `-c approval_policy="never"`。只做探测、不调用模型的调用（`codex --version`、`codex login status`、`codex features list`）不在此列。R1 中「普通 run 不变」由本条取代：普通 run 的参数只多这一项，提示词与其余参数不变。另加一次付费实测，用已发布 v0.5.3 的只读 run 和 review，在本机审批配置下检验会不会写出文件，结果交 delegate 负责人判断已发布接口里 `readOnly: true` 的含义。
   - 影响：写模式 run 里需要越出沙箱的命令（如在 worktree 里 `git commit`、网络访问）以前可能被本机审批方放行，现在直接被拒；需要提交的使用方继续依靠前缀放行规则，或由调用方代为提交。
   - 本模块因此改动 claude-review 管理的 `review_execution.py` 一行参数，并在 `spec/claude-review.md` 及其英文页加一句指向本条。
+- **R3（2026-10-26，用户原话：「选方案 B：普通 run 保留 --ephemeral，只加时间预算和兜底；同意为此修订 run-resume 的 Always 规则。」）：** [run-timeout](run-timeout.md) 给所有 run 与续跑的提示词末尾追加时间预算段，超时输出结果行（`status=timeout`，退出 124），`--resume` 也接受 `timeout`。Always 规则「普通 run 与改动前逐字节一致」改为「普通 run 除时间预算段外与改动前一致」；A3、RR-01 与拒绝表中 `run not waiting for input` 一行按 run-timeout 调整。普通 run 的参数（含 `--ephemeral`）不变。
 
 ## 技术栈与命令
 
@@ -107,7 +108,7 @@ delegate: run_id=20261024183015.12345 status=done resumable=false
 | `invalid run id` | runId 不符合 `^[0-9]{14}\.[0-9]+$` |
 | `run not found` | 状态文件不存在（未用 `--resumable`、运行失败、已被保留策略清理） |
 | `run not resumable` | 状态文件里没有会话 ID |
-| `run not waiting for input` | 状态不是 `needs-input` |
+| `run not waiting for input` | 状态不是 `needs-input`（R3 起也接受 `timeout`，见 run-timeout） |
 | `run already resumed` | 该 runId 已被续跑过 |
 | `repository mismatch` | 当前 Git 根目录与状态文件不同 |
 | `write mode mismatch` | `--write` 有无与原运行不同 |
@@ -179,13 +180,13 @@ fi
 
 ## 开发边界
 
-- **Always：** 普通 run 与改动前逐字节一致，由测试守住；中英文合同同步；`interface.json`、能力事实和测试一起改。
+- **Always：** 普通 run 除时间预算段外与改动前一致（R3），由测试守住；中英文合同同步；`interface.json`、能力事实和测试一起改。
 - **Ask first：** 让所有 run 默认可续跑；续跑超时或失败的运行；用 `--output-schema` 结构化答复；改 540 秒期限；付费实测、提交、推送、发版。
 - **Never：** 改 `review.command`、`doctor.command` 或升主版本；续跑时悄悄升级写权限；让任何让 Codex 执行任务的调用沿用用户配置的审批方式（含自动审查代理代批）；替用户回答 `needs-input`；读取或删除 Codex 会话文件；把状态文件或会话 ID 写进业务仓库。
 
 ## 成功条件与验证映射
 
-- **RR-01：** 不带 `--resumable` 时提示词与其余参数不变，参数只多 `approval_policy="never"`（R2），输出只多结果行（桩测试）。
+- **RR-01：** 不带 `--resumable` 时提示词与其余参数不变，参数只多 `approval_policy="never"`（R2），输出只多结果行（桩测试）。R3 起提示词末尾另有时间预算段，见 run-timeout RT-02。
 - **RR-02：** `--resumable` 不传 `--ephemeral`、固定 `approval_policy="never"`，使用含「先做不受待定决策影响的任务……再停」的提示词，写出 0600 状态文件并提取会话 ID；取不到时降级为 `resumable=false`（桩测试）。
 - **RR-03：** `done` / `needs-input` 按标记判定，`needs-input` 退出 0，答复完整输出（桩测试）。
 - **RR-04：** 续跑调用 `codex exec resume`，带正确的沙箱、`approval_policy="never"`、模型、推理档、会话 ID 和答复，产生新 runId 和 `parent` 链（桩测试）。

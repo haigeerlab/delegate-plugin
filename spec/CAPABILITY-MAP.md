@@ -20,8 +20,9 @@
 | claude-review | 为 delegate 增加显式后端选择、Claude Code 只读审查和统一审查结果，保持现有 Codex 行为兼容 | channel, detection, routing |
 | integration-interface | 发布静态 interface.json 声明对外能力与接口版本，并把审查报告 schema_version 1 写成对外兼容合同 | claude-review |
 | run-resume | 为 run 增加显式开启的可续跑模式：返回 runId 与结束状态 done/needs-input，并以 --resume 带用户答复续跑原 Codex 会话；接口升 1.1 只增字段 | channel, integration-interface |
+| run-timeout | run 超时保留进度：所有 run 加提示词时间预算，可续跑 run 被中止后再续跑一轮只读收尾，取不到进度时走不靠模型的兜底；结束状态新增 timeout（退出 124），可续跑 run 超时后可 --resume；修 killpg EPERM；接口升 1.2 只增字段 | channel, integration-interface, run-resume |
 
-Build order: channel → detection → routing → claude-review → integration-interface → run-resume
+Build order: channel → detection → routing → claude-review → integration-interface → run-resume → run-timeout
 
 channel 与 detection 共用 `backend.py`，该共享代码不是独立模块依赖。routing 按显式请求结合 detection 体检，授权后使用 channel；构建顺序保留既有实施顺序，不新增运行职责。
 

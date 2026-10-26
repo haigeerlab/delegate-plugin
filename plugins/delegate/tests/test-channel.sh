@@ -168,7 +168,14 @@ done
 EXPECTED_TASK='【非交互委托】没有人能回答你的提问或确认请求，也不会有后续轮次。不要先出方案等确认，直接做到底，并把完整结论写进最终答复。沙箱是只读的：不要修改文件、不要提交、不要启动服务、不要做任务之外的网络访问。
 
 -开头的任务'
-if [ "${STATUS}" -eq 0 ] && [ "${LAST_ARG}" = "${EXPECTED_TASK}" ]; then
+# run-timeout 在任务之后追加时间预算段，其起始秒每次不同，只比对到段首。
+case "${LAST_ARG}" in
+  "${EXPECTED_TASK}
+
+【时间预算】"*) TASK_MATCHED=1 ;;
+  *) TASK_MATCHED=0 ;;
+esac
+if [ "${STATUS}" -eq 0 ] && [ "${TASK_MATCHED}" -eq 1 ]; then
   pass '16：-- 后以 - 开头的任务正常执行'
 else
   fail '16：-- 后以 - 开头的任务未正确传递'

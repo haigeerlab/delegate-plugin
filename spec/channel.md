@@ -86,9 +86,9 @@ bash /path/to/delegate-plugin/plugins/delegate/scripts/codex-exec.sh [--write] [
 - 删除 `OPENAI_API_KEY` 和 `CODEX_API_KEY`，CLI 配置指定 `forced_login_method="chatgpt"`、`model_provider="openai"`。
 - `--ephemeral`、无颜色、stdin=/dev/null，preamble 明确非交互任务与行为范围。
 - `-o` 写最终答复，合并 stdout/stderr 写过程日志。
-- Codex 开新进程组。期限默认/上限 540 秒；`DELEGATE_TIMEOUT_SECONDS` 可缩短，非法或非正值回落默认。期限不包括前置探测和后置验收。
+- Codex 开新进程组。期限默认/上限 540 秒；`DELEGATE_TIMEOUT_SECONDS` 可缩短，非法或非正值回落默认。期限不包括前置探测和后置验收。自 [run-timeout](run-timeout.md) 起，Codex 主运行只用其中的 M 秒，余下留给收尾轮或兜底。
 - 到期或 TERM/INT/HUP：TERM 进程组，最多等 2 秒，KILL 残余并回收直接子进程；正常退出也清理同组残余。
-- 外部 Bash timeout=600000。超时退出 124；信号对应 143/130/129；其他执行失败保留状态，空答复退出 1。
+- 外部 Bash timeout=600000。超时退出 124（自 run-timeout 起超时也输出答复、元数据与结果行，见该合同）；信号对应 143/130/129；其他执行失败保留状态，空答复退出 1。
 - 自行脱离进程组的后代不在清理保证中；行为指令不是 OS 权限隔离。真实沙箱允许的 tmp/额外根以宿主配置为准。
 
 ## 写入与输出

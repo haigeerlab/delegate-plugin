@@ -1,5 +1,5 @@
 {
-  "interface": "1.1",
+  "interface": "1.2",
   "review": {
     "command": "/delegate:review",
     "backends": ["codex", "claude-code"],
@@ -9,7 +9,8 @@
   "run": {
     "command": "/delegate:run", "backends": ["codex"], "write": "explicit",
     "resume": {"optIn": "--resumable", "option": "--resume", "backends": ["codex"],
-               "statuses": ["done", "needs-input"]}
+               "statuses": ["done", "needs-input", "timeout"]},
+    "timeout": {"status": "timeout", "exitCode": 124}
   },
   "doctor": {"command": "/delegate:doctor"}
 }

@@ -4,11 +4,18 @@ import json
 import os
 from pathlib import Path
 import re
+import subprocess
 import sys
 
 RUN_ID = re.compile(r'[0-9]{14}\.[0-9]+')
 SESSION_LINE = re.compile(r'session id: ([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})')
 MARKER = 'NEED_USER:'
+TIME_UP = 'TIME_UP:'
+# Deadline split for one delegated run: T total seconds -> wrap-up W, main run M, "no new step" threshold S.
+WRAPUP_CAP = 45
+WRAPUP_DIVISOR = 6
+THRESHOLD_MARGIN = 90
+THRESHOLD_DIVISOR = 2
 
 
 def valid_run_id(value):
@@ -27,11 +34,25 @@ def session_id_from_log(path):
     return None
 
 
-def classify(answer):
+def deadlines(total):
+    wrapup = min(WRAPUP_CAP, total // WRAPUP_DIVISOR)
+    main = total - wrapup
+    return wrapup, main, max(main - THRESHOLD_MARGIN, main // THRESHOLD_DIVISOR)
+
+
+def classify(answer, resumable=True):
     text = answer.lstrip().lstrip('﻿').lstrip()
-    if text.startswith(MARKER):
+    if text.startswith(TIME_UP):
+        return 'timeout', text[len(TIME_UP):].strip()
+    if resumable and text.startswith(MARKER):
         return 'needs-input', text[len(MARKER):].strip()
     return 'done', None
+
+
+def changed_files(baseline, current):
+    """Porcelain lines that are new or different from the pre-run snapshot."""
+    known = set(baseline)
+    return [line for line in current if line not in known]
 
 
 def _path(directory, run_id, suffix):
@@ -86,7 +107,7 @@ def check_resume(directory, run_id, repository, write):
         return 'run not found', None
     if not state.get('sessionId'):
         return 'run not resumable', None
-    if state.get('status') != 'needs-input':
+    if state.get('status') not in ('needs-input', 'timeout'):
         return 'run not waiting for input', None
     if os.path.lexists(_path(directory, run_id, '.resumed')):
         return 'run already resumed', None
@@ -97,11 +118,10 @@ def check_resume(directory, run_id, repository, write):
     return None, state
 
 
-def record(directory, run_id, log, answer, repository, write, model, effort, parent, resumable):
-    status = 'done'
+def record(directory, run_id, log, answer, repository, write, model, effort, parent, resumable, forced=None):
+    with open(answer, encoding='utf-8', errors='replace') as handle:
+        status = forced or classify(handle.read(), resumable)[0]
     if resumable:
-        with open(answer, encoding='utf-8', errors='replace') as handle:
-            status = classify(handle.read())[0]
         session = session_id_from_log(log)
         if session is None:
             print('delegate: 过程日志里没有会话 ID，本次运行不能续跑。', file=sys.stderr)
@@ -118,9 +138,27 @@ def record(directory, run_id, log, answer, repository, write, model, effort, par
 
 def main(arguments):
     command = arguments[0] if arguments else ''
-    if command == 'record' and len(arguments) == 11:
-        directory, run_id, log, answer, repository, write, model, effort, parent, resumable = arguments[1:]
-        print(record(directory, run_id, log, answer, repository, write == '1', model, effort, parent, resumable == '1'))
+    if command == 'record' and len(arguments) in (11, 12):
+        directory, run_id, log, answer, repository, write, model, effort, parent, resumable = arguments[1:11]
+        forced = arguments[11] if len(arguments) == 12 else None
+        print(record(directory, run_id, log, answer, repository, write == '1', model, effort, parent, resumable == '1',
+                     forced or None))
+        return 0
+    if command == 'session' and len(arguments) == 2:
+        print(session_id_from_log(arguments[1]) or '')
+        return 0
+    if command == 'deadlines' and len(arguments) == 2 and arguments[1].isdigit():
+        print('\n'.join(str(value) for value in deadlines(int(arguments[1]))))
+        return 0
+    if command == 'changes' and len(arguments) == 2:
+        try:
+            with open(arguments[1], encoding='utf-8', errors='replace') as handle:
+                baseline = handle.read().splitlines()
+            current = subprocess.run(['git', 'status', '--porcelain'], check=True, stdout=subprocess.PIPE,
+                                     universal_newlines=True).stdout.splitlines()
+        except (OSError, subprocess.CalledProcessError):
+            return 1
+        print('\n'.join(changed_files(baseline, current)))
         return 0
     if command == 'check' and len(arguments) == 5:
         reason, state = check_resume(arguments[1], arguments[2], arguments[3], arguments[4] == '1')

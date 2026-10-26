@@ -142,6 +142,11 @@ except ValueError:
     seconds = 540
 print(min(seconds, 540) if seconds > 0 else 540)
 ')"
+# Split the deadline: Codex's main run gets MAIN_SECONDS, a wrap-up round WRAPUP_SECONDS.
+DEADLINES="$(python3 -B "${SCRIPT_DIR}/run_state.py" deadlines "${DELEGATE_TIMEOUT_SECONDS}")" || exit 1
+WRAPUP_SECONDS="$(printf '%s\n' "${DEADLINES}" | sed -n 1p)"
+MAIN_SECONDS="$(printf '%s\n' "${DEADLINES}" | sed -n 2p)"
+THRESHOLD_SECONDS="$(printf '%s\n' "${DEADLINES}" | sed -n 3p)"
 STAMP="$(date '+%Y%m%d%H%M%S')"
 RUN_ID="${STAMP}.$$"
 ANSWER="${TMP_ROOT}/${RUN_ID}.answer"
@@ -156,6 +161,8 @@ if [ "${WRITE_MODE}" -eq 1 ]; then
   PREAMBLE='【非交互委托】没有人能回答你的提问或确认请求，也不会有后续轮次。不要先出方案等确认，直接做到底，并把完整结论写进最终答复。沙箱允许写入当前工作目录：可以修改文件，但不要提交、不要推送、不要做任务之外的网络访问。'
   GIT_BASELINE_HEAD="$(git rev-parse --verify HEAD 2>/dev/null || printf '尚无提交')"
   GIT_BASELINE_STATUS="$(git status --porcelain)" || exit 1
+  # Kept so a timeout fallback can list what changed during the run.
+  printf '%s\n' "${GIT_BASELINE_STATUS}" > "${TMP_ROOT}/${RUN_ID}.baseline" || exit 1
   GIT_BASELINE_CHANGES="$(printf '%s' "${GIT_BASELINE_STATUS}" | python3 -c 'import sys; print(len(sys.stdin.read().splitlines()))')"
 fi
 
@@ -208,7 +215,7 @@ try:
             os.unlink(log)
         except OSError:
             continue
-        for suffix in ('.answer', '.state.json', '.resumed'):
+        for suffix in ('.answer', '.state.json', '.resumed', '.wrapup', '.wrapup.answer', '.baseline'):
             try:
                 os.unlink(log[:-4] + suffix)
             except OSError:
@@ -242,11 +249,11 @@ finish() {
   fi
   if [ "${EXIT_STATUS}" -eq 0 ]; then
     emit_git_acceptance
-    if [ -n "${RESULT_LINE}" ]; then
-      printf '%s\n' "${RESULT_LINE}"
-    fi
   else
     emit_git_acceptance >&2
+  fi
+  if [ -n "${RESULT_LINE}" ]; then
+    printf '%s\n' "${RESULT_LINE}"
   fi
   cleanup_process_logs
   exit "${EXIT_STATUS}"
@@ -260,6 +267,11 @@ trap 'interrupted 143' TERM
 trap 'interrupted 130' INT
 trap 'interrupted 129' HUP
 
+T0="$(date '+%s')"
+PROMPT="${PROMPT}
+
+$(printf '【时间预算】本次运行开始于 epoch 秒 %s，%s 秒后会被强制中止，中止时不保留未写出的答复。需要判断用时就运行 `date +%%s`。已用时达到 %s 秒后，不要再开始新的步骤，也不要启动预计会跨过期限的长命令，立即给出最终答复：第一行以 `TIME_UP:` 开头，后面写已完成的进度、做到一半的步骤（如有）、下一步应从哪里开始。' \
+  "${T0}" "${MAIN_SECONDS}" "${THRESHOLD_SECONDS}")"
 CODEX_ARGS=(exec ${EXTRA[@]+"${EXTRA[@]}"} -c 'forced_login_method="chatgpt"' -c 'model_provider="openai"' \
   ${APPROVAL[@]+"${APPROVAL[@]}"} ${EPHEMERAL[@]+"${EPHEMERAL[@]}"} --sandbox "${SANDBOX}" --color never -o "${ANSWER}" -- "${PROMPT}")
 if [ "${RESUME_GIVEN}" -eq 1 ]; then
@@ -271,7 +283,7 @@ fi
 
 RESULT_LINE=''
 EXEC_STARTED=1
-python3 -B "${SCRIPT_DIR}/run_codex.py" "${DELEGATE_TIMEOUT_SECONDS}" \
+python3 -B "${SCRIPT_DIR}/run_codex.py" "${MAIN_SECONDS}" \
   env -u OPENAI_API_KEY -u CODEX_API_KEY DELEGATE_REVIEW_DEPTH=1 codex "${CODEX_ARGS[@]}" \
   >"${LOG}" 2>&1 </dev/null &
 RUNNER_PID=$!
@@ -280,7 +292,69 @@ CODEX_STATUS=$?
 RUNNER_PID=''
 
 if [ "${CODEX_STATUS}" -eq 124 ]; then
-  printf 'delegate: codex 超过 %s 秒被中止。完整过程日志：%s\n' "${DELEGATE_TIMEOUT_SECONDS}" "${LOG}" >&2
+  printf 'delegate: codex 超过 %s 秒被中止。完整过程日志：%s\n' "${MAIN_SECONDS}" "${LOG}" >&2
+  # Wrap-up: one read-only resume round that only reports progress, else a model-free fallback.
+  FALLBACK_REASON=''
+  STOPPED_SESSION=''
+  if [ "${RESUMABLE}" -eq 1 ]; then
+    STOPPED_SESSION="$(python3 -B "${SCRIPT_DIR}/run_state.py" session "${LOG}")"
+  fi
+  if [ "${RESUMABLE}" -ne 1 ]; then
+    # An --ephemeral session id exists in the log but is never persisted, so it is not reported.
+    FALLBACK_REASON='普通 run 不保留会话'
+  elif [ -z "${STOPPED_SESSION}" ]; then
+    FALLBACK_REASON='未取得会话 ID'
+  elif [ "${WRAPUP_SECONDS}" -le 0 ]; then
+    FALLBACK_REASON='收尾轮超时'
+  else
+    WRAPUP_ANSWER="${TMP_ROOT}/${RUN_ID}.wrapup.answer"
+    WRAPUP_PROMPT='【收尾】本次运行已到期被中止。不要再执行任何命令，也不要继续做任务。只写进度：第一行以 `TIME_UP:` 开头，后面写已完成的步骤及结果、做到一半的步骤（如有）、下一步应从哪里开始。'
+    python3 -B "${SCRIPT_DIR}/run_codex.py" "${WRAPUP_SECONDS}" \
+      env -u OPENAI_API_KEY -u CODEX_API_KEY DELEGATE_REVIEW_DEPTH=1 codex exec resume ${EXTRA[@]+"${EXTRA[@]}"} \
+      -c 'forced_login_method="chatgpt"' -c 'model_provider="openai"' ${APPROVAL[@]+"${APPROVAL[@]}"} \
+      -c 'sandbox_mode="read-only"' -o "${WRAPUP_ANSWER}" -- "${STOPPED_SESSION}" "${WRAPUP_PROMPT}" \
+      >"${TMP_ROOT}/${RUN_ID}.wrapup" 2>&1 </dev/null &
+    RUNNER_PID=$!
+    wait "${RUNNER_PID}"
+    WRAPUP_STATUS=$?
+    RUNNER_PID=''
+    if [ "${WRAPUP_STATUS}" -eq 124 ]; then
+      FALLBACK_REASON='收尾轮超时'
+    elif [ "${WRAPUP_STATUS}" -ne 0 ]; then
+      FALLBACK_REASON="收尾轮失败（退出 ${WRAPUP_STATUS}）"
+    elif [ ! -s "${WRAPUP_ANSWER}" ]; then
+      FALLBACK_REASON='收尾轮答复为空'
+    else
+      cp "${WRAPUP_ANSWER}" "${ANSWER}" || exit 1
+    fi
+  fi
+  [ -n "${FALLBACK_REASON}" ] && : > "${ANSWER}"
+  RESULT_LINE="$(python3 -B "${SCRIPT_DIR}/run_state.py" record "${TMP_ROOT}" "${RUN_ID}" "${LOG}" "${ANSWER}" \
+    "${REPO_ROOT}" "${WRITE_MODE}" "${MODEL}" "${EFFORT}" "${PARENT_RUN_ID}" "${RESUMABLE}" timeout)"
+  if [ -n "${FALLBACK_REASON}" ]; then
+    RESUMABLE_TEXT='否'
+    case "${RESULT_LINE}" in *' resumable=true') RESUMABLE_TEXT='是' ;; esac
+    {
+      printf 'delegate: 已中止，未取得进度说明（%s）。会话 ID：%s；可续跑：%s。\n' \
+        "${FALLBACK_REASON}" "${STOPPED_SESSION:-无}" "${RESUMABLE_TEXT}"
+      if [ "${WRITE_MODE}" -eq 1 ]; then
+        printf '改动的文件（与运行前比较）：\n'
+        CHANGED="$(python3 -B "${SCRIPT_DIR}/run_state.py" changes "${TMP_ROOT}/${RUN_ID}.baseline")"
+        printf '%s\n' "${CHANGED:-无}"
+      else
+        printf '只读运行，不列文件\n'
+      fi
+    } > "${ANSWER}"
+  fi
+  cat "${ANSWER}"
+  printf '\n---\n'
+  printf '模型：%s / 推理档：%s\n' "${MODEL:-配置默认}" "${EFFORT:-配置默认}"
+  printf '过程日志（未进入本会话上下文）：%s（%s 字节）\n' "${LOG}" "$(wc -c < "${LOG}" | tr -d ' ')"
+  if [ -n "${FALLBACK_REASON}" ]; then
+    printf '收尾：兜底（%s）\n' "${FALLBACK_REASON}"
+  else
+    printf '收尾：收尾轮\n'
+  fi
   exit 124
 fi
 
@@ -298,9 +372,16 @@ fi
 
 ANSWER_BYTES="$(wc -c < "${ANSWER}" | tr -d ' ')"
 LOG_BYTES="$(wc -c < "${LOG}" | tr -d ' ')"
+RECORDED="$(python3 -B "${SCRIPT_DIR}/run_state.py" record "${TMP_ROOT}" "${RUN_ID}" "${LOG}" "${ANSWER}" \
+  "${REPO_ROOT}" "${WRITE_MODE}" "${MODEL}" "${EFFORT}" "${PARENT_RUN_ID}" "${RESUMABLE}")"
 cat "${ANSWER}"
 printf '\n---\n'
 printf '模型：%s / 推理档：%s\n' "${MODEL:-配置默认}" "${EFFORT:-配置默认}"
 printf '过程日志（未进入本会话上下文）：%s（%s 字节；最终答复 %s 字节）\n' "${LOG}" "${LOG_BYTES}" "${ANSWER_BYTES}"
-RESULT_LINE="$(python3 -B "${SCRIPT_DIR}/run_state.py" record "${TMP_ROOT}" "${RUN_ID}" "${LOG}" "${ANSWER}" \
-  "${REPO_ROOT}" "${WRITE_MODE}" "${MODEL}" "${EFFORT}" "${PARENT_RUN_ID}" "${RESUMABLE}")"
+RESULT_LINE="${RECORDED}"
+case "${RESULT_LINE}" in
+  *' status=timeout '*)
+    printf '收尾：主动停\n'
+    exit 124
+    ;;
+esac

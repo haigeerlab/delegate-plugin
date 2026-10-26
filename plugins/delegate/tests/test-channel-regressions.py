@@ -248,5 +248,39 @@ class ChannelRegressionTests(unittest.TestCase):
             self.assertIn(option, text)
         self.assertFalse(Path(self.env["STUB_CALL_LOG"]).exists(), "--help invoked codex")
 
+
+class RunCodexEpermTests(unittest.TestCase):
+    """macOS reports EPERM from killpg when only zombies remain in the group."""
+
+    @classmethod
+    def setUpClass(cls):
+        import importlib.util
+        path = PLUGIN_ROOT / "plugins/delegate/scripts/run_codex.py"
+        spec = importlib.util.spec_from_file_location("delegate_run_codex", path)
+        cls.module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(cls.module)
+
+    def test_stop_group_tolerates_eperm_and_reaps(self):
+        from unittest import mock
+        process = subprocess.Popen(["true"], start_new_session=True)
+        time.sleep(.2)
+        with mock.patch.object(self.module.os, "killpg", side_effect=PermissionError(1, "Operation not permitted")):
+            self.module.stop_group(process)
+        self.assertEqual(process.returncode, 0)
+
+    def test_main_keeps_exit_status_when_killpg_reports_eperm(self):
+        from unittest import mock
+        saved = sys.argv
+        handlers = {sig: signal.getsignal(sig) for sig in (signal.SIGTERM, signal.SIGINT, signal.SIGHUP)}
+        sys.argv = ["run_codex.py", "5", "sh", "-c", "exit 3"]
+        try:
+            with mock.patch.object(self.module.os, "killpg", side_effect=PermissionError(1, "Operation not permitted")):
+                status = self.module.main()
+        finally:
+            sys.argv = saved
+            for sig, handler in handlers.items():
+                signal.signal(sig, handler)
+        self.assertEqual(status, 3)
+
 if __name__ == "__main__":
     unittest.main()
