@@ -169,6 +169,14 @@ fi
 EPHEMERAL=(--ephemeral)
 # Never let a configured approver let a delegated run leave its sandbox.
 APPROVAL=(-c 'approval_policy="never"')
+# Write runs would make Codex persist project trust in the user's config.toml; trust it for this run only.
+TRUST=()
+if [ "${WRITE_MODE}" -eq 1 ]; then
+  TRUST_OVERRIDE="$(python3 -B "${SCRIPT_DIR}/codex_trust.py")"
+  if [ -n "${TRUST_OVERRIDE}" ]; then
+    TRUST=(-c "${TRUST_OVERRIDE}")
+  fi
+fi
 REPO_ROOT="$(git rev-parse --show-toplevel)" || exit 1
 PARENT_RUN_ID=''
 PROMPT="${PREAMBLE}
@@ -273,11 +281,11 @@ PROMPT="${PROMPT}
 $(printf '【时间预算】本次运行开始于 epoch 秒 %s，%s 秒后会被强制中止，中止时不保留未写出的答复。需要判断用时就运行 `date +%%s`。已用时达到 %s 秒后，不要再开始新的步骤，也不要启动预计会跨过期限的长命令，立即给出最终答复：第一行以 `TIME_UP:` 开头，后面写已完成的进度、做到一半的步骤（如有）、下一步应从哪里开始。' \
   "${T0}" "${MAIN_SECONDS}" "${THRESHOLD_SECONDS}")"
 CODEX_ARGS=(exec ${EXTRA[@]+"${EXTRA[@]}"} -c 'forced_login_method="chatgpt"' -c 'model_provider="openai"' \
-  ${APPROVAL[@]+"${APPROVAL[@]}"} ${EPHEMERAL[@]+"${EPHEMERAL[@]}"} --sandbox "${SANDBOX}" --color never -o "${ANSWER}" -- "${PROMPT}")
+  ${APPROVAL[@]+"${APPROVAL[@]}"} ${TRUST[@]+"${TRUST[@]}"} ${EPHEMERAL[@]+"${EPHEMERAL[@]}"} --sandbox "${SANDBOX}" --color never -o "${ANSWER}" -- "${PROMPT}")
 if [ "${RESUME_GIVEN}" -eq 1 ]; then
   # `exec resume` has no --sandbox or --color; the sandbox is set through config instead.
   CODEX_ARGS=(exec resume ${EXTRA[@]+"${EXTRA[@]}"} -c 'forced_login_method="chatgpt"' -c 'model_provider="openai"' \
-    ${APPROVAL[@]+"${APPROVAL[@]}"} -c "sandbox_mode=\"${SANDBOX}\"" -o "${ANSWER}" -- "${SESSION_ID}" "${PROMPT}")
+    ${APPROVAL[@]+"${APPROVAL[@]}"} ${TRUST[@]+"${TRUST[@]}"} -c "sandbox_mode=\"${SANDBOX}\"" -o "${ANSWER}" -- "${SESSION_ID}" "${PROMPT}")
   python3 -B "${SCRIPT_DIR}/run_state.py" claim "${TMP_ROOT}" "${RESUME_ID}" || exit 64
 fi
 

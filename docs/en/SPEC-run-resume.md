@@ -88,7 +88,7 @@ delegate: run_id=20261024183015.12345 status=done resumable=false
 /bin/bash "${CLAUDE_PLUGIN_ROOT}/scripts/delegate-exec.sh" run --resume <runId> [--write] -- "<user answer>"
 ```
 
-- Runs `codex exec resume`. The Codex sandbox can only be passed as `-c sandbox_mode="read-only|workspace-write"` (`resume` has no `--sandbox`). Model and effort come from the state file. `-c approval_policy="never"` is always passed as well (R1). Auth configuration, `-o`, stdin=/dev/null, process group and deadline match a plain run; `--ephemeral` is not passed.
+- Runs `codex exec resume`. The Codex sandbox can only be passed as `-c sandbox_mode="read-only|workspace-write"` (`resume` has no `--sandbox`). Model and effort come from the state file. `-c approval_policy="never"` is always passed as well (R1); write-mode resumes also get the project-trust override, see [write-trust](SPEC-write-trust.md). Auth configuration, `-o`, stdin=/dev/null, process group and deadline match a plain run; `--ephemeral` is not passed.
 - Text sent to Codex:
 
   > [User answer] <answer verbatim>

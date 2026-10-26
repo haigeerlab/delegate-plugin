@@ -212,6 +212,8 @@ Process logs and answers are stored in `${TMPDIR:-/tmp}/delegate/`, with directo
 
 Codex's sandbox and host configuration determine read and write permissions. `workspace-write` may also allow temporary directories and additional roots. Instructions against committing, pushing, publishing, or unrelated network access are behavioral rules, not a substitute for the OS sandbox or host permissions.
 
+**`--write` does not write Codex project trust.** The first time Codex enters a repository without a trust level under the `workspace-write` sandbox, it appends `[projects."<repository path>"] trust_level = "trusted"` to `~/.codex/config.toml` (or the `config.toml` in `CODEX_HOME` when set). To avoid that write, delegate reads that file (read-only) before every write-mode run, including resumable runs and resumes: when it has no entry for this repository, delegate passes `-c projects={"<repository path>"={trust_level="trusted"}}` so the repository is trusted for this run only and nothing is persisted; when an entry exists (including one you marked `untrusted`), no argument is added and your setting applies. The key is the Git repository root; inside a git worktree it is the main repository path. When the check is uncertain (the file cannot be read or is not UTF-8, the path contains a quote or backslash, or the repository layout is unusual), no argument is added and one line is printed on stderr; Codex may then still write a trust entry. Read-only runs and reviews get no argument. Trust entries left by earlier delegate versions are not removed; delete them by hand if you do not want them. See the [write-trust contract](docs/en/SPEC-write-trust.md).
+
 ## Updates and uninstalling
 
 ### Installation from a remote marketplace

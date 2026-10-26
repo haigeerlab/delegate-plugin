@@ -4,6 +4,18 @@
 
 Resumable delegation and the approval mode change after v0.5.3 are recorded in [v0.6.0 release notes](v0.6.0.md). Historical acceptance records retain their original version/status without retroactive approval.
 
+## Write mode no longer writes Codex project trust (write-trust)
+
+Contract: [docs/en/SPEC-write-trust.md](../SPEC-write-trust.md). The interface version and `interface.json` are unchanged.
+
+- **User configuration is left alone**: previously the first `--write` run in a repository made Codex append `[projects."<repository path>"] trust_level = "trusted"` to `~/.codex/config.toml`. delegate now reads that file (read-only) before every write-mode run, including resumable runs and resumes, and when it has no entry for this repository passes `-c projects={...}` so the repository is trusted for that run only, without persisting anything.
+- **Existing entries are kept**: when the user configuration already has an entry for this repository (including `untrusted`), no argument is added.
+- **Worktrees**: the trust key is the main repository path, matching Codex's own rule, so runs from a worktree subdirectory are covered.
+- **Uncertain checks fall back to the old behavior**: if the file cannot be read or is not UTF-8, the path contains a quote or backslash, or the repository layout is unusual, no argument is added, one line is printed on stderr, and the exit code is unchanged.
+- Trust entries left by earlier versions are not removed; read-only runs and reviews keep their arguments.
+
+Not yet verified: a full `--write` run while signed in (paid verification, awaiting authorization); `projects` entries in system, managed or project-level configuration; normalization of symlinked paths.
+
 ## Keep progress on run timeout (run-timeout, interface 1.2)
 
 Contract: [docs/en/SPEC-run-timeout.md](../SPEC-run-timeout.md).

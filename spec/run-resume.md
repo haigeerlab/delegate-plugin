@@ -1,6 +1,6 @@
 # 规格：run-resume（可续跑委托）
 
-<!-- spec-guard: review approved 7a023b6ee92a -->
+<!-- spec-guard: review approved e78ae2487595 -->
 
 简体中文 | [English](../docs/en/SPEC-run-resume.md)
 
@@ -90,7 +90,7 @@ delegate: run_id=20261024183015.12345 status=done resumable=false
 /bin/bash "${CLAUDE_PLUGIN_ROOT}/scripts/delegate-exec.sh" run --resume <runId> [--write] -- "<用户答复>"
 ```
 
-- 执行：`codex exec resume`。Codex 沙箱只能经 `-c sandbox_mode="read-only|workspace-write"` 传入（`resume` 不接受 `--sandbox`），模型和推理档沿用状态文件。同样固定 `-c approval_policy="never"`（R1）。认证配置、`-o`、stdin=/dev/null、进程组与期限同普通 run，不传 `--ephemeral`。
+- 执行：`codex exec resume`。Codex 沙箱只能经 `-c sandbox_mode="read-only|workspace-write"` 传入（`resume` 不接受 `--sandbox`），模型和推理档沿用状态文件。同样固定 `-c approval_policy="never"`（R1）；写模式续跑另加项目信任覆盖，见 [write-trust](write-trust.md)。认证配置、`-o`、stdin=/dev/null、进程组与期限同普通 run，不传 `--ephemeral`。
 - 发给 Codex 的内容：
 
   > 【用户答复】<答复原文>
