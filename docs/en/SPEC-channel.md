@@ -86,9 +86,9 @@ Basic checks locate the CLI through PATH and run `codex --version` and `codex lo
 - Remove `OPENAI_API_KEY` and `CODEX_API_KEY`; select CLI configuration `forced_login_method="chatgpt"` and `model_provider="openai"`.
 - Use `--ephemeral`, no color, stdin=/dev/null, and a preamble defining non-interactive work and behavioral scope.
 - `-o` writes the final answer; combined stdout/stderr goes to the process log.
-- Codex starts in a new process group. The execution deadline defaults to and is capped at 540 seconds. `DELEGATE_TIMEOUT_SECONDS` can shorten it; invalid or non-positive values fall back to the default. The deadline excludes preflight probes and subsequent verification.
+- Codex starts in a new process group. The execution deadline defaults to and is capped at 540 seconds. `DELEGATE_TIMEOUT_SECONDS` can shorten it; invalid or non-positive values fall back to the default. The deadline excludes preflight probes and subsequent verification. Since [run-timeout](SPEC-run-timeout.md), the Codex main run uses only M of these seconds; the rest is kept for the wrap-up round or the fallback.
 - On deadline or TERM/INT/HUP, send TERM to the process group, wait at most 2 seconds, then KILL remaining processes and reap the direct child. Normal exit also cleans up remaining processes in the group.
-- External Bash timeout=600000 milliseconds. Timeout exits 124; signals correspond to 143/130/129. Other execution failures retain their status; an empty answer exits 1.
+- External Bash timeout=600000 milliseconds. Timeout exits 124 (since run-timeout a timeout also prints the answer, metadata and result line; see that contract); signals correspond to 143/130/129. Other execution failures retain their status; an empty answer exits 1.
 - Descendants that leave the process group are outside the cleanup guarantee. Behavioral instructions are not OS permission isolation; temporary directories and additional roots allowed by the real sandbox depend on host configuration.
 
 ## Writes and output

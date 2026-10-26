@@ -8,7 +8,7 @@ Drafted 2026-10-24. Prompted by ecosystem proposal S32 (smooth multi-module para
 
 - **A1** New module `run-resume`, depending on channel and integration-interface. No existing clause in channel or integration-interface changes; each gets one pointer sentence to this module.
 - **A2** Resumable mode is opt-in: run gains `--resumable`. A run without it behaves byte-for-byte as today (prompt, `--ephemeral`, Codex arguments); the only addition is the A3 result line. (Since R2 a fixed approval option is also added; see the revision history.)
-- **A3** Every successfully returned run appends `delegate: run_id=<id> status=<done|needs-input> resumable=<true|false>` to stdout. `needs-input` still exits 0. Timeout, failure and empty answer keep their existing exit codes and print no such line.
+- **A3** Every successfully returned run appends `delegate: run_id=<id> status=<done|needs-input> resumable=<true|false>` to stdout. `needs-input` still exits 0. Timeout, failure and empty answer keep their existing exit codes and print no such line. (R3: a timeout now prints the line too, with status `timeout`; see [run-timeout](SPEC-run-timeout.md).)
 - **A4** Resume is `--resume <runId> [--write] -- "<user answer>"`. Only the latest round with status `needs-input` is accepted. It must run in the same repository root, `--write` must match the original run, and `--model` and `--effort` are not accepted (the original settings are reused). Each round gets a new runId. State files are pruned with the existing log retention. delegate never deletes Codex's own session files.
 - **A5** `needs-input` is detected only through the prompt-defined `NEED_USER:` marker, not `--output-schema`. A model that omits the marker is classified `done`; this is a known limitation.
 - **A6** `interface.json` moves to `1.1` and only adds the optional field `run.resume`. `review.command`, `doctor.command` and every other existing field stay unchanged; the major version is unchanged.
@@ -21,6 +21,7 @@ Drafted 2026-10-24. Prompted by ecosystem proposal S32 (smooth multi-module para
 - **R2 (2026-10-25; the user's words relayed by the delegate owner: "extend the approval_policy=\"never\" revision to every run, resume and review call path, and test whether the existing read-only paths get approved"; effective after review and approval in this session):** R1 extends to every delegate call that has Codex carry out work: plain run (read-only and write), resumable run, resume and the Codex review backend all pass `-c approval_policy="never"`. Probe-only calls that use no model (`codex --version`, `codex login status`, `codex features list`) are excluded. This replaces "plain runs are unchanged" in R1: plain runs gain only this option; prompt and other arguments are unchanged. One more paid check runs the published v0.5.3 read-only run and review under the local approval configuration to see whether they write a file; the delegate owner uses the result to judge the meaning of `readOnly: true` in the published interface.
   - Impact: in write-mode runs, commands that need to leave the sandbox (such as `git commit` inside a worktree, or network access) could previously be approved by the local approver and are now refused; consumers that need commits keep relying on prefix allow rules or commit on the caller side.
   - This module therefore changes one argument in `review_execution.py`, owned by claude-review, and adds one pointer sentence to `spec/claude-review.md` and its English page.
+- **R3 (2026-10-26; the user's words: "选方案 B：普通 run 保留 --ephemeral，只加时间预算和兜底；同意为此修订 run-resume 的 Always 规则。" — option B: plain runs keep `--ephemeral` and only gain the time budget and the fallback; I agree to revise run-resume's Always rule for this):** [run-timeout](SPEC-run-timeout.md) appends a time-budget paragraph to every run and resume prompt, prints the result line on timeout (`status=timeout`, exit 124), and lets `--resume` accept `timeout`. The Always rule "plain runs byte-for-byte unchanged" becomes "plain runs unchanged except for the time-budget paragraph"; A3, RR-01 and the `run not waiting for input` row are adjusted per run-timeout. Plain-run arguments (including `--ephemeral`) are unchanged.
 
 ## Tech stack and commands
 
@@ -105,7 +106,7 @@ delegate: run_id=20261024183015.12345 status=done resumable=false
 | `invalid run id` | runId does not match `^[0-9]{14}\.[0-9]+$` |
 | `run not found` | no state file (not `--resumable`, run failed, or pruned by retention) |
 | `run not resumable` | the state file has no session id |
-| `run not waiting for input` | status is not `needs-input` |
+| `run not waiting for input` | status is not `needs-input` (since R3 `timeout` is also accepted; see run-timeout) |
 | `run already resumed` | the runId has already been resumed |
 | `repository mismatch` | the current Git root differs from the state file |
 | `write mode mismatch` | `--write` differs from the original run |
@@ -177,13 +178,13 @@ Tests are written first and shown to fail before implementation. Stub tests prov
 
 ## Boundaries
 
-- **Always:** keep plain runs byte-for-byte unchanged, guarded by tests; keep Chinese and English contracts in sync; change `interface.json`, capability facts and tests together.
+- **Always:** keep plain runs unchanged except for the time-budget paragraph (R3), guarded by tests; keep Chinese and English contracts in sync; change `interface.json`, capability facts and tests together.
 - **Ask first:** making every run resumable by default; resuming timed-out or failed runs; structured answers through `--output-schema`; changing the 540-second deadline; the paid run, commits, pushes and releases.
 - **Never:** change `review.command` or `doctor.command`, or bump the major version; silently escalate to write on resume; let any call that has Codex carry out work inherit the user's configured approval mode (including approvals by an automatic review agent); answer a `needs-input` question for the user; read or delete Codex session files; write state files or session ids into the business repository.
 
 ## Success criteria and verification map
 
-- **RR-01:** Without `--resumable`, the prompt and other arguments are unchanged, the arguments gain only `approval_policy="never"` (R2), and output gains only the result line (stub tests).
+- **RR-01:** Without `--resumable`, the prompt and other arguments are unchanged, the arguments gain only `approval_policy="never"` (R2), and output gains only the result line (stub tests). Since R3 the prompt also ends with the time-budget paragraph; see run-timeout RT-02.
 - **RR-02:** `--resumable` omits `--ephemeral`, always passes `approval_policy="never"`, uses the prompt containing "first do the tasks not affected by pending decisions … stop only when", writes a 0600 state file and extracts the session id; without a session id it falls back to `resumable=false` (stub tests).
 - **RR-03:** `done` / `needs-input` follows the marker; `needs-input` exits 0 and the answer is printed in full (stub tests).
 - **RR-04:** Resume calls `codex exec resume` with the right sandbox, `approval_policy="never"`, model, effort, session id and answer, and produces a new runId with a `parent` chain (stub tests).

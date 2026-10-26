@@ -59,6 +59,7 @@ Placed at the plugin root, following agent-relay: a consumer finds the enabled d
 - Version rules: adding optional fields is a minor version (`1.x`); removing, renaming or changing the meaning of a field is a major version (`2.0`). Consumers check a major range such as `>=1.0,<2.0`.
 - If the file cannot be read or parsed, consumers should report "unknown", not "not installed". That is the consumer's probe rule; delegate only guarantees the file exists and is valid.
 - Since interface 1.1, `run` has the optional field `resume`, specified in [run-resume](SPEC-run-resume.md); the first version and the version rules on this page are unchanged.
+- Since interface 1.2, `"timeout"` is appended to `run.resume.statuses` and `run.timeout` is added, specified in [run-timeout](SPEC-run-timeout.md). `statuses` is an open set: a consumer meeting an unknown value must stop or treat it as failure, never as completion.
 
 ## Review report contract (`schemaVersion: 1`)
 

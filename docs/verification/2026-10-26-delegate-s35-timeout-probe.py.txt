@@ -1,0 +1,77 @@
+#!/usr/bin/env python3
+"""S35 probe driver: run real `codex exec` (or resume) like delegate does, stop it on a schedule.
+
+usage: probe.py <name> <outdir> <mode> <stop_after> <prompt_file> [session_id]
+  mode: term  -> SIGTERM to the group at stop_after, wait up to 15s, then SIGKILL (records how codex reacts)
+        kill  -> SIGKILL to the group at stop_after
+        runcodex -> go through delegate's own run_codex.py with timeout=stop_after (TERM, 2s, KILL)
+        none  -> no stop (stop_after is only a safety cap; SIGKILL when reached)
+  session_id given -> `codex exec resume <id> <prompt>` instead of a fresh exec
+"""
+import json, os, signal, subprocess, sys, time
+
+RUN_CODEX = '/Users/vilin/Documents/haigeerlab/delegate-plugin/.claude/worktrees/serene-spence-a9b059/plugins/delegate/scripts/run_codex.py'
+
+name, outdir, mode, stop_after, prompt_file = sys.argv[1:6]
+session = sys.argv[6] if len(sys.argv) > 6 else None
+stop_after = float(stop_after)
+prompt = open(prompt_file, encoding='utf-8').read()
+log = os.path.join(outdir, name + '.log')
+answer = os.path.join(outdir, name + '.answer')
+# PROBE_SANDBOX / PROBE_EFFORT mirror delegate's --write and --effort (resume keeps the original effort)
+sandbox = os.environ.get('PROBE_SANDBOX', 'read-only')
+effort = os.environ.get('PROBE_EFFORT')
+common = ['-c', 'forced_login_method="chatgpt"', '-c', 'model_provider="openai"', '-c', 'approval_policy="never"']
+if effort:
+    common = ['-c', 'model_reasoning_effort="%s"' % effort] + common
+if session:
+    args = ['codex', 'exec', 'resume'] + common + ['-c', 'sandbox_mode="%s"' % sandbox, '-o', answer, '--', session, prompt]
+else:
+    args = ['codex', 'exec'] + common + ['--sandbox', sandbox, '--color', 'never', '-o', answer, '--', prompt]
+cmd = ['env', '-u', 'OPENAI_API_KEY', '-u', 'CODEX_API_KEY', 'DELEGATE_REVIEW_DEPTH=1'] + args
+if mode == 'runcodex':
+    cmd = ['python3', '-B', RUN_CODEX, str(int(stop_after))] + cmd
+
+def safe_killpg(pid, sig):
+    try:
+        os.killpg(pid, sig)
+    except (ProcessLookupError, PermissionError):
+        pass
+
+
+rec = {'name': name, 'mode': mode, 'stopAfter': stop_after, 'resumeOf': session, 'start': time.time()}
+with open(log, 'wb') as out:
+    p = subprocess.Popen(cmd, stdin=subprocess.DEVNULL, stdout=out, stderr=subprocess.STDOUT, start_new_session=True)
+    try:
+        cap = stop_after + 30 if mode == 'runcodex' else stop_after
+        rec['rc'] = p.wait(timeout=cap)
+        rec['stopped'] = None
+    except subprocess.TimeoutExpired:
+        rec['signalAt'] = time.time() - rec['start']
+        if mode == 'term':
+            safe_killpg(p.pid, signal.SIGTERM)
+            rec['stopped'] = 'SIGTERM'
+            try:
+                rec['rc'] = p.wait(timeout=15)
+                rec['exitAfterSignal'] = time.time() - rec['start'] - rec['signalAt']
+            except subprocess.TimeoutExpired:
+                rec['stopped'] = 'SIGTERM->SIGKILL(15s)'
+                safe_killpg(p.pid, signal.SIGKILL)
+                rec['rc'] = p.wait()
+        else:
+            rec['stopped'] = 'SIGKILL'
+            safe_killpg(p.pid, signal.SIGKILL)
+            rec['rc'] = p.wait()
+    # anything left in the group (e.g. a sleep child) is cleaned so the next run is clean
+    try:
+        os.killpg(p.pid, signal.SIGKILL)
+        rec['leftoverKilled'] = True
+    except ProcessLookupError:
+        rec['leftoverKilled'] = False
+    except PermissionError:
+        rec['leftoverKilled'] = 'EPERM'
+rec['elapsed'] = time.time() - rec['start']
+rec['answerBytes'] = os.path.getsize(answer) if os.path.exists(answer) else None
+with open(os.path.join(outdir, name + '.json'), 'w') as f:
+    json.dump(rec, f, ensure_ascii=False, indent=1)
+print(json.dumps(rec, ensure_ascii=False))

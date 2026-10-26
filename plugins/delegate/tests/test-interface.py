@@ -76,14 +76,19 @@ class InterfaceTests(unittest.TestCase):
         self.assertIs(self.interface['review']['readOnly'], True)
 
     def test_resume_is_an_additive_minor_version(self):
-        self.assertEqual(self.interface['interface'], '1.1')
+        self.assertEqual(self.interface['interface'], '1.2')
         # spec-guard reads these two fields; they must never change within major version 1.
         self.assertEqual(self.interface['review']['command'], '/delegate:review')
         self.assertEqual(self.interface['doctor']['command'], '/delegate:doctor')
         self.assertEqual(self.interface['run']['resume'], {
             'optIn': '--resumable', 'option': '--resume',
             'backends': [name for name, value in delegate_capabilities.BACKENDS.items() if value['resume']],
-            'statuses': ['done', 'needs-input']})
+            'statuses': ['done', 'needs-input', 'timeout']})
+
+    def test_timeout_is_an_additive_minor_version(self):
+        # run-timeout: the timeout status always exits 124; statuses is an open set.
+        self.assertEqual(self.interface['run']['timeout'], {'status': 'timeout', 'exitCode': 124})
+        self.assertIn(self.interface['run']['timeout']['status'], self.interface['run']['resume']['statuses'])
 
     def test_report_schema_version(self):
         self.assertEqual(self.interface['review']['report']['schemaVersion'], self.report['schema_version'])

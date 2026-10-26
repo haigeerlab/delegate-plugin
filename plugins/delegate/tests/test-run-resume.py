@@ -188,7 +188,7 @@ class RunFlowTests(unittest.TestCase):
         self.assertEqual(call[:-1], ['exec', '-c', 'forced_login_method="chatgpt"', '-c', 'model_provider="openai"',
                                      '-c', 'approval_policy="never"', '--ephemeral', '--sandbox', 'read-only', '--color', 'never', '-o', answer, '--'])
         self.assertTrue(call[-1].startswith('【非交互委托】没有人能回答你的提问'))
-        self.assertTrue(call[-1].endswith('\n\n任务'))
+        self.assertIn('\n\n任务\n\n【时间预算】', call[-1])  # run-timeout appends the time budget
         self.assertIn('NEED_USER: 普通 run 不判定', output.stdout)
         self.assertFalse((self.logs / (run_id + '.state.json')).exists())
 
@@ -276,11 +276,13 @@ class RunFlowTests(unittest.TestCase):
         self.assertNotEqual(second, first)
         self.assertEqual((status, resumable), ('done', 'true'))
         call = self.exec_calls()[-1]
-        self.assertEqual(call, ['exec', 'resume', '-m', 'gpt-test', '-c', 'model_reasoning_effort="high"',
-                                '-c', 'forced_login_method="chatgpt"', '-c', 'model_provider="openai"',
-                                '-c', 'approval_policy="never"', '-c', 'sandbox_mode="read-only"', '-o', str(self.logs / (second + '.answer')),
-                                '--', SESSION, '【用户答复】选 A\n\n请按上次约定继续：先做不受待定决策影响的任务；'
-                                '还需要用户拍板时，最终答复第一行以 `NEED_USER:` 开头。'])
+        self.assertEqual(call[:-1], ['exec', 'resume', '-m', 'gpt-test', '-c', 'model_reasoning_effort="high"',
+                                     '-c', 'forced_login_method="chatgpt"', '-c', 'model_provider="openai"',
+                                     '-c', 'approval_policy="never"', '-c', 'sandbox_mode="read-only"', '-o', str(self.logs / (second + '.answer')),
+                                     '--', SESSION])
+        # run-timeout appends the time budget after the unchanged resume prompt.
+        self.assertTrue(call[-1].startswith('【用户答复】选 A\n\n请按上次约定继续：先做不受待定决策影响的任务；'
+                                            '还需要用户拍板时，最终答复第一行以 `NEED_USER:` 开头。\n\n【时间预算】'))
         self.assertNotIn('git 验收', output.stdout)
         state = self.state_of(second)
         self.assertEqual((state['parent'], state['sessionId'], state['model'], state['effort']),

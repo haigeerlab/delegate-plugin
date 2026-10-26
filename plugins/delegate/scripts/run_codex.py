@@ -20,6 +20,9 @@ def stop_group(process):
         os.killpg(process.pid, signal.SIGTERM)
     except ProcessLookupError:
         return
+    except PermissionError:
+        # macOS reports EPERM when only zombies remain in the group.
+        pass
     try:
         process.wait(timeout=2)
     except subprocess.TimeoutExpired:
@@ -27,7 +30,7 @@ def stop_group(process):
     # The parent may have exited while a descendant still holds this group.
     try:
         os.killpg(process.pid, signal.SIGKILL)
-    except ProcessLookupError:
+    except (ProcessLookupError, PermissionError):
         pass
     process.wait()
 
