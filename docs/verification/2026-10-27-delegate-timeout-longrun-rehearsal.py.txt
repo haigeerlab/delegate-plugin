@@ -1,0 +1,73 @@
+# 2026-10-27 delegate --timeout 长期限免费演练所用脚本原文（不作为当前可执行脚本）。
+# 第一部分：转接脚本 shim/codex（放在 PATH 最前面，把 wrapper 的 codex exec 改连本机假端点）。
+# #!/bin/bash
+# # Rehearsal shim: route the wrapper's codex call to a local fake endpoint.
+# if [ "$1 $2" = "login status" ]; then echo "Logged in using ChatGPT"; exit 0; fi
+# [ "$1" = exec ] || exec "$REAL_CODEX" "$@"
+# args=()
+# for a in "$@"; do
+#   [ "$a" = 'model_provider="openai"' ] && a='model_provider="fk"'
+#   args+=("$a")
+# done
+# head=(exec); rest=("${args[@]:1}")
+# if [ "${rest[0]}" = resume ]; then head+=(resume); rest=("${rest[@]:1}"); fi
+# exec "$REAL_CODEX" "${head[@]}" -c "model_providers.fk={name=\"fk\",base_url=\"http://127.0.0.1:${FAKE_PORT}/v1\",wire_api=\"responses\"}" -m fake-model "${rest[@]}"
+# 第二部分：rehearse.py。用法：python3 -B rehearse.py <仓库根> done|timeout <输出 JSON> <--timeout 秒数>
+"""Free rehearsal: real Codex CLI + delegate-exec.sh against a local fake Responses endpoint."""
+import importlib.util, json, os, subprocess, sys, tempfile, time, threading
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
+
+REPO = Path(sys.argv[1]); MODE = sys.argv[2]; OUT = Path(sys.argv[3])
+SHIM = Path(__file__).resolve().parent / 'shim'
+
+def handler(mode):
+    served = [0]; lock = threading.Lock()
+    class H(BaseHTTPRequestHandler):
+        def log_message(self, *a): pass
+        def ev(self, o):
+            self.wfile.write(("event: %s\ndata: %s\n\n" % (o["type"], json.dumps(o))).encode()); self.wfile.flush()
+        def do_POST(self):
+            body = self.rfile.read(int(self.headers.get("content-length", 0))).decode('utf-8', 'replace')
+            with lock:
+                i = served[0]; served[0] += 1
+            if '【收尾】' in body and body.rfind('【收尾】') > body.rfind('function_call_output'):
+                kind, val = 'answer', 'TIME_UP: 假收尾：sleep 未完成'
+            elif mode == 'done':
+                kind, val = ('call', 'sleep 25') if i < 24 else ('answer', 'DONE: 假任务完成')
+            else:
+                kind, val = 'call', 'sleep 1000'
+            self.send_response(200); self.send_header("content-type", "text/event-stream"); self.end_headers()
+            r = "resp_%d" % i
+            self.ev({"type": "response.created", "response": {"id": r}})
+            if kind == 'call':
+                item = {"type": "function_call", "id": "fc_%d" % i, "call_id": "call_%d" % i, "name": "exec_command",
+                        "arguments": json.dumps({"cmd": val, "yield_time_ms": 30000})}
+            else:
+                item = {"type": "message", "role": "assistant", "id": "msg_%d" % i,
+                        "content": [{"type": "output_text", "text": val}]}
+            self.ev({"type": "response.output_item.done", "item": item})
+            self.ev({"type": "response.completed", "response": {"id": r, "usage": {"input_tokens": 1,
+                     "input_tokens_details": {"cached_tokens": 0}, "output_tokens": 1,
+                     "output_tokens_details": {"reasoning_tokens": 0}, "total_tokens": 2}}})
+    return H
+
+server = ThreadingHTTPServer(("127.0.0.1", 0), handler(MODE))
+threading.Thread(target=server.serve_forever, daemon=True).start()
+home = tempfile.mkdtemp(prefix='delegate-rehearse-home-')
+work = tempfile.mkdtemp(prefix='delegate-rehearse-repo-')
+subprocess.run(['git', 'init', '-q'], cwd=work, check=True)
+real = subprocess.run(['/usr/bin/which', 'codex'], capture_output=True, text=True).stdout.strip()
+env = {k: v for k, v in os.environ.items() if k not in ('OPENAI_API_KEY', 'CODEX_API_KEY')}
+env.update(CODEX_HOME=home, FAKE_PORT=str(server.server_address[1]), REAL_CODEX=real, PATH=str(SHIM) + ':' + env['PATH'])
+timeout = sys.argv[4]
+args = ['/bin/bash', str(REPO / 'plugins/delegate/scripts/delegate-exec.sh'), 'run', '--resumable', '--timeout', timeout, '--', '假任务']
+t0 = time.monotonic()
+p = subprocess.run(args, cwd=work, env=env, stdin=subprocess.DEVNULL, capture_output=True, text=True)
+elapsed = time.monotonic() - t0
+time.sleep(2)
+ps = subprocess.run(['ps', '-axo', 'pid,ppid,command'], capture_output=True, text=True).stdout
+left = [l for l in ps.splitlines() if ('sleep 1000' in l or 'sleep 25' in l) and 'grep' not in l]
+OUT.write_text(json.dumps({'exit': p.returncode, 'elapsed': round(elapsed, 1), 'stdout': p.stdout, 'stderr': p.stderr,
+                           'leftover': left, 'requests': None}, ensure_ascii=False, indent=1), encoding='utf-8')
+server.shutdown()

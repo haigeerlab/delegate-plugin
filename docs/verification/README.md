@@ -140,3 +140,4 @@
 |---|---|---|
 | [S38 前置实测：`--json` 事件、续跑压缩、worktree 与长运行](2026-10-27-delegate-s38-probe.md) | 结果/记录 | [2026-10-27-delegate-s38-probe.py.txt](2026-10-27-delegate-s38-probe.py.txt)、[2026-10-27-delegate-s38-fake-responses.py.txt](2026-10-27-delegate-s38-fake-responses.py.txt)、[2026-10-27-delegate-s38-term-repro.sh.txt](2026-10-27-delegate-s38-term-repro.sh.txt) |
 | [接口 1.3 合并实测（RU-07）](2026-10-27-delegate-1.3-merged-live.md) | 结果/记录 | — |
+| [`--timeout` 超过 540 秒的真实运行（run-longrun 补测）](2026-10-27-delegate-timeout-longrun-live.md) | 结果/记录 | [2026-10-27-delegate-timeout-longrun-rehearsal.py.txt](2026-10-27-delegate-timeout-longrun-rehearsal.py.txt) |
