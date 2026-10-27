@@ -1,0 +1,31 @@
+#!/bin/bash
+# repro.sh <name> <TERM|INT|HUP> <probe|product> <sleep_seconds> [signal_at]
+R=/Users/vilin/delegate-s38-rootcause-20261027141314; O=$R/out/$1; mkdir -p $O
+SIG=$2; SL=$4; AT=${5:-15}; PORT=$((18800 + RANDOM % 100))
+# probe = patched copy of run_codex.py: faulthandler on SIGUSR1 + timestamped marks (see the record)
+case $3 in probe) RUNNER=$R/run_codex_probe.py ;; *) RUNNER=/Users/vilin/Documents/haigeerlab/delegate-plugin/.claude/worktrees/cool-einstein-2c2232/plugins/delegate/scripts/run_codex.py ;; esac
+FAKE_TOOL=exec_command FAKE_ARGS_TMPL='{"cmd":"__CMD__","yield_time_ms":30000}' python3 $R/fakeresp.py $PORT $O "${KIND:-call}:sleep $SL && echo slept" & SRV=$!
+sleep 1
+tree() { ps -axo pid,ppid,pgid,stat,command | awk -v r="$1" 'BEGIN{} {pid[$1]=$0; par[$1]=$2} END{ for (p in pid) { q=p; while (q!="" && q!=1 && q!=0) { if (q==r) { print substr(pid[p],1,150); break } q=par[q] } } }' | sort -n; }
+cd $R/repo
+python3 -B $RUNNER 700 env -u OPENAI_API_KEY -u CODEX_API_KEY codex exec ${EPH---ephemeral} \
+  -c "model_providers.fk={name=\"fk\",base_url=\"http://127.0.0.1:$PORT/v1\",wire_api=\"responses\"}" -c model_provider="fk" -m ${MODEL:-fake-model} \
+  -c approval_policy="never" --sandbox read-only --color never --json -o $O/answer -- go </dev/null > $O/events.jsonl 2> $O/stderr &
+P=$!
+for i in $(seq 1 120); do pgrep -qf "^sleep $SL$" && break; sleep 1; done; echo "sleep seen after ~${i}s of start"; sleep $AT
+echo "== tree before $SIG (runner $P)"; tree $P | tee $O/tree-before
+T0=$(python3 -c 'import time;print(time.time())'); echo "signal at $T0"; kill -$SIG $P
+EXITED=''
+for i in $(seq 1 40); do
+  sleep 1
+  if ! kill -0 $P 2>/dev/null; then wait $P; RC=$?; EXITED=$(python3 -c "import time;print(round(time.time()-$T0,1))"); break; fi
+  if [ $i -eq 8 ]; then echo "== still alive at 8s, tree:"; tree $P; kill -USR1 $P 2>/dev/null
+    for c in $(pgrep -f "127.0.0.1:$PORT/v1" ); do echo "== sample $c"; sample $c 1 -mayDie 2>/dev/null | grep -E 'Thread_|waitpid|wait4|kevent|select|read|futex|psynch' | head -15; done; fi
+done
+if [ -n "$EXITED" ]; then echo "runner exited rc=$RC after ${EXITED}s"; else echo "runner STILL ALIVE after 40s"; fi
+sleep 2; echo "== survivors from tree-before (pid ppid pgid stat cmd)"; for q in $(awk '{print $1}' $O/tree-before); do [ "$q" = "$P" ] && continue; ps -o pid=,ppid=,pgid=,stat=,command= -p $q 2>/dev/null | cut -c1-110; done
+echo "== leftovers (codex on port / sleep $SL)"; pgrep -fl "127.0.0.1:$PORT/v1" | cut -c1-120; pgrep -fl "^sleep $SL$" | cut -c1-120
+echo "== probe marks"; grep -a '\[probe' $O/stderr
+echo "== python stack (if dumped)"; grep -a -A12 'Thread 0x\|Current thread' $O/stderr | head -30
+pkill -KILL -f "127.0.0.1:$PORT/v1" 2>/dev/null; pkill -KILL -f "^sleep $SL$" 2>/dev/null; [ -z "$EXITED" ] && kill -KILL $P 2>/dev/null
+kill $SRV; echo "== events tail"; tail -3 $O/events.jsonl | cut -c1-200; echo "requests: $(ls $O/req-*.json 2>/dev/null | wc -l)"

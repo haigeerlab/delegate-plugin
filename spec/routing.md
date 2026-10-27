@@ -5,6 +5,8 @@
 
 取消每轮 UserPromptSubmit 自动路由提醒；Codex 基础可用缓存不代表宿主、委托意图或 Claude 可用。用户明确请求委托时，命令/skill 区分宿主与后端：默认 Codex，显式 Claude 仅固定范围只读审查；不自动选相反宿主、不混模型/参数、不 fallback，详情见 [claude-review](claude-review.md)。显式委托和写权限确认纪律保留，同一范围已有授权不重复确认。
 
+接口 1.3 起，写入授权有一个例外：满足 [run-check](run-check.md) 所列四个条件、并带 `--authorized-by <文件>` 时，视为本轮已授权；纪律写在插件的 `references/run.md`，`delegate-routing` skill 有一句指向。其余写入规则不变。
+
 当前合同：2026-10-13（路由提醒修复）；2026-10-08条款与样本保留历史适用范围。历史原文见 [归档索引](../docs/archive/pre-spec-guard/README.md)。当前 `tasks/routing/` 跟踪维护核对和本次修复，不追认历史验收，也不覆盖本规格。
 
 

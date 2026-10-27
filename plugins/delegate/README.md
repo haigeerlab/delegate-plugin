@@ -57,7 +57,33 @@ tests/                       离线桩测试与回归
 - 用户答复后：`/delegate:run --resume <runId> [--write] -- "<用户答复>"`。答复须是用户原话或其同意的转述；只续跑最近一轮 needs-input，同一仓库、写模式一致，沿用原模型与推理档；每轮新 runId。
 - 超时（`status=timeout`，退出 124）：提示词里有时间预算，模型应在到期前主动停下并写进度（答复首行 `TIME_UP:`）；被强制中止时再以只读沙箱续跑一轮只写进度的收尾，收尾也失败就输出不靠模型的兜底文字（会话 ID、可否续跑，写模式附改动文件）。超时后可用 `--resume` 续跑，由用户决定。
 - 普通 run（不带 `--resumable`）同样有时间预算和兜底，超时也是 `status=timeout`、退出 124，但会话不保留，不能续跑。
-- 已知限制：模型漏写标记会判为 done；失败的运行不能续跑；续跑状态随最近 50 组日志一起清理。
+- 已知限制：模型漏写标记会判为 done；失败的运行不能续跑。
+- **done 之后接着派下一个任务（接口 1.3 起）**：`/delegate:run --continue <runId> [--write] -- "<下一个任务>"`，只接 `--resumable` 起头的链上状态为 `done` 的一轮，在同一个 Codex 会话里接着做，不必重新起会话、重读项目。一个 runId 只能被接一次；任务须来自已批准的 Plan 或用户本人。
+- 链上的状态文件和结果文件保留 14 天，过程日志只保留最近 50 组。
+
+## 检查与事先写入授权
+
+- `/delegate:run --check "<命令>"`（接口 1.3 起）：运行以 `done` 结束后，由 delegate 在仓库根按参数列表执行检查命令（不经 shell，期限 600 秒），结果写进结果文件的 `check`，不改变运行本身的状态。命令里有 shell 运算符时拒绝，规则与 module-crew 相同。检查在沙箱外以你的权限执行，所以命令只能来自项目配置里你批过的检查命令。
+- `/delegate:run --write --authorized-by <文件>`（接口 1.3 起）：使用方（module-crew）把你打开外包开关时的原话记录成文件，在 Spec 和 Plan 已批、Task 在已批 Plan 内、同一模块同一 worktree 时，可以不必每个 Task 都等你点头。delegate 只记录文件的路径和 sha256，并要求整条链用同一个文件；它核实不了文件内容。
+
+## 规则片段
+
+`/delegate:run --rules-file <文件>`（接口 1.3 起）把本次委托专用的规则原样放进提示词（前言之后、任务之前，最多 16 KiB），冲突时以它为准，但沙箱、不提交不推送和首行标记不能被它改变。Codex 会自己读 worktree 根的 AGENTS.md，delegate 不读也不拼；项目长期规则写进 AGENTS.md，这个片段只放这一次委托专用的规则。
+
+## 长任务
+
+默认期限 540 秒。`/delegate:run --timeout <秒>` 可以放大到 541～7200 秒（接口 1.3 起），期限的分配、时间预算、收尾和退出码与默认期限相同。超过宿主前台命令的期限时（Claude Code 的 Bash 前台上限为 600 秒）必须用宿主的后台模式调用；delegate 不托管后台进程，要停下就停止那个后台任务，中止时会回收 Codex 起的全部后代进程。一次运行最多约 `T + 30` 秒结束。
+
+## 结果文件
+
+每次启动过 Codex 的 run 都写一份 JSON 结果文件 `${TMPDIR:-/tmp}/delegate/<runId>.result.json`（0600），供使用方机器读取，不用解析过程日志。
+
+- 有结果行时，结果行的前一行是 `delegate: result=<路径>`；失败、中断、未能回收（退出 125）、空答复时这一行在 stderr。
+- 内容：`status`、`exitCode`、`runId`／`parent`／`chainRoot`、会话 ID、Codex 跑过的命令与退出码、写模式改动的文件、`NEED_USER:`／`TIME_UP:`／`DONE:` 之后的原文、收尾方式、中止清理结果、耗时，以及 token。
+- token 来自 Codex 的 `turn.completed`，是**整个会话的累计值**：`usage.session` 是会话总量，`usage.run` 是本次用量（续跑时取与上一轮的差值）。整条链的总量就是最后一次的 `usage.session`，不要把各轮相加。
+- `--strict`：最终答复首行必须是 `DONE:`、`NEED_USER:`（仅可续跑）或 `TIME_UP:`。缺标记判 `status=unmarked`，退出 1，不能续跑。项目 AGENTS.md 若要求别的首行格式，可能挤掉标记，`--strict` 用来兜住这种情况。
+- 不读取 Codex 自己的会话文件，所以上下文占用、压缩和额度不在结果文件里。
+- 过程日志拆成两个文件：`<runId>.events.jsonl`（Codex 的 JSON 事件流）和 `<runId>.log`（stderr）。
 
 ## 对外接口
 
@@ -66,6 +92,11 @@ tests/                       离线桩测试与回归
 - **`interface.json`**：位于插件根目录。`interface` 是接口版本；`review.backends`、`run.backends` 是本版本**支持**的后端，不代表本机已安装、已登录或有额度，能否运行仍以 `/delegate:doctor` 为准。只增加可选字段升次版本，删除、改名或改变含义升主版本；使用方按主版本范围检查，如 `>=1.0,<2.0`。
 - **续跑（接口 1.1 起）**：`run.resume` 为 `{"optIn": "--resumable", "option": "--resume", "backends": ["codex"], "statuses": [...]}`。使用方按 `>=1.1,<2.0` 判断能否续跑；读到 1.0 或没有该字段时按原做法处理，不续跑。
 - **超时（接口 1.2 起）**：`run.resume.statuses` 为 `["done", "needs-input", "timeout"]`，另有 `run.timeout` 为 `{"status": "timeout", "exitCode": 124}`。使用方按 `>=1.2,<2.0` 才使用 `timeout`；读到 1.1 时超时仍是退出 124，按失败处理。
+- **结果文件（接口 1.3 起）**：`run.result` 为 `{"schemaVersion": 1, "line": "delegate: result=<path>", "strict": "--strict", "statuses": [...]}`，`run.usage` 说明 token 的累计口径。使用方按 `>=1.3,<2.0` 且字段存在时读取结果文件。
+- **接着派任务（接口 1.3 起）**：`run.continue` 为 `{"option": "--continue", "backends": ["codex"], "accepts": ["done"], "chain": "--resumable", "stateRetentionDays": 14}`。
+- **长任务（接口 1.3 起）**：`run.longRun` 为 `{"option": "--timeout", "minSeconds": 541, "maxSeconds": 7200, "defaultSeconds": 540, "background": "caller"}`，`background: "caller"` 表示后台由调用方负责。
+- **检查与写入授权（接口 1.3 起）**：`run.check` 为 `{"option": "--check", "shell": false, "when": "done", "timeoutSeconds": 600, "operators": [...], "match": "token-prefix-or-suffix"}`，运算符规则与 module-crew S30 一致；`run.writeAuthorization` 为 `{"option": "--authorized-by", "requires": "--write", "recorded": "result.authorization", "verifies": [...]}`。`run.write` 仍是 `"explicit"`。
+- **规则片段（接口 1.3 起）**：`run.rules` 为 `{"option": "--rules-file", "maxBytes": 16384, "placement": "after-preamble", "projectInstructions": "codex-reads-agents-md"}`。
 - **`statuses` 是开放集合**：以后的次版本可能追加新值。遇到不认识的值必须停下或当失败处理，不能当成完成；判断成功先看退出码为 0，再看 `status=done`。
 - **审查报告（`review.report.schemaVersion: 1`）**：`/delegate:review` 的标准输出是一份 JSON 报告（`--dry-run` 输出的是预览，不是报告）。标准错误中的私有副本路径不属于接口。稳定字段：
 

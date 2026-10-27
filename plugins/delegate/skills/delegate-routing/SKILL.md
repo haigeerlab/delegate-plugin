@@ -34,7 +34,7 @@ Claude Code→Codex和Codex→Claude Code按用户明确的目标选择后端，
 
 - 不要 `cat` 整个过程日志（等于把省下的上下文重新灌回来）；要证据就按路径 `sed -n` 取几行。
 - `--write` 回来无论成功或失败都必须看 git 验收块与真实 diff；失败不自动回滚，不能只信 Codex 的自述。
-- `--write` 必须用户在该轮明确要求，模型不得自行升级。
+- `--write` 必须用户在该轮明确要求，模型不得自行升级。唯一例外：`/delegate:run` 参考文件（`references/run.md`）里写入授权的四个条件全部满足、并带 `--authorized-by <文件>` 时，视为本轮已授权；任一条不满足就回到本条。
 
 调用 Bash 时，timeout 设为 `600000`。
 

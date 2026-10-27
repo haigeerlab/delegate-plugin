@@ -224,7 +224,8 @@ assert_status_and_stderr 127 "$?" "${STDERR_FILE}" '找不到 codex' '4：codex 
 # 5：exec 失败时，stderr 必须回显过程日志尾部与完整日志路径。
 CALL_LOG="${TEST_TMPDIR}/five.argv"
 STDERR_FILE="${TEST_TMPDIR}/five.stderr"
-STUB_CALL_LOG="${CALL_LOG}" STUB_VERSION_EXIT=0 STUB_EXIT=3 STUB_STDOUT_TEXT='可识别的过程文本' \
+# delegate runs Codex with --json, so the stub reports its process text as an error event.
+STUB_CALL_LOG="${CALL_LOG}" STUB_VERSION_EXIT=0 STUB_EXIT=3 STUB_STDOUT_TEXT='{"type":"error","message":"可识别的过程文本"}' \
   "${EXEC_SCRIPT}" '检查 exec 失败' >"${TEST_TMPDIR}/five.stdout" 2>"${STDERR_FILE}"
 STATUS=$?
 if [ "${STATUS}" -eq 3 ] && grep -F -- '可识别的过程文本' "${STDERR_FILE}" >/dev/null && grep -F -- '过程日志：' "${STDERR_FILE}" >/dev/null; then

@@ -1,0 +1,36 @@
+"""Fake Responses endpoint for probing: no model, no credentials.
+argv: port outdir script   script = comma list of replies per request: msg | call:<command>
+"""
+import json, sys, os, itertools
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+port, outdir, script = int(sys.argv[1]), sys.argv[2], sys.argv[3].split(',')
+counter = itertools.count()
+
+def sse(h, obj):
+    h.wfile.write(('event: %s\ndata: %s\n\n' % (obj['type'], json.dumps(obj))).encode()); h.wfile.flush()
+
+class H(BaseHTTPRequestHandler):
+    def log_message(self, *a): pass
+    def do_GET(self):
+        self.send_response(404); self.end_headers()
+    def do_POST(self):
+        body = self.rfile.read(int(self.headers.get('content-length', 0)))
+        n = next(counter)
+        open(os.path.join(outdir, 'req-%d.json' % n), 'wb').write(body)
+        step = script[min(n, len(script) - 1)]
+        self.send_response(200); self.send_header('content-type', 'text/event-stream'); self.end_headers()
+        rid = 'resp_%d' % n
+        sse(self, {'type': 'response.created', 'response': {'id': rid}})
+        if step.startswith('js:'):
+            js = 'text(await tools.exec_command({cmd:%s,yield_time_ms:30000}));\n' % json.dumps(step[3:])
+            item = {'type': 'custom_tool_call', 'id': 'ctc_%d' % n, 'call_id': 'call_%d' % n, 'name': 'exec', 'input': js, 'status': 'completed'}
+        elif step.startswith('call:'):
+            tool = os.environ.get('FAKE_TOOL', 'shell')
+            args = json.loads(os.environ.get('FAKE_ARGS_TMPL', '{}').replace('__CMD__', step[5:]))
+            item = {'type': 'function_call', 'id': 'fc_%d' % n, 'call_id': 'call_%d' % n, 'name': tool, 'arguments': json.dumps(args)}
+        else:
+            item = {'type': 'message', 'role': 'assistant', 'id': 'msg_%d' % n, 'content': [{'type': 'output_text', 'text': 'done-%d' % n}]}
+        sse(self, {'type': 'response.output_item.done', 'item': item})
+        sse(self, {'type': 'response.completed', 'response': {'id': rid, 'usage': {'input_tokens': 1, 'input_tokens_details': {'cached_tokens': 0}, 'output_tokens': 1, 'output_tokens_details': {'reasoning_tokens': 0}, 'total_tokens': 2}}})
+
+ThreadingHTTPServer(('127.0.0.1', port), H).serve_forever()

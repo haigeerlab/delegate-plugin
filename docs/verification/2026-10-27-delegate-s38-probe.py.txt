@@ -1,0 +1,79 @@
+#!/usr/bin/env python3
+"""S38 probe driver: run real `codex exec --json` (or `exec resume --json`) the way delegate does.
+
+usage: probe.py <name> <outdir> <mode> <cap_seconds> <prompt_file> [session_id]
+  mode: none     -> no stop; SIGKILL the group only if cap_seconds is reached (safety cap)
+        runcodex -> go through delegate's own run_codex.py with timeout=cap_seconds (TERM, 2s, KILL)
+  session_id given -> `codex exec resume <id> <prompt>` instead of a fresh exec
+env:
+  PROBE_CWD        working directory (temporary repo / worktree)
+  PROBE_EFFORT     mirrors delegate --effort (resume keeps the original effort)
+  PROBE_EPHEMERAL  1 -> add --ephemeral (fresh exec only)
+  PROBE_JSON       0 -> omit --json (default 1)
+  PROBE_TERM_AT    runcodex only: send SIGTERM to run_codex.py after this many seconds (host stop)
+Stdout (JSONL events) goes to <name>.jsonl, stderr to <name>.stderr, the -o answer to <name>.answer.
+"""
+import json, os, signal, subprocess, sys, time
+
+RUN_CODEX = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'plugins', 'delegate', 'scripts', 'run_codex.py')
+
+name, outdir, mode, cap, prompt_file = sys.argv[1:6]
+session = sys.argv[6] if len(sys.argv) > 6 else None
+cap = float(cap)
+prompt = open(prompt_file, encoding='utf-8').read()
+answer = os.path.join(outdir, name + '.answer')
+effort = os.environ.get('PROBE_EFFORT')
+common = ['-c', 'forced_login_method="chatgpt"', '-c', 'model_provider="openai"', '-c', 'approval_policy="never"']
+if effort:
+    common = ['-c', 'model_reasoning_effort="%s"' % effort] + common
+use_json = ['--json'] if os.environ.get('PROBE_JSON', '1') == '1' else []
+if session:
+    args = ['codex', 'exec', 'resume'] + common + ['-c', 'sandbox_mode="read-only"'] + use_json + ['-o', answer, '--', session, prompt]
+else:
+    eph = ['--ephemeral'] if os.environ.get('PROBE_EPHEMERAL') == '1' else []
+    args = ['codex', 'exec'] + common + eph + ['--sandbox', 'read-only', '--color', 'never'] + use_json + ['-o', answer, '--', prompt]
+cmd = ['env', '-u', 'OPENAI_API_KEY', '-u', 'CODEX_API_KEY', 'DELEGATE_REVIEW_DEPTH=1'] + args
+if mode == 'runcodex':
+    cmd = ['python3', '-B', os.path.realpath(RUN_CODEX), str(int(cap))] + cmd
+
+
+def safe_killpg(pid, sig):
+    try:
+        os.killpg(pid, sig)
+        return True
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return 'EPERM'
+
+
+term_at = os.environ.get('PROBE_TERM_AT')
+rec = {'name': name, 'mode': mode, 'cap': cap, 'resumeOf': session, 'cwd': os.environ.get('PROBE_CWD'),
+       'effort': effort, 'termAt': term_at, 'start': time.time()}
+with open(os.path.join(outdir, name + '.jsonl'), 'wb') as out, open(os.path.join(outdir, name + '.stderr'), 'wb') as err:
+    p = subprocess.Popen(cmd, stdin=subprocess.DEVNULL, stdout=out, stderr=err, start_new_session=True,
+                         cwd=os.environ.get('PROBE_CWD') or None)
+    rec['pid'] = p.pid
+    try:
+        if term_at:
+            # The host stops delegate: SIGTERM reaches run_codex.py only (not its child group).
+            try:
+                rec['rc'] = p.wait(timeout=float(term_at))
+            except subprocess.TimeoutExpired:
+                rec['signalAt'] = time.time() - rec['start']
+                p.send_signal(signal.SIGTERM)
+                rec['rc'] = p.wait(timeout=60)
+                rec['exitAfterSignal'] = time.time() - rec['start'] - rec['signalAt']
+        else:
+            rec['rc'] = p.wait(timeout=cap + 60 if mode == 'runcodex' else cap)
+    except subprocess.TimeoutExpired:
+        rec['safetyKill'] = time.time() - rec['start']
+        safe_killpg(p.pid, signal.SIGKILL)
+        rec['rc'] = p.wait()
+    # Report (do not hide) anything still alive in the runner's own group.
+    rec['runnerGroupLeft'] = safe_killpg(p.pid, 0)
+rec['elapsed'] = time.time() - rec['start']
+rec['answerBytes'] = os.path.getsize(answer) if os.path.exists(answer) else None
+with open(os.path.join(outdir, name + '.json'), 'w') as f:
+    json.dump(rec, f, ensure_ascii=False, indent=1)
+print(json.dumps(rec, ensure_ascii=False))

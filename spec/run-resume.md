@@ -1,6 +1,6 @@
 # 规格：run-resume（可续跑委托）
 
-<!-- spec-guard: review approved e78ae2487595 -->
+<!-- spec-guard: review approved 82d04d58852f -->
 
 简体中文 | [English](../docs/en/SPEC-run-resume.md)
 
@@ -24,6 +24,12 @@
   - 影响：写模式 run 里需要越出沙箱的命令（如在 worktree 里 `git commit`、网络访问）以前可能被本机审批方放行，现在直接被拒；需要提交的使用方继续依靠前缀放行规则，或由调用方代为提交。
   - 本模块因此改动 claude-review 管理的 `review_execution.py` 一行参数，并在 `spec/claude-review.md` 及其英文页加一句指向本条。
 - **R3（2026-10-26，用户原话：「选方案 B：普通 run 保留 --ephemeral，只加时间预算和兜底；同意为此修订 run-resume 的 Always 规则。」）：** [run-timeout](run-timeout.md) 给所有 run 与续跑的提示词末尾追加时间预算段，超时输出结果行（`status=timeout`，退出 124），`--resume` 也接受 `timeout`。Always 规则「普通 run 与改动前逐字节一致」改为「普通 run 除时间预算段外与改动前一致」；A3、RR-01 与拒绝表中 `run not waiting for input` 一行按 run-timeout 调整。普通 run 的参数（含 `--ephemeral`）不变。
+
+- **R4（2026-10-27，S38 接口 1.3；用户原话：「S38 接口方案：假设全部确认，五个决定点按推荐批准——done 后可续跑（只限 --resumable 链）；A7 只放开期限、用 --timeout 轻方案；写入授权按有条件折中；1.3 一次到齐必须五项，1.4 做回滚与并发额度，第 10 项暂缓；授权 delegate-owner 先做 T1～T5 付费实测再写 Spec。」）：** 只增，原有条款不改：
+  - A7「改 540 秒期限」由 [run-longrun](run-longrun.md) 取代：默认仍是 540 秒，只有显式 `--timeout` 能放大；「不做后台守护进程」保留。
+  - `done` 之后可用 `--continue` 接着跑（只限 `--resumable` 起头的链），见 [run-continue](run-continue.md)；`--resume` 的语义与拒绝表不变。「保留与清理」中状态文件、占位文件随日志一并删除的部分由 run-continue 取代，改为按 14 天保留。
+  - 会话 ID 改从 `--json` 事件流的 `thread.started` 取（不再读日志里的 `session id:` 行），状态文件新增 `chainRoot`、`strict`、`kind`、`usageTotal`、`authorization` 字段，见 [run-result](run-result.md)、[run-check](run-check.md)；读旧状态文件时缺这些字段按空值处理。
+  - Never 规则「读取或删除 Codex 会话文件」不变（S38 决定点 D1 选 A）。
 
 ## 技术栈与命令
 
