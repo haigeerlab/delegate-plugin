@@ -22,8 +22,13 @@
 | run-resume | 为 run 增加显式开启的可续跑模式：返回 runId 与结束状态 done/needs-input，并以 --resume 带用户答复续跑原 Codex 会话；接口升 1.1 只增字段 | channel, integration-interface |
 | run-timeout | run 超时保留进度：所有 run 加提示词时间预算，可续跑 run 被中止后再续跑一轮只读收尾，取不到进度时走不靠模型的兜底；结束状态新增 timeout（退出 124），可续跑 run 超时后可 --resume；修 killpg EPERM；接口升 1.2 只增字段 | channel, integration-interface, run-resume |
 | write-trust | --write 运行不再让 Codex 往用户 ~/.codex/config.toml 写项目信任：用户配置里没有本仓库信任条目时用 -c 内联表临时覆盖为 trusted，已有条目（含 untrusted）不动，读不准时不覆盖并提示 | channel, run-resume |
+| run-result | run 改用 --json 调 Codex，每次写 JSON 结果文件（状态、命令与退出码、改动文件、标记原文、本次与整链 token、耗时），加 --strict 缺首行标记判 unmarked；会话 ID 改从 thread_id 取；接口升 1.3 只增字段 | channel, run-timeout |
+| run-continue | --continue <runId> 在 done 之后接着派下一个 Task，只接受 --resumable 起头的链，沿用续跑的仓库、写模式、占位校验；链上状态与结果文件改按 14 天保留，不受 50 组日志清理挤掉 | run-resume, run-result |
+| run-longrun | --timeout <秒> 只放大期限（541～7200），调用方用宿主后台模式调用，delegate 不托管后台进程；主运行、收尾轮与阈值沿用 run-timeout 公式，中止清理沿用 0.7.1 的后代进程组回收 | run-timeout, run-result |
+| run-check | --check 在运行以 done 结束后按参数列表、不经 shell 执行使用方给的检查命令（运算符规则照抄 module-crew S30），结果写进结果文件；--authorized-by 记录事先写入授权的来源文件与 sha256，整链一致 | run-result |
+| run-rules | --rules-file 把本次委托专用的规则片段原样放在 delegate 前言之后，冲突时以片段为准（安全边界除外），路径与 sha256 写进结果文件；不读也不拼 AGENTS.md | run-result |
 
-Build order: channel → detection → routing → claude-review → integration-interface → run-resume → run-timeout → write-trust
+Build order: channel → detection → routing → claude-review → integration-interface → run-resume → run-timeout → write-trust → run-result → run-continue → run-longrun → run-check → run-rules
 
 channel 与 detection 共用 `backend.py`，该共享代码不是独立模块依赖。routing 按显式请求结合 detection 体检，授权后使用 channel；构建顺序保留既有实施顺序，不新增运行职责。
 
