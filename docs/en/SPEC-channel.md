@@ -9,6 +9,8 @@ Resumable mode (`--resumable`), the run result line and `--resume` are specified
 
 This page retains the Codex `codex-exec.sh` free-text contract. Public `delegate-exec.sh` defaults to that path; explicit backends, common read-only review and snapshot stdin are specified in [claude-review](SPEC-claude-review.md). Legacy adds recursive/known Claude-family rejection without changing existing read/write, ChatGPT auth, deadline or log semantics.
 
+**Revision S41 (2026-10-27, v0.7.1 patch):** S38 measurements showed that each shell command Codex runs starts in a new session and process group; when Codex is stopped it does not reap them, so they are adopted by init/launchd and keep running. Once, `run_codex.py` also failed to exit within 60 seconds of TERM. User's words (Chinese original): "Ship delegate 0.7.1 on its own first: only reap descendant process groups on abort, bound the final wait, report cleanup results truthfully, with fake-endpoint regression tests; 1.3 builds on top of it." This revision changes the cleanup clauses under "Invocation and lifecycle" and CH-03, and adds CH-06 and CH-07. Revision R1 (same day, after Task 15 aggregate validation) shortens the freeze to end once TERM is sent and runs the two grace periods in parallel, so that a `run_codex.py` killed from outside during the freeze cannot leave Codex stopped. The interface stays 1.2, no `--timeout` is added, the 540-second deadline is unchanged, and the result line and stdout are unchanged.
+
 Current contract: 2026-10-08. Earlier records are preserved in the [historical archive](../archive/pre-spec-guard/README.md). Current `tasks/channel/` tracks maintenance reconciliation only; it neither retroactively accepts historical work nor overrides this specification.
 
 
@@ -34,6 +36,7 @@ plugins/delegate/scripts/backend.py         → shared channel/detection authent
 plugins/delegate/scripts/run_codex.py       → process groups, deadlines, cleanup
 plugins/delegate/tests/test-channel.sh      → Shell stub assertions
 plugins/delegate/tests/test-channel-regressions.py → Python unittest lifecycle/Git regressions
+plugins/delegate/tests/test-reap-fake-endpoint.py → abort-reaping regression with real Codex against a local fake endpoint (skipped without codex)
 plugins/delegate/tests/test-backend.py      → shared authentication/configuration regressions
 spec/channel.md                            → current Chinese contract
 docs/en/SPEC-channel.md                    → current English contract
@@ -87,9 +90,17 @@ Basic checks locate the CLI through PATH and run `codex --version` and `codex lo
 - Use `--ephemeral`, no color, stdin=/dev/null, and a preamble defining non-interactive work and behavioral scope.
 - `-o` writes the final answer; combined stdout/stderr goes to the process log.
 - Codex starts in a new process group. The execution deadline defaults to and is capped at 540 seconds. `DELEGATE_TIMEOUT_SECONDS` can shorten it; invalid or non-positive values fall back to the default. The deadline excludes preflight probes and subsequent verification. Since [run-timeout](SPEC-run-timeout.md), the Codex main run uses only M of these seconds; the rest is kept for the wrap-up round or the fallback.
-- On deadline or TERM/INT/HUP, send TERM to the process group, wait at most 2 seconds, then KILL remaining processes and reap the direct child. Normal exit also cleans up remaining processes in the group.
-- External Bash timeout=600000 milliseconds. Timeout exits 124 (since run-timeout a timeout also prints the answer, metadata and result line; see that contract); signals correspond to 143/130/129. Other execution failures retain their status; an empty answer exits 1.
-- Descendants that leave the process group are outside the cleanup guarantee. Behavioral instructions are not OS permission isolation; temporary directories and additional roots allowed by the real sandbox depend on host configuration.
+- On deadline or TERM/INT/HUP (an abort), clean up in this order:
+  1. Send SIGSTOP to the Codex process group so it cannot start new commands;
+  2. Snapshot all Codex descendants and their process groups along the ppid chain (read `/proc` on Linux, otherwise POSIX `ps -A -o pid= -o ppid= -o pgid= -o stat=`), excluding the Codex group, the group of `run_codex.py` itself, and pgid≤1;
+  3. Send TERM to each descendant group, then immediately TERM and SIGCONT to the Codex group; the freeze lasts only until this step (revision R1);
+  4. Descendant groups and the Codex group share one grace period of at most 2 seconds; afterwards KILL any descendant group and the Codex group that remain;
+  5. Reap the direct child, waiting at most 5 seconds.
+  Normal exit also cleans up remaining processes in the group, but does not chase descendants that already left.
+- If the direct child cannot be reaped within the bound, `run_codex.py` prints `delegate: 执行进程未能回收，PID=<pid>` and exits 125; the wrapper treats this as an ordinary execution failure (no result line). When `codex-exec.sh` is interrupted it sends TERM to the execution process, waits at most 15 seconds, then KILLs it and waits at most 2 seconds. A forced stop reports `delegate: 执行进程超时未退出，已强制结束（PID=<pid>），其后代可能残留。`; if it still cannot be reaped it reports `delegate: 执行进程未能回收，PID=<pid>`. Both exit non-zero.
+- Cleanup results of an abort are written to `${TMPDIR:-/tmp}/delegate/<runId>.cleanup` and relayed to stderr by the wrapper: the descendants before the abort (`PID(group)`), `无残留` (none left) or `仍有残留，PID=…` (survivors), and the unreaped line above. Survivors after KILL are only reported and do not change the exit status. `.cleanup` follows the retention of its log.
+- External Bash timeout=600000 milliseconds. Timeout exits 124 (since run-timeout a timeout also prints the answer, metadata and result line; see that contract); signals correspond to 143/130/129; an unreaped execution process is 125. Other execution failures retain their status; an empty answer exits 1.
+- Descendants still alive under Codex at an abort, including commands that changed process group or session, are within the cleanup guarantee. Background processes left after Codex exits normally, processes adopted before the freeze, and PID reuse between snapshot and signal are outside it. Behavioral instructions are not OS permission isolation; temporary directories and additional roots allowed by the real sandbox depend on host configuration.
 
 ## Writes and output
 
@@ -105,10 +116,11 @@ Run these validation commands from the repository root:
 /bin/bash scripts/validate.sh
 /bin/bash plugins/delegate/tests/test-channel.sh
 python3 -B plugins/delegate/tests/test-channel-regressions.py
+python3 -B plugins/delegate/tests/test-reap-fake-endpoint.py
 python3 -B plugins/delegate/tests/test-backend.py
 ```
 
-The original 24 assertions cover options, stdin, stdout separation, sandbox arguments, log cleanup, ordinary timeout, and Git baseline. Regressions cover bounded exit when TERM is ignored, descendants stopping file writes, wrapper interruption, Git evidence after failure/empty answer/timeout, output limits for a 100KB single-line error, rejection of non-Git execution, and help without the CLI. Backend regressions cover authentication rejection, execution configuration, and cache.
+The original 24 assertions cover options, stdin, stdout separation, sandbox arguments, log cleanup, ordinary timeout, and Git baseline. Regressions cover bounded exit when TERM is ignored, descendants stopping file writes, wrapper interruption, Git evidence after failure/empty answer/timeout, output limits for a 100KB single-line error, rejection of non-Git execution, and help without the CLI. Backend regressions cover authentication rejection, execution configuration, and cache. S41 regressions: descendants in another session are reaped on deadline and on TERM/INT/HUP with a cleanup report; a wait that never returns ends boundedly with 125; the wrapper ends boundedly and reports truthfully when the execution process ignores TERM; real Codex against a local fake endpoint (no credentials, temporary `CODEX_HOME`) leaves nothing behind when aborted during a long `sleep`.
 
 Free tests use stubs and verify invocation arguments and process management, not real CLI sandbox or paid-model behavior. `test-channel.sh --live` consumes quota and is excluded from aggregate validation; see the [v0.4.0 verification record](releases/v0.4.0.md) for real runs. Changes to invocation shape must pass aggregate validation; behavior changes first need a regression reproducing the failure. Additional backends, flags, sandbox defaults, or non-Git support require separately defined scope.
 
@@ -118,7 +130,9 @@ The IDs below label existing contract clauses for the 2026-10-08 documentation r
 
 - **CH-01：** Option and readiness exits match the existing contract; help does not invoke the CLI, and unknown/API-key authentication is rejected without echoing credentials.
 - **CH-02：** Default read-only, authorized write arguments, ChatGPT/OpenAI configuration, and closed stdin are correct; stubs do not establish real sandbox permissions.
-- **CH-03：** Deadlines and signals follow the existing lifecycle contract, with same-group cleanup; descendants leaving the group are outside the guarantee.
+- **CH-03 (S41 revision)：** Deadlines and signals follow the lifecycle contract; on abort, Codex is frozen and its descendants snapshotted first, then same-group and regrouped/new-session descendants are reaped by process group. Processes left after Codex exits normally are outside the guarantee.
+- **CH-06 (S41)：** The direct child is awaited at most 5 seconds; if it cannot be reaped, its PID is reported and the exit is 125. The wrapper interruption path waits at most 15+2 seconds and reports truthfully, never hanging the host indefinitely.
+- **CH-07 (S41)：** On abort, the descendant list, whether any survived, and survivor PIDs are written to `.cleanup` and relayed to stderr; the result line, stdout and the state-file format are unchanged.
 - **CH-04：** After execution starts, success/failure/empty-answer/timeout paths provide Git baseline and change summaries, retain existing changes, and do not roll back.
 - **CH-05：** Answers and process logs remain separate, failure tails are bounded, and retention does not change execution status; permissions and symlinks follow the existing log contract.
 

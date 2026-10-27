@@ -169,7 +169,7 @@ Codex 0.162.1 将这四条源命令转换为 skill（0.162.1 是核对此转换�
 bash /path/to/delegate-plugin/plugins/delegate/scripts/codex-exec.sh --write "按已确认方案修复并测试"
 ```
 
-Claude 的 Bash 工具 timeout 设为 `600000` 毫秒。wrapper 的 Codex 执行期限默认和上限为 **540 秒**；`DELEGATE_TIMEOUT_SECONDS` 可设置更短的正整数，超过 540 会被截断，非法或非正值回落 540。认证探测每项最多 5 秒，进程组清理最多等待 2 秒后强制终止。执行期限不包括前置探测与后置 Git 检查；自行脱离进程组的进程不保证被回收。
+Claude 的 Bash 工具 timeout 设为 `600000` 毫秒。wrapper 的 Codex 执行期限默认和上限为 **540 秒**；`DELEGATE_TIMEOUT_SECONDS` 可设置更短的正整数，超过 540 会被截断，非法或非正值回落 540。认证探测每项最多 5 秒。中止（到期或 TERM/INT/HUP）时会先冻结 Codex，再回收它的全部后代进程组，包括换了进程组或会话的 shell 命令；每一步先 TERM、最多等 2 秒再强制终止，清理结果（后代清单、有无残留、残留 PID）输出到 stderr。执行期限不包括前置探测与后置 Git 检查；Codex 正常结束后自己留下的后台进程不保证被回收。
 
 ## 双后端只读审查（v0.5.0）
 
@@ -283,7 +283,7 @@ claude plugin marketplace remove delegate-marketplace
 | Codex 审查报 `codex_inline_input_limit` | 审查输入超过 1 MiB，不会截断或自动分批；用更小的 `--paths` 或加 `--exclude` 分次审查 |
 | 审查报告为 failed、inconclusive 或部分覆盖 | 查看报告列出的未审范围与原因（权限拒绝、达到轮次或预算上限、输出无效等）；这些都不算审查通过 |
 
-wrapper 退出状态：64=参数/非 Git 工作区；127=CLI/Python 基础条件失败；124=执行超时；129/130/143=HUP/INT/TERM 中断；空答复为 1，其他执行失败保留其非零状态。review 使用相同的 64/127/124/129/130/143 约定；正常完成退出 0，即使报告了问题也是 0。doctor 始终退出 0，按文字中的问题数量判断。
+wrapper 退出状态：64=参数/非 Git 工作区；127=CLI/Python 基础条件失败；124=执行超时；129/130/143=HUP/INT/TERM 中断；125=执行进程未能回收（会报告 PID）；空答复为 1，其他执行失败保留其非零状态。review 使用相同的 64/127/124/129/130/143 约定；正常完成退出 0，即使报告了问题也是 0。doctor 始终退出 0，按文字中的问题数量判断。
 
 doctor 会刷新临时缓存，不修改业务文件。它只做部分中文全局规则的启发式检查，不覆盖英文或全部项目级规则，也不验证远端连接、额度、模型权限或 token 是否仍有效。当前运行时诊断和 skill 指令以中文为主；双语文档不改变这些输出。
 
@@ -309,7 +309,7 @@ v0.5.0 不注册UserPromptSubmit，不按每轮输入自动提醒或探测。Ses
 /bin/bash scripts/validate.sh
 ```
 
-总入口包含语法、清单必填字段、判决器自检、3 个 shell 产品套、19 个循环注册的 Python 回归套，以及源码发现回归和隔离策略 policy-only 套。v0.7.0 发布验证为 247 项 Python、53 项 shell 和 19 项 eval；实际 OS、宿主与真实模型证据另列，不计作离线通过。免费总验证不发起模型请求；doctor 规则测试已自行配置 CLI 桩、合成登录状态和临时日志，不再依赖外层 Codex 的安装或登录。[F8 实际修复验证](docs/verification/2026-10-08-f8-applied.md)包含无外层 CLI 和外层拒绝登录的结果。
+总入口包含语法、清单必填字段、判决器自检、3 个 shell 产品套、20 个循环注册的 Python 回归套（其中 `reap-fake-endpoint` 在本机没有 codex 时跳过），以及源码发现回归和隔离策略 policy-only 套。v0.7.0 发布验证为 247 项 Python、53 项 shell 和 19 项 eval；实际 OS、宿主与真实模型证据另列，不计作离线通过。免费总验证不发起模型请求；doctor 规则测试已自行配置 CLI 桩、合成登录状态和临时日志，不再依赖外层 Codex 的安装或登录。[F8 实际修复验证](docs/verification/2026-10-08-f8-applied.md)包含无外层 CLI 和外层拒绝登录的结果。
 
 开发约定、单独测试入口、付费 live 验证和双语维护规则见 [贡献指南](CONTRIBUTING.md)。问题和建议统一通过 [GitHub Issues](https://github.com/haigeerlab/delegate-plugin/issues) 反馈，Bug 提交步骤见下节。
 

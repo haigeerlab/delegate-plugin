@@ -9,6 +9,8 @@
 
 本页保留 Codex `codex-exec.sh` 自由文本合同。公共 `delegate-exec.sh` 默认分派该路径；显式后端、共同只读审查及 stdin 快照输入由 [claude-review](claude-review.md) 管理。旧入口新增递归拒绝和已知 Claude 模型族拒绝，不改变既有 read/write、ChatGPT 认证、期限或日志含义。
 
+**修订 S41（2026-10-27，v0.7.1 补丁）：** S38 实测发现 Codex 执行的 shell 命令起在新会话、新进程组，Codex 被中止时不回收它们，命令会被 init/launchd 收养继续运行；另有一次 `run_codex.py` 收到 TERM 后 60 秒不退出。用户原话：「S41 先单独出 delegate 0.7.1：只修中止时回收后代进程组、最后的 wait 加上限、清理结果如实报告，用假端点做回归测试；1.3 在它之上做。」本次修订「调用与生命周期」的清理条款、CH-03，新增 CH-06、CH-07；修订 R1（同日，Task 15 总验证后）把冻结窗口缩到发完 TERM 为止，两段宽限期并行，避免 `run_codex.py` 在冻结期间被外部 KILL 时留下停止状态的 Codex；接口仍为 1.2，不加 `--timeout`，不改 540 秒期限，结果行与 stdout 不变。
+
 当前合同：2026-10-08。历史原文见 [归档索引](../docs/archive/pre-spec-guard/README.md)。当前 `tasks/channel/` 只跟踪维护核对，不追认历史验收，也不覆盖本规格。
 
 
@@ -34,6 +36,7 @@ plugins/delegate/scripts/backend.py         → channel/detection 共用基础�
 plugins/delegate/scripts/run_codex.py       → 进程组启动、期限与清理
 plugins/delegate/tests/test-channel.sh      → Shell 桩断言
 plugins/delegate/tests/test-channel-regressions.py → Python unittest 生命周期/Git 回归
+plugins/delegate/tests/test-reap-fake-endpoint.py → 真实 Codex 连本机假端点的中止回收回归（无 codex 时跳过）
 plugins/delegate/tests/test-backend.py      → 共用认证/执行配置回归
 spec/channel.md                            → 当前中文合同
 docs/en/SPEC-channel.md                    → 当前英文合同
@@ -87,9 +90,17 @@ bash /path/to/delegate-plugin/plugins/delegate/scripts/codex-exec.sh [--write] [
 - `--ephemeral`、无颜色、stdin=/dev/null，preamble 明确非交互任务与行为范围。
 - `-o` 写最终答复，合并 stdout/stderr 写过程日志。
 - Codex 开新进程组。期限默认/上限 540 秒；`DELEGATE_TIMEOUT_SECONDS` 可缩短，非法或非正值回落默认。期限不包括前置探测和后置验收。自 [run-timeout](run-timeout.md) 起，Codex 主运行只用其中的 M 秒，余下留给收尾轮或兜底。
-- 到期或 TERM/INT/HUP：TERM 进程组，最多等 2 秒，KILL 残余并回收直接子进程；正常退出也清理同组残余。
-- 外部 Bash timeout=600000。超时退出 124（自 run-timeout 起超时也输出答复、元数据与结果行，见该合同）；信号对应 143/130/129；其他执行失败保留状态，空答复退出 1。
-- 自行脱离进程组的后代不在清理保证中；行为指令不是 OS 权限隔离。真实沙箱允许的 tmp/额外根以宿主配置为准。
+- 到期或 TERM/INT/HUP（中止）时按顺序清理：
+  1. 对 Codex 进程组发 SIGSTOP，冻结后不再起新命令；
+  2. 沿 ppid 链快照 Codex 的全部后代及其进程组（Linux 读 `/proc`，否则用 POSIX `ps -A -o pid= -o ppid= -o pgid= -o stat=`），排除 Codex 自己的组、`run_codex.py` 自己的组和 pgid≤1；
+  3. 对每个后代组发 TERM，随即对 Codex 组发 TERM 和 SIGCONT，冻结只持续到这一步（修订 R1）；
+  4. 后代组与 Codex 组共用最多 2 秒的宽限期，到期后仍在的后代组和 Codex 组都 KILL；
+  5. 回收直接子进程，最多等 5 秒。
+  正常退出也清理同组残余，但不追查已脱离的后代。
+- 直接子进程在上限内回收不了时，`run_codex.py` 输出 `delegate: 执行进程未能回收，PID=<pid>` 并退出 125；wrapper 按普通执行失败处理（不输出结果行）。`codex-exec.sh` 被中断时对执行进程 TERM，最多等 15 秒，再 KILL 并最多等 2 秒；强制结束时报告 `delegate: 执行进程超时未退出，已强制结束（PID=<pid>），其后代可能残留。`，仍回收不了时报告 `delegate: 执行进程未能回收，PID=<pid>`，两者都以非零状态退出。
+- 中止时的清理结果写进 `${TMPDIR:-/tmp}/delegate/<runId>.cleanup`，并由 wrapper 转发到 stderr：中止前的后代清单（`PID(组)`）、`无残留` 或 `仍有残留，PID=…`，以及上一条的未能回收行。KILL 后仍有残留只报告，不改退出码。`.cleanup` 随所属日志一起按保留规则清理。
+- 外部 Bash timeout=600000。超时退出 124（自 run-timeout 起超时也输出答复、元数据与结果行，见该合同）；信号对应 143/130/129；执行进程未能回收为 125；其他执行失败保留状态，空答复退出 1。
+- 中止时 Codex 仍在世的后代（含换了进程组或会话的命令）在清理保证内；Codex 正常结束后留下的后台进程、冻结前已被收养的进程、快照与信号之间的 PID 复用不在保证中。行为指令不是 OS 权限隔离。真实沙箱允许的 tmp/额外根以宿主配置为准。
 
 ## 写入与输出
 
@@ -105,10 +116,11 @@ bash /path/to/delegate-plugin/plugins/delegate/scripts/codex-exec.sh [--write] [
 /bin/bash scripts/validate.sh
 /bin/bash plugins/delegate/tests/test-channel.sh
 python3 -B plugins/delegate/tests/test-channel-regressions.py
+python3 -B plugins/delegate/tests/test-reap-fake-endpoint.py
 python3 -B plugins/delegate/tests/test-backend.py
 ```
 
-原有 24 条断言验证参数、stdin、stdout 隔离、沙箱参数、日志清理、普通超时、Git 基线。回归验证忽略 TERM 的有界退出、后代不再写文件、wrapper 中断、失败/空答复/超时后的 Git 证据、100KB 单行错误的回显上限、非 Git 不执行、无 CLI 仍能 help。backend 回归验证认证拒绝、执行配置和缓存。
+原有 24 条断言验证参数、stdin、stdout 隔离、沙箱参数、日志清理、普通超时、Git 基线。回归验证忽略 TERM 的有界退出、后代不再写文件、wrapper 中断、失败/空答复/超时后的 Git 证据、100KB 单行错误的回显上限、非 Git 不执行、无 CLI 仍能 help。backend 回归验证认证拒绝、执行配置和缓存。S41 回归：换会话的后代在到期与 TERM/INT/HUP 时被回收并写出清理报告；`wait` 不返回时 125 有界退出；wrapper 的执行进程不响应 TERM 时有界退出并如实报告；真实 Codex 连本机假端点（不带凭据、临时 `CODEX_HOME`）执行长 `sleep` 时中止无残留。
 
 免费测试使用桩，只能验证调用参数与进程管理，不能证明真实 CLI 沙箱/付费模型行为。`test-channel.sh --live` 会消耗额度，不进入 validate；v0.4.0 的真实验证范围见 [验收记录](../docs/releases/v0.4.0.md)。改调用形态必须跑总验证，修改行为先用回归复现故障。新增后端、flag、沙箱默认或非 Git 支持需另定范围。
 
@@ -118,7 +130,9 @@ python3 -B plugins/delegate/tests/test-backend.py
 
 - **CH-01：** 参数与基础预检符合既有退出状态；help 不执行 CLI，未知/API key 登录拒绝且不回显凭据。
 - **CH-02：** 默认只读、写入按授权传参，ChatGPT/OpenAI 配置及关闭 stdin 正确；桩不能证明真实沙箱权限。
-- **CH-03：** 期限及信号遵循原生命周期合同，同组后代清理；脱离进程组的后代不在保证中。
+- **CH-03（S41 修订）：** 期限及信号遵循生命周期合同；中止时先冻结 Codex、快照后代，再按进程组回收同组和换组/换会话的后代，Codex 正常结束后留下的进程不在保证中。
+- **CH-06（S41）：** 直接子进程最多等 5 秒，回收不了时报告 PID 并退出 125；wrapper 中断路径最多等 15+2 秒并如实报告，不无限挂住宿主。
+- **CH-07（S41）：** 中止时的后代清单、是否残留与残留 PID 写入 `.cleanup` 并转发到 stderr；结果行、stdout 与状态文件格式不变。
 - **CH-04：** 执行开始后的成功/失败/空答复/超时输出 Git 基线及变更概览，保留既有修改，不自动回滚。
 - **CH-05：** 答复与过程日志隔离，日志尾部受限且保留策略不改变执行状态；权限、软链接按原日志合同。
 

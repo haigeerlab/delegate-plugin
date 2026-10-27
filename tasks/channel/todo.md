@@ -60,3 +60,22 @@ Task 9 结果：既有 --live 入口退出 0，25 通过/0 失败，真实只读
 
 - [x] Task 10：当前 Bash 决定及已安装斜杠命令验收。
   - 结果：当前用户批准以 ADR 记录，channel:7-A1 归为合同替代；原生 user-scope /delegate:delegate 实际解析，Bash timeout 600000，真实 read-only Codex 一次答复“批次验收通过”，18 字节 answer/5924 字节过程日志；夹具前后文件哈希相同。仅当前一次样本，历史批准仍未知。见[整批证据](../../docs/verification/2026-10-08-bulk.md)。
+
+## S41：中止时回收后代进程组（v0.7.1，2026-10-27）
+
+计划见 [plan.md](plan.md) 的 S41 一节。
+
+- [x] Task 11：回归测试先红（setsid 后代、有界 wait、wrapper finish、真实 Codex 连假端点）。
+  - 红灯（Checkpoint 7，report，2026-10-27，实现前）：`python3 -B plugins/delegate/tests/test-channel-regressions.py` 13 项中 6 项失败，旧 8 项仍绿。到期与 TERM/INT/HUP 四次都是「new-session descendant survived cleanup」；finish 测试 25 秒内不退出（「wrapper hung waiting for a runner that ignores TERM」）；有界 wait 测试返回 124 而非 125（原代码在最终 `wait()` 上等到子进程自然结束）。
+  - 更正：finish 用例第一次的红灯是测试自身的错误（`backend.py` 会 `from run_codex import stop_group`，替身脚本在导入时就挂住了）。改成只在作为主程序运行时才忽略 TERM 后，对 `origin/main` 的原版代码重跑（`--root` 指向 `git archive origin/main` 解出的副本）仍然是红灯，但原因是：原版 wrapper 约 4.6 秒就退出，把忽略 TERM 的执行进程留成孤儿，也没有报告。也就是说，原版 `finish` 的 `wait` 在这种情形下并不挂住。
+  - `python3 -B plugins/delegate/tests/test-reap-fake-endpoint.py`（真实 Codex 0.162.1，假端点，临时 `CODEX_HOME`）：到期、TERM、INT、HUP 四次都失败，`run_codex.py` 均及时退出，但 `/bin/zsh -lc … sleep 40` 与 `sleep 40` 残留。红灯残留已手工清掉；测试善后改为累计所有见到的 PID。
+- [x] Task 12：`run_codex.py` 回收后代、5 秒上限、125 与清理报告。
+- [x] Task 13：`codex-exec.sh` 转发 `.cleanup`、`finish` 有界、保留清理加后缀。
+  - 绿灯（2026-10-27）：`test-channel-regressions.py` 13 项全过（67.8 秒）；`test-reap-fake-endpoint.py` 2 项（含 4 个场景）全过（21.5 秒）；`test-run-timeout.py` 26 项、`test-run-resume.py` 20 项、`test-backend.py` 12 项全过；`test-channel.sh` 24 通过 / 0 失败（live 跳过）。之后没有残留的 `sleep`。
+- [x] Task 14：中英文文档同步。
+  - `DESIGN.md`、`docs/en/DESIGN.md`、`README.md`、`README.en.md`（清理描述、退出码 125、20 个回归套）、`plugins/delegate/commands/run.md`、`docs/releases/unreleased.md` 及英文页。旧的「脱离进程组不保证」说法只在 review 命令里还有（与本次无关）。
+- [x] Task 15：全量免费验证与配置指纹对照。
+  - 第一轮总验证失败 3 项：发现回归缺新套件登记；`test_timeout_ignoring_sigterm_is_bounded_and_returns_124` 外层 8 秒超时（原版代码单跑同样要 5.1–7.9 秒，预算本来就紧），并且在冻结窗口里被外层 KILL，留下一个停止状态（`Ts`）的假 codex 孤儿；finish 用例与两个信号子用例在负载下超时。
+  - 修订 R1：冻结只持续到发完 TERM，后代组与 Codex 的 2 秒宽限期并行；`finish` 改按 `$SECONDS` 真实秒数轮询；新信号用例的启动等待放宽到 20 秒；发现回归登记 `reap-fake-endpoint`。规格中英文与文档同步。R1 待用户在 Checkpoint 8 确认。
+  - 第二轮（2026-10-27）：`PYTHONDONTWRITEBYTECODE=1 /bin/bash scripts/validate.sh` 输出 `validate: ok`（7 分 37 秒，Python 回归合计 253 项，shell 套 7/12/24/19/10 全过）；`claude plugin validate .` 与 `claude plugin validate ./plugins/delegate` 都通过；`git diff --check` 无输出。`~/.codex/config.toml` 的 sha256 前后都是 `84bbafa4…5538`。测试后没有残留的 `sleep 40`、假 codex 或夹具进程。
+- Checkpoint 8（gate）：2026-10-27 用户在本会话回复「修订 R1 和 diff 审查通过。」
