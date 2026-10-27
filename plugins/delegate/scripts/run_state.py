@@ -24,6 +24,12 @@ WRAPUP_CAP = 45
 WRAPUP_DIVISOR = 6
 THRESHOLD_MARGIN = 90
 THRESHOLD_DIVISOR = 2
+# Retention: process logs keep the latest LOG_GROUPS runs; chain state outlives them by age (run-continue).
+LOG_GROUPS = 50
+LOG_SUFFIXES = ('.answer', '.wrapup', '.wrapup.answer', '.baseline', '.cleanup', '.events.jsonl',
+                '.wrapup.events.jsonl')
+STATE_SUFFIXES = ('.state.json', '.resumed', '.result.json')
+STATE_RETENTION_DAYS = 14
 
 
 def valid_run_id(value):
@@ -243,7 +249,35 @@ def claim_resume(directory, run_id):
     return True
 
 
-def check_resume(directory, run_id, repository, write):
+def cleanup(directory, now):
+    """Keep the latest LOG_GROUPS process logs and chain state younger than STATE_RETENTION_DAYS."""
+    try:
+        entries = list(os.scandir(directory))
+    except OSError:
+        return
+    logs = []
+    for entry in entries:
+        try:
+            if entry.name.endswith('.log'):
+                logs.append((entry.stat().st_mtime, entry.path))
+            elif entry.name.endswith(STATE_SUFFIXES) and entry.stat().st_mtime < now - STATE_RETENTION_DAYS * 86400:
+                os.unlink(entry.path)
+        except OSError:
+            continue
+    logs.sort(reverse=True)
+    for _, log in logs[LOG_GROUPS:]:
+        try:
+            os.unlink(log)
+        except OSError:
+            continue
+        for suffix in LOG_SUFFIXES:
+            try:
+                os.unlink(log[:-4] + suffix)
+            except OSError:
+                pass
+
+
+def check_resume(directory, run_id, repository, write, mode='resume'):
     if not valid_run_id(run_id):
         return 'invalid run id', None
     state = read_state(directory, run_id)
@@ -251,7 +285,9 @@ def check_resume(directory, run_id, repository, write):
         return 'run not found', None
     if not state.get('sessionId'):
         return 'run not resumable', None
-    if state.get('status') not in ('needs-input', 'timeout'):
+    if mode == 'continue' and state.get('status') != 'done':
+        return 'run not done', None
+    if mode != 'continue' and state.get('status') not in ('needs-input', 'timeout'):
         return 'run not waiting for input', None
     if os.path.lexists(_path(directory, run_id, '.resumed')):
         return 'run already resumed', None
@@ -263,7 +299,7 @@ def check_resume(directory, run_id, repository, write):
 
 
 def record(directory, run_id, log, answer, repository, write, model, effort, parent, resumable, forced=None,
-           events=None, strict=False, wrapup_events=None):
+           events=None, strict=False, wrapup_events=None, kind='run'):
     with open(answer, encoding='utf-8', errors='replace') as handle:
         status = forced or classify(handle.read(), resumable, strict)[0]
     if resumable:
@@ -276,7 +312,7 @@ def record(directory, run_id, log, answer, repository, write, model, effort, par
             write_state(directory, {'schema': 1, 'runId': run_id, 'sessionId': session,
                                     'repository': os.path.realpath(repository), 'write': write,
                                     'model': model, 'effort': effort, 'status': status, 'parent': parent or None,
-                                    'chainRoot': chain_root, 'strict': bool(strict),
+                                    'chainRoot': chain_root, 'strict': bool(strict), 'kind': kind,
                                     'usageTotal': session_usage(events, wrapup_events)})
         except OSError:
             print('delegate: 续跑状态写入失败，本次运行不能续跑。', file=sys.stderr)
@@ -293,7 +329,7 @@ def main(arguments):
     if command == 'usage-line' and len(arguments) == 5:
         print(usage_line(arguments[1], arguments[2] or None, arguments[3] or None, arguments[4] or None))
         return 0
-    while len(arguments) >= 2 and arguments[-2] in ('--events', '--strict', '--wrapup-events'):
+    while len(arguments) >= 2 and arguments[-2] in ('--events', '--strict', '--wrapup-events', '--kind'):
         options[arguments[-2][2:]] = arguments[-1]
         arguments = arguments[:-2]
     if command == 'record' and len(arguments) in (11, 12):
@@ -301,7 +337,7 @@ def main(arguments):
         forced = arguments[11] if len(arguments) == 12 else None
         print(record(directory, run_id, log, answer, repository, write == '1', model, effort, parent, resumable == '1',
                      forced or None, events=options.get('events') or None, strict=options.get('strict') == '1',
-                     wrapup_events=options.get('wrapup-events') or None))
+                     wrapup_events=options.get('wrapup-events') or None, kind=options.get('kind') or 'run'))
         return 0
     if command == 'session' and len(arguments) == 2:
         print(session_id_from_log(arguments[1]) or '')
@@ -319,8 +355,12 @@ def main(arguments):
             return 1
         print('\n'.join(changed_files(baseline, current)))
         return 0
-    if command == 'check' and len(arguments) == 5:
-        reason, state = check_resume(arguments[1], arguments[2], arguments[3], arguments[4] == '1')
+    if command == 'cleanup' and len(arguments) == 2:
+        cleanup(arguments[1], time.time())
+        return 0
+    if command == 'check' and len(arguments) in (5, 6):
+        mode = arguments[5] if len(arguments) == 6 else 'resume'
+        reason, state = check_resume(arguments[1], arguments[2], arguments[3], arguments[4] == '1', mode)
         if reason:
             print('delegate: ' + reason, file=sys.stderr)
             return 64

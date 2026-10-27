@@ -57,7 +57,9 @@ tests/                       Offline stub tests and regressions
 - After the user answers: `/delegate:run --resume <runId> [--write] -- "<user answer>"`. The answer must be the user's own words or a paraphrase they accepted. Only the latest needs-input round can be resumed, in the same repository with the same write mode; the original model and effort are reused, and each round gets a new runId.
 - Timeout (`status=timeout`, exit 124): the prompt carries a time budget, so the model should stop before the deadline and write its progress (first line `TIME_UP:`). If it is forcibly stopped, one more read-only round is resumed that only writes progress; if that also fails, a model-free fallback text is printed (session id, whether it can resume, and in write mode the changed files). A timed-out run can be continued with `--resume`, at the user's decision.
 - A plain run (without `--resumable`) gets the same time budget and fallback and also ends in `status=timeout` with exit 124, but its session is not kept and it cannot be resumed.
-- Known limits: a missing marker is classified as done; failed runs cannot be resumed; resume state is pruned together with the latest 50 logs.
+- Known limits: a missing marker is classified as done; failed runs cannot be resumed.
+- **Continue with the next task after done (since interface 1.3)**: `/delegate:run --continue <runId> [--write] -- "<next task>"` takes only a `done` round of a chain started with `--resumable` and carries on in the same Codex session, without starting a new session or rereading the project. A runId can be taken over only once; the task must come from an approved Plan or from the user.
+- Chain state and result files are kept for 14 days; process logs keep only the latest 50 groups.
 
 ## Result file
 
@@ -78,6 +80,7 @@ For other plugins to integrate by version without reading this plugin's internal
 - **Resume (since interface 1.1)**: `run.resume` is `{"optIn": "--resumable", "option": "--resume", "backends": ["codex"], "statuses": [...]}`. Consumers check `>=1.1,<2.0` before resuming; with 1.0 or without the field they behave as before and do not resume.
 - **Timeout (since interface 1.2)**: `run.resume.statuses` is `["done", "needs-input", "timeout"]`, and `run.timeout` is `{"status": "timeout", "exitCode": 124}`. Consumers use `timeout` only with `>=1.2,<2.0`; on 1.1 a timeout still exits 124 and is treated as failure.
 - **Result file (since interface 1.3)**: `run.result` is `{"schemaVersion": 1, "line": "delegate: result=<path>", "strict": "--strict", "statuses": [...]}`, and `run.usage` states how tokens are counted. Consumers read the result file with `>=1.3,<2.0` and the field present.
+- **Continue (since interface 1.3)**: `run.continue` is `{"option": "--continue", "backends": ["codex"], "accepts": ["done"], "chain": "--resumable", "stateRetentionDays": 14}`.
 - **`statuses` is an open set**: later minor versions may append values. A consumer meeting an unknown value must stop or treat it as failure, never as completion; decide success by exit code 0 first, then `status=done`.
 - **Review report (`review.report.schemaVersion: 1`)**: the standard output of `/delegate:review` is one JSON report (`--dry-run` prints a preview, not a report). The private copy path on standard error is not part of the interface. Stable fields:
 

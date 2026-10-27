@@ -311,7 +311,8 @@ class RunTimeoutFlowTests(unittest.TestCase):
         import os
         self.logs.mkdir(mode=0o700)
         old = ['20261001000000.%d' % index for index in range(55)]
-        suffixes = ('.log', '.answer', '.state.json', '.resumed', '.wrapup', '.wrapup.answer', '.baseline')
+        # .state.json and .resumed are pruned by age since run-continue, so only log-type files are listed.
+        suffixes = ('.log', '.answer', '.wrapup', '.wrapup.answer', '.baseline')
         for index, run_id in enumerate(old):
             for suffix in suffixes:
                 path = self.logs / (run_id + suffix)

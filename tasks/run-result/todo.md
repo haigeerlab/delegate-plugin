@@ -51,3 +51,5 @@
 - `claude plugin validate .`、`claude plugin validate ./plugins/delegate`：通过
 - `git diff --check`：通过；spec-guard `verify-artifacts`：4 通过 / 0 警告 / 0 失败
 - 本地提交两次（实测与 1.3 规格计划、run-result 实现），未推送
+
+**后续（2026-10-27）：** 用户选定方案 A（原话见 run-continue 的 plan.md 修订 R1）。`run.md` 里那句指向 README 的话改为指向新增的 `references/run.md`，结果文件与 `--strict` 的用法同时写进参考文件；随 run-continue 的第一次提交一并提交。

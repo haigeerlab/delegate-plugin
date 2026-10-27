@@ -57,7 +57,9 @@ tests/                       离线桩测试与回归
 - 用户答复后：`/delegate:run --resume <runId> [--write] -- "<用户答复>"`。答复须是用户原话或其同意的转述；只续跑最近一轮 needs-input，同一仓库、写模式一致，沿用原模型与推理档；每轮新 runId。
 - 超时（`status=timeout`，退出 124）：提示词里有时间预算，模型应在到期前主动停下并写进度（答复首行 `TIME_UP:`）；被强制中止时再以只读沙箱续跑一轮只写进度的收尾，收尾也失败就输出不靠模型的兜底文字（会话 ID、可否续跑，写模式附改动文件）。超时后可用 `--resume` 续跑，由用户决定。
 - 普通 run（不带 `--resumable`）同样有时间预算和兜底，超时也是 `status=timeout`、退出 124，但会话不保留，不能续跑。
-- 已知限制：模型漏写标记会判为 done；失败的运行不能续跑；续跑状态随最近 50 组日志一起清理。
+- 已知限制：模型漏写标记会判为 done；失败的运行不能续跑。
+- **done 之后接着派下一个任务（接口 1.3 起）**：`/delegate:run --continue <runId> [--write] -- "<下一个任务>"`，只接 `--resumable` 起头的链上状态为 `done` 的一轮，在同一个 Codex 会话里接着做，不必重新起会话、重读项目。一个 runId 只能被接一次；任务须来自已批准的 Plan 或用户本人。
+- 链上的状态文件和结果文件保留 14 天，过程日志只保留最近 50 组。
 
 ## 结果文件
 
@@ -78,6 +80,7 @@ tests/                       离线桩测试与回归
 - **续跑（接口 1.1 起）**：`run.resume` 为 `{"optIn": "--resumable", "option": "--resume", "backends": ["codex"], "statuses": [...]}`。使用方按 `>=1.1,<2.0` 判断能否续跑；读到 1.0 或没有该字段时按原做法处理，不续跑。
 - **超时（接口 1.2 起）**：`run.resume.statuses` 为 `["done", "needs-input", "timeout"]`，另有 `run.timeout` 为 `{"status": "timeout", "exitCode": 124}`。使用方按 `>=1.2,<2.0` 才使用 `timeout`；读到 1.1 时超时仍是退出 124，按失败处理。
 - **结果文件（接口 1.3 起）**：`run.result` 为 `{"schemaVersion": 1, "line": "delegate: result=<path>", "strict": "--strict", "statuses": [...]}`，`run.usage` 说明 token 的累计口径。使用方按 `>=1.3,<2.0` 且字段存在时读取结果文件。
+- **接着派任务（接口 1.3 起）**：`run.continue` 为 `{"option": "--continue", "backends": ["codex"], "accepts": ["done"], "chain": "--resumable", "stateRetentionDays": 14}`。
 - **`statuses` 是开放集合**：以后的次版本可能追加新值。遇到不认识的值必须停下或当失败处理，不能当成完成；判断成功先看退出码为 0，再看 `status=done`。
 - **审查报告（`review.report.schemaVersion: 1`）**：`/delegate:review` 的标准输出是一份 JSON 报告（`--dry-run` 输出的是预览，不是报告）。标准错误中的私有副本路径不属于接口。稳定字段：
 

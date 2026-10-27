@@ -213,7 +213,7 @@ class RunFlowTests(unittest.TestCase):
         self.assertEqual(state, {'schema': 1, 'runId': run_id, 'sessionId': SESSION,
                                  'repository': os.path.realpath(self.repo), 'write': False, 'model': '',
                                  'effort': '', 'status': 'needs-input', 'parent': None,
-                                 'chainRoot': run_id, 'strict': False, 'usageTotal': None})
+                                 'chainRoot': run_id, 'strict': False, 'kind': 'run', 'usageTotal': None})
         self.assertEqual(stat.S_IMODE((self.logs / (run_id + '.state.json')).stat().st_mode), 0o600)
 
     def test_resumable_run_done_records_model_and_effort(self):
@@ -252,20 +252,25 @@ class RunFlowTests(unittest.TestCase):
         self.assertEqual(output.returncode, 64)
         self.assertEqual(self.exec_calls(), [])
 
-    def test_retention_prunes_state_with_logs(self):
+    def test_retention_prunes_logs_but_keeps_recent_state(self):
+        # run-continue: logs keep the latest 50 groups; chain state is pruned by age, not with its logs.
         self.logs.mkdir(mode=0o700)
         old = ['20261001000000.%d' % index for index in range(55)]
         for index, run_id in enumerate(old):
             for suffix in ('.log', '.answer', '.state.json', '.resumed'):
                 path = self.logs / (run_id + suffix)
                 path.write_text('x', encoding='utf-8')
-                os.utime(path, (1000000 + index, 1000000 + index))
+                if suffix in ('.log', '.answer'):
+                    os.utime(path, (1000000 + index, 1000000 + index))
         self.result(self.run_delegate('--', '任务'))
         for run_id in old[:6]:
-            for suffix in ('.log', '.answer', '.state.json', '.resumed'):
+            for suffix in ('.log', '.answer'):
                 self.assertFalse((self.logs / (run_id + suffix)).exists(), run_id + suffix)
+        for run_id in old:
+            for suffix in ('.state.json', '.resumed'):
+                self.assertTrue((self.logs / (run_id + suffix)).exists(), run_id + suffix)
         for run_id in old[6:]:
-            for suffix in ('.log', '.answer', '.state.json', '.resumed'):
+            for suffix in ('.log', '.answer'):
                 self.assertTrue((self.logs / (run_id + suffix)).exists(), run_id + suffix)
 
     def waiting_run(self, *args, **env):

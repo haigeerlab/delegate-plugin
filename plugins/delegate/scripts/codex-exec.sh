@@ -10,6 +10,7 @@ fi
 usage() {
   printf '用法：%s [--write] [--model <slug>] [--effort <level>] [--resumable] [--strict] [--] <任务>\n' "${0}" >&2
   printf '      %s --resume <runId> [--write] [--strict] [--] <用户答复>\n' "${0}" >&2
+  printf '      %s --continue <runId> [--write] [--strict] [--] <下一个任务>\n' "${0}" >&2
 }
 
 TASK=''
@@ -23,6 +24,7 @@ RESUMABLE=0
 STRICT=0
 RESUME_ID=''
 RESUME_GIVEN=0
+CONTINUE_GIVEN=0
 
 while [ "$#" -gt 0 ]; do
   ARG="${1}"
@@ -51,10 +53,14 @@ while [ "$#" -gt 0 ]; do
         STRICT=1
         continue
         ;;
-      --resume)
+      --resume|--continue)
         if [ "$#" -eq 0 ] || [ "${RESUME_GIVEN}" -eq 1 ]; then
           usage
           exit 64
+        fi
+        # --continue reuses the resume path; only the accepted status and the prompt differ.
+        if [ "${ARG}" = '--continue' ]; then
+          CONTINUE_GIVEN=1
         fi
         RESUME_ID="${1}"
         RESUME_GIVEN=1
@@ -95,7 +101,7 @@ if [ "${TASK_COUNT}" -ne 1 ] || [ -z "${TASK}" ]; then
   exit 64
 fi
 if [ "${RESUME_GIVEN}" -eq 1 ] && { [ "${RESUMABLE}" -eq 1 ] || [ -n "${MODEL}" ] || [ -n "${EFFORT}" ]; }; then
-  printf 'delegate: --resume cannot be combined with --resumable, --model or --effort\n' >&2
+  printf 'delegate: --resume or --continue cannot be combined with --resumable, --model or --effort\n' >&2
   exit 64
 fi
 
@@ -112,8 +118,10 @@ if [ "${RESUME_GIVEN}" -eq 1 ]; then
     printf 'delegate: 当前目录不是 Git 工作区；请进入业务 Git 项目后重试。\n' >&2
     exit 64
   fi
+  CHECK_MODE='resume'
+  [ "${CONTINUE_GIVEN}" -eq 1 ] && CHECK_MODE='continue'
   RESUME_STATE="$(python3 -B "${SCRIPT_DIR}/run_state.py" check "${TMP_ROOT}" "${RESUME_ID}" \
-    "$(git rev-parse --show-toplevel)" "${WRITE_MODE}")" || exit "$?"
+    "$(git rev-parse --show-toplevel)" "${WRITE_MODE}" "${CHECK_MODE}")" || exit "$?"
   SESSION_ID="$(printf '%s\n' "${RESUME_STATE}" | sed -n 1p)"
   MODEL="$(printf '%s\n' "${RESUME_STATE}" | sed -n 2p)"
   EFFORT="$(printf '%s\n' "${RESUME_STATE}" | sed -n 3p)"
@@ -201,6 +209,11 @@ if [ "${RESUME_GIVEN}" -eq 1 ]; then
   PROMPT="【用户答复】${TASK}
 
 请按上次约定继续：先做不受待定决策影响的任务；还需要用户拍板时，最终答复第一行以 \`NEED_USER:\` 开头。"
+  if [ "${CONTINUE_GIVEN}" -eq 1 ]; then
+    PROMPT="【下一个任务】${TASK}
+
+上一个任务已经结束。请在本会话里接着做这个新任务，沿用之前的约定：先做不受待定决策影响的部分；需要用户拍板时，最终答复第一行以 \`NEED_USER:\` 开头。"
+  fi
 fi
 
 if [ -n "${MODEL}" ]; then
@@ -211,34 +224,7 @@ if [ -n "${EFFORT}" ]; then
 fi
 
 cleanup_process_logs() {
-  python3 - "${TMP_ROOT}" <<'PY' >/dev/null 2>&1
-import os
-import sys
-
-directory = sys.argv[1]
-try:
-    logs = []
-    for entry in os.scandir(directory):
-        if entry.name.endswith('.log'):
-            try:
-                logs.append((entry.stat().st_mtime, entry.path))
-            except OSError:
-                pass
-    logs.sort(reverse=True)
-    for _, log in logs[50:]:
-        try:
-            os.unlink(log)
-        except OSError:
-            continue
-        for suffix in ('.answer', '.state.json', '.resumed', '.wrapup', '.wrapup.answer', '.baseline', '.cleanup',
-                       '.events.jsonl', '.wrapup.events.jsonl', '.result.json'):
-            try:
-                os.unlink(log[:-4] + suffix)
-            except OSError:
-                pass
-except OSError:
-    pass
-PY
+  python3 -B "${SCRIPT_DIR}/run_state.py" cleanup "${TMP_ROOT}" >/dev/null 2>&1
 }
 
 RUNNER_PID=''
@@ -285,6 +271,15 @@ stop_runner() {
   fi
   return 1
 }
+run_kind() {
+  if [ "${CONTINUE_GIVEN}" -eq 1 ]; then
+    printf 'continue'
+  elif [ "${RESUME_GIVEN}" -eq 1 ]; then
+    printf 'resume'
+  else
+    printf 'run'
+  fi
+}
 write_result_file() {
   RESULT_RESUMABLE=0
   case "${RESULT_LINE}" in
@@ -300,10 +295,7 @@ write_result_file() {
       *) RESULT_STATUS='failed' ;;
     esac
   fi
-  RESULT_KIND='run'
-  if [ "${RESUME_GIVEN}" -eq 1 ]; then
-    RESULT_KIND='resume'
-  fi
+  RESULT_KIND="$(run_kind)"
   if RESULT_PATH="$(python3 -B "${SCRIPT_DIR}/run_state.py" result --directory "${TMP_ROOT}" --run-id "${RUN_ID}" \
     --kind "${RESULT_KIND}" --parent "${PARENT_RUN_ID}" --repository "${REPO_ROOT}" --status "${RESULT_STATUS}" \
     --exit-code "${EXIT_STATUS}" --started "${T0}" --answer "${ANSWER}" --events "${EVENTS}" --log "${LOG}" \
@@ -428,7 +420,7 @@ if [ "${CODEX_STATUS}" -eq 124 ]; then
   [ -n "${FALLBACK_REASON}" ] && WRAPUP_MODE='兜底'
   TIMEOUT_LINE="$(python3 -B "${SCRIPT_DIR}/run_state.py" record "${TMP_ROOT}" "${RUN_ID}" "${LOG}" "${ANSWER}" \
     "${REPO_ROOT}" "${WRITE_MODE}" "${MODEL}" "${EFFORT}" "${PARENT_RUN_ID}" "${RESUMABLE}" timeout --events "${EVENTS}" \
-    --strict "${STRICT}" --wrapup-events "${TMP_ROOT}/${RUN_ID}.wrapup.events.jsonl")"
+    --strict "${STRICT}" --kind "$(run_kind)" --wrapup-events "${TMP_ROOT}/${RUN_ID}.wrapup.events.jsonl")"
   if [ -n "${FALLBACK_REASON}" ]; then
     RESUMABLE_TEXT='否'
     case "${TIMEOUT_LINE}" in *' resumable=true') RESUMABLE_TEXT='是' ;; esac
@@ -480,7 +472,7 @@ ANSWER_BYTES="$(wc -c < "${ANSWER}" | tr -d ' ')"
 LOG_BYTES="$(wc -c < "${LOG}" | tr -d ' ')"
 RECORDED="$(python3 -B "${SCRIPT_DIR}/run_state.py" record "${TMP_ROOT}" "${RUN_ID}" "${LOG}" "${ANSWER}" \
   "${REPO_ROOT}" "${WRITE_MODE}" "${MODEL}" "${EFFORT}" "${PARENT_RUN_ID}" "${RESUMABLE}" --events "${EVENTS}" \
-  --strict "${STRICT}")"
+  --strict "${STRICT}" --kind "$(run_kind)")"
 cat "${ANSWER}"
 printf '\n---\n'
 printf '模型：%s / 推理档：%s\n' "${MODEL:-配置默认}" "${EFFORT:-配置默认}"

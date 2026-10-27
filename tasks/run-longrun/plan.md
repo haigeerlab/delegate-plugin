@@ -4,6 +4,8 @@
 
 日期：2026-10-27。规格：[spec/run-longrun.md](../../spec/run-longrun.md)（用户 2026-10-27 批准，指纹 68219af7cc21）。任务：[todo.md](todo.md)。前提：run-result、run-continue 已完成；0.7.1 的清理已在 main（`64d7ece`）。
 
+**修订 R1（2026-10-27，用户原话：「选 A：新增 plugins/delegate/references/run.md 放 1.3 用法和授权纪律，run.md 只加一句必须先读的指示；四个模块的文档任务按此修订，继续做。」）：** 命令说明渲染后不得超过 4000 字节（`test-command-migration.py`；超出时 Codex 跳过该 skill），`run.md` 已无余量。所以下文文档任务里「`run.md` 写……」的用法与纪律，一律改写进 `plugins/delegate/references/run.md`；`run.md` 只更新 frontmatter 的 argument-hint，并保留那一句「必须先读」的指示。对应成功条件里的命令说明部分，按写进参考文件验收。代码任务不变。
+
 ## 架构决定
 
 - **只改「T 从哪来」。** `codex-exec.sh` 目前把 `DELEGATE_TIMEOUT_SECONDS` 夹到不超过 540，得到 `T`。带 `--timeout` 时 `T` 直接取参数值；不带时一行不改。`run_state.py deadlines` 的公式不变，只放宽它接受的 `T` 上限（到 7200）。

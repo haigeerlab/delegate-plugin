@@ -6,6 +6,8 @@
 
 本模块是 1.3 的最后一个，所以本 Plan 还包含三件 1.3 的收尾工作：五个模块对旧合同的指向句汇总、1.3 付费合并实测（gate）和交付验收（gate）。
 
+**修订 R1（2026-10-27，用户原话：「选 A：新增 plugins/delegate/references/run.md 放 1.3 用法和授权纪律，run.md 只加一句必须先读的指示；四个模块的文档任务按此修订，继续做。」）：** 命令说明渲染后不得超过 4000 字节（`test-command-migration.py`；超出时 Codex 跳过该 skill），`run.md` 已无余量。所以下文文档任务里「`run.md` 写……」的用法与纪律，一律改写进 `plugins/delegate/references/run.md`；`run.md` 只更新 frontmatter 的 argument-hint，并保留那一句「必须先读」的指示。对应成功条件里的命令说明部分，按写进参考文件验收。代码任务不变。
+
 ## 架构决定
 
 - **规则段在 `codex-exec.sh` 里拼进提示词。** 文件校验（普通文件、不是软链接、UTF-8、非空、不超过 16 KiB、不含 NUL）放在 Python 里做，`codex-exec.sh` 只调用；原文原样放入，末尾缺换行时补一个。

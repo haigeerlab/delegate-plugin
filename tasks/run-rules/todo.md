@@ -13,3 +13,5 @@
 - [ ] Checkpoint 4（gate）：交付验收
 
 ## 记录
+
+**Plan 修订 R1（2026-10-27）：** 文档任务改写进 `plugins/delegate/references/run.md`，`run.md` 只改 argument-hint 与「必须先读」指示；用户原话见 plan.md。

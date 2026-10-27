@@ -2,9 +2,9 @@
 """Two explicit executors; capabilities are not model or authentication claims."""
 
 BACKENDS = {
-    'codex': {'review': True, 'run': True, 'write': True, 'resume': True, 'result': True,
+    'codex': {'review': True, 'run': True, 'write': True, 'resume': True, 'result': True, 'continue': True,
               'options': ('--model', '--effort')},
-    'claude-code': {'review': True, 'run': False, 'write': False, 'resume': False, 'result': False,
+    'claude-code': {'review': True, 'run': False, 'write': False, 'resume': False, 'result': False, 'continue': False,
                     'options': ('--model', '--max-turns', '--max-budget-usd')},
 }
 

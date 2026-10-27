@@ -4,6 +4,8 @@
 
 日期：2026-10-27。规格：[spec/run-check.md](../../spec/run-check.md)（用户 2026-10-27 批准，指纹 845bd3397b4f）。任务：[todo.md](todo.md)。前提：run-result、run-continue、run-longrun 已完成。
 
+**修订 R1（2026-10-27，用户原话：「选 A：新增 plugins/delegate/references/run.md 放 1.3 用法和授权纪律，run.md 只加一句必须先读的指示；四个模块的文档任务按此修订，继续做。」）：** 命令说明渲染后不得超过 4000 字节（`test-command-migration.py`；超出时 Codex 跳过该 skill），`run.md` 已无余量。所以下文文档任务里「`run.md` 写……」的用法与纪律，一律改写进 `plugins/delegate/references/run.md`；`run.md` 只更新 frontmatter 的 argument-hint，并保留那一句「必须先读」的指示。对应成功条件里的命令说明部分，按写进参考文件验收。代码任务不变。
+
 ## 架构决定
 
 - **新增 `run_check.py`，校验与执行放在一起。** 运算符常量与判定逐字照抄 module-crew `merge.py:24` 与 `_check_config`（POSIX `shlex.split`，按首尾匹配），注释写明来源和「要改先发 mc-coord」。三条拒绝文案作为常量，测试逐字比对 #11736 原文。

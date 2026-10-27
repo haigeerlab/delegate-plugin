@@ -14,6 +14,7 @@ HELP = '''用法：delegate-exec.sh [--backend codex|claude-code] [选项] [--] 
 共同选项：--model <slug> --review-context <JSON 文件>
 Codex：--write --effort none|minimal|low|medium|high|xhigh
       --resumable（可续跑）；--resume <runId> 带用户答复续跑
+      --continue <runId> 在 done 之后接着派下一个任务（只限 --resumable 起头的链）
       --strict（最终答复首行必须带结束标记，缺了判 unmarked）
 Claude Code：必须提供 --review-context；--max-turns <正整数>（默认 12）
              --max-budget-usd <正数>；不支持 --write 或 --effort。
@@ -33,7 +34,8 @@ class Parser(argparse.ArgumentParser):
 def parse(arguments):
     # Duplicate selectors are errors rather than a silent last-option override.
     options = arguments[:arguments.index('--')] if '--' in arguments else arguments
-    for flag in ('--backend', '--model', '--effort', '--review-context', '--max-turns', '--max-budget-usd', '--resume'):
+    for flag in ('--backend', '--model', '--effort', '--review-context', '--max-turns', '--max-budget-usd', '--resume',
+                 '--continue'):
         if sum(a == flag or a.startswith(flag + '=') for a in options) > 1:
             raise ArgumentError('duplicate option: ' + flag)
     parser = Parser(add_help=False, allow_abbrev=False)
@@ -44,6 +46,7 @@ def parse(arguments):
     parser.add_argument('--resumable', action='store_true')
     parser.add_argument('--strict', action='store_true')
     parser.add_argument('--resume')
+    parser.add_argument('--continue', dest='continue_from')
     parser.add_argument('--review-context')
     parser.add_argument('--max-turns')
     parser.add_argument('--max-budget-usd')
@@ -56,8 +59,11 @@ def parse(arguments):
             raise ArgumentError(result.backend + ' does not support ' + flag)
     if result.write and not BACKENDS[result.backend]['write']:
         raise ArgumentError(result.backend + ' does not support --write')
-    if (result.resumable or result.resume is not None) and not BACKENDS[result.backend]['resume']:
-        raise ArgumentError(result.backend + ' does not support --resumable or --resume')
+    if (result.resumable or result.resume is not None or result.continue_from is not None) and not BACKENDS[result.backend]['resume']:
+        raise ArgumentError(result.backend + ' does not support --resumable, --resume or --continue')
+    if result.continue_from is not None and (result.resumable or result.resume is not None or result.model is not None
+                                             or result.effort is not None or result.review_context is not None):
+        raise ArgumentError('--continue cannot be combined with --resumable, --resume, --model, --effort or --review-context')
     if result.resume is not None and (result.resumable or result.model is not None or result.effort is not None
                                       or result.review_context is not None):
         raise ArgumentError('--resume cannot be combined with --resumable, --model, --effort or --review-context')
@@ -122,6 +128,8 @@ def main(arguments=None, *, review_context=None):
             forwarded.append('--strict')
         if args.resume is not None:
             forwarded.extend(('--resume', args.resume))
+        if args.continue_from is not None:
+            forwarded.extend(('--continue', args.continue_from))
         for flag, value in (('--model', args.model), ('--effort', args.effort)):
             if value is not None:
                 forwarded.extend((flag, value))

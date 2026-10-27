@@ -101,6 +101,15 @@ class InterfaceTests(unittest.TestCase):
         self.assertTrue(delegate_capabilities.BACKENDS['codex']['result'])
         self.assertFalse(delegate_capabilities.BACKENDS['claude-code']['result'])
 
+    def test_continue_is_additive(self):
+        # run-continue (interface 1.3): only done rounds of a --resumable chain; accepts is an open set.
+        self.assertEqual(self.interface['run']['continue'], {
+            'option': '--continue', 'backends': [name for name, value in delegate_capabilities.BACKENDS.items()
+                                                 if value['continue']],
+            'accepts': ['done'], 'chain': '--resumable', 'stateRetentionDays': 14})
+        import run_state
+        self.assertEqual(self.interface['run']['continue']['stateRetentionDays'], run_state.STATE_RETENTION_DAYS)
+
     def test_report_schema_version(self):
         self.assertEqual(self.interface['review']['report']['schemaVersion'], self.report['schema_version'])
 
