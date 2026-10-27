@@ -162,7 +162,7 @@ def main(arguments=None):
             return backend.main(options)
         return review(options)
     except backend.ArgumentError as error:
-        print('delegate: ' + str(error), file=sys.stderr)
+        print(backend.argument_message(error), file=sys.stderr)
         return 64
 
 

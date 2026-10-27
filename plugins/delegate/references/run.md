@@ -29,3 +29,20 @@
   1. `--timeout` 超过宿主前台命令的期限时（Claude Code 的 Bash 前台上限为 600 秒），必须用宿主的后台模式调用，并等宿主的完成通知，不要轮询。
   2. delegate 不提供后台启动、查询、取消；要停下一次运行，就停止那个宿主后台任务，delegate 按收到信号处理（退出 143／130／129），并回收 Codex 起的全部后代进程。
   3. 一次运行最多约 `T + 30` 秒才结束（中止清理与收尾的余量），给后台任务的等待上限不要小于这个数。
+
+## `--check`：做完后跑检查
+
+- `--check "<命令>"` 在运行以 `done` 结束后，由 delegate 在仓库根按参数列表执行（不经 shell，stdin 为空，期限 600 秒），结果写进结果文件的 `check`（`passed`、`failed`、`timeout`、`cannot-run`、`unreaped`、`skipped`），元数据里有一行「检查：…」。其他状态不执行，记为 `skipped`。检查结果不改变运行本身的状态和退出码，要看 `check.status` 自己判断。
+- 命令按 module-crew S30 的规则校验：先 POSIX `shlex.split`，任何 token 以 `&&`、`||`、`;`、`|`、`>`、`<`、`` ` ``、`$(` 开头或结尾就拒绝（退出 64，不启动 Codex），拒绝文案与 module-crew 一字不差。要组合多步，写进项目脚本，或写成 `/bin/sh -c '<原命令>'`。
+- **纪律：检查命令在沙箱外以用户的权限执行，只能取自项目配置里用户批过的 checkCommand 或 quickCheckCommand，不能由 Codex、调用方模型或模块会话临时拼写。** delegate 无法核实来源。
+
+## `--authorized-by`：事先给好的写入授权
+
+- 写法：`run --write --authorized-by <文件> …`，可用于 `--write` 的普通 run、`--resumable`、`--resume`、`--continue`。没有 `--write` 时拒绝；文件须是普通文件、不是软链接、可读、非空、不超过 64 KiB，否则 `authorization file not usable`。
+- delegate 只记录文件的路径、sha256、大小（结果文件的 `authorization`，元数据「写入授权：…」），不读也不解释内容。一条链上一旦记录了授权文件，后面每一轮的 `--write` 都必须给同一个文件（sha256 相同），缺了或不同就拒绝 `authorization mismatch`。写模式没带它时记为「当轮」授权。
+- **纪律：只有下面四条同时满足，才可以不等用户在当轮开口，就带 `--write --authorized-by <文件>`：**
+  1. 用户打开外包开关时的原话，已经由使用方（module-crew）记录成这个文件；
+  2. 这个模块的 Spec 和 Plan 已批准，派出的 Task 在已批 Plan 之内；
+  3. 同一个模块、同一个 worktree；
+  4. 授权来源由 delegate 写进每次的结果（`authorization` 字段），调用方不得删除或改写。
+- 任何一条不满足，就回到原规则：只有用户当轮明确要求才加 `--write`。delegate 只能核对第 3 条的仓库部分与文件是否一致，其余由调用方负责；这是命令指令层面的纪律，不是技术锁。

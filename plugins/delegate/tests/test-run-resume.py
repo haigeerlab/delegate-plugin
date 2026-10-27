@@ -213,7 +213,8 @@ class RunFlowTests(unittest.TestCase):
         self.assertEqual(state, {'schema': 1, 'runId': run_id, 'sessionId': SESSION,
                                  'repository': os.path.realpath(self.repo), 'write': False, 'model': '',
                                  'effort': '', 'status': 'needs-input', 'parent': None,
-                                 'chainRoot': run_id, 'strict': False, 'kind': 'run', 'usageTotal': None})
+                                 'chainRoot': run_id, 'strict': False, 'kind': 'run', 'authorization': None,
+                                 'usageTotal': None})
         self.assertEqual(stat.S_IMODE((self.logs / (run_id + '.state.json')).stat().st_mode), 0o600)
 
     def test_resumable_run_done_records_model_and_effort(self):

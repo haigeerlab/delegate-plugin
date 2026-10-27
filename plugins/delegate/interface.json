@@ -17,7 +17,11 @@
     "continue": {"option": "--continue", "backends": ["codex"], "accepts": ["done"], "chain": "--resumable",
                  "stateRetentionDays": 14},
     "longRun": {"option": "--timeout", "minSeconds": 541, "maxSeconds": 7200, "defaultSeconds": 540,
-                "background": "caller"}
+                "background": "caller"},
+    "check": {"option": "--check", "shell": false, "when": "done", "timeoutSeconds": 600,
+              "operators": ["&&", "||", ";", "|", ">", "<", "`", "$("], "match": "token-prefix-or-suffix"},
+    "writeAuthorization": {"option": "--authorized-by", "requires": "--write", "recorded": "result.authorization",
+                           "verifies": ["file-sha256-across-chain", "repository"]}
   },
   "doctor": {"command": "/delegate:doctor"}
 }

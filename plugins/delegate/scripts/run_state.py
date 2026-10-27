@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """Private state for resumable Codex runs; Codex session files are never read or removed."""
 import argparse
+import hashlib
 import json
 import os
 from pathlib import Path
 import re
+import stat
 import subprocess
 import sys
 import time
@@ -27,9 +29,10 @@ THRESHOLD_DIVISOR = 2
 # Retention: process logs keep the latest LOG_GROUPS runs; chain state outlives them by age (run-continue).
 LOG_GROUPS = 50
 LOG_SUFFIXES = ('.answer', '.wrapup', '.wrapup.answer', '.baseline', '.cleanup', '.events.jsonl',
-                '.wrapup.events.jsonl')
+                '.wrapup.events.jsonl', '.check.log', '.check.cleanup', '.check.json')
 STATE_SUFFIXES = ('.state.json', '.resumed', '.result.json')
 STATE_RETENTION_DAYS = 14
+AUTHORIZATION_MAX_BYTES = 64 * 1024
 
 
 def valid_run_id(value):
@@ -169,10 +172,17 @@ def result_main(arguments):
     parser.add_argument('--exit-code', dest='exit_code', type=int, required=True)
     parser.add_argument('--started', type=float, required=True)
     parser.add_argument('--timeout-seconds', dest='timeout_seconds', type=int, default=None)
+    parser.add_argument('--check-command', dest='check_command', default=None)
+    parser.add_argument('--authorization-file', dest='authorization_file', default='')
     for name in ('write', 'strict', 'resumable', 'resumable_mode'):
         parser.add_argument('--' + name.replace('_', '-'), dest=name, type=lambda value: value == '1', default=False)
     options = parser.parse_args(arguments)
-    print(write_result(options.directory, build_result(options)))
+    result = build_result(options)
+    result['authorization'] = authorization_entry(options.authorization_file, options.write)
+    if options.check_command is not None:
+        import run_check
+        result['check'] = run_check.recorded(options.directory, options.run_id, options.check_command)
+    print(write_result(options.directory, result))
     return 0
 
 
@@ -204,6 +214,19 @@ def _path(directory, run_id, suffix):
 
 def write_state(directory, state):
     _write_private(directory, state['runId'], '.state.json', state)
+
+
+def _authorization_state(path):
+    granted = authorization_file(path)[0] if path else None
+    return {'path': granted['path'], 'sha256': granted['sha256']} if granted else None
+
+
+def authorization_entry(path, write):
+    """The result file's record of where write authorization came from (run-check)."""
+    if not write:
+        return None
+    granted = authorization_file(path)[0] if path else None
+    return dict(source='file', **granted) if granted else {'source': 'in-turn'}
 
 
 def write_result(directory, result):
@@ -260,7 +283,8 @@ def cleanup(directory, now):
     logs = []
     for entry in entries:
         try:
-            if entry.name.endswith('.log'):
+            # Group key: exactly <runId>.log (a .check.log belongs to its run's group, not a group of its own).
+            if entry.name.endswith('.log') and not entry.name.endswith('.check.log'):
                 logs.append((entry.stat().st_mtime, entry.path))
             elif entry.name.endswith(STATE_SUFFIXES) and entry.stat().st_mtime < now - STATE_RETENTION_DAYS * 86400:
                 os.unlink(entry.path)
@@ -279,7 +303,30 @@ def cleanup(directory, now):
                 pass
 
 
-def check_resume(directory, run_id, repository, write, mode='resume'):
+def authorization_file(path):
+    """({path, sha256, bytes}, None) for a usable --authorized-by file, else (None, reason). Content is not read for meaning."""
+    try:
+        info = os.lstat(path)
+    except OSError:
+        return None, '文件不存在或读不了'
+    if stat.S_ISLNK(info.st_mode):
+        return None, '是软链接'
+    if not stat.S_ISREG(info.st_mode):
+        return None, '不是普通文件'
+    if info.st_size == 0 or info.st_size > AUTHORIZATION_MAX_BYTES:
+        return None, '为空或超过 64 KiB'
+    try:
+        descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
+        with os.fdopen(descriptor, 'rb') as handle:
+            data = handle.read(AUTHORIZATION_MAX_BYTES + 1)
+    except OSError:
+        return None, '读不了'
+    if not data or len(data) > AUTHORIZATION_MAX_BYTES:
+        return None, '为空或超过 64 KiB'
+    return {'path': os.path.realpath(path), 'sha256': hashlib.sha256(data).hexdigest(), 'bytes': len(data)}, None
+
+
+def check_resume(directory, run_id, repository, write, mode='resume', authorization=None):
     if not valid_run_id(run_id):
         return 'invalid run id', None
     state = read_state(directory, run_id)
@@ -297,11 +344,14 @@ def check_resume(directory, run_id, repository, write, mode='resume'):
         return 'repository mismatch', None
     if bool(write) != bool(state.get('write')):
         return 'write mode mismatch', None
+    recorded = state.get('authorization')
+    if isinstance(recorded, dict) and recorded.get('sha256') != (authorization or None):
+        return 'authorization mismatch', None
     return None, state
 
 
 def record(directory, run_id, log, answer, repository, write, model, effort, parent, resumable, forced=None,
-           events=None, strict=False, wrapup_events=None, kind='run'):
+           events=None, strict=False, wrapup_events=None, kind='run', authorization=None):
     with open(answer, encoding='utf-8', errors='replace') as handle:
         status = forced or classify(handle.read(), resumable, strict)[0]
     if resumable:
@@ -315,6 +365,7 @@ def record(directory, run_id, log, answer, repository, write, model, effort, par
                                     'repository': os.path.realpath(repository), 'write': write,
                                     'model': model, 'effort': effort, 'status': status, 'parent': parent or None,
                                     'chainRoot': chain_root, 'strict': bool(strict), 'kind': kind,
+                                    'authorization': _authorization_state(authorization),
                                     'usageTotal': session_usage(events, wrapup_events)})
         except OSError:
             print('delegate: 续跑状态写入失败，本次运行不能续跑。', file=sys.stderr)
@@ -331,7 +382,15 @@ def main(arguments):
     if command == 'usage-line' and len(arguments) == 5:
         print(usage_line(arguments[1], arguments[2] or None, arguments[3] or None, arguments[4] or None))
         return 0
-    while len(arguments) >= 2 and arguments[-2] in ('--events', '--strict', '--wrapup-events', '--kind'):
+    if command == 'authorization' and len(arguments) == 2:
+        granted, reason = authorization_file(arguments[1])
+        if granted is None:
+            print('delegate: authorization file not usable\n' + reason, file=sys.stderr)
+            return 64
+        print('\n'.join((granted['path'], granted['sha256'], str(granted['bytes']))))
+        return 0
+    while len(arguments) >= 2 and arguments[-2] in ('--events', '--strict', '--wrapup-events', '--kind',
+                                                    '--authorization-file'):
         options[arguments[-2][2:]] = arguments[-1]
         arguments = arguments[:-2]
     if command == 'record' and len(arguments) in (11, 12):
@@ -339,7 +398,8 @@ def main(arguments):
         forced = arguments[11] if len(arguments) == 12 else None
         print(record(directory, run_id, log, answer, repository, write == '1', model, effort, parent, resumable == '1',
                      forced or None, events=options.get('events') or None, strict=options.get('strict') == '1',
-                     wrapup_events=options.get('wrapup-events') or None, kind=options.get('kind') or 'run'))
+                     wrapup_events=options.get('wrapup-events') or None, kind=options.get('kind') or 'run',
+                     authorization=options.get('authorization-file') or None))
         return 0
     if command == 'session' and len(arguments) == 2:
         print(session_id_from_log(arguments[1]) or '')
@@ -360,9 +420,10 @@ def main(arguments):
     if command == 'cleanup' and len(arguments) == 2:
         cleanup(arguments[1], time.time())
         return 0
-    if command == 'check' and len(arguments) in (5, 6):
-        mode = arguments[5] if len(arguments) == 6 else 'resume'
-        reason, state = check_resume(arguments[1], arguments[2], arguments[3], arguments[4] == '1', mode)
+    if command == 'check' and len(arguments) in (5, 6, 7):
+        mode = arguments[5] if len(arguments) >= 6 else 'resume'
+        authorization = arguments[6] if len(arguments) == 7 else None
+        reason, state = check_resume(arguments[1], arguments[2], arguments[3], arguments[4] == '1', mode, authorization)
         if reason:
             print('delegate: ' + reason, file=sys.stderr)
             return 64

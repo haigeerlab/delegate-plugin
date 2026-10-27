@@ -61,6 +61,11 @@ tests/                       Offline stub tests and regressions
 - **Continue with the next task after done (since interface 1.3)**: `/delegate:run --continue <runId> [--write] -- "<next task>"` takes only a `done` round of a chain started with `--resumable` and carries on in the same Codex session, without starting a new session or rereading the project. A runId can be taken over only once; the task must come from an approved Plan or from the user.
 - Chain state and result files are kept for 14 days; process logs keep only the latest 50 groups.
 
+## Checks and pre-granted write authorization
+
+- `/delegate:run --check "<command>"` (since interface 1.3): after a run ends `done`, delegate runs the check command as an argument list in the repository root (no shell, 600-second limit) and records it under `check` in the result file without changing the run's own status. Commands with shell operators are refused with the same rule as module-crew. The check runs outside the sandbox with your permissions, so the command may only come from check commands you approved in the project configuration.
+- `/delegate:run --write --authorized-by <file>` (since interface 1.3): the consumer (module-crew) records the words you used to switch offloading on in a file; when the Spec and Plan are approved, the Task is inside the approved Plan and it is the same module in the same worktree, it need not wait for your nod on every Task. delegate only records the file's path and sha256 and requires the same file across the chain; it cannot verify the content.
+
 ## Long tasks
 
 The default deadline is 540 seconds. `/delegate:run --timeout <seconds>` widens it to 541–7200 seconds (since interface 1.3); the deadline split, time budget, wrap-up and exit codes are the same as for the default. Above the host's foreground command limit (600 seconds for Claude Code's foreground Bash) it must be called in the host's background mode; delegate does not manage background processes, so stop a run by stopping that background task, and the abort reclaims every descendant process Codex started. A run ends within about `T + 30` seconds.
@@ -86,6 +91,7 @@ For other plugins to integrate by version without reading this plugin's internal
 - **Result file (since interface 1.3)**: `run.result` is `{"schemaVersion": 1, "line": "delegate: result=<path>", "strict": "--strict", "statuses": [...]}`, and `run.usage` states how tokens are counted. Consumers read the result file with `>=1.3,<2.0` and the field present.
 - **Continue (since interface 1.3)**: `run.continue` is `{"option": "--continue", "backends": ["codex"], "accepts": ["done"], "chain": "--resumable", "stateRetentionDays": 14}`.
 - **Long tasks (since interface 1.3)**: `run.longRun` is `{"option": "--timeout", "minSeconds": 541, "maxSeconds": 7200, "defaultSeconds": 540, "background": "caller"}`; `background: "caller"` means the caller owns the background run.
+- **Check and write authorization (since interface 1.3)**: `run.check` is `{"option": "--check", "shell": false, "when": "done", "timeoutSeconds": 600, "operators": [...], "match": "token-prefix-or-suffix"}`, with the same operator rule as module-crew S30; `run.writeAuthorization` is `{"option": "--authorized-by", "requires": "--write", "recorded": "result.authorization", "verifies": [...]}`. `run.write` stays `"explicit"`.
 - **`statuses` is an open set**: later minor versions may append values. A consumer meeting an unknown value must stop or treat it as failure, never as completion; decide success by exit code 0 first, then `status=done`.
 - **Review report (`review.report.schemaVersion: 1`)**: the standard output of `/delegate:review` is one JSON report (`--dry-run` prints a preview, not a report). The private copy path on standard error is not part of the interface. Stable fields:
 

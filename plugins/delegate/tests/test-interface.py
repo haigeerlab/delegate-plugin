@@ -116,6 +116,19 @@ class InterfaceTests(unittest.TestCase):
                                                             'defaultSeconds': 540, 'background': 'caller'})
         self.assertTrue(delegate_capabilities.BACKENDS['codex']['longRun'])
 
+    def test_check_and_write_authorization_are_additive(self):
+        # run-check (interface 1.3): --check never uses a shell; run.write stays "explicit".
+        import run_check
+        self.assertEqual(self.interface['run']['check'], {
+            'option': '--check', 'shell': False, 'when': 'done', 'timeoutSeconds': run_check.CHECK_TIMEOUT_SECONDS,
+            'operators': list(run_check.SHELL_OPS), 'match': 'token-prefix-or-suffix'})
+        self.assertEqual(self.interface['run']['writeAuthorization'], {
+            'option': '--authorized-by', 'requires': '--write', 'recorded': 'result.authorization',
+            'verifies': ['file-sha256-across-chain', 'repository']})
+        self.assertEqual(self.interface['run']['write'], 'explicit')
+        self.assertTrue(delegate_capabilities.BACKENDS['codex']['check'])
+        self.assertTrue(delegate_capabilities.BACKENDS['codex']['writeAuthorization'])
+
     def test_report_schema_version(self):
         self.assertEqual(self.interface['review']['report']['schemaVersion'], self.report['schema_version'])
 

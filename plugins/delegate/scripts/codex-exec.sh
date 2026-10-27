@@ -24,6 +24,12 @@ RESUMABLE=0
 STRICT=0
 RESUME_ID=''
 RESUME_GIVEN=0
+CHECK_COMMAND=''
+CHECK_GIVEN=0
+AUTH_FILE=''
+AUTH_GIVEN=0
+AUTH_PATH=''
+AUTH_SHA=''
 TIMEOUT_GIVEN=''
 CONTINUE_GIVEN=0
 
@@ -65,6 +71,26 @@ while [ "$#" -gt 0 ]; do
         fi
         RESUME_ID="${1}"
         RESUME_GIVEN=1
+        shift
+        continue
+        ;;
+      --authorized-by)
+        if [ "$#" -eq 0 ] || [ "${AUTH_GIVEN}" -eq 1 ]; then
+          usage
+          exit 64
+        fi
+        AUTH_FILE="${1}"
+        AUTH_GIVEN=1
+        shift
+        continue
+        ;;
+      --check)
+        if [ "$#" -eq 0 ] || [ "${CHECK_GIVEN}" -eq 1 ]; then
+          usage
+          exit 64
+        fi
+        CHECK_COMMAND="${1}"
+        CHECK_GIVEN=1
         shift
         continue
         ;;
@@ -127,6 +153,19 @@ if ! command -v python3 >/dev/null 2>&1; then
   printf 'delegate: 找不到 python3；请安装 Python 3 后重试。\n' >&2
   exit 127
 fi
+if [ "${CHECK_GIVEN}" -eq 1 ]; then
+  python3 -B "${SCRIPT_DIR}/run_check.py" validate "${CHECK_COMMAND}" || exit 64
+fi
+if [ "${AUTH_GIVEN}" -eq 1 ]; then
+  if [ "${WRITE_MODE}" -ne 1 ]; then
+    printf 'delegate: --authorized-by requires --write\n' >&2
+    exit 64
+  fi
+  # Only the file's identity is recorded; delegate cannot verify what it says (run-check).
+  AUTH_INFO="$(python3 -B "${SCRIPT_DIR}/run_state.py" authorization "${AUTH_FILE}")" || exit 64
+  AUTH_PATH="$(printf '%s\n' "${AUTH_INFO}" | sed -n 1p)"
+  AUTH_SHA="$(printf '%s\n' "${AUTH_INFO}" | sed -n 2p)"
+fi
 TMP_ROOT="${TMPDIR:-/tmp}/delegate"
 SESSION_ID=''
 if [ "${RESUME_GIVEN}" -eq 1 ]; then
@@ -138,7 +177,7 @@ if [ "${RESUME_GIVEN}" -eq 1 ]; then
   CHECK_MODE='resume'
   [ "${CONTINUE_GIVEN}" -eq 1 ] && CHECK_MODE='continue'
   RESUME_STATE="$(python3 -B "${SCRIPT_DIR}/run_state.py" check "${TMP_ROOT}" "${RESUME_ID}" \
-    "$(git rev-parse --show-toplevel)" "${WRITE_MODE}" "${CHECK_MODE}")" || exit "$?"
+    "$(git rev-parse --show-toplevel)" "${WRITE_MODE}" "${CHECK_MODE}" "${AUTH_SHA}")" || exit "$?"
   SESSION_ID="$(printf '%s\n' "${RESUME_STATE}" | sed -n 1p)"
   MODEL="$(printf '%s\n' "${RESUME_STATE}" | sed -n 2p)"
   EFFORT="$(printf '%s\n' "${RESUME_STATE}" | sed -n 3p)"
@@ -292,6 +331,16 @@ stop_runner() {
   fi
   return 1
 }
+print_authorization() {
+  if [ "${WRITE_MODE}" -ne 1 ]; then
+    return 0
+  fi
+  if [ -n "${AUTH_PATH}" ]; then
+    printf '写入授权：文件 %s（sha256 %s）\n' "${AUTH_PATH}" "$(printf '%s' "${AUTH_SHA}" | cut -c1-12)"
+  else
+    printf '写入授权：当轮\n'
+  fi
+}
 run_kind() {
   if [ "${CONTINUE_GIVEN}" -eq 1 ]; then
     printf 'continue'
@@ -302,6 +351,10 @@ run_kind() {
   fi
 }
 write_result_file() {
+  CHECK_ARGS=()
+  if [ "${CHECK_GIVEN}" -eq 1 ]; then
+    CHECK_ARGS=(--check-command "${CHECK_COMMAND}")
+  fi
   RESULT_RESUMABLE=0
   case "${RESULT_LINE}" in
     *' resumable=true') RESULT_RESUMABLE=1 ;;
@@ -323,7 +376,8 @@ write_result_file() {
     --wrapup-events "${TMP_ROOT}/${RUN_ID}.wrapup.events.jsonl" --wrapup-mode "${WRAPUP_MODE}" \
     --wrapup-reason "${WRAPUP_REASON}" --baseline "${TMP_ROOT}/${RUN_ID}.baseline" --cleanup "${CLEANUP}" \
     --model "${MODEL}" --effort "${EFFORT}" --write "${WRITE_MODE}" --resumable "${RESULT_RESUMABLE}" \
-    --resumable-mode "${RESUMABLE}" --strict "${STRICT}" --timeout-seconds "${DELEGATE_TIMEOUT_SECONDS}")"; then
+    --resumable-mode "${RESUMABLE}" --strict "${STRICT}" --timeout-seconds "${DELEGATE_TIMEOUT_SECONDS}" \
+    ${CHECK_ARGS[@]+"${CHECK_ARGS[@]}"} --authorization-file "${AUTH_PATH}")"; then
     if [ -n "${RESULT_LINE}" ]; then
       printf 'delegate: result=%s\n' "${RESULT_PATH}"
     else
@@ -441,7 +495,7 @@ if [ "${CODEX_STATUS}" -eq 124 ]; then
   [ -n "${FALLBACK_REASON}" ] && WRAPUP_MODE='兜底'
   TIMEOUT_LINE="$(python3 -B "${SCRIPT_DIR}/run_state.py" record "${TMP_ROOT}" "${RUN_ID}" "${LOG}" "${ANSWER}" \
     "${REPO_ROOT}" "${WRITE_MODE}" "${MODEL}" "${EFFORT}" "${PARENT_RUN_ID}" "${RESUMABLE}" timeout --events "${EVENTS}" \
-    --strict "${STRICT}" --kind "$(run_kind)" --wrapup-events "${TMP_ROOT}/${RUN_ID}.wrapup.events.jsonl")"
+    --strict "${STRICT}" --kind "$(run_kind)" --authorization-file "${AUTH_PATH}" --wrapup-events "${TMP_ROOT}/${RUN_ID}.wrapup.events.jsonl")"
   if [ -n "${FALLBACK_REASON}" ]; then
     RESUMABLE_TEXT='否'
     case "${TIMEOUT_LINE}" in *' resumable=true') RESUMABLE_TEXT='是' ;; esac
@@ -466,6 +520,10 @@ if [ "${CODEX_STATUS}" -eq 124 ]; then
   else
     printf '收尾：收尾轮\n'
   fi
+  if [ "${CHECK_GIVEN}" -eq 1 ]; then
+    printf '检查：跳过\n'
+  fi
+  print_authorization
   python3 -B "${SCRIPT_DIR}/run_state.py" usage-line "${TMP_ROOT}" "${EVENTS}" \
     "${TMP_ROOT}/${RUN_ID}.wrapup.events.jsonl" "${PARENT_RUN_ID}"
   RESULT_LINE="${TIMEOUT_LINE}"
@@ -493,11 +551,26 @@ ANSWER_BYTES="$(wc -c < "${ANSWER}" | tr -d ' ')"
 LOG_BYTES="$(wc -c < "${LOG}" | tr -d ' ')"
 RECORDED="$(python3 -B "${SCRIPT_DIR}/run_state.py" record "${TMP_ROOT}" "${RUN_ID}" "${LOG}" "${ANSWER}" \
   "${REPO_ROOT}" "${WRITE_MODE}" "${MODEL}" "${EFFORT}" "${PARENT_RUN_ID}" "${RESUMABLE}" --events "${EVENTS}" \
-  --strict "${STRICT}" --kind "$(run_kind)")"
+  --strict "${STRICT}" --kind "$(run_kind)" --authorization-file "${AUTH_PATH}")"
+CHECK_LINE=''
+if [ "${CHECK_GIVEN}" -eq 1 ]; then
+  CHECK_LINE='检查：跳过'
+  case "${RECORDED}" in
+    *' status=done '*)
+      # Outside the sandbox with the user's permissions, before the Git acceptance block (run-check).
+      CHECK_LINE="$(python3 -B "${SCRIPT_DIR}/run_check.py" run "${TMP_ROOT}" "${RUN_ID}" "${REPO_ROOT}" "${CHECK_COMMAND}")" \
+        || CHECK_LINE='检查：跑不起来'
+      ;;
+  esac
+fi
 cat "${ANSWER}"
 printf '\n---\n'
 printf '模型：%s / 推理档：%s\n' "${MODEL:-配置默认}" "${EFFORT:-配置默认}"
 printf '过程日志（未进入本会话上下文）：%s（%s 字节；最终答复 %s 字节）\n' "${LOG}" "${LOG_BYTES}" "${ANSWER_BYTES}"
+if [ -n "${CHECK_LINE}" ]; then
+  printf '%s\n' "${CHECK_LINE}"
+fi
+print_authorization
 python3 -B "${SCRIPT_DIR}/run_state.py" usage-line "${TMP_ROOT}" "${EVENTS}" '' "${PARENT_RUN_ID}"
 RESULT_LINE="${RECORDED}"
 case "${RESULT_LINE}" in

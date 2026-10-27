@@ -98,6 +98,14 @@ class RetentionTests(unittest.TestCase):
         for suffix in self.state.STATE_SUFFIXES:
             self.assertFalse((self.dir / (stale + suffix)).exists(), stale + suffix)
 
+    def test_check_log_is_not_a_group_of_its_own(self):
+        now = time.time()
+        for index in range(50):
+            self.make('20261001000000.%d' % index, ('.log', '.check.log'), now - 100 + index)
+        self.state.cleanup(self.dir, now)
+        self.assertEqual(len(list(self.dir.glob('*.check.log'))), 50)
+        self.assertEqual(len([p for p in self.dir.glob('*.log') if not p.name.endswith('.check.log')]), 50)
+
     def test_cleanup_tolerates_missing_directory(self):
         self.state.cleanup(self.dir / 'missing', time.time())
 
