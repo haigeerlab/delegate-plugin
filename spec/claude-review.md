@@ -4,7 +4,9 @@
 
 **审批方式（2026-10-25）：** Codex 后端审查调用固定 `-c approval_policy="never"`，见 [run-resume](run-resume.md) 修订记录 R2；其余审查合同不变。
 
-**当前发行（2026-10-26）：** v0.7.0 新增 run 超时保留进度（见 [run-timeout](run-timeout.md)，接口 1.2）并让写模式不再写入 Codex 项目信任（见 [write-trust](write-trust.md)）；本模块的审查合同、参数与报告格式不变，见[版本说明](../docs/releases/v0.7.0.md)；免费验证 247 Python / 53 shell / 19 eval。
+**当前发行（2026-10-27）：** v0.7.1 是补丁版，只修 run 中止时回收 Codex 起的后代进程组（见 [channel](channel.md) 修订 S41）；本模块的审查合同、参数与报告格式不变，见[版本说明](../docs/releases/v0.7.1.md)；免费验证 253 Python / 53 shell / 19 eval。
+
+**v0.7.0 发行（2026-10-26）：** v0.7.0 新增 run 超时保留进度（见 [run-timeout](run-timeout.md)，接口 1.2）并让写模式不再写入 Codex 项目信任（见 [write-trust](write-trust.md)）；本模块的审查合同、参数与报告格式不变，见[版本说明](../docs/releases/v0.7.0.md)；免费验证 247 Python / 53 shell / 19 eval。
 
 **v0.6.0 发行（2026-10-26）：** v0.6.0 新增可续跑委托（见 [run-resume](run-resume.md)），本模块的 Codex 后端审查改为固定 `approval_policy="never"`，审查合同与报告格式不变，见[版本说明](../docs/releases/v0.6.0.md)；免费验证 196 Python / 53 shell / 19 eval。
 
