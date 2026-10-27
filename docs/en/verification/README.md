@@ -133,3 +133,10 @@ Data without a dedicated record page: [2026-10-13-delegate-installed-preview-res
 | [2026-10-26-delegate-s36-trust-probe.md](../../verification/2026-10-26-delegate-s36-trust-probe.md) | result/record | — |
 | [2026-10-26-delegate-s36-write-trust-check.md](../../verification/2026-10-26-delegate-s36-write-trust-check.md) | result/record | [2026-10-26-delegate-s36-write-trust-check.py.txt](../../verification/2026-10-26-delegate-s36-write-trust-check.py.txt) |
 | [2026-10-26-delegate-s36-write-trust-live.md](../../verification/2026-10-26-delegate-s36-write-trust-live.md) | result/record | — |
+
+## Abort reaping and interface 1.3: S38, S41 (2026-10-27)
+
+| Record | Kind | Companion data |
+|---|---|---|
+| [2026-10-27-delegate-s38-probe.md](../../verification/2026-10-27-delegate-s38-probe.md) | result/record | [2026-10-27-delegate-s38-probe.py.txt](../../verification/2026-10-27-delegate-s38-probe.py.txt), [2026-10-27-delegate-s38-fake-responses.py.txt](../../verification/2026-10-27-delegate-s38-fake-responses.py.txt), [2026-10-27-delegate-s38-term-repro.sh.txt](../../verification/2026-10-27-delegate-s38-term-repro.sh.txt) |
+| [2026-10-27-delegate-1.3-merged-live.md](../../verification/2026-10-27-delegate-1.3-merged-live.md) | result/record | — |
