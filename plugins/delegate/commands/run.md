@@ -14,7 +14,7 @@ allowed-tools: Bash
 
 只有用户在该轮明确要求写文件才能加 `--write`，不自行升级权限。写入返回后无论成功、失败、超时或空答复，都核对 Git 验收块和真实 diff；失败不自动回滚，不能只相信执行器自述。所有 run 固定 `approval_policy="never"`，不用本机配置的审批方式：越出沙箱的命令（如 worktree 里 `git commit`、网络访问）直接被拒，提交靠前缀放行规则或由调用方完成。沿用 Codex 原有认证、沙箱、期限和日志合同，不自动重试、切后端或切模型，不提交、推送或发布。
 
-默认/上限 540 秒；Codex 保留原进程组清理，不证明 detached 后代已回收。旧过程日志位于 `${TMPDIR:-/tmp}/delegate/`，最终答复分开返回；只按需用 `sed -n` 读取必要片段，不 `cat` 整个日志。递归调用 delegate 被拒绝。实际宿主/模型无法核实时标 unknown。
+默认/上限 540 秒；中止时冻结 Codex 并回收它的全部后代进程组（含换组、换会话的命令），清理结果与残留 PID 输出到 stderr；执行进程未能回收时退出 125。旧过程日志位于 `${TMPDIR:-/tmp}/delegate/`，最终答复分开返回；只按需用 `sed -n` 读取必要片段，不 `cat` 整个日志。递归调用 delegate 被拒绝。实际宿主/模型无法核实时标 unknown。
 
 成功和超时时 stdout 末行是 `delegate: run_id=<id> status=<done|needs-input|timeout> resumable=<true|false>`；失败、信号中断、空答复不输出。判断成功先看退出码 0 再看 `status=done`；status 是开放集合，不认识的值当失败。
 

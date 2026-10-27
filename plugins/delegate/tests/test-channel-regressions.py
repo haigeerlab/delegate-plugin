@@ -48,12 +48,13 @@ if tracked:
     with open(tracked, "w", encoding="utf-8") as f: f.write("modified by fake codex\n")
 if mode == "hang_ignore":
     signal.signal(signal.SIGTERM, signal.SIG_IGN)
-if mode in ("timeout_child", "signal_child"):
+if mode in ("timeout_child", "signal_child", "setsid_child"):
     marker = os.environ["STUB_MARKER"]
     code = "import time; time.sleep(3); open(%r, 'w').write('late')" % marker
-    child = subprocess.Popen([sys.executable, "-c", code], start_new_session=False)
+    # Like Codex shell commands: setsid_child runs in its own session and process group.
+    child = subprocess.Popen([sys.executable, "-c", code], start_new_session=(mode == "setsid_child"))
     with open(os.environ["STUB_CHILD_PID"], "w") as f: f.write(str(child.pid))
-if mode in ("hang_ignore", "timeout_child", "signal_child"):
+if mode in ("hang_ignore", "timeout_child", "signal_child", "setsid_child"):
     while True: time.sleep(.1)
 if answer and mode != "empty":
     with open(answer, "w", encoding="utf-8") as f: f.write("fake answer\n")
@@ -187,6 +188,123 @@ class ChannelRegressionTests(unittest.TestCase):
             if proc.stderr and not proc.stderr.closed:
                 proc.stderr.close()
 
+    @staticmethod
+    def _alive(pid):
+        """True while pid exists and is not a zombie."""
+        try:
+            os.kill(pid, 0)
+        except ProcessLookupError:
+            return False
+        except PermissionError:
+            return True
+        state = subprocess.run(["ps", "-o", "stat=", "-p", str(pid)], text=True, capture_output=True).stdout.strip()
+        return bool(state) and not state.startswith("Z")
+
+    def _assert_new_session_child_reaped(self, child_pid_file, marker, stderr):
+        diagnostic = stderr.decode("utf-8", "replace")
+        child_pid = int(Path(child_pid_file).read_text())
+        try:
+            deadline = time.monotonic() + 1
+            while self._alive(child_pid) and time.monotonic() < deadline:
+                time.sleep(.05)
+            self.assertFalse(self._alive(child_pid), "new-session descendant survived cleanup")
+            time.sleep(3.2)
+            self.assertFalse(marker.exists(), "new-session descendant wrote after cleanup")
+            self.assertIn("delegate: 清理：", diagnostic, diagnostic[-1200:])
+            self.assertIn(str(child_pid), diagnostic, diagnostic[-1200:])
+            self.assertIn("无残留", diagnostic, diagnostic[-1200:])
+        finally:
+            try:
+                os.kill(child_pid, signal.SIGKILL)
+            except (ProcessLookupError, PermissionError):
+                pass
+
+    def test_timeout_reaps_new_session_descendant_and_reports(self):
+        marker = self.base / "setsid-timeout-marker"
+        child_pid = self.base / "setsid-timeout.pid"
+        status, _, stderr = self.run_wrapper("child", env={
+            "STUB_MODE": "setsid_child", "STUB_MARKER": marker, "STUB_CHILD_PID": child_pid,
+        }, timeout=20)
+        self.assertEqual(status, 124, stderr.decode("utf-8", "replace"))
+        self.assertTrue(self.wait_for_path(child_pid), "fake codex did not record its child")
+        self._assert_new_session_child_reaped(child_pid, marker, stderr)
+
+    def test_wrapper_signals_reap_new_session_descendant_and_report(self):
+        for signum, expected in ((signal.SIGTERM, 143), (signal.SIGINT, 130), (signal.SIGHUP, 129)):
+            with self.subTest(signal=signum.name):
+                tag = signum.name.lower()
+                marker = self.base / f"setsid-{tag}-marker"
+                child_pid = self.base / f"setsid-{tag}.pid"
+                env = self.env.copy()
+                env.update({"DELEGATE_TIMEOUT_SECONDS": "20", "STUB_MODE": "setsid_child",
+                            "STUB_MARKER": str(marker), "STUB_CHILD_PID": str(child_pid)})
+                proc = subprocess.Popen([str(self.script), "signal"], cwd=self.repo, env=env,
+                                        stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                        start_new_session=True)
+                try:
+                    if not self.wait_for_path(child_pid, timeout=20):
+                        self.fail("fake codex child did not start")
+                    os.kill(proc.pid, signum)
+                    try:
+                        _, stderr = proc.communicate(timeout=20)
+                    except subprocess.TimeoutExpired:
+                        self.fail("wrapper did not exit after %s" % signum.name)
+                    self.assertEqual(proc.returncode, expected, stderr.decode("utf-8", "replace"))
+                    self._assert_new_session_child_reaped(child_pid, marker, stderr)
+                finally:
+                    self._kill_group(proc.pid)
+                    if proc.poll() is None:
+                        proc.wait(timeout=2)
+                    for stream in (proc.stdout, proc.stderr):
+                        if stream and not stream.closed:
+                            stream.close()
+
+    def test_wrapper_finish_is_bounded_when_runner_ignores_term(self):
+        import shutil
+        plugin = self.base / "plugin"
+        shutil.copytree(self.root / "plugins/delegate", plugin)
+        runner_pid = self.base / "runner.pid"
+        # backend.py imports stop_group, so only the executed runner ignores TERM.
+        runner = plugin / "scripts/run_codex.py"
+        source = runner.read_text(encoding="utf-8")
+        entry = "if __name__ == '__main__':\n    sys.exit(main())\n"
+        self.assertIn(entry, source)
+        runner.write_text(source.replace(entry,
+            "if __name__ == '__main__':\n"
+            "    for sig in (signal.SIGTERM, signal.SIGINT, signal.SIGHUP):\n"
+            "        signal.signal(sig, signal.SIG_IGN)\n"
+            "    open(%r, 'w').write(str(os.getpid()))\n"
+            "    while True:\n"
+            "        time.sleep(.1)\n" % str(runner_pid)), encoding="utf-8")
+        env = self.env.copy()
+        env["DELEGATE_TIMEOUT_SECONDS"] = "20"
+        proc = subprocess.Popen([str(plugin / "scripts/codex-exec.sh"), "stuck"], cwd=self.repo, env=env,
+                                stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                start_new_session=True)
+        try:
+            if not self.wait_for_path(runner_pid, timeout=8):
+                self.fail("replacement runner did not start")
+            started = time.monotonic()
+            os.kill(proc.pid, signal.SIGTERM)
+            try:
+                _, stderr = proc.communicate(timeout=25)
+            except subprocess.TimeoutExpired:
+                self.fail("wrapper hung waiting for a runner that ignores TERM")
+            elapsed = time.monotonic() - started
+            diagnostic = stderr.decode("utf-8", "replace")
+            self.assertNotEqual(proc.returncode, 0, diagnostic)
+            self.assertLess(elapsed, 20, diagnostic[-1200:])
+            pid = runner_pid.read_text()
+            self.assertIn("执行进程超时未退出，已强制结束（PID=%s）" % pid, diagnostic, diagnostic[-1200:])
+            self.assertFalse(self._alive(int(pid)), "runner survived the wrapper")
+        finally:
+            self._kill_group(proc.pid)
+            if proc.poll() is None:
+                proc.wait(timeout=2)
+            for stream in (proc.stdout, proc.stderr):
+                if stream and not stream.closed:
+                    stream.close()
+
     def test_write_failures_report_git_acceptance_and_keep_changes(self):
         cases = (("fail", 3), ("empty", None), ("timeout_child", 124))
         for mode, expected_status in cases:
@@ -281,6 +399,36 @@ class RunCodexEpermTests(unittest.TestCase):
             for sig, handler in handlers.items():
                 signal.signal(sig, handler)
         self.assertEqual(status, 3)
+
+    def test_unreaped_child_is_reported_and_returns_125(self):
+        """If the direct child cannot be reaped, the final wait must still end."""
+        import contextlib
+        import io
+        from unittest import mock
+        saved = sys.argv
+        handlers = {sig: signal.getsignal(sig) for sig in (signal.SIGTERM, signal.SIGINT, signal.SIGHUP)}
+        pid_file = Path(tempfile.mkdtemp(prefix="delegate-unreaped-")) / "pid"
+        sys.argv = ["run_codex.py", "1", "sh", "-c", "echo $$ > %s; exec sleep 15" % pid_file]
+        stderr = io.StringIO()
+        started = time.monotonic()
+        try:
+            # Signals never arrive, so the child outlives every wait.
+            with mock.patch.object(self.module.os, "killpg", return_value=None), \
+                    contextlib.redirect_stderr(stderr):
+                status = self.module.main()
+        finally:
+            sys.argv = saved
+            for sig, handler in handlers.items():
+                signal.signal(sig, handler)
+            if pid_file.exists():
+                try:
+                    os.kill(int(pid_file.read_text()), signal.SIGKILL)
+                except (ProcessLookupError, ValueError):
+                    pass
+        elapsed = time.monotonic() - started
+        self.assertEqual(status, 125, stderr.getvalue())
+        self.assertLess(elapsed, 12, stderr.getvalue())
+        self.assertIn("delegate: 执行进程未能回收，PID=%s" % pid_file.read_text().strip(), stderr.getvalue())
 
 if __name__ == "__main__":
     unittest.main()

@@ -151,6 +151,7 @@ STAMP="$(date '+%Y%m%d%H%M%S')"
 RUN_ID="${STAMP}.$$"
 ANSWER="${TMP_ROOT}/${RUN_ID}.answer"
 LOG="${TMP_ROOT}/${RUN_ID}.log"
+CLEANUP="${TMP_ROOT}/${RUN_ID}.cleanup"
 PREAMBLE='【非交互委托】没有人能回答你的提问或确认请求，也不会有后续轮次。不要先出方案等确认，直接做到底，并把完整结论写进最终答复。沙箱是只读的：不要修改文件、不要提交、不要启动服务、不要做任务之外的网络访问。'
 SANDBOX='read-only'
 GIT_BASELINE_HEAD=''
@@ -223,7 +224,7 @@ try:
             os.unlink(log)
         except OSError:
             continue
-        for suffix in ('.answer', '.state.json', '.resumed', '.wrapup', '.wrapup.answer', '.baseline'):
+        for suffix in ('.answer', '.state.json', '.resumed', '.wrapup', '.wrapup.answer', '.baseline', '.cleanup'):
             try:
                 os.unlink(log[:-4] + suffix)
             except OSError:
@@ -248,17 +249,43 @@ emit_git_acceptance() {
     git diff --cached --stat
   fi
 }
+wait_runner_gone() {
+  # `wait` itself has no timeout; poll against wall-clock seconds instead.
+  WAIT_UNTIL=$((SECONDS + ${1}))
+  while kill -0 "${RUNNER_PID}" 2>/dev/null && [ "${SECONDS}" -lt "${WAIT_UNTIL}" ]; do
+    sleep 0.1
+  done
+  ! kill -0 "${RUNNER_PID}" 2>/dev/null
+}
+stop_runner() {
+  kill -TERM "${RUNNER_PID}" 2>/dev/null || true
+  # run_codex.py needs about 10 seconds for a full abort cleanup.
+  if wait_runner_gone 15; then
+    wait "${RUNNER_PID}" 2>/dev/null || true
+    return 0
+  fi
+  kill -KILL "${RUNNER_PID}" 2>/dev/null || true
+  if wait_runner_gone 2; then
+    wait "${RUNNER_PID}" 2>/dev/null || true
+    printf 'delegate: 执行进程超时未退出，已强制结束（PID=%s），其后代可能残留。\n' "${RUNNER_PID}" >&2
+  else
+    printf 'delegate: 执行进程未能回收，PID=%s\n' "${RUNNER_PID}" >&2
+  fi
+  return 1
+}
 finish() {
   EXIT_STATUS=$?
   trap - EXIT
-  if [ -n "${RUNNER_PID}" ]; then
-    kill -TERM "${RUNNER_PID}" 2>/dev/null || true
-    wait "${RUNNER_PID}" 2>/dev/null || true
+  if [ -n "${RUNNER_PID}" ] && ! stop_runner && [ "${EXIT_STATUS}" -eq 0 ]; then
+    EXIT_STATUS=1
   fi
   if [ "${EXIT_STATUS}" -eq 0 ]; then
     emit_git_acceptance
   else
     emit_git_acceptance >&2
+  fi
+  if [ -s "${CLEANUP}" ]; then
+    cat "${CLEANUP}" >&2
   fi
   if [ -n "${RESULT_LINE}" ]; then
     printf '%s\n' "${RESULT_LINE}"
@@ -291,7 +318,7 @@ fi
 
 RESULT_LINE=''
 EXEC_STARTED=1
-python3 -B "${SCRIPT_DIR}/run_codex.py" "${MAIN_SECONDS}" \
+python3 -B "${SCRIPT_DIR}/run_codex.py" --report "${CLEANUP}" "${MAIN_SECONDS}" \
   env -u OPENAI_API_KEY -u CODEX_API_KEY DELEGATE_REVIEW_DEPTH=1 codex "${CODEX_ARGS[@]}" \
   >"${LOG}" 2>&1 </dev/null &
 RUNNER_PID=$!
@@ -317,7 +344,7 @@ if [ "${CODEX_STATUS}" -eq 124 ]; then
   else
     WRAPUP_ANSWER="${TMP_ROOT}/${RUN_ID}.wrapup.answer"
     WRAPUP_PROMPT='【收尾】本次运行已到期被中止。不要再执行任何命令，也不要继续做任务。只写进度：第一行以 `TIME_UP:` 开头，后面写已完成的步骤及结果、做到一半的步骤（如有）、下一步应从哪里开始。'
-    python3 -B "${SCRIPT_DIR}/run_codex.py" "${WRAPUP_SECONDS}" \
+    python3 -B "${SCRIPT_DIR}/run_codex.py" --report "${CLEANUP}" "${WRAPUP_SECONDS}" \
       env -u OPENAI_API_KEY -u CODEX_API_KEY DELEGATE_REVIEW_DEPTH=1 codex exec resume ${EXTRA[@]+"${EXTRA[@]}"} \
       -c 'forced_login_method="chatgpt"' -c 'model_provider="openai"' ${APPROVAL[@]+"${APPROVAL[@]}"} \
       -c 'sandbox_mode="read-only"' -o "${WRAPUP_ANSWER}" -- "${STOPPED_SESSION}" "${WRAPUP_PROMPT}" \

@@ -12,7 +12,7 @@ The Claude backend uses an existing local srt, resolved from PATH by default or 
 
 The main session handles requirements, design decisions, and final verification. The Codex backend accepts only ChatGPT authentication. It aims to reduce process context carried by the main session; usage is charged against the account signed into Codex, and lower total cost or token usage is not guaranteed.
 
-Repository: [haigeerlab/delegate-plugin](https://github.com/haigeerlab/delegate-plugin) · Current release: [v0.7.0](https://github.com/haigeerlab/delegate-plugin/releases/tag/v0.7.0) · [Documentation index](docs/en/README.md)
+Repository: [haigeerlab/delegate-plugin](https://github.com/haigeerlab/delegate-plugin) · Current release: [v0.7.1](https://github.com/haigeerlab/delegate-plugin/releases/tag/v0.7.1) · [Documentation index](docs/en/README.md)
 
 ## Contents
 
@@ -169,7 +169,7 @@ To run the source script directly, execute it from the **target Git project**, p
 bash /path/to/delegate-plugin/plugins/delegate/scripts/codex-exec.sh --write "Apply the agreed fix and test it"
 ```
 
-Set the Claude Bash tool timeout to `600000` milliseconds. The wrapper's Codex execution deadline defaults to, and is capped at, **540 seconds**. `DELEGATE_TIMEOUT_SECONDS` accepts a shorter positive integer; larger values are capped at 540, and invalid or non-positive values fall back to 540. Each authentication probe has a 5-second limit. Process-group cleanup waits at most 2 seconds before forced termination. The execution deadline excludes preflight checks and subsequent Git inspection. Processes that detach from the group are not guaranteed to be reclaimed.
+Set the Claude Bash tool timeout to `600000` milliseconds. The wrapper's Codex execution deadline defaults to, and is capped at, **540 seconds**. `DELEGATE_TIMEOUT_SECONDS` accepts a shorter positive integer; larger values are capped at 540, and invalid or non-positive values fall back to 540. Each authentication probe has a 5-second limit. On abort (deadline or TERM/INT/HUP), Codex is frozen first and all of its descendant process groups are reclaimed, including shell commands that changed process group or session; each step sends TERM, waits at most 2 seconds, then forces termination, and the cleanup result (descendant list, whether any survived, survivor PIDs) is printed to stderr. The execution deadline excludes preflight checks and subsequent Git inspection. Background processes Codex leaves after exiting normally are not guaranteed to be reclaimed.
 
 ## Dual-backend read-only review (v0.5.0)
 
@@ -245,7 +245,7 @@ For development and evaluation, you can also explicitly load the source plugin d
 claude --plugin-dir /path/to/delegate-plugin/plugins/delegate
 ```
 
-If a marketplace with the same name is already registered, check its source first. Local loading and remote installation are alternatives; you do not need two installations. The `v0.7.0` tag fixes release source at one revision, while `main` continues to change.
+If a marketplace with the same name is already registered, check its source first. Local loading and remote installation are alternatives; you do not need two installations. The `v0.7.1` tag fixes release source at one revision, while `main` continues to change.
 
 ### Uninstall
 
@@ -283,7 +283,7 @@ Uninstalling does not roll back previous changes to your project. Temporary logs
 | Codex review reports `codex_inline_input_limit` | Review input exceeds 1 MiB and is neither truncated nor split automatically; review in smaller runs with narrower `--paths` or added `--exclude` |
 | Review report is failed, inconclusive, or partially covered | Read the unreviewed scope and reasons in the report (permission denial, turn or budget limit, invalid output, and so on); none of these counts as a passing review |
 
-Wrapper exit statuses: 64 for arguments/non-Git directories; 127 for basic CLI/Python failures; 124 for execution timeout; 129/130/143 for HUP/INT/TERM interruptions. An empty answer exits 1; other execution failures retain their nonzero status. review uses the same 64/127/124/129/130/143 conventions; a completed review exits 0 even when it reports findings. doctor always exits 0; assess the reported issue count.
+Wrapper exit statuses: 64 for arguments/non-Git directories; 127 for basic CLI/Python failures; 124 for execution timeout; 129/130/143 for HUP/INT/TERM interruptions; 125 when the execution process could not be reaped (its PID is reported). An empty answer exits 1; other execution failures retain their nonzero status. review uses the same 64/127/124/129/130/143 conventions; a completed review exits 0 even when it reports findings. doctor always exits 0; assess the reported issue count.
 
 doctor refreshes the temporary cache and does not modify project files. Its heuristics inspect only some Chinese global rules, not English or all project rules. It does not verify remote connectivity, quota, model access, or whether a token remains valid. Runtime diagnostics and skill instructions currently use mainly Chinese; bilingual documentation does not change these outputs.
 
@@ -297,7 +297,7 @@ doctor refreshes the temporary cache and does not modify project files. Its heur
 
 v0.5.0 does not register UserPromptSubmit or probe/remind on every prompt. SessionStart silently refreshes readiness; doctor reports it on demand. The cache lasts 8 hours and is bound to the CLI path, Codex home, plugin root, and version. Future timestamps, old formats, identity changes, and invalid files invalidate it. Cached readiness does not guarantee current authentication; execution always checks login again.
 
-See the [documentation index](docs/en/README.md) for reading order and language pairs. Read [Design](docs/en/DESIGN.md) for rationale and the [capability map](docs/en/capability-map.md) for module responsibilities. Exact contracts are in the [channel](docs/en/SPEC-channel.md), [detection](docs/en/SPEC-detection.md), and [routing](docs/en/SPEC-routing.md) specifications. Release changes are in [v0.7.0](docs/en/releases/v0.7.0.md), [v0.6.0](docs/en/releases/v0.6.0.md), [v0.5.3](docs/en/releases/v0.5.3.md), [v0.5.2](docs/en/releases/v0.5.2.md), [v0.5.1](docs/en/releases/v0.5.1.md), and [v0.5.0](docs/en/releases/v0.5.0.md); subsequent changes are in [Unreleased](docs/en/releases/unreleased.md).
+See the [documentation index](docs/en/README.md) for reading order and language pairs. Read [Design](docs/en/DESIGN.md) for rationale and the [capability map](docs/en/capability-map.md) for module responsibilities. Exact contracts are in the [channel](docs/en/SPEC-channel.md), [detection](docs/en/SPEC-detection.md), and [routing](docs/en/SPEC-routing.md) specifications. Release changes are in [v0.7.1](docs/en/releases/v0.7.1.md), [v0.7.0](docs/en/releases/v0.7.0.md), [v0.6.0](docs/en/releases/v0.6.0.md), [v0.5.3](docs/en/releases/v0.5.3.md), [v0.5.2](docs/en/releases/v0.5.2.md), [v0.5.1](docs/en/releases/v0.5.1.md), and [v0.5.0](docs/en/releases/v0.5.0.md); subsequent changes are in [Unreleased](docs/en/releases/unreleased.md).
 
 ## Development, contributions, and feedback
 
@@ -309,7 +309,7 @@ Run the free offline validation from the **repository root**:
 /bin/bash scripts/validate.sh
 ```
 
-The entry point covers syntax, manifest required fields, evaluator self-tests, three shell product suites, 19 loop-registered Python regression suites, the source-discovery regression and the isolation policy-only suite. v0.7.0 release validation passed 247 Python, 53 shell and 19 eval cases. Actual OS, host and live-model evidence is recorded separately, without labeling it as offline coverage. The free aggregate validation makes no model requests. Doctor rule tests now supply their own CLI stub, synthetic login state, and temporary log, without depending on an outer Codex installation or login. The [actual F8 fix verification in Chinese](docs/verification/2026-10-08-f8-applied.md) covers absent outer CLI and rejected outer login.
+The entry point covers syntax, manifest required fields, evaluator self-tests, three shell product suites, 20 loop-registered Python regression suites (`reap-fake-endpoint` is skipped when codex is not installed locally), the source-discovery regression and the isolation policy-only suite. v0.7.1 release validation passed 253 Python, 53 shell and 19 eval cases. Actual OS, host and live-model evidence is recorded separately, without labeling it as offline coverage. The free aggregate validation makes no model requests. Doctor rule tests now supply their own CLI stub, synthetic login state, and temporary log, without depending on an outer Codex installation or login. The [actual F8 fix verification in Chinese](docs/verification/2026-10-08-f8-applied.md) covers absent outer CLI and rejected outer login.
 
 See [Contributing](CONTRIBUTING.en.md) for development conventions, individual tests, paid live verification, and bilingual maintenance. Use [GitHub Issues](https://github.com/haigeerlab/delegate-plugin/issues) for problems and suggestions; follow the next section to report a bug.
 

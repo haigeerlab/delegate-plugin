@@ -128,3 +128,71 @@ Task 4–5 完成后，在 todo 各项下记录实际文档检查和仍未验证
 ### Checkpoint 6（report）：整批证据收束
 
 遵守整批四个 Claude 会话/最多一个 Codex exec 上限；结果缺证不自动追加调用。完成记录不回填历史批准。
+
+## S41：中止时回收后代进程组（v0.7.1 补丁，2026-10-27）
+
+**来源：** ecosystem-lead 处的 S41，用户原话：「S41 先单独出 delegate 0.7.1：只修中止时回收后代进程组、最后的 wait 加上限、清理结果如实报告，用假端点做回归测试；1.3 在它之上做。」本会话中用户确认假设 A1–A10 与合同条款清单，A5 用 125。合同见 [spec/channel.md](../../spec/channel.md) 修订 S41、CH-03、CH-06、CH-07。
+**批准：** 2026-10-27 用户在本会话回复「Spec 修订和 Plan 批准，开始 Task 11。」
+**范围：** 只改 `run_codex.py`、`codex-exec.sh`、测试与文档。接口 1.2、`--timeout`、540 秒期限、结果行、stdout、状态文件、review 进程管理都不动。
+
+### 实施顺序与检查点
+
+Task 11 → Checkpoint 7（report）→ Task 12 → Task 13 → Task 14 → Task 15 → Checkpoint 8（gate）。
+
+### Task 11：回归测试（先红）
+
+**描述：** `test-channel-regressions.py` 新增：
+- 假 codex 的 `setsid_child` 模式：用 `start_new_session=True` 起子进程，3 秒后写标记；测到期（124）和 wrapper 收到 TERM/INT/HUP 各一次。断言子进程不在、标记没写出、stderr 含清理报告（后代 PID、`无残留`）。
+- `stop_group` 单元测试：注入 `wait` 永远超时的进程，断言有界返回、输出 `执行进程未能回收，PID=…`、`main` 返回 125。
+- wrapper `finish` 有界：把脚本复制到临时目录，换成忽略 TERM 的 `run_codex.py`，断言 wrapper 在约 17 秒内非零退出，stderr 报告强制结束与 PID。
+
+新增 `test-reap-fake-endpoint.py`：本机假 Responses 端点（取自 S38 实测记录附件，不收凭据）、临时 `CODEX_HOME`，真实 Codex 执行长 `sleep` 时对 `run_codex.py` 分别触发到期、TERM、INT、HUP。断言 `sleep` 和 `zsh -lc` 都不在、`run_codex.py` 在上限内退出。找不到 `codex` 时跳过。注册进 `scripts/validate.sh`。
+**验收条件：** 实现前新断言全部红，失败原因与缺陷一致（残留、挂住或无报告）；旧断言不改。
+**验证：** `python3 -B plugins/delegate/tests/test-channel-regressions.py`、`python3 -B plugins/delegate/tests/test-reap-fake-endpoint.py`。
+**依赖：** 无。**涉及文件：** 两个测试文件、`scripts/validate.sh`。**规模：** M（3 文件）。
+
+### Checkpoint 7（report）：红灯记录
+
+把红灯的命令、失败断言和原因记入 todo 后继续。
+
+### Task 12：`run_codex.py` 回收后代、有界等待与报告
+
+**描述：** 按合同五步重写 `stop_group` 的中止路径；新增可选 `--report <路径>`，中止时追加写清理报告；最终 `wait` 5 秒上限，超时输出未能回收行并让 `main` 返回 125。所有 `killpg` 继续容忍 `ProcessLookupError` 与 `PermissionError`。正常退出路径保持原有行为。
+**验收条件：** Task 11 中 `run_codex.py` 相关的断言转绿；EPERM 两条旧回归仍绿。
+**验证：** 同 Task 11 两条命令。
+**依赖：** Task 11。**涉及文件：** `plugins/delegate/scripts/run_codex.py`。**规模：** S（1 文件）。
+
+### Task 13：`codex-exec.sh` 转发报告与 `finish` 有界
+
+**描述：** 两处 `run_codex.py` 调用都传 `--report <runId>.cleanup`；`finish` 对执行进程 TERM，轮询 15 秒，KILL，再轮询 2 秒，如实报告并非零退出；`finish` 把非空的 `.cleanup` 转发到 stderr；保留清理列表加 `.cleanup` 后缀。
+**验收条件：** Task 11 全部转绿；现有 channel、run-resume、run-timeout 套件不变绿。
+**验证：** `/bin/bash plugins/delegate/tests/test-channel.sh`、`python3 -B plugins/delegate/tests/test-channel-regressions.py`、`python3 -B plugins/delegate/tests/test-run-timeout.py`、`python3 -B plugins/delegate/tests/test-run-resume.py`。
+**依赖：** Task 12。**涉及文件：** `plugins/delegate/scripts/codex-exec.sh`。**规模：** S（1 文件）。
+
+### Task 14：文档同步
+
+**描述：** `DESIGN.md` 与 `docs/en/DESIGN.md` 的清理描述；`README.md`／`README.en.md` 的清理描述、退出码表加 125、回归套件数；`plugins/delegate/commands/run.md` 的清理句；`docs/releases/unreleased.md` 与英文页写影响面；`CONTRIBUTING*.md` 若列套件数则同步。
+**验收条件：** 中英文一致，没有残留「detached 后代不在保证」类的旧说法（Codex 正常结束后留下的进程除外）。
+**验证：** `rg -n 'detach|脱离' README* DESIGN.md docs/en/DESIGN.md plugins/delegate/commands spec/channel.md docs/en/SPEC-channel.md`。
+**依赖：** Task 13。**涉及文件：** 约 8 个文档。**规模：** M。
+
+### Task 15：全量免费验证
+
+**描述：** 跑总验证与两项 plugin validate、`git diff --check`；`~/.codex/config.toml` 前后 sha256 对照；确认测试后无残留 `sleep`／假端点进程。
+**验证：** `PYTHONDONTWRITEBYTECODE=1 /bin/bash scripts/validate.sh`、`claude plugin validate .`、`claude plugin validate ./plugins/delegate`、`git diff --check`。
+**依赖：** Task 14。**涉及文件：** 本模块 todo。**规模：** S。
+
+### Checkpoint 8（gate）：交审
+
+把实际 diff、红绿记录和未验证项交用户审。版本号 0.7.1、`v0.7.1` 版本说明、提交、推送和 PR 分别单独询问。
+
+### 风险与缓解
+
+- **冻结后 Codex 的会话没写完，收尾轮续跑不了：** 仍先给 Codex TERM、再 CONT，保留它原来的优雅退出（修订 R1 后 TERM 紧跟在后代组 TERM 之后）；run-timeout 套件守住收尾轮流程。
+- **PID 复用误杀：** 只对快照里 pgid 不变、仍在世的后代组发信号，排除自身组和 pgid≤1；窗口只有几秒，写进合同的保证范围之外。
+- **Linux 无 `ps`：** 优先读 `/proc`。Linux 上未实测，列为未验证项。
+- **真实 Codex 测试依赖本机版本与启动耗时：** 无 codex 时跳过，等待以进程出现为准，不靠固定延时。
+
+### 未验证项（预先列明）
+
+- Linux 实机；写模式（`workspace-write`）下的回收；T5b 那次 60 秒挂住的真实根因（真实 provider 与推理流，需要付费调用）；`sandbox-exec` 包装下的父子关系以本机实测为准。
