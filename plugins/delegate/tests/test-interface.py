@@ -110,6 +110,12 @@ class InterfaceTests(unittest.TestCase):
         import run_state
         self.assertEqual(self.interface['run']['continue']['stateRetentionDays'], run_state.STATE_RETENTION_DAYS)
 
+    def test_long_run_is_additive(self):
+        # run-longrun (interface 1.3): --timeout only widens the default; the caller runs it in the background.
+        self.assertEqual(self.interface['run']['longRun'], {'option': '--timeout', 'minSeconds': 541, 'maxSeconds': 7200,
+                                                            'defaultSeconds': 540, 'background': 'caller'})
+        self.assertTrue(delegate_capabilities.BACKENDS['codex']['longRun'])
+
     def test_report_schema_version(self):
         self.assertEqual(self.interface['review']['report']['schemaVersion'], self.report['schema_version'])
 

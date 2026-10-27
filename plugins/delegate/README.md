@@ -61,6 +61,10 @@ tests/                       离线桩测试与回归
 - **done 之后接着派下一个任务（接口 1.3 起）**：`/delegate:run --continue <runId> [--write] -- "<下一个任务>"`，只接 `--resumable` 起头的链上状态为 `done` 的一轮，在同一个 Codex 会话里接着做，不必重新起会话、重读项目。一个 runId 只能被接一次；任务须来自已批准的 Plan 或用户本人。
 - 链上的状态文件和结果文件保留 14 天，过程日志只保留最近 50 组。
 
+## 长任务
+
+默认期限 540 秒。`/delegate:run --timeout <秒>` 可以放大到 541～7200 秒（接口 1.3 起），期限的分配、时间预算、收尾和退出码与默认期限相同。超过宿主前台命令的期限时（Claude Code 的 Bash 前台上限为 600 秒）必须用宿主的后台模式调用；delegate 不托管后台进程，要停下就停止那个后台任务，中止时会回收 Codex 起的全部后代进程。一次运行最多约 `T + 30` 秒结束。
+
 ## 结果文件
 
 每次启动过 Codex 的 run 都写一份 JSON 结果文件 `${TMPDIR:-/tmp}/delegate/<runId>.result.json`（0600），供使用方机器读取，不用解析过程日志。
@@ -81,6 +85,7 @@ tests/                       离线桩测试与回归
 - **超时（接口 1.2 起）**：`run.resume.statuses` 为 `["done", "needs-input", "timeout"]`，另有 `run.timeout` 为 `{"status": "timeout", "exitCode": 124}`。使用方按 `>=1.2,<2.0` 才使用 `timeout`；读到 1.1 时超时仍是退出 124，按失败处理。
 - **结果文件（接口 1.3 起）**：`run.result` 为 `{"schemaVersion": 1, "line": "delegate: result=<path>", "strict": "--strict", "statuses": [...]}`，`run.usage` 说明 token 的累计口径。使用方按 `>=1.3,<2.0` 且字段存在时读取结果文件。
 - **接着派任务（接口 1.3 起）**：`run.continue` 为 `{"option": "--continue", "backends": ["codex"], "accepts": ["done"], "chain": "--resumable", "stateRetentionDays": 14}`。
+- **长任务（接口 1.3 起）**：`run.longRun` 为 `{"option": "--timeout", "minSeconds": 541, "maxSeconds": 7200, "defaultSeconds": 540, "background": "caller"}`，`background: "caller"` 表示后台由调用方负责。
 - **`statuses` 是开放集合**：以后的次版本可能追加新值。遇到不认识的值必须停下或当失败处理，不能当成完成；判断成功先看退出码为 0，再看 `status=done`。
 - **审查报告（`review.report.schemaVersion: 1`）**：`/delegate:review` 的标准输出是一份 JSON 报告（`--dry-run` 输出的是预览，不是报告）。标准错误中的私有副本路径不属于接口。稳定字段：
 

@@ -16,6 +16,7 @@ Codex：--write --effort none|minimal|low|medium|high|xhigh
       --resumable（可续跑）；--resume <runId> 带用户答复续跑
       --continue <runId> 在 done 之后接着派下一个任务（只限 --resumable 起头的链）
       --strict（最终答复首行必须带结束标记，缺了判 unmarked）
+      --timeout <541～7200 秒>（放大期限；超过宿主前台期限时须用后台模式调用）
 Claude Code：必须提供 --review-context；--max-turns <正整数>（默认 12）
              --max-budget-usd <正数>；不支持 --write 或 --effort。
 Claude 审查目前仅支持 Mac 本机 CLI + srt 0.0.79；条件不足不会切换后端。
@@ -31,11 +32,16 @@ class Parser(argparse.ArgumentParser):
         raise ArgumentError(message)
 
 
+def valid_timeout(value):
+    # --timeout only widens the 540-second default (run-longrun).
+    return value.isascii() and value.isdecimal() and 541 <= int(value) <= 7200
+
+
 def parse(arguments):
     # Duplicate selectors are errors rather than a silent last-option override.
     options = arguments[:arguments.index('--')] if '--' in arguments else arguments
     for flag in ('--backend', '--model', '--effort', '--review-context', '--max-turns', '--max-budget-usd', '--resume',
-                 '--continue'):
+                 '--continue', '--timeout'):
         if sum(a == flag or a.startswith(flag + '=') for a in options) > 1:
             raise ArgumentError('duplicate option: ' + flag)
     parser = Parser(add_help=False, allow_abbrev=False)
@@ -47,6 +53,7 @@ def parse(arguments):
     parser.add_argument('--strict', action='store_true')
     parser.add_argument('--resume')
     parser.add_argument('--continue', dest='continue_from')
+    parser.add_argument('--timeout')
     parser.add_argument('--review-context')
     parser.add_argument('--max-turns')
     parser.add_argument('--max-budget-usd')
@@ -69,6 +76,10 @@ def parse(arguments):
         raise ArgumentError('--resume cannot be combined with --resumable, --model, --effort or --review-context')
     if result.resumable and result.review_context is not None:
         raise ArgumentError('--resumable cannot be combined with --review-context')
+    if result.timeout is not None and not valid_timeout(result.timeout):
+        raise ArgumentError('--timeout must be an integer between 541 and 7200')
+    if result.timeout is not None and result.review_context is not None:
+        raise ArgumentError('--timeout cannot be combined with --review-context')
     if result.strict and result.review_context is not None:
         raise ArgumentError('--strict cannot be combined with --review-context')
     error = model_error(result.backend, result.model)
@@ -130,6 +141,8 @@ def main(arguments=None, *, review_context=None):
             forwarded.extend(('--resume', args.resume))
         if args.continue_from is not None:
             forwarded.extend(('--continue', args.continue_from))
+        if args.timeout is not None:
+            forwarded.extend(('--timeout', args.timeout))
         for flag, value in (('--model', args.model), ('--effort', args.effort)):
             if value is not None:
                 forwarded.extend((flag, value))

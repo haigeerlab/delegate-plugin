@@ -15,7 +15,9 @@
                "statuses": ["done", "needs-input", "timeout", "unmarked", "failed", "interrupted", "unreaped", "empty"]},
     "usage": {"in": "result.usage", "cumulative": "session", "perRun": "run"},
     "continue": {"option": "--continue", "backends": ["codex"], "accepts": ["done"], "chain": "--resumable",
-                 "stateRetentionDays": 14}
+                 "stateRetentionDays": 14},
+    "longRun": {"option": "--timeout", "minSeconds": 541, "maxSeconds": 7200, "defaultSeconds": 540,
+                "background": "caller"}
   },
   "doctor": {"command": "/delegate:doctor"}
 }

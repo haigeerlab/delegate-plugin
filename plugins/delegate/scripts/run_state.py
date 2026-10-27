@@ -156,6 +156,7 @@ def build_result(options):
         'usage': {'run': run, 'session': session, 'note': note},
         'cleanup': parse_cleanup(_read_lines(options.cleanup)),
         'logs': {'events': options.events, 'stderr': options.log},
+        'timeoutSeconds': options.timeout_seconds,
     }
 
 
@@ -167,6 +168,7 @@ def result_main(arguments):
         parser.add_argument('--' + name.replace('_', '-'), dest=name, default='')
     parser.add_argument('--exit-code', dest='exit_code', type=int, required=True)
     parser.add_argument('--started', type=float, required=True)
+    parser.add_argument('--timeout-seconds', dest='timeout_seconds', type=int, default=None)
     for name in ('write', 'strict', 'resumable', 'resumable_mode'):
         parser.add_argument('--' + name.replace('_', '-'), dest=name, type=lambda value: value == '1', default=False)
     options = parser.parse_args(arguments)

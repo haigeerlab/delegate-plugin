@@ -382,7 +382,7 @@ class ResultFileFlowTests(FlowBase):
         self.assertEqual((result['status'], result['exitCode']), ('timeout', 124))
         self.assertEqual(result['wrapUp'], {'mode': '兜底', 'reason': '普通 run 不保留会话'})
         self.assertTrue(any(line.startswith('delegate: 清理：中止前 Codex 的后代进程') for line in result['cleanup']['lines']))
-        self.assertEqual(result['timeoutSeconds'] if 'timeoutSeconds' in result else None, None)
+        self.assertEqual(result['timeoutSeconds'], 4)
 
     def test_model_time_up(self):
         result = self.result_of(self.run_delegate('--', '任务', STUB_ANSWER='TIME_UP: 做完 1 步'))

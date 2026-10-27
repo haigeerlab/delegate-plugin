@@ -8,6 +8,7 @@ v0.7.1 之后（接口 1.3，五个模块全部完成前不发版）：
 
 - **结果文件（run-result）**：每次启动过 Codex 的 run 写一份 JSON 结果文件；结果行前多一行 `delegate: result=<路径>`。新增 `--strict`，缺首行结束标记判 `unmarked`、退出 1。接口新增 `run.result`、`run.usage`。
 - **接着派任务（run-continue）**：新增 `--continue <runId>`，在 `--resumable` 链上状态为 `done` 的一轮之后，于同一 Codex 会话里接着做下一个任务。状态文件、占位文件和结果文件改为保留 14 天，不再随最近 50 组日志一起删除。接口新增 `run.continue`。
+- **长任务（run-longrun）**：新增 `--timeout <秒>`，把期限放大到 541～7200 秒；默认仍是 540 秒，超过宿主前台期限时须由调用方用后台模式调用，delegate 不托管后台进程。中止清理沿用 v0.7.1。结果文件记 `timeoutSeconds`。接口新增 `run.longRun`。
 
 升级提示：
 - 过程日志变成两个文件：`<runId>.events.jsonl`（Codex 以 `--json` 运行的事件流）和 `<runId>.log`（stderr）；失败时 stderr 打印的日志末尾随之变化，并附最近的事件。读日志文本的脚本需要调整；日志不是接口。

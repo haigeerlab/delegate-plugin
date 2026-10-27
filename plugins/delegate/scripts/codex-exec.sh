@@ -24,6 +24,7 @@ RESUMABLE=0
 STRICT=0
 RESUME_ID=''
 RESUME_GIVEN=0
+TIMEOUT_GIVEN=''
 CONTINUE_GIVEN=0
 
 while [ "$#" -gt 0 ]; do
@@ -64,6 +65,22 @@ while [ "$#" -gt 0 ]; do
         fi
         RESUME_ID="${1}"
         RESUME_GIVEN=1
+        shift
+        continue
+        ;;
+      --timeout)
+        if [ "$#" -eq 0 ] || [ -n "${TIMEOUT_GIVEN}" ]; then
+          usage
+          exit 64
+        fi
+        case "${1}" in
+          ''|*[!0-9]*) TIMEOUT_GIVEN='invalid' ;;
+          *) if [ "${#1}" -le 4 ] && [ "${1}" -ge 541 ] && [ "${1}" -le 7200 ]; then TIMEOUT_GIVEN="${1}"; else TIMEOUT_GIVEN='invalid'; fi ;;
+        esac
+        if [ "${TIMEOUT_GIVEN}" = 'invalid' ]; then
+          printf 'delegate: --timeout must be an integer between 541 and 7200\n' >&2
+          exit 64
+        fi
         shift
         continue
         ;;
@@ -155,6 +172,10 @@ except ValueError:
     seconds = 540
 print(min(seconds, 540) if seconds > 0 else 540)
 ')"
+# An explicit --timeout widens the total; the split below is unchanged (run-longrun).
+if [ -n "${TIMEOUT_GIVEN}" ]; then
+  DELEGATE_TIMEOUT_SECONDS="${TIMEOUT_GIVEN}"
+fi
 # Split the deadline: Codex's main run gets MAIN_SECONDS, a wrap-up round WRAPUP_SECONDS.
 DEADLINES="$(python3 -B "${SCRIPT_DIR}/run_state.py" deadlines "${DELEGATE_TIMEOUT_SECONDS}")" || exit 1
 WRAPUP_SECONDS="$(printf '%s\n' "${DEADLINES}" | sed -n 1p)"
@@ -302,7 +323,7 @@ write_result_file() {
     --wrapup-events "${TMP_ROOT}/${RUN_ID}.wrapup.events.jsonl" --wrapup-mode "${WRAPUP_MODE}" \
     --wrapup-reason "${WRAPUP_REASON}" --baseline "${TMP_ROOT}/${RUN_ID}.baseline" --cleanup "${CLEANUP}" \
     --model "${MODEL}" --effort "${EFFORT}" --write "${WRITE_MODE}" --resumable "${RESULT_RESUMABLE}" \
-    --resumable-mode "${RESUMABLE}" --strict "${STRICT}")"; then
+    --resumable-mode "${RESUMABLE}" --strict "${STRICT}" --timeout-seconds "${DELEGATE_TIMEOUT_SECONDS}")"; then
     if [ -n "${RESULT_LINE}" ]; then
       printf 'delegate: result=%s\n' "${RESULT_PATH}"
     else
