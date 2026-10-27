@@ -133,3 +133,10 @@
 | [S36 调研：`--write` 运行能否不写入项目信任](2026-10-26-delegate-s36-trust-probe.md) | 结果/记录 | — |
 | [S36 免费真机核验：write-trust 生成的覆盖能阻止写入](2026-10-26-delegate-s36-write-trust-check.md) | 结果/记录 | [2026-10-26-delegate-s36-write-trust-check.py.txt](2026-10-26-delegate-s36-write-trust-check.py.txt) |
 | [S36 付费实测：真实 `--write` 不再改用户配置](2026-10-26-delegate-s36-write-trust-live.md) | 结果/记录 | — |
+
+## 中止回收与接口 1.3：S38、S41（2026-10-27）
+
+| 记录 | 类型 | 配套数据 |
+|---|---|---|
+| [S38 前置实测：`--json` 事件、续跑压缩、worktree 与长运行](2026-10-27-delegate-s38-probe.md) | 结果/记录 | [2026-10-27-delegate-s38-probe.py.txt](2026-10-27-delegate-s38-probe.py.txt)、[2026-10-27-delegate-s38-fake-responses.py.txt](2026-10-27-delegate-s38-fake-responses.py.txt)、[2026-10-27-delegate-s38-term-repro.sh.txt](2026-10-27-delegate-s38-term-repro.sh.txt) |
+| [接口 1.3 合并实测（RU-07）](2026-10-27-delegate-1.3-merged-live.md) | 结果/记录 | — |

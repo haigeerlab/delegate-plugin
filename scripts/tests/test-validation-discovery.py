@@ -32,7 +32,8 @@ class DiscoveryTests(unittest.TestCase):
         suites = ('backend', 'channel-regressions', 'command-migration', 'review-backends',
             'review-cli', 'claude-review', 'review-context', 'review-result', 'review-execution',
             'review-native', 'review-transport', 'review-guest-entry', 'review-artifacts',
-            'review-service', 'review-guest', 'interface', 'run-resume', 'run-timeout', 'write-trust', 'reap-fake-endpoint', 'claude-isolation')
+            'review-service', 'review-guest', 'interface', 'run-resume', 'run-timeout', 'write-trust', 'reap-fake-endpoint',
+            'run-result', 'run-continue', 'run-longrun', 'run-check', 'run-rules', 'claude-isolation')
         for suite in suites:
             (root / ('plugins/delegate/tests/test-%s.py' % suite)).write_text('# fixture suite\n')
         target = root / 'scripts/tests/test-validation-discovery.py'

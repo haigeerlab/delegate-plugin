@@ -4,7 +4,9 @@
 
 **Approval mode (2026-10-25):** the Codex review backend call always passes `-c approval_policy="never"`; see revision R2 in [run-resume](SPEC-run-resume.md). The rest of the review contract is unchanged.
 
-**Current release, 2026-10-27:** v0.7.1 is a patch release that only makes run reclaim the descendant process groups Codex started when a run is aborted (see [channel](SPEC-channel.md) revision S41); this module's review contract, arguments and report format are unchanged; see the [release notes](releases/v0.7.1.md). Free validation passed 253 Python / 53 shell / 19 eval.
+**Current release, 2026-10-27:** v0.8.0 is a minor release: `/delegate:run` gains a result file, `--continue`, `--timeout`, `--check`, `--authorized-by` and `--rules-file`, and the interface description moves to 1.3 (additive only; see [run-result](SPEC-run-result.md) and the four related specifications); this module's review contract, arguments and report format are unchanged; see the [release notes](releases/v0.8.0.md). Free validation passed 328 Python / 53 shell / 19 eval.
+
+**v0.7.1 release, 2026-10-27:** v0.7.1 is a patch release that only makes run reclaim the descendant process groups Codex started when a run is aborted (see [channel](SPEC-channel.md) revision S41); this module's review contract, arguments and report format are unchanged; see the [release notes](releases/v0.7.1.md). Free validation passed 253 Python / 53 shell / 19 eval.
 
 **v0.7.0 release, 2026-10-26:** v0.7.0 keeps progress on run timeouts (see [run-timeout](SPEC-run-timeout.md), interface 1.2) and stops write mode from writing Codex project trust (see [write-trust](SPEC-write-trust.md)); this module's review contract, arguments and report format are unchanged; see the [release notes](releases/v0.7.0.md). Free validation passed 247 Python / 53 shell / 19 eval.
 

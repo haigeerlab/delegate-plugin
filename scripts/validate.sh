@@ -118,7 +118,7 @@ for SUITE in channel detection routing; do
     fail "${SUITE} 产品测试未通过"
   fi
 done
-for SUITE in backend channel-regressions command-migration review-backends review-cli claude-review review-context review-result review-execution review-native review-transport review-guest-entry review-artifacts review-service review-guest interface run-resume run-timeout write-trust reap-fake-endpoint; do
+for SUITE in backend channel-regressions command-migration review-backends review-cli claude-review review-context review-result review-execution review-native review-transport review-guest-entry review-artifacts review-service review-guest interface run-resume run-timeout write-trust reap-fake-endpoint run-result run-continue run-longrun run-check run-rules; do
   if ! python3 -B "${ROOT_DIR}/plugins/delegate/tests/test-${SUITE}.py"; then
     fail "${SUITE} 回归测试未通过"
   fi
