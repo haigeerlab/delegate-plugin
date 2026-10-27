@@ -140,3 +140,4 @@ Data without a dedicated record page: [2026-10-13-delegate-installed-preview-res
 |---|---|---|
 | [2026-10-27-delegate-s38-probe.md](../../verification/2026-10-27-delegate-s38-probe.md) | result/record | [2026-10-27-delegate-s38-probe.py.txt](../../verification/2026-10-27-delegate-s38-probe.py.txt), [2026-10-27-delegate-s38-fake-responses.py.txt](../../verification/2026-10-27-delegate-s38-fake-responses.py.txt), [2026-10-27-delegate-s38-term-repro.sh.txt](../../verification/2026-10-27-delegate-s38-term-repro.sh.txt) |
 | [2026-10-27-delegate-1.3-merged-live.md](../../verification/2026-10-27-delegate-1.3-merged-live.md) | result/record | — |
+| [2026-10-27-delegate-timeout-longrun-live.md](../../verification/2026-10-27-delegate-timeout-longrun-live.md) | result/record | [2026-10-27-delegate-timeout-longrun-rehearsal.py.txt](../../verification/2026-10-27-delegate-timeout-longrun-rehearsal.py.txt) |
