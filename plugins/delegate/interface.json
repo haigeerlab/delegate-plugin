@@ -21,7 +21,9 @@
     "check": {"option": "--check", "shell": false, "when": "done", "timeoutSeconds": 600,
               "operators": ["&&", "||", ";", "|", ">", "<", "`", "$("], "match": "token-prefix-or-suffix"},
     "writeAuthorization": {"option": "--authorized-by", "requires": "--write", "recorded": "result.authorization",
-                           "verifies": ["file-sha256-across-chain", "repository"]}
+                           "verifies": ["file-sha256-across-chain", "repository"]},
+    "rules": {"option": "--rules-file", "maxBytes": 16384, "placement": "after-preamble",
+              "projectInstructions": "codex-reads-agents-md"}
   },
   "doctor": {"command": "/delegate:doctor"}
 }

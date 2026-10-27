@@ -66,6 +66,10 @@ tests/                       离线桩测试与回归
 - `/delegate:run --check "<命令>"`（接口 1.3 起）：运行以 `done` 结束后，由 delegate 在仓库根按参数列表执行检查命令（不经 shell，期限 600 秒），结果写进结果文件的 `check`，不改变运行本身的状态。命令里有 shell 运算符时拒绝，规则与 module-crew 相同。检查在沙箱外以你的权限执行，所以命令只能来自项目配置里你批过的检查命令。
 - `/delegate:run --write --authorized-by <文件>`（接口 1.3 起）：使用方（module-crew）把你打开外包开关时的原话记录成文件，在 Spec 和 Plan 已批、Task 在已批 Plan 内、同一模块同一 worktree 时，可以不必每个 Task 都等你点头。delegate 只记录文件的路径和 sha256，并要求整条链用同一个文件；它核实不了文件内容。
 
+## 规则片段
+
+`/delegate:run --rules-file <文件>`（接口 1.3 起）把本次委托专用的规则原样放进提示词（前言之后、任务之前，最多 16 KiB），冲突时以它为准，但沙箱、不提交不推送和首行标记不能被它改变。Codex 会自己读 worktree 根的 AGENTS.md，delegate 不读也不拼；项目长期规则写进 AGENTS.md，这个片段只放这一次委托专用的规则。
+
 ## 长任务
 
 默认期限 540 秒。`/delegate:run --timeout <秒>` 可以放大到 541～7200 秒（接口 1.3 起），期限的分配、时间预算、收尾和退出码与默认期限相同。超过宿主前台命令的期限时（Claude Code 的 Bash 前台上限为 600 秒）必须用宿主的后台模式调用；delegate 不托管后台进程，要停下就停止那个后台任务，中止时会回收 Codex 起的全部后代进程。一次运行最多约 `T + 30` 秒结束。
@@ -92,6 +96,7 @@ tests/                       离线桩测试与回归
 - **接着派任务（接口 1.3 起）**：`run.continue` 为 `{"option": "--continue", "backends": ["codex"], "accepts": ["done"], "chain": "--resumable", "stateRetentionDays": 14}`。
 - **长任务（接口 1.3 起）**：`run.longRun` 为 `{"option": "--timeout", "minSeconds": 541, "maxSeconds": 7200, "defaultSeconds": 540, "background": "caller"}`，`background: "caller"` 表示后台由调用方负责。
 - **检查与写入授权（接口 1.3 起）**：`run.check` 为 `{"option": "--check", "shell": false, "when": "done", "timeoutSeconds": 600, "operators": [...], "match": "token-prefix-or-suffix"}`，运算符规则与 module-crew S30 一致；`run.writeAuthorization` 为 `{"option": "--authorized-by", "requires": "--write", "recorded": "result.authorization", "verifies": [...]}`。`run.write` 仍是 `"explicit"`。
+- **规则片段（接口 1.3 起）**：`run.rules` 为 `{"option": "--rules-file", "maxBytes": 16384, "placement": "after-preamble", "projectInstructions": "codex-reads-agents-md"}`。
 - **`statuses` 是开放集合**：以后的次版本可能追加新值。遇到不认识的值必须停下或当失败处理，不能当成完成；判断成功先看退出码为 0，再看 `status=done`。
 - **审查报告（`review.report.schemaVersion: 1`）**：`/delegate:review` 的标准输出是一份 JSON 报告（`--dry-run` 输出的是预览，不是报告）。标准错误中的私有副本路径不属于接口。稳定字段：
 

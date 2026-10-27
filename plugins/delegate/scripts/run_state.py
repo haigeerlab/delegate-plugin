@@ -174,11 +174,15 @@ def result_main(arguments):
     parser.add_argument('--timeout-seconds', dest='timeout_seconds', type=int, default=None)
     parser.add_argument('--check-command', dest='check_command', default=None)
     parser.add_argument('--authorization-file', dest='authorization_file', default='')
+    parser.add_argument('--rules-file', dest='rules_file', default='')
     for name in ('write', 'strict', 'resumable', 'resumable_mode'):
         parser.add_argument('--' + name.replace('_', '-'), dest=name, type=lambda value: value == '1', default=False)
     options = parser.parse_args(arguments)
     result = build_result(options)
     result['authorization'] = authorization_entry(options.authorization_file, options.write)
+    if options.rules_file:
+        import run_rules
+        result['rules'] = run_rules.identity(options.rules_file)
     if options.check_command is not None:
         import run_check
         result['check'] = run_check.recorded(options.directory, options.run_id, options.check_command)

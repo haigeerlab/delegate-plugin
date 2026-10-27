@@ -4,9 +4,11 @@
 BACKENDS = {
     'codex': {'review': True, 'run': True, 'write': True, 'resume': True,
               'result': True, 'continue': True, 'longRun': True, 'check': True, 'writeAuthorization': True,
+              'rules': True,
               'options': ('--model', '--effort')},
     'claude-code': {'review': True, 'run': False, 'write': False, 'resume': False,
                     'result': False, 'continue': False, 'longRun': False, 'check': False, 'writeAuthorization': False,
+                    'rules': False,
                     'options': ('--model', '--max-turns', '--max-budget-usd')},
 }
 

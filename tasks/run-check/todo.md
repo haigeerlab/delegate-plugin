@@ -30,3 +30,5 @@
 **Task 5（2026-10-27）：** 按 Plan 修订 R1，`--check`、`--authorized-by` 的用法与两条纪律（写入授权四条件、检查命令来源）写进 `references/run.md`；`run.md` 只在 argument-hint 与「必须先读」那句里加两个参数（`test-command-migration.py` 通过）；`delegate-routing` 的 SKILL.md 在「`--write` 必须用户在该轮明确要求」后加一句例外并指向参考文件（`test-routing.sh` 10 通过）；中英文 README 新增「检查与事先写入授权」一节与接口条目，中英文待发行说明同步。routing 规格的指向句按 Plan 留到 run-rules 的汇总任务。
 
 **Checkpoint 2（report，2026-10-27）：** 总验证 `validate: ok`；两项 plugin validate 通过；`verify-artifacts` 4 通过；本地提交一次，未推送；`activeModule` 切到 `run-rules`。
+
+**事后发现（2026-10-27，run-rules Task 2 时）：** 本模块 Task 5 在 `run.md` 的 argument-hint 里写了 `--check "<命令>"`，嵌套双引号使 YAML frontmatter 解析失败（运行时该命令的 frontmatter 会被整体丢弃）；本模块 Checkpoint 2 只跑了 `claude plugin validate .`，漏跑 `claude plugin validate ./plugins/delegate`，所以没发现，问题随 `33a54ca` 提交。已在 run-rules 的改动里改为 `--check <命令>`，两项 plugin validate 都通过。之后每个检查点两项 validate 都跑。

@@ -7,6 +7,8 @@
 
 可续跑模式（`--resumable`）、run 结果行与 `--resume` 续跑见 [run-resume](run-resume.md)；不带这些参数时本页合同不变。
 
+接口 1.3 起：Codex 参数多一项 `--json`，过程日志拆成事件流（`.events.jsonl`）与 stderr（`.log`）两个文件，每次运行写 JSON 结果文件，见 [run-result](run-result.md)；默认期限仍为 540 秒，只能由 `--timeout` 放大到 7200 秒，见 [run-longrun](run-longrun.md)。不带 1.3 参数时，本页其余合同不变。
+
 本页保留 Codex `codex-exec.sh` 自由文本合同。公共 `delegate-exec.sh` 默认分派该路径；显式后端、共同只读审查及 stdin 快照输入由 [claude-review](claude-review.md) 管理。旧入口新增递归拒绝和已知 Claude 模型族拒绝，不改变既有 read/write、ChatGPT 认证、期限或日志含义。
 
 **修订 S41（2026-10-27，v0.7.1 补丁）：** S38 实测发现 Codex 执行的 shell 命令起在新会话、新进程组，Codex 被中止时不回收它们，命令会被 init/launchd 收养继续运行；另有一次 `run_codex.py` 收到 TERM 后 60 秒不退出。用户原话：「S41 先单独出 delegate 0.7.1：只修中止时回收后代进程组、最后的 wait 加上限、清理结果如实报告，用假端点做回归测试；1.3 在它之上做。」本次修订「调用与生命周期」的清理条款、CH-03，新增 CH-06、CH-07；修订 R1（同日，Task 15 总验证后）把冻结窗口缩到发完 TERM 为止，两段宽限期并行，避免 `run_codex.py` 在冻结期间被外部 KILL 时留下停止状态的 Codex；接口仍为 1.2，不加 `--timeout`，不改 540 秒期限，结果行与 stdout 不变。

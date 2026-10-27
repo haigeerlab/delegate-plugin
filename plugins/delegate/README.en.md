@@ -66,6 +66,10 @@ tests/                       Offline stub tests and regressions
 - `/delegate:run --check "<command>"` (since interface 1.3): after a run ends `done`, delegate runs the check command as an argument list in the repository root (no shell, 600-second limit) and records it under `check` in the result file without changing the run's own status. Commands with shell operators are refused with the same rule as module-crew. The check runs outside the sandbox with your permissions, so the command may only come from check commands you approved in the project configuration.
 - `/delegate:run --write --authorized-by <file>` (since interface 1.3): the consumer (module-crew) records the words you used to switch offloading on in a file; when the Spec and Plan are approved, the Task is inside the approved Plan and it is the same module in the same worktree, it need not wait for your nod on every Task. delegate only records the file's path and sha256 and requires the same file across the chain; it cannot verify the content.
 
+## Rules section
+
+`/delegate:run --rules-file <file>` (since interface 1.3) puts rules meant only for this delegation into the prompt verbatim (after the preamble, before the task, at most 16 KiB). They win on conflict, except that the sandbox, no commit/push and the first-line markers cannot be changed by them. Codex reads the AGENTS.md at the worktree root by itself; delegate neither reads nor merges it. Keep long-term project rules in AGENTS.md and only this delegation's rules in the section.
+
 ## Long tasks
 
 The default deadline is 540 seconds. `/delegate:run --timeout <seconds>` widens it to 541–7200 seconds (since interface 1.3); the deadline split, time budget, wrap-up and exit codes are the same as for the default. Above the host's foreground command limit (600 seconds for Claude Code's foreground Bash) it must be called in the host's background mode; delegate does not manage background processes, so stop a run by stopping that background task, and the abort reclaims every descendant process Codex started. A run ends within about `T + 30` seconds.
@@ -92,6 +96,7 @@ For other plugins to integrate by version without reading this plugin's internal
 - **Continue (since interface 1.3)**: `run.continue` is `{"option": "--continue", "backends": ["codex"], "accepts": ["done"], "chain": "--resumable", "stateRetentionDays": 14}`.
 - **Long tasks (since interface 1.3)**: `run.longRun` is `{"option": "--timeout", "minSeconds": 541, "maxSeconds": 7200, "defaultSeconds": 540, "background": "caller"}`; `background: "caller"` means the caller owns the background run.
 - **Check and write authorization (since interface 1.3)**: `run.check` is `{"option": "--check", "shell": false, "when": "done", "timeoutSeconds": 600, "operators": [...], "match": "token-prefix-or-suffix"}`, with the same operator rule as module-crew S30; `run.writeAuthorization` is `{"option": "--authorized-by", "requires": "--write", "recorded": "result.authorization", "verifies": [...]}`. `run.write` stays `"explicit"`.
+- **Rules section (since interface 1.3)**: `run.rules` is `{"option": "--rules-file", "maxBytes": 16384, "placement": "after-preamble", "projectInstructions": "codex-reads-agents-md"}`.
 - **`statuses` is an open set**: later minor versions may append values. A consumer meeting an unknown value must stop or treat it as failure, never as completion; decide success by exit code 0 first, then `status=done`.
 - **Review report (`review.report.schemaVersion: 1`)**: the standard output of `/delegate:review` is one JSON report (`--dry-run` prints a preview, not a report). The private copy path on standard error is not part of the interface. Stable fields:
 

@@ -5,6 +5,8 @@
 
 Per-prompt UserPromptSubmit routing reminders are removed. Codex readiness proves neither the host, delegation intent nor Claude availability. Explicit requests use shared commands/skill with independent host/backend selection: default Codex, explicit Claude only for scoped read-only review. No opposite-host auto-routing, parameter/model mixing or fallback; see [claude-review](SPEC-claude-review.md). Explicit delegation and write authorization remain required, without reconfirming the same authorized scope.
 
+Since interface 1.3, write authorization has one exception: when the four conditions listed in [run-check](SPEC-run-check.md) all hold and `--authorized-by <file>` is given, the round counts as authorized; the rules are in the plugin's `references/run.md`, and the `delegate-routing` skill points to them. All other write rules are unchanged.
+
 Current contract: 2026-10-13 (routing reminder fix); 2026-10-08 clauses and samples retain their historical scope. Earlier records are preserved in the [historical archive](../archive/pre-spec-guard/README.md). Current `tasks/routing/` tracks maintenance reconciliation and this fix; it neither retroactively accepts historical work nor overrides this specification.
 
 

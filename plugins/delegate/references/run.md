@@ -46,3 +46,12 @@
   3. 同一个模块、同一个 worktree；
   4. 授权来源由 delegate 写进每次的结果（`authorization` 字段），调用方不得删除或改写。
 - 任何一条不满足，就回到原规则：只有用户当轮明确要求才加 `--write`。delegate 只能核对第 3 条的仓库部分与文件是否一致，其余由调用方负责；这是命令指令层面的纪律，不是技术锁。
+
+## `--rules-file`：本次委托专用的规则片段
+
+- `run … --rules-file <文件> -- "<任务>"`，可用于普通 run、`--resumable`、`--resume`、`--continue`。文件须是普通文件、不是软链接、UTF-8、非空、不含 NUL、不超过 16 KiB，否则 `delegate: rules file not usable`（下一行写原因），退出 64。
+- 原文原样放进提示词的【项目规则（本次委托专用）】一段：普通 run 和可续跑 run 放在前言之后、任务之前；`--resume`、`--continue` 放在最前；收尾轮不放。这一段写明冲突时以它为准，但沙箱、不提交不推送、首行标记不能被它改变。结果文件只记路径、sha256、字节数，不记原文。
+- 与 AGENTS.md 的关系：
+  1. Codex 会自己读取工作目录所在 worktree 根的 AGENTS.md，delegate 不读、不拼、不检查它。
+  2. `--rules-file` 只放 AGENTS.md 以外、这一次委托专用的规则（例如这个 Task 的验收口径）；项目长期规则写进 AGENTS.md。
+  3. 两者冲突时 Codex 实际听谁的，没有机制保证；需要可靠的结束标记就同时用 `--strict`。

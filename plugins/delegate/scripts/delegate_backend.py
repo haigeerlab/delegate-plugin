@@ -19,6 +19,7 @@ Codex：--write --effort none|minimal|low|medium|high|xhigh
       --timeout <541～7200 秒>（放大期限；超过宿主前台期限时须用后台模式调用）
       --check "<命令>"（done 后在仓库根按参数列表执行，不经 shell）
       --authorized-by <文件>（须与 --write 同用；记录事先写入授权的来源）
+      --rules-file <文件>（本次委托专用的规则片段，放在前言之后）
 Claude Code：必须提供 --review-context；--max-turns <正整数>（默认 12）
              --max-budget-usd <正数>；不支持 --write 或 --effort。
 Claude 审查目前仅支持 Mac 本机 CLI + srt 0.0.79；条件不足不会切换后端。
@@ -51,7 +52,7 @@ def parse(arguments):
     # Duplicate selectors are errors rather than a silent last-option override.
     options = arguments[:arguments.index('--')] if '--' in arguments else arguments
     for flag in ('--backend', '--model', '--effort', '--review-context', '--max-turns', '--max-budget-usd', '--resume',
-                 '--continue', '--timeout', '--check', '--authorized-by'):
+                 '--continue', '--timeout', '--check', '--authorized-by', '--rules-file'):
         if sum(a == flag or a.startswith(flag + '=') for a in options) > 1:
             raise ArgumentError('duplicate option: ' + flag)
     parser = Parser(add_help=False, allow_abbrev=False)
@@ -66,6 +67,7 @@ def parse(arguments):
     parser.add_argument('--timeout')
     parser.add_argument('--check')
     parser.add_argument('--authorized-by', dest='authorized_by')
+    parser.add_argument('--rules-file', dest='rules_file')
     parser.add_argument('--review-context')
     parser.add_argument('--max-turns')
     parser.add_argument('--max-budget-usd')
@@ -92,6 +94,8 @@ def parse(arguments):
         raise ArgumentError('--timeout must be an integer between 541 and 7200')
     if result.timeout is not None and result.review_context is not None:
         raise ArgumentError('--timeout cannot be combined with --review-context')
+    if result.rules_file is not None and result.review_context is not None:
+        raise ArgumentError('--rules-file cannot be combined with --review-context')
     if result.authorized_by is not None and not result.write:
         raise ArgumentError('--authorized-by requires --write')
     if result.check is not None:
@@ -168,6 +172,8 @@ def main(arguments=None, *, review_context=None):
             forwarded.extend(('--check', args.check))
         if args.authorized_by is not None:
             forwarded.extend(('--authorized-by', args.authorized_by))
+        if args.rules_file is not None:
+            forwarded.extend(('--rules-file', args.rules_file))
         for flag, value in (('--model', args.model), ('--effort', args.effort)):
             if value is not None:
                 forwarded.extend((flag, value))

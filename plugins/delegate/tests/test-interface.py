@@ -129,6 +129,39 @@ class InterfaceTests(unittest.TestCase):
         self.assertTrue(delegate_capabilities.BACKENDS['codex']['check'])
         self.assertTrue(delegate_capabilities.BACKENDS['codex']['writeAuthorization'])
 
+    def test_interface_1_3_is_complete(self):
+        # spec/run-rules.md, "1.3 完整形状": every 1.3 marker, nothing removed from 1.2.
+        expected = {
+            'interface': '1.3',
+            'review': {'command': '/delegate:review', 'backends': ['codex', 'claude-code'], 'readOnly': True,
+                       'report': {'schemaVersion': 1}},
+            'run': {
+                'command': '/delegate:run', 'backends': ['codex'], 'write': 'explicit',
+                'resume': {'optIn': '--resumable', 'option': '--resume', 'backends': ['codex'],
+                           'statuses': ['done', 'needs-input', 'timeout']},
+                'timeout': {'status': 'timeout', 'exitCode': 124},
+                'result': {'schemaVersion': 1, 'line': 'delegate: result=<path>', 'strict': '--strict',
+                           'statuses': ['done', 'needs-input', 'timeout', 'unmarked', 'failed', 'interrupted',
+                                        'unreaped', 'empty']},
+                'usage': {'in': 'result.usage', 'cumulative': 'session', 'perRun': 'run'},
+                'continue': {'option': '--continue', 'backends': ['codex'], 'accepts': ['done'], 'chain': '--resumable',
+                             'stateRetentionDays': 14},
+                'longRun': {'option': '--timeout', 'minSeconds': 541, 'maxSeconds': 7200, 'defaultSeconds': 540,
+                            'background': 'caller'},
+                'check': {'option': '--check', 'shell': False, 'when': 'done', 'timeoutSeconds': 600,
+                          'operators': ['&&', '||', ';', '|', '>', '<', '`', '$('], 'match': 'token-prefix-or-suffix'},
+                'writeAuthorization': {'option': '--authorized-by', 'requires': '--write', 'recorded': 'result.authorization',
+                                       'verifies': ['file-sha256-across-chain', 'repository']},
+                'rules': {'option': '--rules-file', 'maxBytes': 16384, 'placement': 'after-preamble',
+                          'projectInstructions': 'codex-reads-agents-md'},
+            },
+            'doctor': {'command': '/delegate:doctor'},
+        }
+        self.assertEqual(self.interface, expected)
+        import run_rules
+        self.assertEqual(self.interface['run']['rules']['maxBytes'], run_rules.MAX_BYTES)
+        self.assertTrue(delegate_capabilities.BACKENDS['codex']['rules'])
+
     def test_report_schema_version(self):
         self.assertEqual(self.interface['review']['report']['schemaVersion'], self.report['schema_version'])
 

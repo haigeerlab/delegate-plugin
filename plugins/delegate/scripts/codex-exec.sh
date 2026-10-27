@@ -28,6 +28,9 @@ CHECK_COMMAND=''
 CHECK_GIVEN=0
 AUTH_FILE=''
 AUTH_GIVEN=0
+RULES_FILE=''
+RULES_GIVEN=0
+RULES_SECTION=''
 AUTH_PATH=''
 AUTH_SHA=''
 TIMEOUT_GIVEN=''
@@ -71,6 +74,16 @@ while [ "$#" -gt 0 ]; do
         fi
         RESUME_ID="${1}"
         RESUME_GIVEN=1
+        shift
+        continue
+        ;;
+      --rules-file)
+        if [ "$#" -eq 0 ] || [ "${RULES_GIVEN}" -eq 1 ]; then
+          usage
+          exit 64
+        fi
+        RULES_FILE="${1}"
+        RULES_GIVEN=1
         shift
         continue
         ;;
@@ -155,6 +168,10 @@ if ! command -v python3 >/dev/null 2>&1; then
 fi
 if [ "${CHECK_GIVEN}" -eq 1 ]; then
   python3 -B "${SCRIPT_DIR}/run_check.py" validate "${CHECK_COMMAND}" || exit 64
+fi
+if [ "${RULES_GIVEN}" -eq 1 ]; then
+  # The section ends with its own closing marker, so command substitution keeps the file's text intact.
+  RULES_SECTION="$(python3 -B "${SCRIPT_DIR}/run_rules.py" section "${RULES_FILE}")" || exit 64
 fi
 if [ "${AUTH_GIVEN}" -eq 1 ]; then
   if [ "${WRITE_MODE}" -ne 1 ]; then
@@ -254,15 +271,21 @@ if [ "${WRITE_MODE}" -eq 1 ]; then
 fi
 REPO_ROOT="$(git rev-parse --show-toplevel)" || exit 1
 PARENT_RUN_ID=''
-PROMPT="${PREAMBLE}
+TASK_TEXT="${TASK}"
+if [ -n "${RULES_SECTION}" ]; then
+  TASK_TEXT="${RULES_SECTION}
 
 ${TASK}"
+fi
+PROMPT="${PREAMBLE}
+
+${TASK_TEXT}"
 if [ "${RESUMABLE}" -eq 1 ]; then
   # Resumable sessions are persisted by Codex; keep the sandbox sentence and swap only the opening.
   EPHEMERAL=()
   PROMPT='【可续跑委托】你的最终答复会转给用户；用户答复后，会带着答复在本会话里接着跑。先做不受待定决策影响的任务，碰到需要用户拍板的决策（规格没覆盖的取舍、测试改不红、高风险不可逆操作）再停。要停时，最终答复第一行以 `NEED_USER:` 开头，后面写要问用户的问题，再写已完成的进度和可选项；不需要用户时照常做到底，第一行不要写 `NEED_USER:`。'"${PREAMBLE#*并把完整结论写进最终答复。}
 
-${TASK}"
+${TASK_TEXT}"
 fi
 if [ "${RESUME_GIVEN}" -eq 1 ]; then
   PARENT_RUN_ID="${RESUME_ID}"
@@ -273,6 +296,11 @@ if [ "${RESUME_GIVEN}" -eq 1 ]; then
     PROMPT="【下一个任务】${TASK}
 
 上一个任务已经结束。请在本会话里接着做这个新任务，沿用之前的约定：先做不受待定决策影响的部分；需要用户拍板时，最终答复第一行以 \`NEED_USER:\` 开头。"
+  fi
+  if [ -n "${RULES_SECTION}" ]; then
+    PROMPT="${RULES_SECTION}
+
+${PROMPT}"
   fi
 fi
 
@@ -377,7 +405,7 @@ write_result_file() {
     --wrapup-reason "${WRAPUP_REASON}" --baseline "${TMP_ROOT}/${RUN_ID}.baseline" --cleanup "${CLEANUP}" \
     --model "${MODEL}" --effort "${EFFORT}" --write "${WRITE_MODE}" --resumable "${RESULT_RESUMABLE}" \
     --resumable-mode "${RESUMABLE}" --strict "${STRICT}" --timeout-seconds "${DELEGATE_TIMEOUT_SECONDS}" \
-    ${CHECK_ARGS[@]+"${CHECK_ARGS[@]}"} --authorization-file "${AUTH_PATH}")"; then
+    ${CHECK_ARGS[@]+"${CHECK_ARGS[@]}"} --authorization-file "${AUTH_PATH}" --rules-file "${RULES_FILE}")"; then
     if [ -n "${RESULT_LINE}" ]; then
       printf 'delegate: result=%s\n' "${RESULT_PATH}"
     else
