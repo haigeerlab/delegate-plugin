@@ -1,6 +1,6 @@
 ---
 description: "把已明确任务交给 Codex 执行，默认只读，显式 write 才可改文件"
-argument-hint: "[--backend codex] [--write] [--model <slug>] [--effort <level>] [--resumable] <任务> | --resume <runId> [--write] <用户答复>"
+argument-hint: "[--backend codex] [--write] [--model <slug>] [--effort <level>] [--resumable] [--strict] <任务> | --resume <runId> [--write] [--strict] <用户答复>"
 allowed-tools: Bash
 ---
 
@@ -17,6 +17,8 @@ allowed-tools: Bash
 默认/上限 540 秒；中止时冻结 Codex 并回收它的全部后代进程组（含换组、换会话的命令），清理结果与残留 PID 输出到 stderr；执行进程未能回收时退出 125。旧过程日志位于 `${TMPDIR:-/tmp}/delegate/`，最终答复分开返回；只按需用 `sed -n` 读取必要片段，不 `cat` 整个日志。递归调用 delegate 被拒绝。实际宿主/模型无法核实时标 unknown。
 
 成功和超时时 stdout 末行是 `delegate: run_id=<id> status=<done|needs-input|timeout> resumable=<true|false>`；失败、信号中断、空答复不输出。判断成功先看退出码 0 再看 `status=done`；status 是开放集合，不认识的值当失败。
+
+结果行前一行 `delegate: result=<路径>` 是 JSON 结果文件（失败时在 stderr）；它和 `--strict` 的用法见 `${CLAUDE_PLUGIN_ROOT}/README.md`「结果文件」。
 
 超时 `status=timeout` 一律退出 124：提示词附时间预算，模型应到期前主动停下、首行 `TIME_UP:` 写进度；被强制中止时可续跑 run 再只读收尾一轮，否则输出不靠模型的兜底（写模式附改动文件）。超时不等于完成，进度交用户，续跑由用户决定。
 

@@ -76,7 +76,7 @@ class InterfaceTests(unittest.TestCase):
         self.assertIs(self.interface['review']['readOnly'], True)
 
     def test_resume_is_an_additive_minor_version(self):
-        self.assertEqual(self.interface['interface'], '1.2')
+        self.assertEqual(self.interface['interface'], '1.3')
         # spec-guard reads these two fields; they must never change within major version 1.
         self.assertEqual(self.interface['review']['command'], '/delegate:review')
         self.assertEqual(self.interface['doctor']['command'], '/delegate:doctor')
@@ -89,6 +89,17 @@ class InterfaceTests(unittest.TestCase):
         # run-timeout: the timeout status always exits 124; statuses is an open set.
         self.assertEqual(self.interface['run']['timeout'], {'status': 'timeout', 'exitCode': 124})
         self.assertIn(self.interface['run']['timeout']['status'], self.interface['run']['resume']['statuses'])
+
+    def test_result_and_usage_are_additive(self):
+        # run-result (interface 1.3): result file, --strict and usage; statuses is an open set.
+        self.assertEqual(self.interface['run']['result'], {
+            'schemaVersion': 1, 'line': 'delegate: result=<path>', 'strict': '--strict',
+            'statuses': ['done', 'needs-input', 'timeout', 'unmarked', 'failed', 'interrupted', 'unreaped', 'empty']})
+        self.assertEqual(self.interface['run']['usage'], {'in': 'result.usage', 'cumulative': 'session', 'perRun': 'run'})
+        self.assertLessEqual(set(self.interface['run']['resume']['statuses']), set(self.interface['run']['result']['statuses']))
+        self.assertEqual(self.interface['run']['write'], 'explicit')
+        self.assertTrue(delegate_capabilities.BACKENDS['codex']['result'])
+        self.assertFalse(delegate_capabilities.BACKENDS['claude-code']['result'])
 
     def test_report_schema_version(self):
         self.assertEqual(self.interface['review']['report']['schemaVersion'], self.report['schema_version'])

@@ -183,7 +183,8 @@ if args[:2] == ["login", "status"]:
     raise SystemExit(0)
 with open(os.environ["STUB_CALL_LOG"], "a", encoding="utf-8") as log:
     log.write(json.dumps(args, ensure_ascii=False) + "\n")
-print("OpenAI Codex v0.162.1\n--------\nsession id: 01a15f3b-0f2c-7d82-b5cc-7a1f711c11d2\n--------")
+# delegate runs Codex with --json: the session id arrives as a thread.started event.
+print(json.dumps({"type": "thread.started", "thread_id": "01a15f3b-0f2c-7d82-b5cc-7a1f711c11d2"}))
 for index, arg in enumerate(args[:-1]):
     if arg == "-o":
         with open(args[index + 1], "w", encoding="utf-8") as answer:

@@ -14,6 +14,7 @@ HELP = '''用法：delegate-exec.sh [--backend codex|claude-code] [选项] [--] 
 共同选项：--model <slug> --review-context <JSON 文件>
 Codex：--write --effort none|minimal|low|medium|high|xhigh
       --resumable（可续跑）；--resume <runId> 带用户答复续跑
+      --strict（最终答复首行必须带结束标记，缺了判 unmarked）
 Claude Code：必须提供 --review-context；--max-turns <正整数>（默认 12）
              --max-budget-usd <正数>；不支持 --write 或 --effort。
 Claude 审查目前仅支持 Mac 本机 CLI + srt 0.0.79；条件不足不会切换后端。
@@ -41,6 +42,7 @@ def parse(arguments):
     parser.add_argument('--effort', choices=('none', 'minimal', 'low', 'medium', 'high', 'xhigh'))
     parser.add_argument('--write', action='store_true')
     parser.add_argument('--resumable', action='store_true')
+    parser.add_argument('--strict', action='store_true')
     parser.add_argument('--resume')
     parser.add_argument('--review-context')
     parser.add_argument('--max-turns')
@@ -61,6 +63,8 @@ def parse(arguments):
         raise ArgumentError('--resume cannot be combined with --resumable, --model, --effort or --review-context')
     if result.resumable and result.review_context is not None:
         raise ArgumentError('--resumable cannot be combined with --review-context')
+    if result.strict and result.review_context is not None:
+        raise ArgumentError('--strict cannot be combined with --review-context')
     error = model_error(result.backend, result.model)
     if error:
         raise ArgumentError(error)
@@ -114,6 +118,8 @@ def main(arguments=None, *, review_context=None):
             forwarded.append('--write')
         if args.resumable:
             forwarded.append('--resumable')
+        if args.strict:
+            forwarded.append('--strict')
         if args.resume is not None:
             forwarded.extend(('--resume', args.resume))
         for flag, value in (('--model', args.model), ('--effort', args.effort)):

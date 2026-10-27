@@ -59,6 +59,17 @@ tests/                       离线桩测试与回归
 - 普通 run（不带 `--resumable`）同样有时间预算和兜底，超时也是 `status=timeout`、退出 124，但会话不保留，不能续跑。
 - 已知限制：模型漏写标记会判为 done；失败的运行不能续跑；续跑状态随最近 50 组日志一起清理。
 
+## 结果文件
+
+每次启动过 Codex 的 run 都写一份 JSON 结果文件 `${TMPDIR:-/tmp}/delegate/<runId>.result.json`（0600），供使用方机器读取，不用解析过程日志。
+
+- 有结果行时，结果行的前一行是 `delegate: result=<路径>`；失败、中断、未能回收（退出 125）、空答复时这一行在 stderr。
+- 内容：`status`、`exitCode`、`runId`／`parent`／`chainRoot`、会话 ID、Codex 跑过的命令与退出码、写模式改动的文件、`NEED_USER:`／`TIME_UP:`／`DONE:` 之后的原文、收尾方式、中止清理结果、耗时，以及 token。
+- token 来自 Codex 的 `turn.completed`，是**整个会话的累计值**：`usage.session` 是会话总量，`usage.run` 是本次用量（续跑时取与上一轮的差值）。整条链的总量就是最后一次的 `usage.session`，不要把各轮相加。
+- `--strict`：最终答复首行必须是 `DONE:`、`NEED_USER:`（仅可续跑）或 `TIME_UP:`。缺标记判 `status=unmarked`，退出 1，不能续跑。项目 AGENTS.md 若要求别的首行格式，可能挤掉标记，`--strict` 用来兜住这种情况。
+- 不读取 Codex 自己的会话文件，所以上下文占用、压缩和额度不在结果文件里。
+- 过程日志拆成两个文件：`<runId>.events.jsonl`（Codex 的 JSON 事件流）和 `<runId>.log`（stderr）。
+
 ## 对外接口
 
 供其他插件按版本对接，不读本插件内部文件。
@@ -66,6 +77,7 @@ tests/                       离线桩测试与回归
 - **`interface.json`**：位于插件根目录。`interface` 是接口版本；`review.backends`、`run.backends` 是本版本**支持**的后端，不代表本机已安装、已登录或有额度，能否运行仍以 `/delegate:doctor` 为准。只增加可选字段升次版本，删除、改名或改变含义升主版本；使用方按主版本范围检查，如 `>=1.0,<2.0`。
 - **续跑（接口 1.1 起）**：`run.resume` 为 `{"optIn": "--resumable", "option": "--resume", "backends": ["codex"], "statuses": [...]}`。使用方按 `>=1.1,<2.0` 判断能否续跑；读到 1.0 或没有该字段时按原做法处理，不续跑。
 - **超时（接口 1.2 起）**：`run.resume.statuses` 为 `["done", "needs-input", "timeout"]`，另有 `run.timeout` 为 `{"status": "timeout", "exitCode": 124}`。使用方按 `>=1.2,<2.0` 才使用 `timeout`；读到 1.1 时超时仍是退出 124，按失败处理。
+- **结果文件（接口 1.3 起）**：`run.result` 为 `{"schemaVersion": 1, "line": "delegate: result=<path>", "strict": "--strict", "statuses": [...]}`，`run.usage` 说明 token 的累计口径。使用方按 `>=1.3,<2.0` 且字段存在时读取结果文件。
 - **`statuses` 是开放集合**：以后的次版本可能追加新值。遇到不认识的值必须停下或当失败处理，不能当成完成；判断成功先看退出码为 0，再看 `status=done`。
 - **审查报告（`review.report.schemaVersion: 1`）**：`/delegate:review` 的标准输出是一份 JSON 报告（`--dry-run` 输出的是预览，不是报告）。标准错误中的私有副本路径不属于接口。稳定字段：
 

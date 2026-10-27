@@ -59,6 +59,17 @@ tests/                       Offline stub tests and regressions
 - A plain run (without `--resumable`) gets the same time budget and fallback and also ends in `status=timeout` with exit 124, but its session is not kept and it cannot be resumed.
 - Known limits: a missing marker is classified as done; failed runs cannot be resumed; resume state is pruned together with the latest 50 logs.
 
+## Result file
+
+Every run that started Codex writes one JSON result file, `${TMPDIR:-/tmp}/delegate/<runId>.result.json` (0600), for consumers to read by machine instead of parsing process logs.
+
+- When there is a result line, the line before it is `delegate: result=<path>`; on failure, interruption, an unreaped executor (exit 125) or an empty answer, this line goes to stderr.
+- Contents: `status`, `exitCode`, `runId`/`parent`/`chainRoot`, the session id, the commands Codex ran with their exit codes, the files changed in write mode, the text after `NEED_USER:`/`TIME_UP:`/`DONE:`, how a timeout was wrapped up, the abort-cleanup report, the duration, and tokens.
+- Tokens come from Codex's `turn.completed` and are **cumulative for the whole session**: `usage.session` is the session total, `usage.run` is this run's usage (for a resumed round, the difference from the previous round). The total for a chain is the last `usage.session`; do not add the rounds up.
+- `--strict`: the first line of the final answer must be `DONE:`, `NEED_USER:` (resumable only) or `TIME_UP:`. A missing marker gives `status=unmarked`, exit 1, and cannot be resumed. A project AGENTS.md that asks for another first-line format may push the marker out; `--strict` catches that.
+- Codex's own session files are not read, so context usage, compaction and quota are not in the result file.
+- Process logs are now two files: `<runId>.events.jsonl` (Codex's JSON event stream) and `<runId>.log` (stderr).
+
 ## External interface
 
 For other plugins to integrate by version without reading this plugin's internals.
@@ -66,6 +77,7 @@ For other plugins to integrate by version without reading this plugin's internal
 - **`interface.json`**: at the plugin root. `interface` is the interface version; `review.backends` and `run.backends` are the backends this version **supports**, not ones installed, signed in or funded on this machine; whether they run is still decided by `/delegate:doctor`. Adding optional fields bumps the minor version; removing, renaming or changing a field's meaning bumps the major version. Consumers check a major range such as `>=1.0,<2.0`.
 - **Resume (since interface 1.1)**: `run.resume` is `{"optIn": "--resumable", "option": "--resume", "backends": ["codex"], "statuses": [...]}`. Consumers check `>=1.1,<2.0` before resuming; with 1.0 or without the field they behave as before and do not resume.
 - **Timeout (since interface 1.2)**: `run.resume.statuses` is `["done", "needs-input", "timeout"]`, and `run.timeout` is `{"status": "timeout", "exitCode": 124}`. Consumers use `timeout` only with `>=1.2,<2.0`; on 1.1 a timeout still exits 124 and is treated as failure.
+- **Result file (since interface 1.3)**: `run.result` is `{"schemaVersion": 1, "line": "delegate: result=<path>", "strict": "--strict", "statuses": [...]}`, and `run.usage` states how tokens are counted. Consumers read the result file with `>=1.3,<2.0` and the field present.
 - **`statuses` is an open set**: later minor versions may append values. A consumer meeting an unknown value must stop or treat it as failure, never as completion; decide success by exit code 0 first, then `status=done`.
 - **Review report (`review.report.schemaVersion: 1`)**: the standard output of `/delegate:review` is one JSON report (`--dry-run` prints a preview, not a report). The private copy path on standard error is not part of the interface. Stable fields:
 

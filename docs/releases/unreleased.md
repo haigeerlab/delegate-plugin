@@ -2,4 +2,13 @@
 
 简体中文 | [English](../en/releases/unreleased.md)
 
-v0.6.0 之后的 run 超时保留进度（接口 1.2）与写模式不再写入 Codex 项目信任已归入 [v0.7.0 版本说明](v0.7.0.md)；v0.7.0 之后的中止时回收 Codex 起的命令已归入 [v0.7.1 版本说明](v0.7.1.md)。v0.7.1 之后暂无未发布变更。历史验收记录保留其发生时的版本和状态，不追认历史批准。
+v0.6.0 之后的 run 超时保留进度（接口 1.2）与写模式不再写入 Codex 项目信任已归入 [v0.7.0 版本说明](v0.7.0.md)；v0.7.0 之后的中止时回收 Codex 起的命令已归入 [v0.7.1 版本说明](v0.7.1.md)。历史验收记录保留其发生时的版本和状态，不追认历史批准。
+
+v0.7.1 之后（接口 1.3，五个模块全部完成前不发版）：
+
+- **结果文件（run-result）**：每次启动过 Codex 的 run 写一份 JSON 结果文件；结果行前多一行 `delegate: result=<路径>`。新增 `--strict`，缺首行结束标记判 `unmarked`、退出 1。接口新增 `run.result`、`run.usage`。
+
+升级提示：
+- 过程日志变成两个文件：`<runId>.events.jsonl`（Codex 以 `--json` 运行的事件流）和 `<runId>.log`（stderr）；失败时 stderr 打印的日志末尾随之变化，并附最近的事件。读日志文本的脚本需要调整；日志不是接口。
+- 结果行仍是 stdout 最后一行，但它前面多了 `delegate: result=` 一行。
+- 结果文件的 `status` 多了 `unmarked`（仅 `--strict`）以及没有结果行时的 `failed`、`interrupted`、`unreaped`、`empty`。判断成功仍先看退出码为 0，再看 `status=done`。

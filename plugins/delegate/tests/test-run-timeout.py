@@ -88,7 +88,11 @@ with open(os.environ["STUB_CALL_LOG"], "a", encoding="utf-8") as log:
 resume = args[:2] == ["exec", "resume"]
 prefix = "STUB_RESUME_" if resume else "STUB_"
 if os.environ.get("STUB_SESSION"):
-    print("OpenAI Codex v0.162.1\n--------\nsession id: " + os.environ["STUB_SESSION"] + "\n--------", flush=True)
+    # delegate runs Codex with --json: the session id arrives as a thread.started event.
+    if "--json" in args:
+        print(json.dumps({"type": "thread.started", "thread_id": os.environ["STUB_SESSION"]}), flush=True)
+    else:
+        print("OpenAI Codex v0.162.1\n--------\nsession id: " + os.environ["STUB_SESSION"] + "\n--------", flush=True)
 if os.environ.get(prefix + "WRITE"):
     with open(os.environ[prefix + "WRITE"], "a", encoding="utf-8") as handle:
         handle.write("changed by fake codex\n")
@@ -236,7 +240,7 @@ class RunTimeoutFlowTests(unittest.TestCase):
         self.assertLess(output.elapsed, 7 + 5)
         first, wrapup = self.exec_calls()
         self.assertEqual(wrapup, ['exec', 'resume', '-c', 'forced_login_method="chatgpt"', '-c', 'model_provider="openai"',
-                                  '-c', 'approval_policy="never"', '-c', 'sandbox_mode="read-only"',
+                                  '-c', 'approval_policy="never"', '-c', 'sandbox_mode="read-only"', '--json',
                                   '-o', str(self.logs / (run_id + '.wrapup.answer')), '--', SESSION, self.WRAPUP_PROMPT])
         self.assertTrue((self.logs / (run_id + '.wrapup')).exists())
 

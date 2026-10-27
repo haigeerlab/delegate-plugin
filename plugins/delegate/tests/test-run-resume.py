@@ -112,7 +112,11 @@ if args[:2] == ["login", "status"]:
 with open(os.environ["STUB_CALL_LOG"], "a", encoding="utf-8") as log:
     log.write(json.dumps(args, ensure_ascii=False) + "\n")
 if os.environ.get("STUB_SESSION"):
-    print("OpenAI Codex v0.162.1\n--------\nsession id: " + os.environ["STUB_SESSION"] + "\n--------")
+    # delegate runs Codex with --json: the session id arrives as a thread.started event.
+    if "--json" in args:
+        print(json.dumps({"type": "thread.started", "thread_id": os.environ["STUB_SESSION"]}))
+    else:
+        print("OpenAI Codex v0.162.1\n--------\nsession id: " + os.environ["STUB_SESSION"] + "\n--------")
 for index, arg in enumerate(args[:-1]):
     if arg == "-o":
         with open(args[index + 1], "w", encoding="utf-8") as answer:
@@ -186,7 +190,7 @@ class RunFlowTests(unittest.TestCase):
         [call] = self.exec_calls()
         answer = str(self.logs / (run_id + '.answer'))
         self.assertEqual(call[:-1], ['exec', '-c', 'forced_login_method="chatgpt"', '-c', 'model_provider="openai"',
-                                     '-c', 'approval_policy="never"', '--ephemeral', '--sandbox', 'read-only', '--color', 'never', '-o', answer, '--'])
+                                     '-c', 'approval_policy="never"', '--ephemeral', '--sandbox', 'read-only', '--color', 'never', '--json', '-o', answer, '--'])
         self.assertTrue(call[-1].startswith('【非交互委托】没有人能回答你的提问'))
         self.assertIn('\n\n任务\n\n【时间预算】', call[-1])  # run-timeout appends the time budget
         self.assertIn('NEED_USER: 普通 run 不判定', output.stdout)
@@ -208,7 +212,8 @@ class RunFlowTests(unittest.TestCase):
         state = self.state_of(run_id)
         self.assertEqual(state, {'schema': 1, 'runId': run_id, 'sessionId': SESSION,
                                  'repository': os.path.realpath(self.repo), 'write': False, 'model': '',
-                                 'effort': '', 'status': 'needs-input', 'parent': None})
+                                 'effort': '', 'status': 'needs-input', 'parent': None,
+                                 'chainRoot': run_id, 'strict': False, 'usageTotal': None})
         self.assertEqual(stat.S_IMODE((self.logs / (run_id + '.state.json')).stat().st_mode), 0o600)
 
     def test_resumable_run_done_records_model_and_effort(self):
@@ -278,7 +283,7 @@ class RunFlowTests(unittest.TestCase):
         call = self.exec_calls()[-1]
         self.assertEqual(call[:-1], ['exec', 'resume', '-m', 'gpt-test', '-c', 'model_reasoning_effort="high"',
                                      '-c', 'forced_login_method="chatgpt"', '-c', 'model_provider="openai"',
-                                     '-c', 'approval_policy="never"', '-c', 'sandbox_mode="read-only"', '-o', str(self.logs / (second + '.answer')),
+                                     '-c', 'approval_policy="never"', '-c', 'sandbox_mode="read-only"', '--json', '-o', str(self.logs / (second + '.answer')),
                                      '--', SESSION])
         # run-timeout appends the time budget after the unchanged resume prompt.
         self.assertTrue(call[-1].startswith('【用户答复】选 A\n\n请按上次约定继续：先做不受待定决策影响的任务；'

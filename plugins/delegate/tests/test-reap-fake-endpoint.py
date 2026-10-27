@@ -10,8 +10,7 @@ Skipped when `codex` is not on PATH.
 from __future__ import annotations
 
 import argparse
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-import json
+import importlib.util
 import os
 from pathlib import Path
 import shutil
@@ -19,7 +18,6 @@ import signal
 import subprocess
 import sys
 import tempfile
-import threading
 import time
 import unittest
 
@@ -34,32 +32,9 @@ SLEEP_SECONDS = 40
 COMMAND = "sleep %d && echo slept" % SLEEP_SECONDS
 
 
-class FakeResponses(BaseHTTPRequestHandler):
-    """Every request is answered with one exec_command tool call."""
-
-    def log_message(self, *args):
-        pass
-
-    def do_GET(self):
-        self.send_response(404)
-        self.end_headers()
-
-    def _event(self, obj):
-        self.wfile.write(("event: %s\ndata: %s\n\n" % (obj["type"], json.dumps(obj))).encode())
-        self.wfile.flush()
-
-    def do_POST(self):
-        self.rfile.read(int(self.headers.get("content-length", 0)))
-        self.send_response(200)
-        self.send_header("content-type", "text/event-stream")
-        self.end_headers()
-        self._event({"type": "response.created", "response": {"id": "resp_fake"}})
-        self._event({"type": "response.output_item.done", "item": {
-            "type": "function_call", "id": "fc_fake", "call_id": "call_fake", "name": "exec_command",
-            "arguments": json.dumps({"cmd": COMMAND, "yield_time_ms": 30000})}})
-        self._event({"type": "response.completed", "response": {"id": "resp_fake", "usage": {
-            "input_tokens": 1, "input_tokens_details": {"cached_tokens": 0}, "output_tokens": 1,
-            "output_tokens_details": {"reasoning_tokens": 0}, "total_tokens": 2}}})
+_spec = importlib.util.spec_from_file_location("fake_responses", Path(__file__).with_name("fake-responses.py"))
+fake_responses = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(fake_responses)
 
 
 def process_table():
@@ -95,8 +70,8 @@ def living(pids):
 class RealCodexAbortTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.server = ThreadingHTTPServer(("127.0.0.1", 0), FakeResponses)
-        threading.Thread(target=cls.server.serve_forever, daemon=True).start()
+        # Every request is answered with one exec_command tool call.
+        cls.server = fake_responses.start([("call", COMMAND)])
 
     @classmethod
     def tearDownClass(cls):
@@ -126,10 +101,8 @@ class RealCodexAbortTests(unittest.TestCase):
         env.pop("OPENAI_API_KEY", None)
         env.pop("CODEX_API_KEY", None)
         env["CODEX_HOME"] = str(self.base / "home")
-        port = self.server.server_address[1]
-        provider = 'model_providers.fk={name="fk",base_url="http://127.0.0.1:%d/v1",wire_api="responses"}' % port
         command = [sys.executable, "-B", str(RUNNER), str(seconds), "codex", "exec", "--ephemeral",
-                   "--skip-git-repo-check", "-c", provider, "-c", 'model_provider="fk"', "-m", "fake-model",
+                   "--skip-git-repo-check", *fake_responses.provider_args(self.server),
                    "-c", 'approval_policy="never"', "--sandbox", "read-only", "--color", "never",
                    "-o", str(self.base / "answer"), "--", "go"]
         # A file, not a pipe: a surviving command could otherwise keep the read open.
