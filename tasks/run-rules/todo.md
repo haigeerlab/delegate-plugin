@@ -9,7 +9,7 @@
 - [x] Checkpoint 1（report）：1.3 免费验证全绿
 - [x] Task 4：1.3 合同指向句汇总
 - [x] Checkpoint 2（gate）：旧合同改动复审与本地提交
-- [ ] Checkpoint 3（gate）：1.3 付费合并实测（RU-07）
+- [x] Checkpoint 3（gate）：1.3 付费合并实测（RU-07）
 - [ ] Checkpoint 4（gate）：交付验收
 
 ## 记录
@@ -27,3 +27,5 @@
 **Task 4（2026-10-27）：** 五个模块对旧合同的改动一次写完，中英文同步，原有条款只加不改：`spec/channel.md`（1.3 指向：`--json`、日志拆分、结果文件、`--timeout`）、`spec/run-resume.md`（修订记录 R4：A7 只放开期限、`--continue`、会话 ID 来源与状态文件新字段、状态类文件 14 天保留、Never 规则不变）、`spec/run-timeout.md`（1.3 指向：收尾轮 `--json`、`--timeout` 时 `T` 的来源、保留规则）、`spec/routing.md`（写入授权例外），以及四个英文对应页。`verify-artifacts`：4 通过、2 警告（run-resume、run-timeout「批准后已修订」，预期内，等 Checkpoint 2 复审）。总验证 `validate: ok`，两项 plugin validate 通过。
 
 **Checkpoint 2（gate，2026-10-27）：** 用户复审 Task 4 的四个旧规格改动，原话「批准」。已重新记录 `spec/run-resume.md`、`spec/run-timeout.md` 的批准标记（`channel.md`、`routing.md` 没有标记，不补）；`verify-artifacts` 恢复 0 警告。本地提交一次，未推送。下一步停在 Checkpoint 3（gate）报付费合并实测计划。
+
+**Checkpoint 3（gate，2026-10-27）：** 用户原话「批准，最多 6 次」。实际 4 次付费调用，记录见 `docs/verification/2026-10-27-delegate-1.3-merged-live.md`。计划第 2 步的设计有误（只读链不能 `--continue --write`），实测时改为先免费验证拒绝、再以写模式新起一条链，多用 1 次调用，仍在上限内。结果：结果文件字段、`usage.run` 差值、`--continue`、`--authorized-by`、`--check`、带 `--strict` 时首行标记压过 AGENTS.md 都成立；`--timeout 660` 的运行只跑了 500 秒，「超过 540 秒仍正常结束」未验证，按约定不补跑。`config.toml` 测前测后一致。
