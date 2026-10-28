@@ -4,7 +4,9 @@
 
 **审批方式（2026-10-25）：** Codex 后端审查调用固定 `-c approval_policy="never"`，见 [run-resume](run-resume.md) 修订记录 R2；其余审查合同不变。
 
-**当前发行（2026-10-28）：** v0.8.1 是补丁版，只改文档、行为不变，接口仍为 1.3；本模块的审查合同、参数与报告格式不变，见[版本说明](../docs/releases/v0.8.1.md)；免费验证 328 Python / 53 shell / 19 eval。
+**当前发行（2026-10-28）：** v0.8.2 是补丁版，只改 `/delegate:run` 的命令说明、行为不变，接口仍为 1.3；本模块的审查合同、参数与报告格式不变，见[版本说明](../docs/releases/v0.8.2.md)；免费验证 328 Python / 53 shell / 19 eval。
+
+**v0.8.1 发行（2026-10-28）：** v0.8.1 是补丁版，只改文档、行为不变，接口仍为 1.3；本模块的审查合同、参数与报告格式不变，见[版本说明](../docs/releases/v0.8.1.md)；免费验证 328 Python / 53 shell / 19 eval。
 
 **v0.8.0 发行（2026-10-27）：** v0.8.0 是次版本，`/delegate:run` 新增结果文件、`--continue`、`--timeout`、`--check`、`--authorized-by`、`--rules-file`，接口说明升到 1.3（只增不改，见 [run-result](run-result.md) 等五份规格）；本模块的审查合同、参数与报告格式不变，见[版本说明](../docs/releases/v0.8.0.md)；免费验证 328 Python / 53 shell / 19 eval。
 
