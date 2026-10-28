@@ -4,7 +4,9 @@
 
 **Approval mode (2026-10-25):** the Codex review backend call always passes `-c approval_policy="never"`; see revision R2 in [run-resume](SPEC-run-resume.md). The rest of the review contract is unchanged.
 
-**Current release, 2026-10-28:** v0.8.1 is a patch release that changes documentation only; behavior is unchanged and the interface stays 1.3; this module's review contract, arguments and report format are unchanged; see the [release notes](releases/v0.8.1.md). Free validation passed 328 Python / 53 shell / 19 eval.
+**Current release, 2026-10-28:** v0.8.2 is a patch release that changes only the `/delegate:run` command description; behavior is unchanged and the interface stays 1.3; this module's review contract, arguments and report format are unchanged; see the [release notes](releases/v0.8.2.md). Free validation passed 328 Python / 53 shell / 19 eval.
+
+**v0.8.1 release, 2026-10-28:** v0.8.1 is a patch release that changes documentation only; behavior is unchanged and the interface stays 1.3; this module's review contract, arguments and report format are unchanged; see the [release notes](releases/v0.8.1.md). Free validation passed 328 Python / 53 shell / 19 eval.
 
 **v0.8.0 release, 2026-10-27:** v0.8.0 is a minor release: `/delegate:run` gains a result file, `--continue`, `--timeout`, `--check`, `--authorized-by` and `--rules-file`, and the interface description moves to 1.3 (additive only; see [run-result](SPEC-run-result.md) and the four related specifications); this module's review contract, arguments and report format are unchanged; see the [release notes](releases/v0.8.0.md). Free validation passed 328 Python / 53 shell / 19 eval.
 
