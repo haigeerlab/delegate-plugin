@@ -2,7 +2,7 @@
 
 [简体中文](README.md) | English
 
-A review and delegation plugin with shared Claude Code / Codex source command entry points. v0.5.0 provides **Codex / Claude Code read-only review** and the existing **Codex general execution** mode; Codex remains the default backend. The main session receives the final answer; process logs stay locally.
+A review and delegation plugin with shared Claude Code / Codex source command entry points: **read-only review** can use the Codex or Claude Code backend, while **general execution** runs on Codex only; Codex remains the default backend. Interface 1.3 (since v0.8.0) adds resumption and continuation, long tasks, a result file, post-run checks, pre-granted write authorization, and a rules section to Codex execution; these execution capabilities exist only on the Codex backend, and the Claude Code backend performs read-only review only. The main session receives the final answer; process logs stay locally.
 
 Four entries separate responsibilities: `/delegate:review` performs scoped read-only review, `/delegate:run` executes general Codex tasks, `/delegate:doctor` checks integration prerequisites, and `/delegate:help` explains capabilities and migration. Codex exposes the corresponding `source-command-*` skills.
 
@@ -12,7 +12,7 @@ The Claude backend uses an existing local srt, resolved from PATH by default or 
 
 The main session handles requirements, design decisions, and final verification. The Codex backend accepts only ChatGPT authentication. It aims to reduce process context carried by the main session; usage is charged against the account signed into Codex, and lower total cost or token usage is not guaranteed.
 
-Repository: [haigeerlab/delegate-plugin](https://github.com/haigeerlab/delegate-plugin) · Current release: [v0.8.0](https://github.com/haigeerlab/delegate-plugin/releases/tag/v0.8.0) · [Documentation index](docs/en/README.md)
+Repository: [haigeerlab/delegate-plugin](https://github.com/haigeerlab/delegate-plugin) · Current release: [v0.8.1](https://github.com/haigeerlab/delegate-plugin/releases/tag/v0.8.1) · [Documentation index](docs/en/README.md)
 
 ## Contents
 
@@ -47,7 +47,9 @@ Directly entering a delegation command with a specific task also authorizes that
 
 The plugin supports a single, non-interactive, synchronous delegation, model and reasoning-effort selection, read-only defaults, authorized writes, log separation, failure diagnostics, and a Git change summary. **Both modes require a Git working tree.**
 
-It does not provide background jobs, queues, resumption, automatic retries, a third backend, or team quota management. It does not handle automatic commits, pushes, or publishing, and does not guarantee correct results or adherence to every instruction.
+Codex execution can be resumed and continued: a run started with `--resumable` that stops to ask the user or times out is resumed with `--resume`, and after done the next task is dispatched with `--continue`; see [Resumable delegation](plugins/delegate/README.en.md#resumable-delegation). The plugin does not host background processes: the caller runs a `--timeout` long task that exceeds the host's foreground limit in the host's background mode, and delegate provides no background start, status, cancellation, or queue.
+
+It does not provide automatic retries, a third backend, or team quota management. It does not handle automatic commits, pushes, or publishing, and does not guarantee correct results or adherence to every instruction.
 
 ## Prerequisites
 
@@ -154,12 +156,22 @@ All four Codex migration artifacts and Claude Code 2.1.296 session-only source i
 /delegate:run --model <model-slug> --effort high Trace the login flow
 ```
 
+The execution options from `--resumable` through `--rules-file` apply only to the Codex backend of `/delegate:run`; the Claude Code backend performs read-only review only and does not accept them. Full usage and authorization rules are in the [run reference](plugins/delegate/references/run.md) (Chinese).
+
 | Option | Contract |
 |---|---|
 | No mode switch | `read-only` sandbox |
 | `--write` | `workspace-write` sandbox; explicit user authorization in the current turn is required |
 | `--model <slug>` | Passed to the selected backend unchanged; omission uses Codex configuration. The entry point first rejects invalid syntax and values from the other backend's model family (and Claude's `opusplan`) with exit status 64; unknown slugs with valid syntax fail in the selected CLI |
 | `--effort <level>` | Pass reasoning effort through; valid values depend on the model and CLI version |
+| `--resumable` | Resumable mode: Codex may stop to ask the user (`status=needs-input`) and can be resumed after a timeout; see [Resumable delegation](plugins/delegate/README.en.md#resumable-delegation) |
+| `--resume <runId>` | Resume the latest round of a resumable run whose status is needs-input or timeout, with the user's own answer |
+| `--continue <runId>` | Dispatch the next task after a round with status done on a `--resumable` chain (interface 1.3) |
+| `--timeout <seconds>` | Lift the deadline to 541–7200 seconds (default 540); when it exceeds the host's foreground limit, call it in the host's background mode; see [Long tasks](plugins/delegate/README.en.md#long-tasks) |
+| `--strict` | The final answer's first line must be `DONE:`, `NEED_USER:`, or `TIME_UP:`; a missing marker yields `status=unmarked` and exit 1; see [Result file](plugins/delegate/README.en.md#result-file) |
+| `--check "<command>"` | After a run ends with done, run the check command at the repository root without a shell and record the result in the result file; the command may only come from project check commands the user approved |
+| `--authorized-by <file>` | Requires `--write`: record the path and sha256 of a pre-granted write authorization file; the whole chain must use the same file; see [Checks and pre-granted write authorization](plugins/delegate/README.en.md#checks-and-pre-granted-write-authorization) for when it applies |
+| `--rules-file <file>` | Place a rules section for this delegation only (at most 16 KiB) into the prompt verbatim; see [Rules section](plugins/delegate/README.en.md#rules-section) |
 | `--` | End option parsing so a task may begin with `-` |
 | `--help` / `-h` | Local wrapper usage without Codex; this is not an additional session command |
 
@@ -169,7 +181,7 @@ To run the source script directly, execute it from the **target Git project**, p
 bash /path/to/delegate-plugin/plugins/delegate/scripts/codex-exec.sh --write "Apply the agreed fix and test it"
 ```
 
-Set the Claude Bash tool timeout to `600000` milliseconds. The wrapper's Codex execution deadline defaults to, and is capped at, **540 seconds**. `DELEGATE_TIMEOUT_SECONDS` accepts a shorter positive integer; larger values are capped at 540, and invalid or non-positive values fall back to 540. Each authentication probe has a 5-second limit. On abort (deadline or TERM/INT/HUP), Codex is frozen first and all of its descendant process groups are reclaimed, including shell commands that changed process group or session; each step sends TERM, waits at most 2 seconds, then forces termination, and the cleanup result (descendant list, whether any survived, survivor PIDs) is printed to stderr. The execution deadline excludes preflight checks and subsequent Git inspection. Background processes Codex leaves after exiting normally are not guaranteed to be reclaimed.
+Set the Claude Bash tool timeout to `600000` milliseconds. The wrapper's Codex execution deadline defaults to **540 seconds**. `DELEGATE_TIMEOUT_SECONDS` can only shorten the default (a positive integer; larger values count as 540, and invalid or non-positive values fall back to 540). `--timeout <seconds>` lifts the deadline to 541–7200 seconds and ignores that variable; when it exceeds the host's foreground command limit (600 seconds for the Claude Code Bash tool), call it in the host's background mode and wait for the completion notice; see [Long tasks](plugins/delegate/README.en.md#long-tasks). Each authentication probe has a 5-second limit. On abort (deadline or TERM/INT/HUP), Codex is frozen first and all of its descendant process groups are reclaimed, including shell commands that changed process group or session; each step sends TERM, waits at most 2 seconds, then forces termination, and the cleanup result (descendant list, whether any survived, survivor PIDs) is printed to stderr. The execution deadline excludes preflight checks and subsequent Git inspection. Background processes Codex leaves after exiting normally are not guaranteed to be reclaimed.
 
 ## Dual-backend read-only review (v0.5.0)
 
@@ -245,7 +257,7 @@ For development and evaluation, you can also explicitly load the source plugin d
 claude --plugin-dir /path/to/delegate-plugin/plugins/delegate
 ```
 
-If a marketplace with the same name is already registered, check its source first. Local loading and remote installation are alternatives; you do not need two installations. The `v0.8.0` tag fixes release source at one revision, while `main` continues to change.
+If a marketplace with the same name is already registered, check its source first. Local loading and remote installation are alternatives; you do not need two installations. The `v0.8.1` tag fixes release source at one revision, while `main` continues to change.
 
 ### Uninstall
 
@@ -297,7 +309,7 @@ doctor refreshes the temporary cache and does not modify project files. Its heur
 
 v0.5.0 does not register UserPromptSubmit or probe/remind on every prompt. SessionStart silently refreshes readiness; doctor reports it on demand. The cache lasts 8 hours and is bound to the CLI path, Codex home, plugin root, and version. Future timestamps, old formats, identity changes, and invalid files invalidate it. Cached readiness does not guarantee current authentication; execution always checks login again.
 
-See the [documentation index](docs/en/README.md) for reading order and language pairs. Read [Design](docs/en/DESIGN.md) for rationale and the [capability map](docs/en/capability-map.md) for module responsibilities. Exact contracts are in the [channel](docs/en/SPEC-channel.md), [detection](docs/en/SPEC-detection.md), and [routing](docs/en/SPEC-routing.md) specifications. Release changes are in [v0.8.0](docs/en/releases/v0.8.0.md), [v0.7.1](docs/en/releases/v0.7.1.md), [v0.7.0](docs/en/releases/v0.7.0.md), [v0.6.0](docs/en/releases/v0.6.0.md), [v0.5.3](docs/en/releases/v0.5.3.md), [v0.5.2](docs/en/releases/v0.5.2.md), [v0.5.1](docs/en/releases/v0.5.1.md), and [v0.5.0](docs/en/releases/v0.5.0.md); subsequent changes are in [Unreleased](docs/en/releases/unreleased.md).
+See the [documentation index](docs/en/README.md) for reading order and language pairs. Read [Design](docs/en/DESIGN.md) for rationale and the [capability map](docs/en/capability-map.md) for module responsibilities. Exact contracts are in the [channel](docs/en/SPEC-channel.md), [detection](docs/en/SPEC-detection.md), and [routing](docs/en/SPEC-routing.md) specifications. Release changes are in [v0.8.1](docs/en/releases/v0.8.1.md), [v0.8.0](docs/en/releases/v0.8.0.md), [v0.7.1](docs/en/releases/v0.7.1.md), [v0.7.0](docs/en/releases/v0.7.0.md), [v0.6.0](docs/en/releases/v0.6.0.md), [v0.5.3](docs/en/releases/v0.5.3.md), [v0.5.2](docs/en/releases/v0.5.2.md), [v0.5.1](docs/en/releases/v0.5.1.md), and [v0.5.0](docs/en/releases/v0.5.0.md); subsequent changes are in [Unreleased](docs/en/releases/unreleased.md).
 
 ## Development, contributions, and feedback
 
@@ -309,7 +321,7 @@ Run the free offline validation from the **repository root**:
 /bin/bash scripts/validate.sh
 ```
 
-The entry point covers syntax, manifest required fields, evaluator self-tests, three shell product suites, 25 loop-registered Python regression suites (`reap-fake-endpoint` is skipped when codex is not installed locally), the source-discovery regression and the isolation policy-only suite. v0.8.0 release validation passed 328 Python, 53 shell and 19 eval cases. Actual OS, host and live-model evidence is recorded separately, without labeling it as offline coverage. The free aggregate validation makes no model requests. Doctor rule tests now supply their own CLI stub, synthetic login state, and temporary log, without depending on an outer Codex installation or login. The [actual F8 fix verification in Chinese](docs/verification/2026-10-08-f8-applied.md) covers absent outer CLI and rejected outer login.
+The entry point covers syntax, manifest required fields, evaluator self-tests, three shell product suites, 25 loop-registered Python regression suites (`reap-fake-endpoint` is skipped when codex is not installed locally), the source-discovery regression and the isolation policy-only suite. v0.8.1 release validation passed 328 Python, 53 shell and 19 eval cases. Actual OS, host and live-model evidence is recorded separately, without labeling it as offline coverage. The free aggregate validation makes no model requests. Doctor rule tests now supply their own CLI stub, synthetic login state, and temporary log, without depending on an outer Codex installation or login. The [actual F8 fix verification in Chinese](docs/verification/2026-10-08-f8-applied.md) covers absent outer CLI and rejected outer login.
 
 See [Contributing](CONTRIBUTING.en.md) for development conventions, individual tests, paid live verification, and bilingual maintenance. Use [GitHub Issues](https://github.com/haigeerlab/delegate-plugin/issues) for problems and suggestions; follow the next section to report a bug.
 

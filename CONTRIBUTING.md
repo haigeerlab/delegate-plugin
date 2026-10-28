@@ -47,7 +47,7 @@ claude --plugin-dir /path/to/delegate-plugin/plugins/delegate
 /bin/bash scripts/validate.sh
 ```
 
-总入口检查 JSON/Python/Bash 语法、可执行位、清单必填字段、判决器自检、已注册的 shell 产品套和 Python 回归套。v0.8.0 发布验证为 328 项 Python、53 项 shell 和 19 项 eval（v0.7.1 为 253 项，v0.7.0 为 247 项，v0.6.0 为 196 项，v0.5.3 为 173 项，v0.5.2 为 166 项，v0.5.1 为 162 项，v0.5.0 为 157 项 Python）；总入口包含 25 个循环注册的 Python 回归套、源码发现回归和隔离策略 policy-only 套，实际 OS/宿主/live 证据另列。v0.4.0 的 52 条产品断言和 17 个 Python 回归仅是历史基线；免费总入口不调用模型；doctor 的四个规则检查通过 run_doctor 显式使用本套受控 CLI、合成登录状态和临时日志，不继承外层安装/认证判据。[本轮实际验证](docs/verification/2026-10-08-f8-applied.md)在无外层 Codex 环境通过整个总套，且无 CLI/外层拒绝登录两种场景的探测套各 19 条通过。
+总入口检查 JSON/Python/Bash 语法、可执行位、清单必填字段、判决器自检、已注册的 shell 产品套和 Python 回归套。v0.8.1 发布验证为 328 项 Python、53 项 shell 和 19 项 eval（v0.8.0 同为 328 项，v0.7.1 为 253 项，v0.7.0 为 247 项，v0.6.0 为 196 项，v0.5.3 为 173 项，v0.5.2 为 166 项，v0.5.1 为 162 项，v0.5.0 为 157 项 Python）；总入口包含 25 个循环注册的 Python 回归套、源码发现回归和隔离策略 policy-only 套，实际 OS/宿主/live 证据另列。v0.4.0 的 52 条产品断言和 17 个 Python 回归仅是历史基线；免费总入口不调用模型；doctor 的四个规则检查通过 run_doctor 显式使用本套受控 CLI、合成登录状态和临时日志，不继承外层安装/认证判据。[本轮实际验证](docs/verification/2026-10-08-f8-applied.md)在无外层 Codex 环境通过整个总套，且无 CLI/外层拒绝登录两种场景的探测套各 19 条通过。
 
 文件语法发现仅排除根目录 `.git` 和已忽略的本机私有 `.agent/acceptance` 验收产物，避免把 0600 安装备份当作可执行源码；不忽略其他 `.agent` 文件、相似目录名或产品源码。私有证据按相应批次另行核对，产品套全部保留。发现规则回归为 `python3 -B scripts/tests/test-validation-discovery.py`，使用隔离夹具，不调用模型。
 
