@@ -36,7 +36,9 @@ Claude Code→Codex和Codex→Claude Code按用户明确的目标选择后端，
 - `--write` 回来无论成功或失败都必须看 git 验收块与真实 diff；失败不自动回滚，不能只信 Codex 的自述。
 - `--write` 必须用户在该轮明确要求，模型不得自行升级。唯一例外：`/delegate:run` 参考文件（`references/run.md`）里写入授权的四个条件全部满足、并带 `--authorized-by <文件>` 时，视为本轮已授权；任一条不满足就回到本条。
 
-调用 Bash 时，timeout 设为 `600000`。
+调用 Bash 时，timeout 设为 `600000`。`/delegate:run --timeout <秒>`（541～7200，仅 Codex）超过了 540 秒的默认期限，必须用宿主的后台模式调用，等宿主的完成通知，不要轮询；一次运行最多约 `T + 30` 秒结束，要停下就停止那个后台任务。delegate 不托管后台进程。
+
+`--continue <runId>` 只接 `--resumable` 起头的链上状态为 `done` 的一轮；`needs-input`、`timeout` 仍用 `--resume`。任务须来自已批准的 Plan 或用户本人，`--write` 授权规则与上一节相同，不因能接着派而放宽。细则见 `references/run.md`。
 
 主会话宿主与执行后端独立。审查入口 `/delegate:review` 默认仍是 Codex；用户明确选择 Claude Code 时用 `--backend claude-code`，限定 diff、模块或明确路径，不因宿主自动换后端。范围用 paths/base/changes 快捷参数或高级 context JSON；缺范围不扫描全项目。两个后端的 review 都只读，拒绝 write；Claude 另拒绝 effort。实现和机械修改用 `/delegate:run`，目前仅既有 Codex。两后端的模型/参数分开，失败不换后端，不把不同模型视角当作准确率证明。
 
