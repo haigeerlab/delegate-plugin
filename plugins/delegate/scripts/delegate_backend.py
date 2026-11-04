@@ -16,7 +16,7 @@ Codex：--write --effort none|minimal|low|medium|high|xhigh
       --resumable（可续跑）；--resume <runId> 带用户答复续跑
       --continue <runId> 在 done 之后接着派下一个任务（只限 --resumable 起头的链）
       --strict（最终答复首行必须带结束标记，缺了判 unmarked）
-      --timeout <541～7200 秒>（放大期限；超过宿主前台期限时须用后台模式调用）
+      --timeout <541～7200 秒>（放大期限；带它就须用宿主后台模式调用）
       --check "<命令>"（done 后在仓库根按参数列表执行，不经 shell）
       --authorized-by <文件>（须与 --write 同用；记录事先写入授权的来源）
       --rules-file <文件>（本次委托专用的规则片段，放在前言之后）

@@ -32,7 +32,7 @@ Codex 中对应的 skill 为 `source-command-review`、`source-command-run`、`s
 
 - 所有用法：Git 工作区、Python 3、Bash（兼容 3.2）。
 - Codex 后端：PATH 中可运行的 `codex`，使用 ChatGPT 登录。
-- Claude Code 审查后端（可选）：macOS、原版 Claude Code ≥2.1.295 且已登录、Node.js ≥22.12.0、已安装的 srt 0.0.79、可用的用户 GUI launchd 域。
+- Claude Code 审查后端（可选）：macOS、原版 Claude Code ≥2.1.295 且已登录、Node.js ≥22.12.0、已安装的 srt 0.0.79（npm 包 `@anthropic-ai/sandbox-runtime`，`srt --version` 须为 `0.0.79`）、可用的用户 GUI launchd 域。
 
 插件不安装依赖、不登录、不修改全局配置：`--write` 运行用 `-c` 只对本次运行临时信任当前仓库，不让 Codex 往 `~/.codex/config.toml` 写信任记录（读不准时除外，会在 stderr 提示），详见[根 README](../../README.md#输出与验收)。所有 run 与 Codex 审查固定 `approval_policy="never"`，不用本机配置的审批方式：越出沙箱的命令（如 worktree 里 `git commit`、网络访问）直接被拒，提交靠前缀放行规则或由调用方完成。首次使用前运行 `/delegate:doctor`，使用 Claude 后端前运行 `/delegate:doctor --backend claude-code`。
 
@@ -72,7 +72,7 @@ tests/                       离线桩测试与回归
 
 ## 长任务
 
-默认期限 540 秒。`/delegate:run --timeout <秒>` 可以放大到 541～7200 秒（接口 1.3 起），期限的分配、时间预算、收尾和退出码与默认期限相同。超过宿主前台命令的期限时（Claude Code 的 Bash 前台上限为 600 秒）必须用宿主的后台模式调用；delegate 不托管后台进程，要停下就停止那个后台任务，中止时会回收 Codex 起的全部后代进程。一次运行最多约 `T + 30` 秒结束。
+默认期限 540 秒。`/delegate:run --timeout <秒>` 可以放大到 541～7200 秒（接口 1.3 起），期限的分配、时间预算、收尾和退出码与默认期限相同。带 `--timeout` 就必须用宿主的后台模式调用（超过 540 秒即须后台，不按 Claude Code 的 Bash 前台上限 600 秒自行判断）；delegate 不托管后台进程，要停下就停止那个后台任务，中止时会回收 Codex 起的全部后代进程。一次运行最多约 `T + 30` 秒结束。
 
 ## 结果文件
 

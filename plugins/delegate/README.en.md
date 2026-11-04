@@ -32,7 +32,7 @@ In Codex the corresponding skills are `source-command-review`, `source-command-r
 
 - All uses: a Git working tree, Python 3, and Bash (compatible with 3.2).
 - Codex backend: a working `codex` on PATH, signed in through ChatGPT.
-- Claude Code review backend (optional): macOS, the official Claude Code ≥2.1.295 already signed in, Node.js ≥22.12.0, an installed srt 0.0.79, and an available user GUI launchd domain.
+- Claude Code review backend (optional): macOS, the official Claude Code ≥2.1.295 already signed in, Node.js ≥22.12.0, an installed srt 0.0.79 (npm package `@anthropic-ai/sandbox-runtime`; `srt --version` must print `0.0.79`), and an available user GUI launchd domain.
 
 The plugin installs no dependencies, signs in to nothing, and changes no global configuration: `--write` runs trust the current repository for that run only through `-c`, so Codex does not write a trust entry to `~/.codex/config.toml` (except when the check is uncertain, which is reported on stderr; see the [root README](../../README.en.md#output-and-verification)). Every run and Codex review uses `approval_policy="never"` instead of the local approval configuration: commands that leave the sandbox (such as `git commit` inside a worktree, or network access) are refused, and commits rely on prefix allow rules or the caller. Run `/delegate:doctor` before first use, and `/delegate:doctor --backend claude-code` before using the Claude backend.
 
@@ -72,7 +72,7 @@ tests/                       Offline stub tests and regressions
 
 ## Long tasks
 
-The default deadline is 540 seconds. `/delegate:run --timeout <seconds>` widens it to 541–7200 seconds (since interface 1.3); the deadline split, time budget, wrap-up and exit codes are the same as for the default. Above the host's foreground command limit (600 seconds for Claude Code's foreground Bash) it must be called in the host's background mode; delegate does not manage background processes, so stop a run by stopping that background task, and the abort reclaims every descendant process Codex started. A run ends within about `T + 30` seconds.
+The default deadline is 540 seconds. `/delegate:run --timeout <seconds>` widens it to 541–7200 seconds (since interface 1.3); the deadline split, time budget, wrap-up and exit codes are the same as for the default. Whenever `--timeout` is given it must be called in the host's background mode (anything above 540 seconds needs the background; do not judge by the 600-second limit of Claude Code's foreground Bash); delegate does not manage background processes, so stop a run by stopping that background task, and the abort reclaims every descendant process Codex started. A run ends within about `T + 30` seconds.
 
 ## Result file
 
