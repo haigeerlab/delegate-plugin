@@ -29,7 +29,7 @@ allowed-tools: Bash
 **review 范围**
 - 路径以仓库根为准，--repo 指定工作区；paths/module 默认读 HEAD，工作区须明确 changes，只有 working-tree 可含 untracked。
 - base/head 与 changes 互斥；无 paths 时只选变更文件，不全项目扫描；context 与快捷参数互斥，旧 CLI review-context 保留；exclude/spec/plan/criterion 可重复。
-- 仓库须已有提交，否则报 git_probe_failed（127）。
+- 仓库须已有提交，否则报 repository_has_no_commits（127）。
 - dry-run 只预览，不调用模型、不查认证、不给结论。
 
 **run**

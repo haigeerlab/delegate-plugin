@@ -196,7 +196,12 @@ def capture_document(document):
         raise ContextError('repository_not_worktree_root')
     if git(document['working_directory'], 'rev-parse', '--show-toplevel').decode().strip() != str(root):
         raise ContextError('working_directory_outside_repository')
-    head = git(root, 'rev-parse', '--verify', 'HEAD').decode().strip()
+    try:
+        head = git(root, 'rev-parse', '--verify', 'HEAD').decode().strip()
+    except ContextError as error:
+        if str(error) == 'git_probe_failed' and not git(root, 'for-each-ref', '--count=1'):
+            raise ContextError('repository_has_no_commits') from None
+        raise
     status = git(root, 'status', '--porcelain=v1', '-z', '--untracked-files=all')
     staged_raw = git(root, 'diff', '--no-ext-diff', '--no-textconv', '--name-only', '-z', '--cached', '--')
     unstaged_raw = git(root, 'diff', '--no-ext-diff', '--no-textconv', '--name-only', '-z', '--')

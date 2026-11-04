@@ -187,6 +187,25 @@ class ReviewContextTests(unittest.TestCase):
         with self.assertRaises(review_context.ContextError):
             self.capture(dict(self.document, working_directory=str(self.root)))
 
+    def test_repository_without_commits_reports_a_dedicated_diagnostic(self):
+        empty = self.root / 'empty'
+        empty.mkdir()
+        subprocess.run(['git', '-C', str(empty), 'init', '-q'], check=True)
+        (empty / 'a.txt').write_text('untracked\n')
+        for baseline, flags in (({'mode': 'commits', 'from': 'HEAD', 'to': 'HEAD'}, (False, False, False)),
+                                ({'mode': 'working-tree'}, (True, True, True))):
+            doc = dict(self.document, repository=str(empty), working_directory=str(empty),
+                       scope={'include': ['a.txt'], 'exclude': []}, baseline=baseline,
+                       uncommitted_changes=dict(zip(('staged', 'unstaged', 'untracked'), flags)))
+            with self.subTest(mode=baseline['mode']), \
+                    self.assertRaisesRegex(review_context.ContextError, '^repository_has_no_commits$'):
+                self.capture(doc)
+
+    def test_missing_commit_in_existing_history_still_reports_git_probe_failed(self):
+        doc = dict(self.document, baseline={'mode': 'commits', 'from': '0' * 40, 'to': self.new})
+        with self.assertRaisesRegex(review_context.ContextError, '^git_probe_failed$'):
+            self.capture(doc)
+
 
 if __name__ == '__main__':
     unittest.main()
