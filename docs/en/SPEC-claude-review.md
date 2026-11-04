@@ -4,7 +4,9 @@
 
 **Approval mode (2026-10-25):** the Codex review backend call always passes `-c approval_policy="never"`; see revision R2 in [run-resume](SPEC-run-resume.md). The rest of the review contract is unchanged.
 
-**Current release, 2026-11-04:** v0.8.3 is a patch release that changes only user documentation and help text; behavior is unchanged and the interface stays 1.3; this module's review contract, arguments and report format are unchanged; see the [release notes](releases/v0.8.3.md). Free validation passed 328 Python / 53 shell / 19 eval.
+**Current release, 2026-11-04:** v0.8.4 is a patch release in which reviewing a repository without commits reports `repository_has_no_commits` (previously `git_probe_failed`); exit statuses and the rest of the report are unchanged and the interface stays 1.3; see the [release notes](releases/v0.8.4.md). Free validation passed 330 Python / 53 shell / 19 eval.
+
+**v0.8.3 release, 2026-11-04:** v0.8.3 is a patch release that changes only user documentation and help text; behavior is unchanged and the interface stays 1.3; this module's review contract, arguments and report format are unchanged; see the [release notes](releases/v0.8.3.md). Free validation passed 328 Python / 53 shell / 19 eval.
 
 **v0.8.2 release, 2026-10-28:** v0.8.2 is a patch release that changes only the `/delegate:run` command description; behavior is unchanged and the interface stays 1.3; this module's review contract, arguments and report format are unchanged; see the [release notes](releases/v0.8.2.md). Free validation passed 328 Python / 53 shell / 19 eval.
 
