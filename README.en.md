@@ -12,7 +12,7 @@ The Claude backend uses an existing local srt, resolved from PATH by default or 
 
 The main session handles requirements, design decisions, and final verification. The Codex backend accepts only ChatGPT authentication. It aims to reduce process context carried by the main session; usage is charged against the account signed into Codex, and lower total cost or token usage is not guaranteed.
 
-Repository: [haigeerlab/delegate-plugin](https://github.com/haigeerlab/delegate-plugin) · Current release: [v0.8.2](https://github.com/haigeerlab/delegate-plugin/releases/tag/v0.8.2) · [Documentation index](docs/en/README.md)
+Repository: [haigeerlab/delegate-plugin](https://github.com/haigeerlab/delegate-plugin) · Current release: [v0.8.3](https://github.com/haigeerlab/delegate-plugin/releases/tag/v0.8.3) · [Documentation index](docs/en/README.md)
 
 ## Contents
 
@@ -47,7 +47,7 @@ Directly entering a delegation command with a specific task also authorizes that
 
 The plugin supports a single, non-interactive, synchronous delegation, model and reasoning-effort selection, read-only defaults, authorized writes, log separation, failure diagnostics, and a Git change summary. **Both modes require a Git working tree.**
 
-Codex execution can be resumed and continued: a run started with `--resumable` that stops to ask the user or times out is resumed with `--resume`, and after done the next task is dispatched with `--continue`; see [Resumable delegation](plugins/delegate/README.en.md#resumable-delegation). The plugin does not host background processes: the caller runs a `--timeout` long task that exceeds the host's foreground limit in the host's background mode, and delegate provides no background start, status, cancellation, or queue.
+Codex execution can be resumed and continued: a run started with `--resumable` that stops to ask the user or times out is resumed with `--resume`, and after done the next task is dispatched with `--continue`; see [Resumable delegation](plugins/delegate/README.en.md#resumable-delegation). The plugin does not host background processes: the caller always runs a `--timeout` long task in the host's background mode, and delegate provides no background start, status, cancellation, or queue.
 
 It does not provide automatic retries, a third backend, or team quota management. It does not handle automatic commits, pushes, or publishing, and does not guarantee correct results or adherence to every instruction.
 
@@ -65,6 +65,17 @@ It does not provide automatic retries, a third backend, or team quota management
 The Codex execution path keeps the v0.4.0 verified environment: Claude Code 2.1.291, Codex CLI 0.160.0, Python 3.10, and Bash 3.2. The v0.5.0 Claude review backend was tested on macOS 15.7.3 arm64 with the official Claude Code 2.1.296. These are tested versions, not a minimum compatibility guarantee. Windows and Linux have not been verified. The Quick start below installs whatever Codex is latest at the time with `@latest` rather than pinning these versions; `codex --version` reports what you actually have.
 
 Codex backend authentication is checked through CLI status rather than the existence of `auth.json`. API-key and unrecognized authentication states are rejected. Execution removes `OPENAI_API_KEY` and `CODEX_API_KEY` and selects ChatGPT authentication and the OpenAI provider. Codex CLI manages credential storage, which may use a file under `CODEX_HOME` or the system keychain. [Codex authentication documentation](https://learn.chatgpt.com/docs/auth)
+
+The Claude review backend's srt is the npm package `@anthropic-ai/sandbox-runtime`; the plugin does not install it for you. When needed, install it and check the versions in a terminal:
+
+```bash
+npm install -g @anthropic-ai/sandbox-runtime@0.0.79
+srt --version
+node --version
+claude --version
+```
+
+`srt --version` must print `0.0.79` (other versions are rejected), `node --version` must be at least `v22.12.0`, and `claude --version` at least 2.1.295. Then run `/delegate:doctor --backend claude-code` to confirm.
 
 ## Quick start
 
@@ -123,7 +134,7 @@ Enter this in the Claude Code session:
 
 This makes a real Codex model request and consumes the signed-in account's quota. On successful completion, expect the final answer, model/effort hints, a process-log path, and byte counts. If no model is specified, the wrapper displays `配置默认` (configuration default); this does not mean it has discovered the actual model name.
 
-For writes, explicitly authorize the current task before using `--write`, then review actual diffs and test results as described in [Output and verification](#output-and-verification).
+For writes, explicitly authorize the current task before using `--write`, then review actual diffs and test results as described in [Output and verification](#output-and-verification). Codex does not commit for you: every run uses `approval_policy="never"`, so commands outside the sandbox (such as `git commit` in a worktree, or network access) are rejected outright, and you or the caller commit after checking the diff.
 
 ## Commands and options
 
@@ -161,13 +172,13 @@ The execution options from `--resumable` through `--rules-file` apply only to th
 | Option | Contract |
 |---|---|
 | No mode switch | `read-only` sandbox |
-| `--write` | `workspace-write` sandbox; explicit user authorization in the current turn is required |
+| `--write` | `workspace-write` sandbox; explicit user authorization in the current turn is required; it does not commit, the caller does |
 | `--model <slug>` | Passed to the selected backend unchanged; omission uses Codex configuration. The entry point first rejects invalid syntax and values from the other backend's model family (and Claude's `opusplan`) with exit status 64; unknown slugs with valid syntax fail in the selected CLI |
 | `--effort <level>` | Pass reasoning effort through; valid values depend on the model and CLI version |
 | `--resumable` | Resumable mode: Codex may stop to ask the user (`status=needs-input`) and can be resumed after a timeout; see [Resumable delegation](plugins/delegate/README.en.md#resumable-delegation) |
 | `--resume <runId>` | Resume the latest round of a resumable run whose status is needs-input or timeout, with the user's own answer |
 | `--continue <runId>` | Dispatch the next task after a round with status done on a `--resumable` chain (interface 1.3) |
-| `--timeout <seconds>` | Lift the deadline to 541–7200 seconds (default 540); when it exceeds the host's foreground limit, call it in the host's background mode; see [Long tasks](plugins/delegate/README.en.md#long-tasks) |
+| `--timeout <seconds>` | Lift the deadline to 541–7200 seconds (default 540); whenever it is given, call it in the host's background mode; see [Long tasks](plugins/delegate/README.en.md#long-tasks) |
 | `--strict` | The final answer's first line must be `DONE:`, `NEED_USER:`, or `TIME_UP:`; a missing marker yields `status=unmarked` and exit 1; see [Result file](plugins/delegate/README.en.md#result-file) |
 | `--check "<command>"` | After a run ends with done, run the check command at the repository root without a shell and record the result in the result file; the command may only come from project check commands the user approved |
 | `--authorized-by <file>` | Requires `--write`: record the path and sha256 of a pre-granted write authorization file; the whole chain must use the same file; see [Checks and pre-granted write authorization](plugins/delegate/README.en.md#checks-and-pre-granted-write-authorization) for when it applies |
@@ -181,7 +192,7 @@ To run the source script directly, execute it from the **target Git project**, p
 bash /path/to/delegate-plugin/plugins/delegate/scripts/codex-exec.sh --write "Apply the agreed fix and test it"
 ```
 
-Set the Claude Bash tool timeout to `600000` milliseconds. The wrapper's Codex execution deadline defaults to **540 seconds**. `DELEGATE_TIMEOUT_SECONDS` can only shorten the default (a positive integer; larger values count as 540, and invalid or non-positive values fall back to 540). `--timeout <seconds>` lifts the deadline to 541–7200 seconds and ignores that variable; when it exceeds the host's foreground command limit (600 seconds for the Claude Code Bash tool), call it in the host's background mode and wait for the completion notice; see [Long tasks](plugins/delegate/README.en.md#long-tasks). Each authentication probe has a 5-second limit. On abort (deadline or TERM/INT/HUP), Codex is frozen first and all of its descendant process groups are reclaimed, including shell commands that changed process group or session; each step sends TERM, waits at most 2 seconds, then forces termination, and the cleanup result (descendant list, whether any survived, survivor PIDs) is printed to stderr. The execution deadline excludes preflight checks and subsequent Git inspection. Background processes Codex leaves after exiting normally are not guaranteed to be reclaimed.
+Set the Claude Bash tool timeout to `600000` milliseconds. The wrapper's Codex execution deadline defaults to **540 seconds**. `DELEGATE_TIMEOUT_SECONDS` can only shorten the default (a positive integer; larger values count as 540, and invalid or non-positive values fall back to 540). `--timeout <seconds>` lifts the deadline to 541–7200 seconds and ignores that variable, and it must be called in the host's background mode with a wait for the completion notice (anything above 540 seconds needs the background; do not judge by the 600-second foreground limit of the Claude Code Bash tool); see [Long tasks](plugins/delegate/README.en.md#long-tasks). Each authentication probe has a 5-second limit. On abort (deadline or TERM/INT/HUP), Codex is frozen first and all of its descendant process groups are reclaimed, including shell commands that changed process group or session; each step sends TERM, waits at most 2 seconds, then forces termination, and the cleanup result (descendant list, whether any survived, survivor PIDs) is printed to stderr. The execution deadline excludes preflight checks and subsequent Git inspection. Background processes Codex leaves after exiting normally are not guaranteed to be reclaimed.
 
 ## Dual-backend read-only review (v0.5.0)
 
@@ -222,6 +233,8 @@ On execution failure, timeout, an empty answer, or interruption, **a write-mode 
 
 Process logs and answers are stored in `${TMPDIR:-/tmp}/delegate/`, with directory mode 0700 and new-file mode 0600. After success or failure, cleanup attempts to retain the latest **50 pairs** of `.log/.answer` files. Cleanup failure does not change the task's exit status. The count limit does not bound individual file sizes. Failure output shows at most the final 40 lines / 16KiB of the log and its full path. Read only the relevant lines when needed rather than bringing the entire log back into the session.
 
+**Keeping acceptance evidence.** These files are rotated (process logs keep the latest 50 groups; chain state and result files are kept for 14 days), and the system may also clear `${TMPDIR}`. To keep a delegation as acceptance evidence, copy the files you need into your project's own evidence directory soon after the run: for run, `<runId>.result.json` (status, exit code, changed files, tokens) and `<runId>.answer` (final answer); for review, save the JSON report from standard output, or copy the matching `.report.json` under `${TMPDIR:-/tmp}/delegate-review/`. Process logs (`.events.jsonl`, `.log`) may contain source excerpts and local paths, so quote only the lines you need and strip private content before putting them in a public repository. delegate has no archive command.
+
 Codex's sandbox and host configuration determine read and write permissions. `workspace-write` may also allow temporary directories and additional roots. Instructions against committing, pushing, publishing, or unrelated network access are behavioral rules, not a substitute for the OS sandbox or host permissions.
 
 **`--write` does not write Codex project trust.** The first time Codex enters a repository without a trust level under the `workspace-write` sandbox, it appends `[projects."<repository path>"] trust_level = "trusted"` to `~/.codex/config.toml` (or the `config.toml` in `CODEX_HOME` when set). To avoid that write, delegate reads that file (read-only) before every write-mode run, including resumable runs and resumes: when it has no entry for this repository, delegate passes `-c projects={"<repository path>"={trust_level="trusted"}}` so the repository is trusted for this run only and nothing is persisted; when an entry exists (including one you marked `untrusted`), no argument is added and your setting applies. The key is the Git repository root; inside a git worktree it is the main repository path. When the check is uncertain (the file cannot be read or is not UTF-8, the path contains a quote or backslash, or the repository layout is unusual), no argument is added and one line is printed on stderr; Codex may then still write a trust entry. Read-only runs and reviews get no argument. Trust entries left by earlier delegate versions are not removed; delete them by hand if you do not want them. See the [write-trust contract](docs/en/SPEC-write-trust.md).
@@ -257,7 +270,7 @@ For development and evaluation, you can also explicitly load the source plugin d
 claude --plugin-dir /path/to/delegate-plugin/plugins/delegate
 ```
 
-If a marketplace with the same name is already registered, check its source first. Local loading and remote installation are alternatives; you do not need two installations. The `v0.8.2` tag fixes release source at one revision, while `main` continues to change.
+If a marketplace with the same name is already registered, check its source first. Local loading and remote installation are alternatives; you do not need two installations. The `v0.8.3` tag fixes release source at one revision, while `main` continues to change.
 
 ### Uninstall
 
@@ -289,10 +302,11 @@ Uninstalling does not roll back previous changes to your project. Temporary logs
 | Failure or empty answer | Inspect errors, log paths, and actual diffs; failed-task edits are not automatically reverted |
 | Waiting for confirmation without doing the task | Inspect effective global/project AGENTS.md rules and exempt non-interactive execution from workflow sections intended only for interactive sessions |
 | review reports a missing scope (64) | Provide one of `--paths`, `--base`, `--changes`, or `--context`; the whole project is never scanned automatically. Add `--dry-run` first to preview the resolved scope |
-| Claude backend preconditions fail (127) | Run `/delegate:doctor --backend claude-code`; check the `claude`, `node`, and `srt` versions, and if needed set existing absolute paths with `DELEGATE_CLAUDE_BIN`, `DELEGATE_NODE_BIN`, or `DELEGATE_SRT_BIN`. It never falls back to Codex |
+| Claude backend preconditions fail (127) | Run `/delegate:doctor --backend claude-code`; check the `claude`, `node`, and `srt` versions (requirements and install commands are in [Prerequisites](#prerequisites)), and if needed set existing absolute paths with `DELEGATE_CLAUDE_BIN`, `DELEGATE_NODE_BIN`, or `DELEGATE_SRT_BIN`. It never falls back to Codex |
 | Claude backend reports `native_authentication_environment_unverified` | The environment sets a custom auth directory, API key/token, third-party provider, or an `ANTHROPIC_BASE_URL` pointing anywhere other than the official endpoint. List only the variable names with `env \| cut -d= -f1 \| grep -E '^(ANTHROPIC_\|CLAUDE_)'` (a plain `env \| grep` prints secret values to the terminal; do not paste environment output into an Issue either), then unset them in your terminal before rerunning. The `ANTHROPIC_BASE_URL=https://api.anthropic.com` (official default) that Claude Desktop sessions carry is accepted and does not trigger this error |
 | Claude backend reports `macos_required` or a diagnostic starting with `launchd_` or `macos_process_api_` | The Claude backend supports only macOS, starts a temporary job in the current user's GUI launchd domain, and checks the process boundary through kernel process interfaces. Non-macOS reports `macos_required`; when `launchctl` cannot be called, cannot observe, or fails to start the job (possible in SSH, tmux, or other sessions without a graphical login; which code each case yields has not been tested individually) it reports `launchd_control_unavailable`, `launchd_observation_unverified`, or `launchd_start_failed`; a failed kernel interface check reports `macos_process_api_unavailable`, `macos_process_api_unverified`, or `process_identity_unverified`. review exits 127, and `/delegate:doctor --backend claude-code` prints `条件不足：<diagnostic>` (conditions missing). Retry from a terminal or Claude Code on a Mac with a graphical login, or use `--backend codex`; there is no automatic fallback |
 | Codex review reports `codex_inline_input_limit` | Review input exceeds 1 MiB and is neither truncated nor split automatically; review in smaller runs with narrower `--paths` or added `--exclude` |
+| review reports `git_probe_failed` (127, also with `--dry-run`) | A Git query inside delegate failed and no model was started. The most common cause is a repository with no commits yet (no HEAD): `/delegate:review` requires an existing commit, and `--changes working-tree --include-untracked` does not get around it; `git add` the files to review and `git commit` once, then review again. If commits exist, check that `--base`/`--head` name existing commits |
 | Review report is failed, inconclusive, or partially covered | Read the unreviewed scope and reasons in the report (permission denial, turn or budget limit, invalid output, and so on); none of these counts as a passing review |
 
 Wrapper exit statuses: 64 for arguments/non-Git directories; 127 for basic CLI/Python failures; 124 for execution timeout; 129/130/143 for HUP/INT/TERM interruptions; 125 when the execution process could not be reaped (its PID is reported). An empty answer exits 1; other execution failures retain their nonzero status. review uses the same 64/127/124/129/130/143 conventions; a completed review exits 0 even when it reports findings. doctor always exits 0; assess the reported issue count.
@@ -309,7 +323,7 @@ doctor refreshes the temporary cache and does not modify project files. Its heur
 
 v0.5.0 does not register UserPromptSubmit or probe/remind on every prompt. SessionStart silently refreshes readiness; doctor reports it on demand. The cache lasts 8 hours and is bound to the CLI path, Codex home, plugin root, and version. Future timestamps, old formats, identity changes, and invalid files invalidate it. Cached readiness does not guarantee current authentication; execution always checks login again.
 
-See the [documentation index](docs/en/README.md) for reading order and language pairs. Read [Design](docs/en/DESIGN.md) for rationale and the [capability map](docs/en/capability-map.md) for module responsibilities. Exact contracts are in the [channel](docs/en/SPEC-channel.md), [detection](docs/en/SPEC-detection.md), and [routing](docs/en/SPEC-routing.md) specifications. Release changes are in [v0.8.2](docs/en/releases/v0.8.2.md), [v0.8.1](docs/en/releases/v0.8.1.md), [v0.8.0](docs/en/releases/v0.8.0.md), [v0.7.1](docs/en/releases/v0.7.1.md), [v0.7.0](docs/en/releases/v0.7.0.md), [v0.6.0](docs/en/releases/v0.6.0.md), [v0.5.3](docs/en/releases/v0.5.3.md), [v0.5.2](docs/en/releases/v0.5.2.md), [v0.5.1](docs/en/releases/v0.5.1.md), and [v0.5.0](docs/en/releases/v0.5.0.md); subsequent changes are in [Unreleased](docs/en/releases/unreleased.md).
+See the [documentation index](docs/en/README.md) for reading order and language pairs. Read [Design](docs/en/DESIGN.md) for rationale and the [capability map](docs/en/capability-map.md) for module responsibilities. Exact contracts are in the [channel](docs/en/SPEC-channel.md), [detection](docs/en/SPEC-detection.md), and [routing](docs/en/SPEC-routing.md) specifications. Release changes are in [v0.8.3](docs/en/releases/v0.8.3.md), [v0.8.2](docs/en/releases/v0.8.2.md), [v0.8.1](docs/en/releases/v0.8.1.md), [v0.8.0](docs/en/releases/v0.8.0.md), [v0.7.1](docs/en/releases/v0.7.1.md), [v0.7.0](docs/en/releases/v0.7.0.md), [v0.6.0](docs/en/releases/v0.6.0.md), [v0.5.3](docs/en/releases/v0.5.3.md), [v0.5.2](docs/en/releases/v0.5.2.md), [v0.5.1](docs/en/releases/v0.5.1.md), and [v0.5.0](docs/en/releases/v0.5.0.md); subsequent changes are in [Unreleased](docs/en/releases/unreleased.md).
 
 ## Development, contributions, and feedback
 
@@ -321,7 +335,7 @@ Run the free offline validation from the **repository root**:
 /bin/bash scripts/validate.sh
 ```
 
-The entry point covers syntax, manifest required fields, evaluator self-tests, three shell product suites, 25 loop-registered Python regression suites (`reap-fake-endpoint` is skipped when codex is not installed locally), the source-discovery regression and the isolation policy-only suite. v0.8.2 release validation passed 328 Python, 53 shell and 19 eval cases. Actual OS, host and live-model evidence is recorded separately, without labeling it as offline coverage. The free aggregate validation makes no model requests. Doctor rule tests now supply their own CLI stub, synthetic login state, and temporary log, without depending on an outer Codex installation or login. The [actual F8 fix verification in Chinese](docs/verification/2026-10-08-f8-applied.md) covers absent outer CLI and rejected outer login.
+The entry point covers syntax, manifest required fields, evaluator self-tests, three shell product suites, 25 loop-registered Python regression suites (`reap-fake-endpoint` is skipped when codex is not installed locally), the source-discovery regression and the isolation policy-only suite. v0.8.3 release validation passed 328 Python, 53 shell and 19 eval cases. Actual OS, host and live-model evidence is recorded separately, without labeling it as offline coverage. The free aggregate validation makes no model requests. Doctor rule tests now supply their own CLI stub, synthetic login state, and temporary log, without depending on an outer Codex installation or login. The [actual F8 fix verification in Chinese](docs/verification/2026-10-08-f8-applied.md) covers absent outer CLI and rejected outer login.
 
 See [Contributing](CONTRIBUTING.en.md) for development conventions, individual tests, paid live verification, and bilingual maintenance. Use [GitHub Issues](https://github.com/haigeerlab/delegate-plugin/issues) for problems and suggestions; follow the next section to report a bug.
 

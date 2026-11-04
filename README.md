@@ -12,7 +12,7 @@ Claude 后端使用本机已有的 srt，默认从 PATH 解析，也可用 `DELE
 
 主会话负责需求澄清、方案判断与最终验收。Codex 后端只接受 ChatGPT 登录，目的是减少主会话携带的过程上下文；实际使用哪个账号的额度取决于 Codex 登录账号，不保证节省总费用或总 token。
 
-仓库：[haigeerlab/delegate-plugin](https://github.com/haigeerlab/delegate-plugin) · 当前发行：[v0.8.2](https://github.com/haigeerlab/delegate-plugin/releases/tag/v0.8.2) · [文档索引](docs/README.md)
+仓库：[haigeerlab/delegate-plugin](https://github.com/haigeerlab/delegate-plugin) · 当前发行：[v0.8.3](https://github.com/haigeerlab/delegate-plugin/releases/tag/v0.8.3) · [文档索引](docs/README.md)
 
 ## 目录
 
@@ -47,7 +47,7 @@ Claude 后端使用本机已有的 srt，默认从 PATH 解析，也可用 `DELE
 
 支持单次、非交互、同步委托，选择模型与推理档、默认只读、授权后可写、日志隔离、失败诊断和 Git 变更概览。当前两种模式都**只接受 Git 工作区**。
 
-Codex 执行可以续跑和续接：`--resumable` 起头的运行停下问用户或超时后用 `--resume` 续跑，done 之后用 `--continue` 接着派下一个任务，见[可续跑委托](plugins/delegate/README.md#可续跑委托)。插件不托管后台进程：超过宿主前台期限的 `--timeout` 长任务由调用方用宿主的后台模式调用，delegate 不提供后台启动、查询、取消或排队。
+Codex 执行可以续跑和续接：`--resumable` 起头的运行停下问用户或超时后用 `--resume` 续跑，done 之后用 `--continue` 接着派下一个任务，见[可续跑委托](plugins/delegate/README.md#可续跑委托)。插件不托管后台进程：带 `--timeout` 的长任务一律由调用方用宿主的后台模式调用，delegate 不提供后台启动、查询、取消或排队。
 
 插件不提供自动重试、第三后端或团队配额管理；不负责自动提交、推送或发布，也不保证结果正确或模型遵守全部指令。
 
@@ -65,6 +65,17 @@ Codex 执行可以续跑和续接：`--resumable` 起头的运行停下问用户
 Codex 执行路径沿用 v0.4.0 的验证环境：Claude Code 2.1.291、Codex CLI 0.160.0、Python 3.10、Bash 3.2。v0.5.0 的 Claude 审查后端实测 macOS 15.7.3 arm64 与原版 Claude Code 2.1.296。这些是已验证环境，未声明更早版本的最低兼容线，也未验证 Windows 或 Linux。下方快速开始用 `@latest` 安装当时的最新 Codex，不固定到上述版本；实际版本以 `codex --version` 为准。
 
 Codex 后端的认证状态通过 CLI 检查，不以 `auth.json` 是否存在为依据。API key 登录和未知认证状态会被拒绝；执行时清除 `OPENAI_API_KEY`、`CODEX_API_KEY`，并指定 ChatGPT 认证和 OpenAI provider。凭据存储由 Codex CLI 管理，可能使用 `CODEX_HOME` 下的文件或系统钥匙串。[Codex 认证说明](https://learn.chatgpt.com/docs/auth)
+
+Claude 审查后端的 srt 是 npm 包 `@anthropic-ai/sandbox-runtime`，插件不替你安装。需要时在终端安装并核对版本：
+
+```bash
+npm install -g @anthropic-ai/sandbox-runtime@0.0.79
+srt --version
+node --version
+claude --version
+```
+
+`srt --version` 须输出 `0.0.79`（其他版本会被拒绝），`node --version` 不低于 `v22.12.0`，`claude --version` 不低于 2.1.295。装好后运行 `/delegate:doctor --backend claude-code` 确认。
 
 ## 快速开始
 
@@ -121,7 +132,7 @@ v0.5.0 使用 `/delegate:run`；从 v0.4.0 升级时，旧 `/delegate:delegate` 
 
 这个命令会发起真实 Codex 模型请求并消耗登录账号的额度。正常结束后，应看到最终答复、模型/推理档提示、过程日志路径和字节数。未指定模型时显示“配置默认”，不代表 wrapper 已读取到实际模型名称。
 
-有写入需求时，明确授权当前任务后使用 `--write`，并按[输出与验收](#输出与验收)检查真实 diff 和测试结果。
+有写入需求时，明确授权当前任务后使用 `--write`，并按[输出与验收](#输出与验收)检查真实 diff 和测试结果。Codex 不会替你提交：所有 run 固定 `approval_policy="never"`，越出沙箱的命令（如 worktree 里的 `git commit`、网络访问）直接被拒，提交由你或调用方在核对 diff 后完成。
 
 ## 命令与参数
 
@@ -161,13 +172,13 @@ Codex 0.162.1 将这四条源命令转换为 skill（0.162.1 是核对此转换�
 | 参数 | 约定 |
 |---|---|
 | 无模式开关 | `read-only` 沙箱 |
-| `--write` | `workspace-write` 沙箱；须用户当前轮明确授权 |
+| `--write` | `workspace-write` 沙箱；须用户当前轮明确授权；不提交，提交由调用方完成 |
 | `--model <slug>` | 按原值传给所选后端；省略则采用 Codex 配置。入口先拒绝语法非法、属于另一后端模型族的值（以及 Claude 的 `opusplan`），退出码 64；未知但语法合法的 slug 由所选 CLI 报错 |
 | `--effort <level>` | 透传推理档；合法值取决于模型和 CLI 版本 |
 | `--resumable` | 可续跑模式：Codex 可停下问用户（`status=needs-input`），超时后可续跑；见[可续跑委托](plugins/delegate/README.md#可续跑委托) |
 | `--resume <runId>` | 带用户原话续跑最近一轮状态为 needs-input 或 timeout 的可续跑运行 |
 | `--continue <runId>` | 在 `--resumable` 链上状态为 done 的一轮之后，接着派下一个任务（接口 1.3） |
-| `--timeout <秒>` | 把期限放大到 541～7200 秒（默认 540）；超过宿主前台期限时须用宿主后台模式调用，见[长任务](plugins/delegate/README.md#长任务) |
+| `--timeout <秒>` | 把期限放大到 541～7200 秒（默认 540）；带它就须用宿主后台模式调用，见[长任务](plugins/delegate/README.md#长任务) |
 | `--strict` | 最终答复首行须是 `DONE:`、`NEED_USER:` 或 `TIME_UP:`，缺标记判 `status=unmarked`、退出 1；见[结果文件](plugins/delegate/README.md#结果文件) |
 | `--check "<命令>"` | 运行以 done 结束后，在仓库根不经 shell 执行检查命令，结果写进结果文件；命令只能取自用户批过的项目检查命令 |
 | `--authorized-by <文件>` | 须与 `--write` 同用：记录事先写入授权文件的路径和 sha256，整条链须用同一文件；适用条件见[检查与事先写入授权](plugins/delegate/README.md#检查与事先写入授权) |
@@ -181,7 +192,7 @@ Codex 0.162.1 将这四条源命令转换为 skill（0.162.1 是核对此转换�
 bash /path/to/delegate-plugin/plugins/delegate/scripts/codex-exec.sh --write "按已确认方案修复并测试"
 ```
 
-Claude 的 Bash 工具 timeout 设为 `600000` 毫秒。wrapper 的 Codex 执行期限默认为 **540 秒**；`DELEGATE_TIMEOUT_SECONDS` 只能把默认值缩短（正整数，超过 540 按 540，非法或非正值回落 540）。`--timeout <秒>` 可把期限放大到 541～7200 秒，带 `--timeout` 时忽略该环境变量；超过宿主前台命令期限（Claude Code 的 Bash 前台上限 600 秒）时，须用宿主后台模式调用并等完成通知，见[长任务](plugins/delegate/README.md#长任务)。认证探测每项最多 5 秒。中止（到期或 TERM/INT/HUP）时会先冻结 Codex，再回收它的全部后代进程组，包括换了进程组或会话的 shell 命令；每一步先 TERM、最多等 2 秒再强制终止，清理结果（后代清单、有无残留、残留 PID）输出到 stderr。执行期限不包括前置探测与后置 Git 检查；Codex 正常结束后自己留下的后台进程不保证被回收。
+Claude 的 Bash 工具 timeout 设为 `600000` 毫秒。wrapper 的 Codex 执行期限默认为 **540 秒**；`DELEGATE_TIMEOUT_SECONDS` 只能把默认值缩短（正整数，超过 540 按 540，非法或非正值回落 540）。`--timeout <秒>` 可把期限放大到 541～7200 秒，带 `--timeout` 时忽略该环境变量，并且须用宿主后台模式调用、等完成通知（超过 540 秒即须后台，不按 Claude Code 的 Bash 前台上限 600 秒自行判断），见[长任务](plugins/delegate/README.md#长任务)。认证探测每项最多 5 秒。中止（到期或 TERM/INT/HUP）时会先冻结 Codex，再回收它的全部后代进程组，包括换了进程组或会话的 shell 命令；每一步先 TERM、最多等 2 秒再强制终止，清理结果（后代清单、有无残留、残留 PID）输出到 stderr。执行期限不包括前置探测与后置 Git 检查；Codex 正常结束后自己留下的后台进程不保证被回收。
 
 ## 双后端只读审查（v0.5.0）
 
@@ -222,6 +233,8 @@ Claude 需明确范围，可用 review 的快捷参数或高级 context JSON，�
 
 过程日志与答复位于 `${TMPDIR:-/tmp}/delegate/`，目录 0700、新文件 0600。完成或失败后尽力保留最近 **50 组** `.log/.answer`；清理失败不改变任务退出码。数量限制不限制单个文件体积。失败回显日志尾部最多 40 行 / 16KiB，并给出完整路径；按需读取少量行，避免把整个日志带回会话。
 
+**留作验收证据。** 这些文件会被轮换清理（过程日志保留最近 50 组，链状态与结果文件保留 14 天），`${TMPDIR}` 也可能被系统清空。要把一次委托留作验收证据，结束后及时把需要的文件复制到项目自己的证据目录：run 复制 `<runId>.result.json`（状态、退出码、改动文件、token）和 `<runId>.answer`（最终答复）；review 保存标准输出的 JSON 报告，或复制 `${TMPDIR:-/tmp}/delegate-review/` 下对应的 `.report.json`。过程日志（`.events.jsonl`、`.log`）可能含源码片段和本机路径，只摘录必要几行，放进公开仓库前先去掉私密内容。delegate 不提供归档命令。
+
 默认只读与可写权限由 Codex 沙箱及宿主配置实现。`workspace-write` 的可写范围可能包括临时目录和额外根目录；“不提交、不推送、不发布、不越范围访问网络”等是行为指令，不能替代 OS 沙箱或宿主权限配置。
 
 **`--write` 不写 Codex 的项目信任。** Codex 在 `workspace-write` 沙箱下第一次进入一个还没有信任级别的仓库时，会往 `~/.codex/config.toml`（设了 `CODEX_HOME` 时为其中的 `config.toml`）追加 `[projects."<仓库路径>"] trust_level = "trusted"`。为避免这一写入，delegate 在写模式运行（含可续跑与续跑）前只读检查该文件：没有本仓库的条目时，传 `-c projects={"<仓库路径>"={trust_level="trusted"}}` 只对本次运行临时信任，不落盘；已有条目（包括你标的 `untrusted`）时不加参数，按你的设置运行。键是 Git 仓库根目录，在 git worktree 里是主仓库路径。读不准时（配置文件读不了或不是 UTF-8、路径含引号或反斜杠、非常规仓库布局）不加参数并在 stderr 提示一行，此时 Codex 仍可能写入一条信任记录。只读运行与审查不加参数。旧版 delegate 运行时留下的信任条目不会被清理，不需要时可手动删除。详见 [write-trust 合同](spec/write-trust.md)。
@@ -257,7 +270,7 @@ claude plugin install delegate@delegate-marketplace
 claude --plugin-dir /path/to/delegate-plugin/plugins/delegate
 ```
 
-已注册同名 marketplace 时，应先检查现有来源；本地加载与远程安装是替代方式，不需要同时安装两份。发行源码由 `v0.8.2` 标签固定，`main` 会继续变化。
+已注册同名 marketplace 时，应先检查现有来源；本地加载与远程安装是替代方式，不需要同时安装两份。发行源码由 `v0.8.3` 标签固定，`main` 会继续变化。
 
 ### 卸载
 
@@ -289,10 +302,11 @@ claude plugin marketplace remove delegate-marketplace
 | 失败或空答复 | 查错误、日志路径和真实 diff；失败修改不会自动撤销 |
 | 停在等待确认 | 检查实际生效的全局/项目 AGENTS.md，给仅用于交互的流程章节注明非交互豁免 |
 | review 报缺少范围（64） | 提供 `--paths`、`--base`、`--changes` 或 `--context` 之一；不会自动扫描整个项目。可先加 `--dry-run` 预览解析结果 |
-| Claude 后端条件不足（127） | 运行 `/delegate:doctor --backend claude-code`；核对 `claude`、`node`、`srt` 版本，必要时用 `DELEGATE_CLAUDE_BIN`、`DELEGATE_NODE_BIN`、`DELEGATE_SRT_BIN` 指定已有绝对路径。不会自动改用 Codex |
+| Claude 后端条件不足（127） | 运行 `/delegate:doctor --backend claude-code`；核对 `claude`、`node`、`srt` 版本（要求与安装命令见[前置条件](#前置条件)），必要时用 `DELEGATE_CLAUDE_BIN`、`DELEGATE_NODE_BIN`、`DELEGATE_SRT_BIN` 指定已有绝对路径。不会自动改用 Codex |
 | Claude 后端报 `native_authentication_environment_unverified` | 当前环境设置了自定义认证目录、API key/token、第三方 provider，或指向非官方地址的 `ANTHROPIC_BASE_URL`。用 `env \| cut -d= -f1 \| grep -E '^(ANTHROPIC_\|CLAUDE_)'` 只列出变量名核对（不要直接 `env \| grep`，会把密钥值打到终端；也不要把环境变量输出贴进 Issue），然后在终端里去掉这些变量再运行。Claude Desktop 会话自带的 `ANTHROPIC_BASE_URL=https://api.anthropic.com`（官方默认地址）会被放行，不会触发此错误 |
 | Claude 后端报 `macos_required`、`launchd_` 开头或 `macos_process_api_` 开头的诊断 | Claude 后端只支持 macOS，并要在当前用户的 GUI launchd 域里启动临时任务、用内核进程接口核对进程边界。非 macOS 报 `macos_required`；`launchctl` 无法调用、无法观测或启动任务失败（例如在缺少图形登录的 SSH、tmux 等会话中可能出现；具体由哪一项触发未逐一实测）报 `launchd_control_unavailable`、`launchd_observation_unverified` 或 `launchd_start_failed`；内核接口检查失败报 `macos_process_api_unavailable`、`macos_process_api_unverified` 或 `process_identity_unverified`。review 退出 127，`/delegate:doctor --backend claude-code` 显示 `条件不足：<诊断码>`。在已登录图形界面的 Mac 本机终端或 Claude Code 中重试，或改用 `--backend codex`；不会自动回退 |
 | Codex 审查报 `codex_inline_input_limit` | 审查输入超过 1 MiB，不会截断或自动分批；用更小的 `--paths` 或加 `--exclude` 分次审查 |
+| review 报 `git_probe_failed`（127，`--dry-run` 也一样） | delegate 内部的 git 查询失败，模型没有启动。最常见的原因是仓库还没有任何提交（没有 HEAD）：`/delegate:review` 要求已有提交，加 `--changes working-tree --include-untracked` 也绕不过；先 `git add` 要审的文件并 `git commit` 一次再审。已有提交时，核对 `--base`/`--head` 是否指向存在的提交 |
 | 审查报告为 failed、inconclusive 或部分覆盖 | 查看报告列出的未审范围与原因（权限拒绝、达到轮次或预算上限、输出无效等）；这些都不算审查通过 |
 
 wrapper 退出状态：64=参数/非 Git 工作区；127=CLI/Python 基础条件失败；124=执行超时；129/130/143=HUP/INT/TERM 中断；125=执行进程未能回收（会报告 PID）；空答复为 1，其他执行失败保留其非零状态。review 使用相同的 64/127/124/129/130/143 约定；正常完成退出 0，即使报告了问题也是 0。doctor 始终退出 0，按文字中的问题数量判断。
@@ -309,7 +323,7 @@ doctor 会刷新临时缓存，不修改业务文件。它只做部分中文全�
 
 v0.5.0 不注册UserPromptSubmit，不按每轮输入自动提醒或探测。SessionStart静默刷新基础条件，doctor按需报告；缓存有效期 8 小时，绑定 CLI 路径、Codex home、插件根目录与版本；未来时间、旧格式、身份变化和坏文件都会失效。缓存不保证当前认证有效，真正执行前总会重新检查登录。
 
-阅读顺序和两种语言的对应页见[文档索引](docs/README.md)。设计见 [DESIGN.md](DESIGN.md)，模块职责见[能力图](spec/CAPABILITY-MAP.md)，精确合同见[通道](spec/channel.md)、[探测](spec/detection.md)和[路由](spec/routing.md)规格。发行变化见 [v0.8.2](docs/releases/v0.8.2.md)、[v0.8.1](docs/releases/v0.8.1.md)、[v0.8.0](docs/releases/v0.8.0.md)、[v0.7.1](docs/releases/v0.7.1.md)、[v0.7.0](docs/releases/v0.7.0.md)、[v0.6.0](docs/releases/v0.6.0.md)、[v0.5.3](docs/releases/v0.5.3.md)、[v0.5.2](docs/releases/v0.5.2.md)、[v0.5.1](docs/releases/v0.5.1.md) 与 [v0.5.0](docs/releases/v0.5.0.md)，后续修改见[未发布记录](docs/releases/unreleased.md)。
+阅读顺序和两种语言的对应页见[文档索引](docs/README.md)。设计见 [DESIGN.md](DESIGN.md)，模块职责见[能力图](spec/CAPABILITY-MAP.md)，精确合同见[通道](spec/channel.md)、[探测](spec/detection.md)和[路由](spec/routing.md)规格。发行变化见 [v0.8.3](docs/releases/v0.8.3.md)、[v0.8.2](docs/releases/v0.8.2.md)、[v0.8.1](docs/releases/v0.8.1.md)、[v0.8.0](docs/releases/v0.8.0.md)、[v0.7.1](docs/releases/v0.7.1.md)、[v0.7.0](docs/releases/v0.7.0.md)、[v0.6.0](docs/releases/v0.6.0.md)、[v0.5.3](docs/releases/v0.5.3.md)、[v0.5.2](docs/releases/v0.5.2.md)、[v0.5.1](docs/releases/v0.5.1.md) 与 [v0.5.0](docs/releases/v0.5.0.md)，后续修改见[未发布记录](docs/releases/unreleased.md)。
 
 ## 开发、贡献与反馈
 
@@ -321,7 +335,7 @@ v0.5.0 不注册UserPromptSubmit，不按每轮输入自动提醒或探测。Ses
 /bin/bash scripts/validate.sh
 ```
 
-总入口包含语法、清单必填字段、判决器自检、3 个 shell 产品套、25 个循环注册的 Python 回归套（其中 `reap-fake-endpoint` 在本机没有 codex 时跳过），以及源码发现回归和隔离策略 policy-only 套。v0.8.2 发布验证为 328 项 Python、53 项 shell 和 19 项 eval；实际 OS、宿主与真实模型证据另列，不计作离线通过。免费总验证不发起模型请求；doctor 规则测试已自行配置 CLI 桩、合成登录状态和临时日志，不再依赖外层 Codex 的安装或登录。[F8 实际修复验证](docs/verification/2026-10-08-f8-applied.md)包含无外层 CLI 和外层拒绝登录的结果。
+总入口包含语法、清单必填字段、判决器自检、3 个 shell 产品套、25 个循环注册的 Python 回归套（其中 `reap-fake-endpoint` 在本机没有 codex 时跳过），以及源码发现回归和隔离策略 policy-only 套。v0.8.3 发布验证为 328 项 Python、53 项 shell 和 19 项 eval；实际 OS、宿主与真实模型证据另列，不计作离线通过。免费总验证不发起模型请求；doctor 规则测试已自行配置 CLI 桩、合成登录状态和临时日志，不再依赖外层 Codex 的安装或登录。[F8 实际修复验证](docs/verification/2026-10-08-f8-applied.md)包含无外层 CLI 和外层拒绝登录的结果。
 
 开发约定、单独测试入口、付费 live 验证和双语维护规则见 [贡献指南](CONTRIBUTING.md)。问题和建议统一通过 [GitHub Issues](https://github.com/haigeerlab/delegate-plugin/issues) 反馈，Bug 提交步骤见下节。
 
