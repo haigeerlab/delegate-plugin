@@ -37,6 +37,12 @@ Path(os.environ['FIXTURE_SCHEMA']).write_bytes(Path(args[args.index('--output-sc
 mode=os.environ.get('FIXTURE_MODE','normal')
 if mode=='error':print('SECRET_CREDENTIAL',file=sys.stderr);sys.exit(1)
 if mode=='empty':sys.exit(0)
+if mode in ('schemafail','turnfail'):
+ message=('SECRET_CREDENTIAL 400 invalid_json_schema: Invalid schema for response_format' if mode=='schemafail' else 'SECRET_CREDENTIAL stream disconnected')
+ print(json.dumps({'type':'thread.started','thread_id':'t'}))
+ print(json.dumps({'type':'error','message':message}))
+ print(json.dumps({'type':'turn.failed','error':{'message':message}}))
+ sys.exit(1)
 if mode=='hang':
  import time
  Path(os.environ['FIXTURE_PID']).write_text(str(os.getpid()))
@@ -160,6 +166,22 @@ class CommonExecutionTests(unittest.TestCase):
                 report=json.loads(result.stdout)
                 self.assertEqual(report['execution_status'],status)
                 self.assertEqual(report['review_outcome'],'inconclusive')
+                self.assertNotIn('SECRET_CREDENTIAL',result.stdout+result.stderr)
+                for path in (self.root/'delegate-review').glob('*'):
+                    self.assertNotIn('SECRET_CREDENTIAL',path.read_text())
+
+    def test_codex_error_events_become_fixed_codes_without_message_text(self):
+        for mode, extra in [('schemafail',['codex_output_schema_rejected']),('turnfail',[])]:
+            with self.subTest(mode=mode):
+                result=self.run_review(mode)
+                self.assertEqual(result.returncode,1,result.stderr)
+                report=json.loads(result.stdout)
+                self.assertEqual(report['execution_status'],'failed')
+                self.assertEqual(report['review_outcome'],'inconclusive')
+                for code in ['codex_result_invalid','codex_turn_failed',*extra]:
+                    self.assertIn(code,report['diagnostics'])
+                if not extra:
+                    self.assertNotIn('codex_output_schema_rejected',report['diagnostics'])
                 self.assertNotIn('SECRET_CREDENTIAL',result.stdout+result.stderr)
                 for path in (self.root/'delegate-review').glob('*'):
                     self.assertNotIn('SECRET_CREDENTIAL',path.read_text())
