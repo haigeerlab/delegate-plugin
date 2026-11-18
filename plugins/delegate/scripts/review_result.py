@@ -9,13 +9,17 @@ from claude_review import unique_object
 CONTENT_FIELDS = {'schema_version', 'reviewed', 'unreviewed', 'findings'}
 FINDING_FIELDS = {'title', 'file', 'line', 'trigger', 'impact', 'evidence', 'suggestion', 'unverified'}
 CONTENT_SCHEMA = {'type': 'object', 'additionalProperties': False,
-    'properties': {'schema_version': {'const': 1}, 'reviewed': {'type': 'array', 'items': {'type': 'string'}},
+    'properties': {'schema_version': {'type': 'integer', 'const': 1}, 'reviewed': {'type': 'array', 'items': {'type': 'string'}},
         'unreviewed': {'type': 'array', 'items': {'type': 'object', 'additionalProperties': False,
             'properties': {'path': {'type': 'string'}, 'reason': {'type': 'string'}}, 'required': ['path', 'reason']}},
         'findings': {'type': 'array', 'items': {'type': 'object', 'additionalProperties': False,
             'properties': {**{name: {'type': 'string'} for name in FINDING_FIELDS - {'line', 'unverified'}},
                 'line': {'type': ['integer', 'null']}, 'unverified': {'type': 'array', 'items': {'type': 'string'}}},
             'required': sorted(FINDING_FIELDS)}}}, 'required': sorted(CONTENT_FIELDS)}
+
+
+TLS_UNTRUSTED_MARKERS = ('SELF_SIGNED_CERT_IN_CHAIN', 'DEPTH_ZERO_SELF_SIGNED_CERT',
+    'UNABLE_TO_GET_ISSUER_CERT', 'UNABLE_TO_VERIFY_LEAF_SIGNATURE')
 
 
 class ResultError(Exception):
@@ -230,6 +234,10 @@ def claude_report(stream, execution, context, *, requested_model=None):
                     code = 'claude_api_' + error
                     if code not in report['diagnostics']:
                         report['diagnostics'].append(code)
+                    # Node TLS codes only map to a fixed code; the text stays out.
+                    if (any(marker in json.dumps(event) for marker in TLS_UNTRUSTED_MARKERS)
+                            and 'claude_api_tls_untrusted' not in report['diagnostics']):
+                        report['diagnostics'].append('claude_api_tls_untrusted')
             raise ResultError('backend_result_error')
         if not isinstance(denials, list):
             raise ResultError('permission_status_unverified')

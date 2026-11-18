@@ -184,6 +184,22 @@ class ResultTests(unittest.TestCase):
         self.assertEqual(properties['findings']['items']['properties']['file']['enum'], ['src/a.py'])
         self.assertEqual(json.dumps(review_result.CONTENT_SCHEMA, sort_keys=True), before)
 
+    def test_schema_satisfies_openai_strict_structured_outputs(self):
+        # OpenAI strict mode rejects the whole schema (400 invalid_json_schema)
+        # when any node lacks a type or an object leaves fields optional/open.
+        def walk(node, path):
+            self.assertIn('type', node, path)
+            types = node['type'] if isinstance(node['type'], list) else [node['type']]
+            if 'object' in types:
+                self.assertIs(node.get('additionalProperties'), False, path)
+                self.assertEqual(sorted(node['required']), sorted(node['properties']), path)
+                for name, child in node['properties'].items():
+                    walk(child, path + '/properties/' + name)
+            if 'array' in types:
+                walk(node['items'], path + '/items')
+        for schema in (review_result.CONTENT_SCHEMA, review_result.schema_for_context(self.context)):
+            walk(schema, '')
+
     def test_bad_coverage_preserves_cli_model_usage_and_specific_safe_reason(self):
         for content, detail in (
                 (dict(self.content, reviewed=['data/src/a.py']), 'coverage_reviewed_path_unknown'),
@@ -249,6 +265,21 @@ class ResultTests(unittest.TestCase):
                 self.assertIn('claude_api_' + error, result['diagnostics'])
                 self.assertEqual(result['execution_status'], 'failed')
                 self.assertNotIn('PRIVATE_', json.dumps(result))
+
+    def test_untrusted_tls_certificate_gets_a_fixed_code_without_message_text(self):
+        terminal = dict(self.terminal, subtype='error_during_execution', is_error=True)
+        for marker in ('SELF_SIGNED_CERT_IN_CHAIN', 'UNABLE_TO_GET_ISSUER_CERT_LOCALLY'):
+            with self.subTest(marker=marker):
+                assistant = {'type': 'assistant', 'error': 'server_error', 'message': {'content': [{'type': 'text',
+                    'text': 'API Error: Unable to connect to API: PRIVATE_HOST (%s)' % marker}]}}
+                result = self.report(self.stream(self.init, assistant, terminal))
+                self.assertIn('claude_api_server_error', result['diagnostics'])
+                self.assertIn('claude_api_tls_untrusted', result['diagnostics'])
+                self.assertEqual(result['execution_status'], 'failed')
+                self.assertNotIn('PRIVATE_', json.dumps(result))
+        assistant = {'type': 'assistant', 'error': 'server_error', 'message': 'PRIVATE_CONTENT'}
+        result = self.report(self.stream(self.init, assistant, terminal))
+        self.assertNotIn('claude_api_tls_untrusted', result['diagnostics'])
 
     def test_unknown_or_malformed_error_fields_never_become_diagnostics_or_success(self):
         for value in ('PRIVATE_CREDENTIAL_CONTENT', {}, [], None, True):

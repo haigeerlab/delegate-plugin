@@ -4,7 +4,9 @@
 
 **审批方式（2026-10-25）：** Codex 后端审查调用固定 `-c approval_policy="never"`，见 [run-resume](run-resume.md) 修订记录 R2；其余审查合同不变。
 
-**当前发行（2026-11-04）：** v0.8.4 是补丁版，无提交仓库的审查改报 `repository_has_no_commits`（原为 `git_probe_failed`），退出码与其他报告内容不变，接口仍为 1.3，见[版本说明](../docs/releases/v0.8.4.md)；免费验证 330 Python / 53 shell / 19 eval。
+**当前发行（2026-11-18）：** v0.8.5 是补丁版，修复审查结果 schema 缺 type 导致 Codex 审查全部失败，并新增 codex_turn_failed、codex_output_schema_rejected、claude_api_tls_untrusted 三个固定诊断码；接口仍为 1.3，沙箱边界不变，见[版本说明](../docs/releases/v0.8.5.md)；免费验证 333 Python / 53 shell / 19 eval。
+
+**v0.8.4 发行（2026-11-04）：** v0.8.4 是补丁版，无提交仓库的审查改报 `repository_has_no_commits`（原为 `git_probe_failed`），退出码与其他报告内容不变，接口仍为 1.3，见[版本说明](../docs/releases/v0.8.4.md)；免费验证 330 Python / 53 shell / 19 eval。
 
 **v0.8.3 发行（2026-11-04）：** v0.8.3 是补丁版，只改使用者文档与帮助文字、行为不变，接口仍为 1.3；本模块的审查合同、参数与报告格式不变，见[版本说明](../docs/releases/v0.8.3.md)；免费验证 328 Python / 53 shell / 19 eval。
 
@@ -203,8 +205,8 @@ OS 层用 srt 包围本机整个 Claude 进程；源仓库/Git、用户配置、
 | `usage` | 仅后端实报字段和明确口径；缺失不是零，成本不是账单 |
 
 退出 0 不等于审查通过。完成且覆盖全范围才能给出 `no_findings_in_scope`；权限拒绝、轮次/预算耗尽、部分覆盖、无输出、缺少最终 result、`is_error`、解析失败及格式不符均不能给出该结论。已有发现可以保留，但部分完成的总判断为 `inconclusive`。
-Claude错误终态先保留非空permission_denials列表的固定permission_denied事实，不回显工具输入；同时保留已知四类错误subtype的claude_error_*码和错误终态中已知assistant.error枚举的claude_api_*码，继续保留backend_result_error。未知/畸形字段不拼入诊断，errors/message原文不保存；不能从通用error_during_execution推断认证、额度或服务原因。成功终态不被先前已恢复的assistant错误改判失败；未新增重试或后端切换。
-两后端均按本次快照文件清单生成输出 schema：reviewed、unreviewed.path 和 findings.file 的枚举仅含原路径，不含 data/ 前缀、排除项或运行时路径。空快照不生成非法空枚举，并保持未完成。模型不得重复覆盖路径或同时声明已审/未审；采集阶段遗漏由 wrapper 合并，语义校验仍强制执行，schema 不证明审查真实。范围失败只保留固定细分类别，不回显任意路径或原文。已校验的唯一终结事件提供的模型/用量先于答案语义解析保存；错误、达限或坏覆盖仍失败，缺失元数据仍未知，不凭失败推断费用为零。
+Claude错误终态先保留非空permission_denials列表的固定permission_denied事实，不回显工具输入；同时保留已知四类错误subtype的claude_error_*码和错误终态中已知assistant.error枚举的claude_api_*码，继续保留backend_result_error。未知/畸形字段不拼入诊断，errors/message原文不保存；不能从通用error_during_execution推断认证、额度或服务原因。成功终态不被先前已恢复的assistant错误改判失败；未新增重试或后端切换。v0.8.5 起，已知 assistant.error 事件含 Node TLS 证书不可信错误码（如 SELF_SIGNED_CERT_IN_CHAIN、UNABLE_TO_GET_ISSUER_CERT）时，另加固定码 claude_api_tls_untrusted；只匹配固定标记，原文仍不保存，沙箱信任库与网络边界不变。
+两后端均按本次快照文件清单生成输出 schema：reviewed、unreviewed.path 和 findings.file 的枚举仅含原路径，不含 data/ 前缀、排除项或运行时路径。空快照不生成非法空枚举，并保持未完成。schema 须满足 OpenAI 严格结构化输出：每个节点都声明 type，对象禁止额外字段且 required 列全所有字段（v0.8.5 起由回归测试守住）。模型不得重复覆盖路径或同时声明已审/未审；采集阶段遗漏由 wrapper 合并，语义校验仍强制执行，schema 不证明审查真实。范围失败只保留固定细分类别，不回显任意路径或原文。已校验的唯一终结事件提供的模型/用量先于答案语义解析保存；错误、达限或坏覆盖仍失败，缺失元数据仍未知，不凭失败推断费用为零。
 
 行号必须能在指定快照或 diff 的明确一侧核验；不匹配的定位标为未验证，不虚构行号。结构化 JSON 只证明格式，主会话仍需核实发现；任何结论不自动提供合并或交付授权。
 CLI 缺失/版本不支持/隔离不可用及启动前条件不符：条件不足；启动后的认证、额度、服务或非零失败：执行失败。参数错误退出 64，缺失 CLI/运行依赖 127，其他失败/不完整非零，正常完成（包括发现问题）退出 0；超时 124，INT/TERM/HUP 130/143/129。保存原始后端退出码为元数据，不强行改成“无问题”。
@@ -290,7 +292,7 @@ DELEGATE_SRT_BIN=/absolute/existing/srt DELEGATE_NODE_BIN=/absolute/existing/nod
 
 ## Codex 前置诊断与调用环境（2026-10-12）
 
-共同审查保留 codex_preflight_failed，并增加可信阶段诊断：codex_cli_missing、codex_version_probe_failed、codex_version_probe_timeout/unavailable、codex_login_probe_timeout/unavailable、codex_login_status_failed 或 codex_login_method_unsupported。这些分类来自受控检查分支，不复制CLI原始stdout/stderr、凭据、路径或环境；backend_started=false、conditions_missing/inconclusive且保留未审范围。backend.check 的原两值返回、退出码及旧CLI文案兼容。版本无法运行不等同于用户未登录，也不能自动安装/升级或登录。
+共同审查保留 codex_preflight_failed，并增加可信阶段诊断：codex_cli_missing、codex_version_probe_failed、codex_version_probe_timeout/unavailable、codex_login_probe_timeout/unavailable、codex_login_status_failed 或 codex_login_method_unsupported。这些分类来自受控检查分支，不复制CLI原始stdout/stderr、凭据、路径或环境；backend_started=false、conditions_missing/inconclusive且保留未审范围。backend.check 的原两值返回、退出码及旧CLI文案兼容。版本无法运行不等同于用户未登录，也不能自动安装/升级或登录。启动后事件流含 error 或 turn.failed 事件时，codex_result_invalid 之外另加固定码 codex_turn_failed；错误内容含 invalid_json_schema 时再加 codex_output_schema_rejected（v0.8.5 起）。只匹配固定标记，错误原文不进报告或日志。
 
 第三批真实Claude宿主祖先核验通过，但Node12作为其Bash环境的优先运行时令Codex版本探针失败，退出127、四文件未审、实际后端未启动；来源免费重现Node12失败及现有Node24.18.0成功，见[第三批结果](../docs/verification/2026-10-12-claude-review-mac-reverse-third-result.json)。新验收驱动只对本次子进程固定已有Node路径/版本/摘要，不修改用户PATH或配置，不在已批准失败批次中变更运行时或重跑。真正修复后反向仍未验收。
 

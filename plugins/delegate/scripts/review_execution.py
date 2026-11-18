@@ -38,6 +38,17 @@ def private_root(context):
     return root
 
 
+def codex_error_codes(events):
+    # Fixed codes only: error messages can echo prompts, paths or credentials.
+    failures = [item for item in events if isinstance(item, dict) and item.get('type') in ('error', 'turn.failed')]
+    if not failures:
+        return []
+    codes = ['codex_turn_failed']
+    if 'invalid_json_schema' in json.dumps(failures):
+        codes.append('codex_output_schema_rejected')
+    return codes
+
+
 def save_artifacts(report, context):
     root = private_root(context) / 'delegate-review'
     try:
@@ -180,6 +191,7 @@ def codex_review(args, context):
                 output.seek(0)
                 raw_events = output.read(LIMIT + 1)
                 values = {}
+                events = []
                 try:
                     if len(raw_events) > LIMIT:
                         raise ValueError()
@@ -207,6 +219,7 @@ def codex_review(args, context):
                             report['review_outcome'] = 'findings' if report['findings'] else 'no_findings_in_scope'
                 except (OSError, ValueError, UnicodeError, ResultError) as error:
                     execution['diagnostics'].append('codex_result_invalid')
+                    execution['diagnostics'] += codex_error_codes(events)
                     if isinstance(error, ResultError):
                         execution['diagnostics'].append(str(error))
                     if execution['execution_status'] == 'completed':
