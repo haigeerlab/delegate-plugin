@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Offline native routing/error contracts; no Darwin jobs or real executors."""
 import errno
+import hashlib
 import json
 import plistlib
 import signal
@@ -199,6 +200,97 @@ class DesktopBaseUrl(unittest.TestCase):
             with self.subTest(name=name):
                 self.assertEqual(self.review('https://api.anthropic.com', {name: 'x'}),
                                  ['native_authentication_environment_unverified'])
+
+
+class SandboxTrustTests(unittest.TestCase):
+    """S88: explicitly trusted certificates are added read-only for the sandboxed CLI."""
+
+    def setUp(self):
+        self.temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temporary.cleanup)
+        self.base = Path(self.temporary.name).resolve()
+        self.bin = self.base / 'bin'; self.bin.mkdir()
+        for name in ('claude', 'srt', 'node'):
+            (self.bin / name).write_text('#!/bin/sh\n'); (self.bin / name).chmod(0o755)
+        self.repository = self.base / 'repository'; self.repository.mkdir()
+        self.context = {'repository': str(self.repository), 'files': {'src/a.py': b'fixture\n'},
+            'file_sha256': {'src/a.py': hashlib.sha256(b'fixture\n').hexdigest()}, 'allowed_tools': ['Read']}
+        self.caller_ca = self.base / 'caller-ca.pem'; self.caller_ca.write_text('PRIVATE_CALLER_CA')
+
+    def runner(self, trust):
+        root = self.base / ('run%d' % len(list(self.base.glob('run*')))); root.mkdir(mode=0o700)
+        def export(directory, **_):
+            if isinstance(trust, Exception):
+                raise trust
+            directory.mkdir(mode=0o700)
+            path = directory / 'trusted.pem'; path.write_text('PRIVATE_PEM'); path.chmod(0o400)
+            return {'count': trust, 'path': str(path)} if trust else {'count': 0, 'path': None}
+        values = {name: '' for name in AUTHENTICATION_VARIABLES}
+        values['NODE_EXTRA_CA_CERTS'] = str(self.caller_ca)
+        with patch.dict('os.environ', values), patch('sys.platform', 'darwin'), \
+                patch.object(review_native, 'executable', side_effect=lambda name, _: self.bin / name), \
+                patch.object(review_native, 'export_trusted', side_effect=export):
+            return review_native.NativeRunner(root, self.context)
+
+    def test_exported_file_is_readable_not_writable_and_hidden_from_review_tools(self):
+        runner = self.runner(3)
+        path = str(runner.root / 'trust' / 'trusted.pem')
+        self.assertEqual(runner.environment.get('NODE_EXTRA_CA_CERTS'), path)
+        policy = json.loads(runner.policy.read_text())['filesystem']
+        self.assertIn(path, json.dumps(policy['allowRead']))
+        self.assertNotIn('trust', json.dumps(policy['allowWrite']))
+        self.assertIn('Read(/%s)' % path, runner.tool_denials)
+        self.assertEqual(runner.trust_diagnostics, [])
+        self.assertEqual(runner.trust_count, 3)
+        self.assertNotIn(str(self.caller_ca), json.dumps([runner.environment, policy]))
+
+    def test_nothing_trusted_or_failed_export_adds_no_trust_or_caller_file(self):
+        for trust, diagnostics in ((0, []), (review_native.TrustExportError('system_trust_export_unavailable'),
+                ['system_trust_export_unavailable'])):
+            with self.subTest(trust=trust):
+                runner = self.runner(trust)
+                self.assertNotIn('NODE_EXTRA_CA_CERTS', runner.environment)
+                self.assertEqual(runner.trust_diagnostics, diagnostics)
+                self.assertNotIn(str(self.caller_ca), runner.policy.read_text())
+
+    def test_failed_export_is_a_non_fatal_report_diagnostic(self):
+        runner = SimpleNamespace(claude=Path('/fixture/claude'), invoke=None, cancelled=None,
+            runtime_preflight=lambda: None, trust_diagnostics=['system_trust_export_unavailable'])
+        expected = {'execution_status': 'completed', 'diagnostics': [], 'cleanup': 'confirmed'}
+        context = dict(self.context, scope={}, baseline={}, diff_sha256=None, file_sha256={}, unreviewed=[])
+        args = SimpleNamespace(model=None, task='fixture', max_turns=12, max_budget_usd=None)
+        with patch.object(review_native, 'NativeRunner', return_value=runner), \
+                patch.object(review_native, 'native_temporary', return_value=self.base), \
+                patch.object(review_native, 'execute', return_value=expected), \
+                patch.object(review_native.shutil, 'rmtree'):
+            report, status = review_native.native_review(args, context)
+        self.assertEqual(status, 0)
+        self.assertEqual(report['execution_status'], 'completed')
+        self.assertEqual(report['diagnostics'], ['system_trust_export_unavailable'])
+
+    def test_doctor_reports_only_the_certificate_count(self):
+        import contextlib, io, os, review_doctor
+        for trust, line in ((3, '系统明确信任的证书：3 张，已加入沙箱'),
+                (review_native.TrustExportError('system_trust_export_unavailable'),
+                 '系统证书导出：system_trust_export_unavailable（不影响运行，沙箱只用 CLI 自带的公共根证书）')):
+            with self.subTest(trust=trust):
+                runner = self.runner(trust)
+                runner.runtime_preflight = lambda: None
+                output = io.StringIO()
+                previous = os.getcwd(); os.chdir(self.repository)
+                try:
+                    with patch('sys.argv', ['review_doctor.py', '--backend', 'claude-code']), \
+                            patch.object(review_doctor, 'NativeRunner', return_value=runner), \
+                            patch.object(review_doctor, 'preflight', return_value={'version': '2.1.311',
+                                'auth_method': 'claude.ai', 'provider': 'firstParty'}), \
+                            patch.dict('os.environ', {'DELEGATE_REVIEW_DEPTH': '0'}), \
+                            contextlib.redirect_stdout(output):
+                        review_doctor.main()
+                finally:
+                    os.chdir(previous)
+                self.assertIn(line, output.getvalue())
+                self.assertNotIn('PRIVATE_', output.getvalue())
+                self.assertNotIn('trusted.pem', output.getvalue())
 
 
 if __name__ == '__main__':
