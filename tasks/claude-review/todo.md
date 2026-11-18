@@ -498,6 +498,8 @@ Task10交付接续：沿用此前明确提交/推送授权，17份文档修订�
 - [x] S88-2（report）：`NativeRunner` 接入与 doctor 显示；测试覆盖 CR-12。
 - [x] S88-3（report）：文档、v0.8.6 发行说明、版本号；`scripts/validate.sh` 通过。
 - [x] S88-4（gate）：提交、PR、发版各经用户确认。用户 2026-11-18 原话「提交并发版」。
-- [ ] S88-5（gate）：CR-14 真实验收，用 Claude 额度，另经用户授权。
+- [x] S88-5（gate）：CR-14 真实验收，用 Claude 额度，另经用户授权。用户 2026-11-18 批准最终验收（原话「批准验收」）。
 
 S88-1～3 结果（2026-11-18）：`review_trust.py` 与沙箱接入完成；`test-review-trust.py` 6 项、`test-review-native.py` 新增 4 项均先确认失败再实现通过；执行测试的假运行器补 `trust_diagnostics` 属性，发现回归的套件桩列表加入 `review-trust`。本机真实 `security` 手动导出 3 张、文件 0400（只读、不调用模型）。免费总验证结果见 v0.8.6 发行说明。S88-4、S88-5 未做。
+
+S88-5 与最终验收（2026-11-18）：CR-14 以生态总负责人 ecosystem-lead 的实跑为准（agent-relay #21173，本会话未复跑、未另用额度）：v0.8.6 发布副本（f282e37）在本机开着 Cloudflare WARP 时，Claude 后端 review `execution_status=completed`、`review_outcome=findings`、reviewed 1/1、diagnostics 为空；`review_doctor.py --backend claude-code` 显示「系统明确信任的证书：3 张，已加入沙箱」；Codex 后端同时复跑 completed。规格要求的对照组（关闭本功能复现原失败）未单独运行，以 v0.8.5 时同一网络下实测的 `claude_api_tls_untrusted`（#21135）作修复前对照。CR-11～CR-13 由免费测试覆盖，免费总验证 343 Python / 53 shell / 19 eval。规格内容在构建中未修改，仅状态行改为已批准并补当前发行行。用户「批准验收」。
