@@ -35,6 +35,10 @@ def main():
         facts = preflight(str(runner.claude), runner.invoke)
         print('本机 CLI、原有认证和进程边界预检通过：Claude ' + facts['version'])
         print('认证方式：' + facts['auth_method'] + '；提供者：' + facts['provider'])
+        if runner.trust_diagnostics:
+            print('系统证书导出：' + runner.trust_diagnostics[0] + '（不影响运行，沙箱只用 CLI 自带的公共根证书）')
+        else:
+            print('系统明确信任的证书：%d 张，已加入沙箱' % runner.trust_count)
         print('模型、额度、审查工具和跨宿主实际任务：未验证。')
         print('诊断完成；发现 0 个配置问题，不代表后端审查可用或远端/额度可用。')
     except (BoundaryError, PreflightError, ValueError, OSError) as error:

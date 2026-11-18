@@ -4,7 +4,9 @@
 
 **Approval mode (2026-10-25):** the Codex review backend call always passes `-c approval_policy="never"`; see revision R2 in [run-resume](SPEC-run-resume.md). The rest of the review contract is unchanged.
 
-**Current release, 2026-11-18:** v0.8.5 is a patch release that fixes the review result schema missing a type, which made every Codex review fail, and adds three fixed diagnostics: codex_turn_failed, codex_output_schema_rejected and claude_api_tls_untrusted; the interface stays 1.3 and the sandbox boundary is unchanged; see the [release notes](releases/v0.8.5.md). Free validation passed 333 Python / 53 shell / 19 eval.
+**Current release, 2026-11-18:** v0.8.6 is a patch release implementing "Sandbox certificate trust" in this specification: Claude backend reviews automatically add the explicitly trusted system certificates for the sandboxed claude through a read-only file and `NODE_EXTRA_CA_CERTS`, reporting the non-fatal `system_trust_export_unavailable` on failure; the interface stays 1.3, the network allowlist is unchanged and real acceptance CR-14 has not been run; see the [release notes](releases/v0.8.6.md). Free validation passed 343 Python / 53 shell / 19 eval.
+
+**v0.8.5 release, 2026-11-18:** v0.8.5 is a patch release that fixes the review result schema missing a type, which made every Codex review fail, and adds three fixed diagnostics: codex_turn_failed, codex_output_schema_rejected and claude_api_tls_untrusted; the interface stays 1.3 and the sandbox boundary is unchanged; see the [release notes](releases/v0.8.5.md). Free validation passed 333 Python / 53 shell / 19 eval.
 
 **v0.8.4 release, 2026-11-04:** v0.8.4 is a patch release in which reviewing a repository without commits reports `repository_has_no_commits` (previously `git_probe_failed`); exit statuses and the rest of the report are unchanged and the interface stays 1.3; see the [release notes](releases/v0.8.4.md). Free validation passed 330 Python / 53 shell / 19 eval.
 
@@ -295,6 +297,59 @@ Reverse batch three verified the actual Claude host ancestry, but Node12 at the 
 ### 2026-10-13: local installation paths and supervisor startup
 
 The launchd interpreter may be unable to reopen plugin installation files under Documents. The main session stages only the three trusted supervisor/parser modules review_macos.py, review_result.py and claude_review.py inside the existing private control tree (0700 directory,0600 files), then starts the temporary job there. This step copies no source snapshots, credentials or other user data. The reviewer remains denied read/write access to the entire control tree; tools, network, identity proof, deadlines and cleanup are unchanged. It changes no system permissions, global configuration or authentication and switches no backend. Path-denial and model-free fix evidence is recorded separately; a startup probe does not establish a successful real-model review.
+
+## Sandbox certificate trust (S88, 2026-11-18, approved)
+
+**Status:** approved by the user on 2026-11-18 ("批准，开始实现", i.e. "approved, start implementing"); tasks are in the S88 section of the [plan](../../tasks/claude-review/plan.md), planned for v0.8.6.
+
+### Problem
+
+With TLS-decrypting network software installed (observed: Cloudflare WARP, since 11-02), `api.anthropic.com` is served with a certificate issued by that software's root certificate, which is trusted only in the system keychain. claude outside the sandbox uses system trust and works; claude inside the srt sandbox cannot read it and fails to connect (`assistant.error=server_error`, text containing `SELF_SIGNED_CERT_IN_CHAIN`), reported as `claude_api_tls_untrusted` since v0.8.5. The user will not change the network software's exclusion settings and wants delegate to solve it.
+
+### Goal
+
+The root certificates trusted by the Claude review backend inside the sandbox match the root certificates the local user has **explicitly marked as trusted** outside it: nothing more is trusted, no manual step is required, and the network allowlist is unchanged.
+
+### Approach (option C: automatic export)
+
+Before starting srt for each Claude backend review (and the same preflight of `doctor --backend claude-code`):
+
+1. **Read trust settings**: `/usr/bin/security trust-settings-export -d <file>` for the admin domain and `/usr/bin/security trust-settings-export <file>` for the user domain, written to this run's private control directory, each with a 5-second deadline. Read-only; the keychain and trust settings are never changed.
+2. **Select certificates** by SHA-1 that are "explicitly trusted". A record is selected only if either:
+   - `trustSettings` is an empty array (unconditional trust); or
+   - it contains an entry with `kSecTrustSettingsResult` 1 (TrustRoot) or 2 (TrustAsRoot) whose policy name is absent or `sslServer` or `basicX509`.
+
+   Any record with `kSecTrustSettingsResult` 3 (Deny) whose policy name is absent or `sslServer` is excluded. Trust limited to other policies (such as code signing) is not selected.
+3. **Fetch the certificates**: the export holds SHA-1 hashes only. Read `/Library/Keychains/System.keychain` and the user's `login.keychain-db` with `/usr/bin/security find-certificate -a -Z -p`, **recompute the SHA-1 of each DER** locally, and keep only certificates matching step 2. Missing hashes are ignored.
+4. **Write the file**: selected certificates are written as PEM into a read-only directory for this run (directory 0700, file 0400, created by delegate, outside the writable directory). At most 64 certificates and 1 MiB; exceeding either counts as an export failure.
+5. **Hand it to the sandbox**: add the file to srt's readable paths (not writable) and set `NODE_EXTRA_CA_CERTS=<that file>` in the fixed environment given to claude. Node **adds** this trust; claude's bundled public roots still apply. The tool layer adds the usual Read deny for the path, so the reviewer cannot read it.
+6. **Clean up** with this run's control directory; nothing is cached or reused across runs.
+
+**Failures:** if any step fails or times out, or nothing is selected, the variable is **not set** and the review runs as in v0.8.5; the report adds the non-fatal diagnostic `system_trust_export_unavailable` (only on export failure; selecting zero certificates is not a failure). If a certificate problem still occurs, `claude_api_tls_untrusted` is reported as before.
+
+**doctor:** `doctor --backend claude-code` shows how many certificates were exported, or `system_trust_export_unavailable`, without certificate names, hashes or paths; doctor still makes no network requests.
+
+### Boundaries
+
+**Always:** trust only certificates the admin or user has explicitly trusted outside the sandbox; recompute every certificate hash; keep the file read-only, private and deleted after use; leave the Codex backend and run unaffected.
+**Ask first:** sources beyond explicit trust settings, network allowlist changes, real model acceptance (one Claude backend review on a TLS-decrypting network, using Claude quota).
+**Never:** enable srt's `enableWeakerNetworkIsolation` (opening trustd, which srt itself flags as an exfiltration vector); read or copy private keys; write the keychain or trust settings; **replace** the trust store with `SSL_CERT_FILE` or similar; inherit the caller's `NODE_EXTRA_CA_CERTS` (caller variables still do not enter the sandbox, so an arbitrary file cannot widen trust); put certificate names, hashes or paths in reports or logs.
+
+### Success criteria
+
+| Clause | Success criterion and planned verification |
+|---|---|
+| CR-11 | Selection rules: fixed trust-settings fixtures cover unconditional trust, sslServer/basicX509 trust, Deny, other-policy-only and unspecified results, with the correct selected set; certificates with a mismatched hash or missing from the keychains are not selected |
+| CR-12 | Files and boundary: directory 0700, file 0400; the path is in srt's readable list and not its writable list; the tool-layer Read deny covers it; the fixed environment has `NODE_EXTRA_CA_CERTS` pointing only to that file; the caller's variable of the same name is not inherited; the file is deleted after the run |
+| CR-13 | Failure means "no added trust": a missing `security`, nonzero exit, timeout, invalid output, more than 64 certificates or 1 MiB leave the variable unset and report `system_trust_export_unavailable` while the review proceeds; reports and logs contain no certificate names, hashes or paths |
+| CR-14 | Real acceptance (separately authorized): on a TLS-decrypting network a Claude backend review of a fixed small fixture is `completed` with source, Git and configuration unchanged; with the feature off on the same network the original failure reproduces as a control |
+
+All free parts are tested with a fake `security` command and temporary directories, never reading the real keychain or calling a model, and are wired into `scripts/validate.sh`.
+
+### To confirm
+
+1. Selected certificates are not checked for being CA certificates (basicConstraints); system trust settings decide, so a leaf certificate trusted on its own is also selected. I consider this acceptable because it is already trusted outside the sandbox.
+2. This Mac currently has three explicitly trusted certificates: the Cloudflare Gateway CA and two mkcert local development certificates; all three would be imported into the sandbox.
 
 ## Appendix: historical continuations (original status, not current conclusions)
 

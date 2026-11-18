@@ -4,7 +4,9 @@
 
 **审批方式（2026-10-25）：** Codex 后端审查调用固定 `-c approval_policy="never"`，见 [run-resume](run-resume.md) 修订记录 R2；其余审查合同不变。
 
-**当前发行（2026-11-18）：** v0.8.5 是补丁版，修复审查结果 schema 缺 type 导致 Codex 审查全部失败，并新增 codex_turn_failed、codex_output_schema_rejected、claude_api_tls_untrusted 三个固定诊断码；接口仍为 1.3，沙箱边界不变，见[版本说明](../docs/releases/v0.8.5.md)；免费验证 333 Python / 53 shell / 19 eval。
+**当前发行（2026-11-18）：** v0.8.6 是补丁版，实现本规格「沙箱证书信任」：Claude 后端审查自动把系统明确信任的证书以只读文件经 `NODE_EXTRA_CA_CERTS` 追加给沙箱里的 claude，失败时报非致命 `system_trust_export_unavailable`；接口仍为 1.3，网络放行范围不变，真实验收 CR-14 未做，见[版本说明](../docs/releases/v0.8.6.md)；免费验证 343 Python / 53 shell / 19 eval。
+
+**v0.8.5 发行（2026-11-18）：** v0.8.5 是补丁版，修复审查结果 schema 缺 type 导致 Codex 审查全部失败，并新增 codex_turn_failed、codex_output_schema_rejected、claude_api_tls_untrusted 三个固定诊断码；接口仍为 1.3，沙箱边界不变，见[版本说明](../docs/releases/v0.8.5.md)；免费验证 333 Python / 53 shell / 19 eval。
 
 **v0.8.4 发行（2026-11-04）：** v0.8.4 是补丁版，无提交仓库的审查改报 `repository_has_no_commits`（原为 `git_probe_failed`），退出码与其他报告内容不变，接口仍为 1.3，见[版本说明](../docs/releases/v0.8.4.md)；免费验证 330 Python / 53 shell / 19 eval。
 
@@ -301,6 +303,59 @@ DELEGATE_SRT_BIN=/absolute/existing/srt DELEGATE_NODE_BIN=/absolute/existing/nod
 launchd的解释器不一定能重新打开Documents中的插件安装文件。主会话仅将review_macos.py、review_result.py、claude_review.py三个受信监督/解析代码文件复制到既有私有control子目录（目录0700、文件0600），临时任务从该处启动。源码快照、凭据与其他用户数据不在这一步复制；reviewer仍被OS禁止读写整个control树，工具、网络、身份证明、期限与清理规则不变。不修改系统权限、全局配置或认证，不换后端。实际路径拒绝及零模型修复证据另记；不能由启动探针推导真实模型审查通过。
 
 > 对外说明：本机身份与路径已脱敏；原始记录在私有验收目录保留，未改变原结论或追认历史验收。
+
+## 沙箱证书信任（S88，2026-11-18，已批准）
+
+**状态：** 用户 2026-11-18 批准（原话「批准，开始实现」），任务见 [plan](../tasks/claude-review/plan.md) 的 S88 节，计划随 v0.8.6 发布。
+
+### 问题
+
+本机装了会解密 TLS 的网络软件（实测为 Cloudflare WARP，11-02 起）后，访问 `api.anthropic.com` 拿到的是该软件根证书签发的证书。这张根证书只在系统钥匙串里被设为信任。沙箱外的 claude 能用系统信任，正常；srt 沙箱里的 claude 读不到它，连接失败（`assistant.error=server_error`，正文含 `SELF_SIGNED_CERT_IN_CHAIN`），v0.8.5 起报 `claude_api_tls_untrusted`。用户已表示不改网络软件的免检设置，要 delegate 解决。
+
+### 目标
+
+Claude 审查后端在沙箱内信任的根证书，与本机用户在沙箱外**明确设为信任**的根证书一致；不多信，不要求用户手动操作，不改网络放行范围。
+
+### 做法（方案 C：自动导出）
+
+每次 Claude 后端审查（以及 `doctor --backend claude-code` 的同一预检）在启动 srt 前执行：
+
+1. **读信任设置**：用 `/usr/bin/security trust-settings-export -d <文件>` 导出管理员域、`/usr/bin/security trust-settings-export <文件>` 导出用户域，输出写在本次私有控制目录。每条命令有期限（5 秒）。只读，不改钥匙串或信任设置。
+2. **选证书**：按 SHA-1 收集"明确信任"的证书。一条记录满足以下任一条件才入选：
+   - `trustSettings` 为空数组（无条件信任）；
+   - 含一项 `kSecTrustSettingsResult` 为 1（TrustRoot）或 2（TrustAsRoot），且策略名缺省或为 `sslServer`、`basicX509`。
+
+   含 `kSecTrustSettingsResult` 为 3（Deny）且策略名缺省或为 `sslServer` 的记录一律排除。只限定于其他策略（如代码签名）的信任不入选。
+3. **取证书本体**：导出文件只有 SHA-1，没有证书。用 `/usr/bin/security find-certificate -a -Z -p` 读取 `/Library/Keychains/System.keychain` 和当前用户的 `login.keychain-db`，对每张证书**自行重算 DER 的 SHA-1**，只保留与第 2 步集合一致的证书。找不到的哈希忽略。
+4. **写文件**：入选证书写成 PEM，放在本次运行专用的只读目录（目录 0700、文件 0400，由 delegate 创建，不在 writable 目录内）。最多 64 张、文件最多 1 MiB，超限视为导出失败。
+5. **交给沙箱**：把该文件加入 srt 的可读路径（不可写），在交给 claude 的固定环境中设置 `NODE_EXTRA_CA_CERTS=<该文件>`。Node 对此变量是**追加**信任，claude 自带的公共根证书照旧生效。工具层照常对该路径加 Read deny，reviewer 读不到。
+6. **清理**：随本次控制目录一起删除，不缓存、不跨运行复用。
+
+**失败处理：** 任一步失败、超时或一张都没选到时，**不设置**该环境变量，审查照常运行，与 v0.8.5 行为一致；报告加非致命诊断 `system_trust_export_unavailable`（只在导出失败时加，选到 0 张不算失败）。若随后仍遇证书问题，照旧报 `claude_api_tls_untrusted`。
+
+**doctor：** `doctor --backend claude-code` 显示本次导出了几张证书或 `system_trust_export_unavailable`，不显示证书名称、哈希或路径；doctor 仍不联网。
+
+### 边界
+
+**Always：** 只信任沙箱外已被管理员或用户明确设为信任的证书；每张证书自行重算哈希核对；文件只读、私有、用后删除；Codex 后端与 run 不受影响。
+**Ask first：** 扩大到系统内置根证书以外的其他来源、改网络放行域名、真实模型验收（需在 TLS 解密网络下跑一次 Claude 后端审查，用 Claude 额度）。
+**Never：** 打开 srt 的 `enableWeakerNetworkIsolation`（放开 trustd，srt 官方标明有外泄风险）；读取或复制私钥；写钥匙串或信任设置；用 `SSL_CERT_FILE` 等变量**替换**信任库；继承调用方环境里的 `NODE_EXTRA_CA_CERTS`（调用方变量仍不进入沙箱，避免被任意文件扩大信任）；把证书名称、哈希或路径写进报告或日志。
+
+### 成功条件
+
+| 条款 | 成功标准与计划验证 |
+|---|---|
+| CR-11 | 选证规则：用固定信任设置夹具覆盖无条件信任、sslServer/basicX509 信任、Deny、只限其他策略、未指定结果五类，入选集合正确；哈希不符或钥匙串里找不到的证书不入选 |
+| CR-12 | 文件与边界：目录 0700、文件 0400；路径在 srt 可读列表、不在可写列表；工具层 Read deny 覆盖该路径；固定环境含 `NODE_EXTRA_CA_CERTS` 且只指向该文件；调用方同名变量不被继承；运行结束后文件已删除 |
+| CR-13 | 失败关闭为"不加信任"：`security` 缺失、非零退出、超时、输出非法、超过 64 张或 1 MiB 时不设变量、报 `system_trust_export_unavailable`，审查照常进行；报告和日志里没有证书名称、哈希或路径 |
+| CR-14 | 真实验收（另经授权）：在 TLS 解密网络下，Claude 后端审查固定小夹具 `completed`，源码、Git、配置不变；同一网络下关闭本功能复现原失败作对照 |
+
+免费部分全部用假 `security` 命令和临时目录测试，不读真实钥匙串、不调用模型，并入 `scripts/validate.sh`。
+
+### 待确认
+
+1. 入选证书不检查是否为 CA 证书（basicConstraints），以系统信任设置为准；被单独设为信任的叶子证书也会入选。我认为可以接受，因为沙箱外本来就信任它们。
+2. 本机现有 3 张明确信任的证书：Cloudflare Gateway CA 和两张 mkcert 本地开发证书，都会被导入沙箱。
 
 ## 附录：历史接续记录（保留当时状态，不覆盖当前结论）
 

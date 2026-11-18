@@ -268,7 +268,7 @@ sys.path.insert(0,""" + repr(str(SCRIPTS)) + """)
 import review_native
 class FakeNativeRunner:
  def __init__(self,root,context):
-  self.claude=Path(""" + repr(str(claude)) + """);self.cancelled=None
+  self.claude=Path(""" + repr(str(claude)) + """);self.cancelled=None;self.trust_diagnostics=[]
  def runtime_preflight(self):pass
  def invoke(self,argv,*,deadline,stdin=None):
   result=subprocess.run(argv,input=stdin,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,timeout=deadline)

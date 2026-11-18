@@ -12,7 +12,7 @@ Claude 后端使用本机已有的 srt，默认从 PATH 解析，也可用 `DELE
 
 主会话负责需求澄清、方案判断与最终验收。Codex 后端只接受 ChatGPT 登录，目的是减少主会话携带的过程上下文；实际使用哪个账号的额度取决于 Codex 登录账号，不保证节省总费用或总 token。
 
-仓库：[haigeerlab/delegate-plugin](https://github.com/haigeerlab/delegate-plugin) · 当前发行：[v0.8.5](https://github.com/haigeerlab/delegate-plugin/releases/tag/v0.8.5) · [文档索引](docs/README.md)
+仓库：[haigeerlab/delegate-plugin](https://github.com/haigeerlab/delegate-plugin) · 当前发行：[v0.8.6](https://github.com/haigeerlab/delegate-plugin/releases/tag/v0.8.6) · [文档索引](docs/README.md)
 
 ## 目录
 
@@ -270,7 +270,7 @@ claude plugin install delegate@delegate-marketplace
 claude --plugin-dir /path/to/delegate-plugin/plugins/delegate
 ```
 
-已注册同名 marketplace 时，应先检查现有来源；本地加载与远程安装是替代方式，不需要同时安装两份。发行源码由 `v0.8.5` 标签固定，`main` 会继续变化。
+已注册同名 marketplace 时，应先检查现有来源；本地加载与远程安装是替代方式，不需要同时安装两份。发行源码由 `v0.8.6` 标签固定，`main` 会继续变化。
 
 ### 卸载
 
@@ -307,7 +307,8 @@ claude plugin marketplace remove delegate-marketplace
 | Claude 后端报 `macos_required`、`launchd_` 开头或 `macos_process_api_` 开头的诊断 | Claude 后端只支持 macOS，并要在当前用户的 GUI launchd 域里启动临时任务、用内核进程接口核对进程边界。非 macOS 报 `macos_required`；`launchctl` 无法调用、无法观测或启动任务失败（例如在缺少图形登录的 SSH、tmux 等会话中可能出现；具体由哪一项触发未逐一实测）报 `launchd_control_unavailable`、`launchd_observation_unverified` 或 `launchd_start_failed`；内核接口检查失败报 `macos_process_api_unavailable`、`macos_process_api_unverified` 或 `process_identity_unverified`。review 退出 127，`/delegate:doctor --backend claude-code` 显示 `条件不足：<诊断码>`。在已登录图形界面的 Mac 本机终端或 Claude Code 中重试，或改用 `--backend codex`；不会自动回退 |
 | Codex 审查报 `codex_inline_input_limit` | 审查输入超过 1 MiB，不会截断或自动分批；用更小的 `--paths` 或加 `--exclude` 分次审查 |
 | Codex 审查报 `codex_turn_failed`（可能同时有 `codex_output_schema_rejected`） | Codex 已启动，但这一轮被服务端或 CLI 判为失败；报告只保留固定码，不含错误原文。带 `codex_output_schema_rejected` 表示审查结果 schema 被模型服务拒绝，v0.8.4 及以前就是这种情况（Codex 审查全部失败），升级到 v0.8.5 或更新版本。其他情况核对 `codex login status`、额度与网络后人工决定是否重试 |
-| Claude 后端报 `claude_api_tls_untrusted`（常与 `claude_api_server_error` 一起出现） | 沙箱里的 claude 不信任访问 Anthropic API 时拿到的 TLS 证书。常见原因是 Cloudflare WARP、公司代理等会解密 TLS 的网络：它们的根证书只在系统钥匙串里，沙箱外的 claude 能用，沙箱里不行。可在该网络的管理设置中把 Anthropic 域名设为不解密，或改用 `--backend codex`。delegate 不会自动放宽沙箱的证书信任；`/delegate:doctor` 不联网，查不出这种情况 |
+| Claude 后端报 `claude_api_tls_untrusted`（常与 `claude_api_server_error` 一起出现） | 沙箱里的 claude 不信任访问 Anthropic API 时拿到的 TLS 证书。常见原因是 Cloudflare WARP、公司代理等会解密 TLS 的网络。v0.8.6 起，delegate 每次运行会自动把系统里管理员或用户**明确设为信任**的证书以只读方式追加给沙箱里的 claude，多数情况下不再出现；仍出现时，先运行 `/delegate:doctor --backend claude-code` 看导出了几张证书，并确认该网络的根证书在「钥匙串访问」里被设为「始终信任」。也可以在该网络的管理设置中把 Anthropic 域名设为不解密，或改用 `--backend codex`。delegate 不会打开 srt 的 trustd 放行，也不扩大网络放行范围 |
+| Claude 后端报 `system_trust_export_unavailable`（不影响运行） | 导出系统明确信任的证书失败（`security` 命令失败、超时、输出无法解析，或超过 64 张 / 1 MiB），本次没有追加任何证书，审查照常进行，沙箱只用 CLI 自带的公共根证书。只有在随后还出现 `claude_api_tls_untrusted` 时才需要处理：检查 `/usr/bin/security trust-settings-export -d` 能否正常运行 |
 | review 报 `repository_has_no_commits`（127，`--dry-run` 也一样） | 仓库还没有任何提交（没有 HEAD），模型没有启动。`/delegate:review` 要求已有提交，加 `--changes working-tree --include-untracked` 也绕不过；先 `git add` 要审的文件并 `git commit` 一次再审。v0.8.3 及以前同一情况报 `git_probe_failed` |
 | review 报 `git_probe_failed`（127） | delegate 内部的 git 查询失败，模型没有启动。核对 `--base`／`--head` 是否指向存在的提交，以及仓库本身是否完好 |
 | 审查报告为 failed、inconclusive 或部分覆盖 | 查看报告列出的未审范围与原因（权限拒绝、达到轮次或预算上限、输出无效等）；这些都不算审查通过 |
@@ -326,7 +327,7 @@ doctor 会刷新临时缓存，不修改业务文件。它只做部分中文全�
 
 v0.5.0 不注册UserPromptSubmit，不按每轮输入自动提醒或探测。SessionStart静默刷新基础条件，doctor按需报告；缓存有效期 8 小时，绑定 CLI 路径、Codex home、插件根目录与版本；未来时间、旧格式、身份变化和坏文件都会失效。缓存不保证当前认证有效，真正执行前总会重新检查登录。
 
-阅读顺序和两种语言的对应页见[文档索引](docs/README.md)。设计见 [DESIGN.md](DESIGN.md)，模块职责见[能力图](spec/CAPABILITY-MAP.md)，精确合同见[通道](spec/channel.md)、[探测](spec/detection.md)和[路由](spec/routing.md)规格。发行变化见 [v0.8.5](docs/releases/v0.8.5.md)、[v0.8.4](docs/releases/v0.8.4.md)、[v0.8.3](docs/releases/v0.8.3.md)、[v0.8.2](docs/releases/v0.8.2.md)、[v0.8.1](docs/releases/v0.8.1.md)、[v0.8.0](docs/releases/v0.8.0.md)、[v0.7.1](docs/releases/v0.7.1.md)、[v0.7.0](docs/releases/v0.7.0.md)、[v0.6.0](docs/releases/v0.6.0.md)、[v0.5.3](docs/releases/v0.5.3.md)、[v0.5.2](docs/releases/v0.5.2.md)、[v0.5.1](docs/releases/v0.5.1.md) 与 [v0.5.0](docs/releases/v0.5.0.md)，后续修改见[未发布记录](docs/releases/unreleased.md)。
+阅读顺序和两种语言的对应页见[文档索引](docs/README.md)。设计见 [DESIGN.md](DESIGN.md)，模块职责见[能力图](spec/CAPABILITY-MAP.md)，精确合同见[通道](spec/channel.md)、[探测](spec/detection.md)和[路由](spec/routing.md)规格。发行变化见 [v0.8.6](docs/releases/v0.8.6.md)、[v0.8.5](docs/releases/v0.8.5.md)、[v0.8.4](docs/releases/v0.8.4.md)、[v0.8.3](docs/releases/v0.8.3.md)、[v0.8.2](docs/releases/v0.8.2.md)、[v0.8.1](docs/releases/v0.8.1.md)、[v0.8.0](docs/releases/v0.8.0.md)、[v0.7.1](docs/releases/v0.7.1.md)、[v0.7.0](docs/releases/v0.7.0.md)、[v0.6.0](docs/releases/v0.6.0.md)、[v0.5.3](docs/releases/v0.5.3.md)、[v0.5.2](docs/releases/v0.5.2.md)、[v0.5.1](docs/releases/v0.5.1.md) 与 [v0.5.0](docs/releases/v0.5.0.md)，后续修改见[未发布记录](docs/releases/unreleased.md)。
 
 ## 开发、贡献与反馈
 
@@ -338,7 +339,7 @@ v0.5.0 不注册UserPromptSubmit，不按每轮输入自动提醒或探测。Ses
 /bin/bash scripts/validate.sh
 ```
 
-总入口包含语法、清单必填字段、判决器自检、3 个 shell 产品套、25 个循环注册的 Python 回归套（其中 `reap-fake-endpoint` 在本机没有 codex 时跳过），以及源码发现回归和隔离策略 policy-only 套。v0.8.5 发布验证为 333 项 Python、53 项 shell 和 19 项 eval；实际 OS、宿主与真实模型证据另列，不计作离线通过。免费总验证不发起模型请求；doctor 规则测试已自行配置 CLI 桩、合成登录状态和临时日志，不再依赖外层 Codex 的安装或登录。[F8 实际修复验证](docs/verification/2026-10-08-f8-applied.md)包含无外层 CLI 和外层拒绝登录的结果。
+总入口包含语法、清单必填字段、判决器自检、3 个 shell 产品套、26 个循环注册的 Python 回归套（其中 `reap-fake-endpoint` 在本机没有 codex 时跳过），以及源码发现回归和隔离策略 policy-only 套。v0.8.6 发布验证为 343 项 Python、53 项 shell 和 19 项 eval；实际 OS、宿主与真实模型证据另列，不计作离线通过。免费总验证不发起模型请求；doctor 规则测试已自行配置 CLI 桩、合成登录状态和临时日志，不再依赖外层 Codex 的安装或登录。[F8 实际修复验证](docs/verification/2026-10-08-f8-applied.md)包含无外层 CLI 和外层拒绝登录的结果。
 
 开发约定、单独测试入口、付费 live 验证和双语维护规则见 [贡献指南](CONTRIBUTING.md)。问题和建议统一通过 [GitHub Issues](https://github.com/haigeerlab/delegate-plugin/issues) 反馈，Bug 提交步骤见下节。
 

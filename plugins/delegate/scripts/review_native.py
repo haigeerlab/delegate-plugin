@@ -16,6 +16,7 @@ from review_execution import deadline
 from review_isolation import build_policy
 from review_macos import BoundaryError, MacBoundary
 from review_result import base_report
+from review_trust import TrustExportError, export_trusted
 
 
 def executable(name, variable):
@@ -94,6 +95,16 @@ class NativeRunner:
                      Path('/private/etc/ssl/cert.pem')):
             if path.exists():
                 readable.append(path.resolve(strict=True))
+        # S88: add, never replace, the CA certificates the user explicitly
+        # trusts outside the sandbox; caller CA variables are not inherited.
+        self.trust_diagnostics, self.trust_count, trusted = [], 0, None
+        try:
+            exported = export_trusted(self.root / 'trust')
+            self.trust_count, trusted = exported['count'], exported['path']
+        except TrustExportError as error:
+            self.trust_diagnostics.append(str(error))
+        if trusted:
+            readable.append(Path(trusted).resolve(strict=True))
         self.policy = self.control / 'policy.json'
         self.policy.write_text(json.dumps(build_policy(snapshot=self.snapshot,
             writable=self.writable, home=home, protected=[self.control, Path(context['repository'])],
@@ -107,6 +118,8 @@ class NativeRunner:
             'DISABLE_TELEMETRY': '1', 'DISABLE_ERROR_REPORTING': '1',
             'ENABLE_CLAUDEAI_MCP_SERVERS': 'false', 'CLAUDE_CODE_DISABLE_ARTIFACT': '1',
             'CLAUDE_CODE_SKIP_PROMPT_HISTORY': '1'}
+        if trusted:
+            self.environment['NODE_EXTRA_CA_CERTS'] = str(Path(trusted).resolve(strict=True))
         # Deny reviewer Read/Glob/Grep access to authentication/runtime paths.
         # OS grants above serve the CLI and native helpers, not review context.
         if any(re.search(r'[()*?\[\]\r\n]', str(path)) for path in readable):
@@ -171,6 +184,7 @@ def native_review(args, context):
         runner = NativeRunner(root, context)
         runner.runtime_preflight()
         report = execute(str(runner.claude), args, context, runner.invoke, timeout=deadline())
+        report['diagnostics'] += [code for code in runner.trust_diagnostics if code not in report['diagnostics']]
         report['execution_environment'] = 'native'
         report['cleanup_scope'] = 'kernel_coalition'
         state = report['execution_status']

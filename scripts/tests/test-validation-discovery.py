@@ -31,7 +31,7 @@ class DiscoveryTests(unittest.TestCase):
             target.chmod(0o755)
         suites = ('backend', 'channel-regressions', 'command-migration', 'review-backends',
             'review-cli', 'claude-review', 'review-context', 'review-result', 'review-execution',
-            'review-native', 'review-transport', 'review-guest-entry', 'review-artifacts',
+            'review-native', 'review-trust', 'review-transport', 'review-guest-entry', 'review-artifacts',
             'review-service', 'review-guest', 'interface', 'run-resume', 'run-timeout', 'write-trust', 'reap-fake-endpoint',
             'run-result', 'run-continue', 'run-longrun', 'run-check', 'run-rules', 'claude-isolation')
         for suite in suites:
