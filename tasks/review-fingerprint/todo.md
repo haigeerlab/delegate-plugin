@@ -10,7 +10,7 @@
 - [x] Checkpoint 1（report）：免费验证全绿
 - [x] Task 5：文档同步
 - [x] Checkpoint 2（gate）：复审与本地提交
-- [ ] Checkpoint 3（gate）：交付验收
+- [x] Checkpoint 3（gate）：交付验收
 
 ## 记录
 
@@ -27,3 +27,5 @@
 **Task 5（2026-11-20）：** 插件中英文 README 的对外接口一节加「补丁指纹（接口 1.4 起）」条目、报告字段表加 `scope.fingerprint` 并注明 `diff_sha256` 只在本机有效、解读规则补三条（对比 `paths`、一致不等于可合并、未知算法按无法复算）、提醒浅克隆要能取到 `from`；`spec/integration-interface.md` 与英文页各加一句 1.4 指向句（只加不改）；中英文 `unreleased.md` 加本项；仓库根中英文 README 的故障排查表加 `fingerprint_inputs_inconsistent`（Plan 未列，按诊断码惯例补上）。总验证 `validate: ok`、两项 plugin validate、`git diff --check` 通过。`verify-artifacts` 4 通过、1 警告（integration-interface「批准后已修订」，预期内，等 Checkpoint 2 复审）。
 
 **Checkpoint 2（gate，2026-11-20）：** 用户复审 integration-interface 指向句等改动，原话「通过，本地提交」。已重新记录 `spec/integration-interface.md` 批准标记，`verify-artifacts` 4 通过、0 警告。本地提交一次，未推送。下一步停在 Checkpoint 3（gate）交付验收。
+
+**Checkpoint 3（gate，2026-11-20）：** 用户交付验收原话「验收通过」。FP-01～FP-07 通过；未验证：跨 git 版本一致性（靠算法保证）、真实模型审查报告里的字段（付费，规格未要求）。本模块提交 `248036a` 加本次勾选提交，均未推送。推送、PR、v0.9.0 发版与回复 ecosystem-lead 另行授权。
