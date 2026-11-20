@@ -162,7 +162,8 @@ def base_report(backend, execution, context, requested_model):
         'execution_environment': execution.get('execution_environment', 'unknown'),
         'cleanup': cleanup, 'requested_model': requested_model, 'observed_models': [],
         'scope': {'paths': context['scope'], 'baseline': context['baseline'],
-                  'diff_sha256': context['diff_sha256'], 'files': context['file_sha256']},
+                  'diff_sha256': context['diff_sha256'], 'fingerprint': context.get('fingerprint'),
+                  'files': context['file_sha256']},
         'reviewed': [], 'unreviewed': list(context['unreviewed']) + [
             {'path': name, 'reason': 'review_not_completed'} for name in context['files']],
         'findings': [], 'diagnostics': diagnostics,

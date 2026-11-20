@@ -97,6 +97,7 @@ tests/                       离线桩测试与回归
 - **长任务（接口 1.3 起）**：`run.longRun` 为 `{"option": "--timeout", "minSeconds": 541, "maxSeconds": 7200, "defaultSeconds": 540, "background": "caller"}`，`background: "caller"` 表示后台由调用方负责。
 - **检查与写入授权（接口 1.3 起）**：`run.check` 为 `{"option": "--check", "shell": false, "when": "done", "timeoutSeconds": 600, "operators": [...], "match": "token-prefix-or-suffix"}`，运算符规则与 module-crew S30 一致；`run.writeAuthorization` 为 `{"option": "--authorized-by", "requires": "--write", "recorded": "result.authorization", "verifies": [...]}`。`run.write` 仍是 `"explicit"`。
 - **规则片段（接口 1.3 起）**：`run.rules` 为 `{"option": "--rules-file", "maxBytes": 16384, "placement": "after-preamble", "projectInstructions": "codex-reads-agents-md"}`。
+- **补丁指纹（接口 1.4 起）**：`review.report.fingerprint` 为 `{"field": "scope.fingerprint", "algorithm": "blob-pairs-v1", "baselineModes": ["commits"]}`，算法见[规格](../../spec/review-fingerprint.md)。只用两个提交树里每个被审文件的权限和对象编号算 sha256，与 git 配置、git 版本无关，可以在别的机器（如 GitHub Actions）复算；Actions 上浅克隆时要能取到 `from` 提交。
 - **`statuses` 是开放集合**：以后的次版本可能追加新值。遇到不认识的值必须停下或当失败处理，不能当成完成；判断成功先看退出码为 0，再看 `status=done`。
 - **审查报告（`review.report.schemaVersion: 1`）**：`/delegate:review` 的标准输出是一份 JSON 报告（`--dry-run` 输出的是预览，不是报告）。标准错误中的私有副本路径不属于接口。稳定字段：
 
@@ -106,12 +107,13 @@ tests/                       离线桩测试与回归
 | `execution_status` | `completed` / `conditions_missing` / `failed` / `timed_out` / `cancelled` |
 | `review_outcome` | `findings` / `no_findings_in_scope` / `inconclusive` |
 | `backend` | `codex` / `claude-code` |
-| `scope.paths`、`scope.baseline`、`scope.diff_sha256`、`scope.files` | 审查对象与指纹 |
+| `scope.paths`、`scope.baseline`、`scope.diff_sha256`、`scope.files` | 审查对象与指纹；`diff_sha256` 是 diff 文字的 sha256，受本机 git 配置与版本影响，只在本机有效 |
+| `scope.fingerprint`（接口 1.4 起） | `{algorithm, sha256, paths}`；只在基准为 `commits` 时有值，其他基准为 `null` |
 | `reviewed`、`unreviewed[]`（`{path, reason}`） | 已审与未审文件 |
 | `findings[]` | `{title, file, line, trigger, impact, evidence, suggestion, unverified}`，`line` 可为 `null` |
 | `limitations` | 限制说明 |
 
-其他字段属于诊断信息，可能变化。只有 `execution_status=completed` 且 `review_outcome` 为 `findings` 或 `no_findings_in_scope` 才算有结论；`no_findings_in_scope` 不等于没有缺陷。报告是第三方参考意见，不是用户批准；引用时注明 delegate、后端与指纹。
+其他字段属于诊断信息，可能变化。只有 `execution_status=completed` 且 `review_outcome` 为 `findings` 或 `no_findings_in_scope` 才算有结论；`no_findings_in_scope` 不等于没有缺陷。报告是第三方参考意见，不是用户批准；引用时注明 delegate、后端与指纹。复算 `scope.fingerprint` 时：只证明审查看到的补丁就是 `paths` 从 `from` 到 `to` 的这些变化，PR 里有没有审查没看到的文件要自己对比 `paths`；指纹一致不等于有结论，更不等于可以合并；遇到不认识的 `algorithm` 按无法复算处理。
 
 ## 反馈与许可
 
