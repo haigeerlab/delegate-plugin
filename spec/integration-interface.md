@@ -1,6 +1,6 @@
 # 规格：integration-interface（对外接口说明与审查报告合同）
 
-<!-- spec-guard: review approved bff68d8ca2d7 -->
+<!-- spec-guard: review approved 2923df95b472 -->
 
 简体中文 | [English](../docs/en/SPEC-integration-interface.md)
 
@@ -62,6 +62,7 @@ docs/releases/unreleased.md                → 记一条待发行说明
 - 文件读不到或解析失败，使用方应报“未知”，不当作没装；这是使用方的探测规则，delegate 只保证文件存在且有效。
 - 接口 1.1 起 `run` 下新增可选字段 `resume`，合同见 [run-resume](run-resume.md)；本页首版内容与版本规则不变。
 - 接口 1.2 起 `run.resume.statuses` 追加 `"timeout"`、新增 `run.timeout`，合同见 [run-timeout](run-timeout.md)。`statuses` 是开放集合：使用方遇到不认识的值必须停下或当失败处理，不能当成完成。
+- 接口 1.4 起 `review.report` 下新增 `fingerprint`，报告 `scope` 下新增可选字段 `fingerprint`（与 git 配置和版本无关、可在别的机器复算的补丁指纹），合同见 [review-fingerprint](review-fingerprint.md)；报告 `schema_version` 仍为 `1`，下文报告合同里其余字段的含义不变。
 
 ## 审查报告合同（`schemaVersion: 1`）
 

@@ -315,5 +315,33 @@ class ResultTests(unittest.TestCase):
         self.assertNotIn('PRIVATE_CREDENTIAL_PATH', json.dumps(result))
 
 
+class FingerprintReportTests(unittest.TestCase):
+    """scope.fingerprint is passed through unchanged, null when absent (S98)."""
+    EMPTY = {'files': {}, 'unreviewed': [], 'scope': {}, 'baseline': {}, 'diff_sha256': 'd' * 64, 'file_sha256': {}}
+
+    def test_fingerprint_is_copied_into_scope_next_to_diff_sha256(self):
+        fingerprint = {'algorithm': 'blob-pairs-v1', 'sha256': 'f' * 64, 'paths': ['a.py']}
+        report = review_result.base_report('codex', {'execution_status': 'failed'},
+                                           dict(self.EMPTY, fingerprint=fingerprint), None)
+        self.assertEqual(report['scope']['fingerprint'], fingerprint)
+        self.assertEqual(report['scope']['diff_sha256'], 'd' * 64)
+
+    def test_missing_fingerprint_is_null(self):
+        report = review_result.claude_report(b'', {'execution_status': 'failed'}, self.EMPTY)
+        self.assertIsNone(report['scope']['fingerprint'])
+
+    def test_failure_before_context_reports_null_fingerprint(self):
+        import contextlib
+        import io
+        import delegate_backend
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            delegate_backend.context_failure('codex', None, 'scope_invalid')
+        report = json.loads(output.getvalue())
+        self.assertIn('fingerprint', report['scope'])
+        self.assertIsNone(report['scope']['fingerprint'])
+        self.assertIsNone(report['scope']['diff_sha256'])
+
+
 if __name__ == '__main__':
     unittest.main()

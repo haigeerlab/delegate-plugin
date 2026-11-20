@@ -16,7 +16,7 @@ EXECUTION_STATUS = {'completed', 'conditions_missing', 'failed', 'timed_out', 'c
 REVIEW_OUTCOME = {'findings', 'no_findings_in_scope', 'inconclusive'}
 STABLE_FIELDS = {'schema_version', 'execution_status', 'review_outcome', 'backend', 'scope',
                  'reviewed', 'unreviewed', 'findings', 'limitations'}
-SCOPE_FIELDS = {'paths', 'baseline', 'diff_sha256', 'files'}
+SCOPE_FIELDS = {'paths', 'baseline', 'diff_sha256', 'fingerprint', 'files'}
 FINDING_FIELDS = {'title', 'file', 'line', 'trigger', 'impact', 'evidence', 'suggestion', 'unverified'}
 
 
@@ -76,7 +76,7 @@ class InterfaceTests(unittest.TestCase):
         self.assertIs(self.interface['review']['readOnly'], True)
 
     def test_resume_is_an_additive_minor_version(self):
-        self.assertEqual(self.interface['interface'], '1.3')
+        self.assertEqual(self.interface['interface'], '1.4')
         # spec-guard reads these two fields; they must never change within major version 1.
         self.assertEqual(self.interface['review']['command'], '/delegate:review')
         self.assertEqual(self.interface['doctor']['command'], '/delegate:doctor')
@@ -129,12 +129,14 @@ class InterfaceTests(unittest.TestCase):
         self.assertTrue(delegate_capabilities.BACKENDS['codex']['check'])
         self.assertTrue(delegate_capabilities.BACKENDS['codex']['writeAuthorization'])
 
-    def test_interface_1_3_is_complete(self):
-        # spec/run-rules.md, "1.3 完整形状": every 1.3 marker, nothing removed from 1.2.
+    def test_interface_1_4_is_complete(self):
+        # spec/run-rules.md, "1.3 完整形状", plus spec/review-fingerprint.md "接口 1.4"; nothing removed.
         expected = {
-            'interface': '1.3',
+            'interface': '1.4',
             'review': {'command': '/delegate:review', 'backends': ['codex', 'claude-code'], 'readOnly': True,
-                       'report': {'schemaVersion': 1}},
+                       'report': {'schemaVersion': 1,
+                                  'fingerprint': {'field': 'scope.fingerprint', 'algorithm': 'blob-pairs-v1',
+                                                  'baselineModes': ['commits']}}},
             'run': {
                 'command': '/delegate:run', 'backends': ['codex'], 'write': 'explicit',
                 'resume': {'optIn': '--resumable', 'option': '--resume', 'backends': ['codex'],
@@ -161,6 +163,8 @@ class InterfaceTests(unittest.TestCase):
         import run_rules
         self.assertEqual(self.interface['run']['rules']['maxBytes'], run_rules.MAX_BYTES)
         self.assertTrue(delegate_capabilities.BACKENDS['codex']['rules'])
+        import review_fingerprint
+        self.assertEqual(self.interface['review']['report']['fingerprint']['algorithm'], review_fingerprint.ALGORITHM)
 
     def test_report_schema_version(self):
         self.assertEqual(self.interface['review']['report']['schemaVersion'], self.report['schema_version'])

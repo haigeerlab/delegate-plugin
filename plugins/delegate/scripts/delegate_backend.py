@@ -132,7 +132,7 @@ def parse(arguments):
 def context_failure(backend, model, diagnostic, context=None):
     from review_result import base_report, render
     if context is None:
-        context = {'scope': {'state': 'unknown'}, 'baseline': {}, 'diff_sha256': None,
+        context = {'scope': {'state': 'unknown'}, 'baseline': {}, 'diff_sha256': None, 'fingerprint': None,
                    'files': {}, 'file_sha256': {}, 'unreviewed': [{'path': 'unknown', 'reason': diagnostic}]}
     report = base_report(backend, {'execution_status': 'conditions_missing',
         'backend_started': False, 'cleanup': 'confirmed', 'diagnostics': [diagnostic]}, context, model)

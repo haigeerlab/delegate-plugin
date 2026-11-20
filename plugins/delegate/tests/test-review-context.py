@@ -9,6 +9,7 @@ import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 import review_context
+import review_fingerprint
 
 
 class ReviewContextTests(unittest.TestCase):
@@ -205,6 +206,89 @@ class ReviewContextTests(unittest.TestCase):
         doc = dict(self.document, baseline={'mode': 'commits', 'from': '0' * 40, 'to': self.new})
         with self.assertRaisesRegex(review_context.ContextError, '^git_probe_failed$'):
             self.capture(doc)
+
+
+class FingerprintContextTests(unittest.TestCase):
+    """blob-pairs-v1 entries come from the two trees only (S98)."""
+    git = ReviewContextTests.git
+    capture = ReviewContextTests.capture
+
+    def setUp(self):
+        ReviewContextTests.setUp(self)
+        src = self.repo / 'src'
+        for name, text in (('mod.txt', 'm\n'), ('del.txt', 'd\n'), ('exec.sh', 'e\n'), ('link', 'l\n'), ('dir', 'x\n')):
+            (src / name).write_text(text)
+        self.git('add', '.')
+        self.git('commit', '-qm', 'fingerprint baseline')
+        self.base = self.git('rev-parse', 'HEAD').strip()
+        (src / 'mod.txt').write_text('m2\n')
+        (src / 'del.txt').unlink()
+        (src / 'exec.sh').chmod(0o755)
+        (src / 'link').unlink()
+        (src / 'link').symlink_to('mod.txt')
+        (src / 'dir').unlink()
+        (src / 'dir').mkdir()
+        (src / 'dir/inner.txt').write_text('i\n')
+        (src / 'new.txt').write_text('n\n')
+        (src / 'excluded.py').write_text('changed but excluded\n')
+        self.git('add', '-A')
+        self.git('commit', '-qm', 'fingerprint change')
+        self.head = self.git('rev-parse', 'HEAD').strip()
+        self.shapes = dict(self.document, baseline={'mode': 'commits', 'from': self.base, 'to': self.head})
+
+    def tree_entry(self, commit, path):
+        out = subprocess.run(['git', '-C', str(self.repo), '--literal-pathspecs', 'ls-tree', '-z', '--full-tree',
+                              commit, '--', path], check=True, capture_output=True).stdout
+        if not out:
+            return '000000', '0' * 40
+        mode, kind, oid = out.split(b'\t')[0].decode().split()
+        return ('000000', '0' * 40) if kind == 'tree' else (mode, oid)
+
+    def test_six_change_shapes_match_an_independent_ls_tree_recomputation(self):
+        result = self.capture(self.shapes)
+        paths = ['src/del.txt', 'src/dir', 'src/dir/inner.txt', 'src/exec.sh', 'src/link', 'src/mod.txt', 'src/new.txt']
+        expected = {path: self.tree_entry(self.base, path) + self.tree_entry(self.head, path) for path in paths}
+        self.assertEqual(result['fingerprint'], review_fingerprint.fingerprint(expected))
+        self.assertEqual(expected['src/exec.sh'][0::2], ('100644', '100755'))
+        self.assertEqual(expected['src/link'][2], '120000')
+        self.assertEqual(expected['src/dir'][2:], ('000000', '0' * 40))
+        self.assertNotIn('src/excluded.py', result['fingerprint']['paths'])
+        diff_paths = sorted({line[len('diff --git a/'):].split(' b/')[0] for line in result['diff'].splitlines()
+                            if line.startswith('diff --git a/')})  # a type change prints two headers
+        self.assertEqual(diff_paths, result['fingerprint']['paths'])
+
+    def test_repository_configuration_changes_diff_sha256_but_not_the_fingerprint(self):
+        before = self.capture(self.shapes)
+        for key, value in (('diff.algorithm', 'patience'), ('diff.noprefix', 'true'), ('diff.context', '10'),
+                           ('core.quotepath', 'false'), ('core.abbrev', '12')):
+            self.git('config', key, value)
+        (self.repo / '.git/info').mkdir(exist_ok=True)
+        (self.repo / '.git/info/attributes').write_text('*.txt -diff\n')
+        after = self.capture(self.shapes)
+        self.assertNotEqual(before['diff_sha256'], after['diff_sha256'])
+        self.assertEqual(before['fingerprint'], after['fingerprint'])
+
+    def test_uncommitted_baselines_have_no_fingerprint(self):
+        (self.repo / 'src/mod.txt').write_text('dirty\n')
+        self.git('add', 'src/mod.txt')
+        for mode, flags in (('staged', (True, False, False)), ('unstaged', (False, True, False)),
+                            ('working-tree', (True, True, False))):
+            doc = dict(self.document, baseline={'mode': mode},
+                uncommitted_changes=dict(zip(('staged', 'unstaged', 'untracked'), flags)))
+            self.assertIsNone(self.capture(doc)['fingerprint'])
+
+    def test_entries_that_do_not_cover_the_reviewed_paths_fail_without_a_fingerprint(self):
+        original = review_context.git
+
+        def short(repository, *arguments):
+            output = original(repository, *arguments)
+            if '--raw' in arguments:
+                return b'\0'.join(output.split(b'\0')[2:])
+            return output
+        review_context.git = short
+        self.addCleanup(setattr, review_context, 'git', original)
+        with self.assertRaisesRegex(review_context.ContextError, '^fingerprint_inputs_inconsistent$'):
+            self.capture(self.shapes)
 
 
 if __name__ == '__main__':

@@ -27,8 +27,9 @@ The project adoption scope confirmed on 2026-10-08 standardizes file locations. 
 | run-longrun | --timeout <seconds> only lifts the deadline (541–7200); the caller runs it in the host's background mode and delegate hosts no background process; the main run, wrap-up round and threshold use the run-timeout formulas, and abort cleanup uses the 0.7.1 descendant process-group reclaiming | run-timeout, run-result |
 | run-check | --check runs the caller's check command after a run ends with done, as an argument list without a shell (operator rule copied from module-crew S30), and records the result in the result file; --authorized-by records the source file and sha256 of a pre-granted write authorization, identical across the chain | run-result |
 | run-rules | --rules-file places a rules section for this delegation only verbatim after the delegate preamble; it wins on conflict (except safety boundaries); its path and sha256 go into the result file; AGENTS.md is neither read nor merged | run-result |
+| review-fingerprint | The review report adds a patch fingerprint scope.fingerprint that does not depend on local git configuration or the git version (sha256 over the from/to object ids of the reviewed files), emitted only for the commits baseline; the algorithm is published in interface.json so consumers can recompute it on another machine; diff_sha256 is unchanged; interface 1.4, fields added only | claude-review, integration-interface |
 
-Build order: channel → detection → routing → claude-review → integration-interface → run-resume → run-timeout → write-trust → run-result → run-continue → run-longrun → run-check → run-rules
+Build order: channel → detection → routing → claude-review → integration-interface → run-resume → run-timeout → write-trust → run-result → run-continue → run-longrun → run-check → run-rules → review-fingerprint
 
 channel and detection share `backend.py`; this shared code is not a separate module dependency. routing uses detection diagnostics for explicit requests and invokes channel after authorization. The build order preserves the existing implementation sequence without adding runtime responsibilities.
 

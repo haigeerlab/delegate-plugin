@@ -97,6 +97,7 @@ For other plugins to integrate by version without reading this plugin's internal
 - **Long tasks (since interface 1.3)**: `run.longRun` is `{"option": "--timeout", "minSeconds": 541, "maxSeconds": 7200, "defaultSeconds": 540, "background": "caller"}`; `background: "caller"` means the caller owns the background run.
 - **Check and write authorization (since interface 1.3)**: `run.check` is `{"option": "--check", "shell": false, "when": "done", "timeoutSeconds": 600, "operators": [...], "match": "token-prefix-or-suffix"}`, with the same operator rule as module-crew S30; `run.writeAuthorization` is `{"option": "--authorized-by", "requires": "--write", "recorded": "result.authorization", "verifies": [...]}`. `run.write` stays `"explicit"`.
 - **Rules section (since interface 1.3)**: `run.rules` is `{"option": "--rules-file", "maxBytes": 16384, "placement": "after-preamble", "projectInstructions": "codex-reads-agents-md"}`.
+- **Patch fingerprint (since interface 1.4)**: `review.report.fingerprint` is `{"field": "scope.fingerprint", "algorithm": "blob-pairs-v1", "baselineModes": ["commits"]}`; the algorithm is in the [spec](../../docs/en/SPEC-review-fingerprint.md). It is a sha256 over only the mode and object id of each reviewed file in the two commit trees, independent of git configuration and the git version, so it can be recomputed on another machine (such as GitHub Actions); a shallow clone on Actions must still reach the `from` commit.
 - **`statuses` is an open set**: later minor versions may append values. A consumer meeting an unknown value must stop or treat it as failure, never as completion; decide success by exit code 0 first, then `status=done`.
 - **Review report (`review.report.schemaVersion: 1`)**: the standard output of `/delegate:review` is one JSON report (`--dry-run` prints a preview, not a report). The private copy path on standard error is not part of the interface. Stable fields:
 
@@ -106,12 +107,13 @@ For other plugins to integrate by version without reading this plugin's internal
 | `execution_status` | `completed` / `conditions_missing` / `failed` / `timed_out` / `cancelled` |
 | `review_outcome` | `findings` / `no_findings_in_scope` / `inconclusive` |
 | `backend` | `codex` / `claude-code` |
-| `scope.paths`, `scope.baseline`, `scope.diff_sha256`, `scope.files` | Review target and fingerprint |
+| `scope.paths`, `scope.baseline`, `scope.diff_sha256`, `scope.files` | Review target and fingerprint; `diff_sha256` is the sha256 of the diff text, depends on local git configuration and version, and is only valid on the local machine |
+| `scope.fingerprint` (since interface 1.4) | `{algorithm, sha256, paths}`; set only for the `commits` baseline, `null` for other baselines |
 | `reviewed`, `unreviewed[]` (`{path, reason}`) | Reviewed and unreviewed files |
 | `findings[]` | `{title, file, line, trigger, impact, evidence, suggestion, unverified}`; `line` may be `null` |
 | `limitations` | Limitation statements |
 
-Other fields are diagnostics and may change. A review has a conclusion only when `execution_status=completed` and `review_outcome` is `findings` or `no_findings_in_scope`; `no_findings_in_scope` does not mean there are no defects. A report is a third-party opinion, not user approval; cite it with delegate, the backend and the fingerprint.
+Other fields are diagnostics and may change. A review has a conclusion only when `execution_status=completed` and `review_outcome` is `findings` or `no_findings_in_scope`; `no_findings_in_scope` does not mean there are no defects. A report is a third-party opinion, not user approval; cite it with delegate, the backend and the fingerprint. When recomputing `scope.fingerprint`: it only proves the patch the review saw is these changes of `paths` from `from` to `to`; compare the PR's changed files with `paths` yourself to rule out files the review did not see; a matching fingerprint does not mean a conclusion, let alone approval to merge; treat an unknown `algorithm` as "cannot recompute".
 
 ## Feedback and license
 

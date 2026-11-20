@@ -12,6 +12,7 @@ import subprocess
 import tempfile
 import time
 
+from review_fingerprint import fingerprint as blob_pairs_fingerprint
 from review_guest import MAX_BYTES, MAX_FILE_BYTES, _open_file, _unique_object, unpack_snapshot
 
 FIELDS = {'schema_version', 'repository', 'working_directory', 'review_type', 'scope', 'baseline',
@@ -175,6 +176,37 @@ def working_file(root, name):
         os.close(root_fd)
 
 
+def tree_fingerprint(root, start, end, reviewed):
+    """blob-pairs-v1 over both trees; raw output gives modes and full ids only."""
+    entries = {}
+    if reviewed:
+        fields = git(root, 'diff', '--raw', '-z', '--no-renames', '--no-abbrev', '--no-relative',
+                     start, end, '--', *reviewed).split(b'\0')
+        if fields[-1:] == [b'']:
+            fields.pop()
+        if len(fields) % 2:
+            raise ContextError('fingerprint_inputs_inconsistent')
+        for metadata, raw_name in zip(fields[0::2], fields[1::2]):
+            parts = metadata.decode('ascii', 'replace').split()
+            if (len(parts) != 5 or not parts[0].startswith(':')
+                    or not all(re.fullmatch(r'[0-7]{6}', mode) for mode in (parts[0][1:], parts[1]))
+                    or not all(re.fullmatch(r'[0-9a-f]{40}|[0-9a-f]{64}', oid) for oid in parts[2:4])):
+                raise ContextError('fingerprint_inputs_inconsistent')
+            sides = []
+            for mode, oid in ((parts[0][1:], parts[2]), (parts[1], parts[3])):
+                sides += ['000000', '0' * len(oid)] if mode == '040000' else [mode, oid]
+            try:
+                name = raw_name.decode('utf-8')
+            except UnicodeError:
+                raise ContextError('fingerprint_inputs_inconsistent') from None
+            if name in entries:
+                raise ContextError('fingerprint_inputs_inconsistent')
+            entries[name] = tuple(sides)
+    if set(entries) != set(reviewed):
+        raise ContextError('fingerprint_inputs_inconsistent')
+    return blob_pairs_fingerprint(entries)
+
+
 def capture(path):
     try:
         with Path(path).open('rb') as source:
@@ -257,6 +289,9 @@ def capture_document(document):
     diff = git(root, *diff_args, '--', *[name for name in changed if selected(name, document['scope'])]) if any(selected(name, document['scope']) for name in changed) else b''
     if len(diff) > 1024 * 1024:
         raise ContextError('diff_size_limit')
+    fingerprint = (tree_fingerprint(root, baseline['from'], baseline['to'],
+                                    [name for name in changed if selected(name, document['scope'])])
+                   if mode == 'commits' else None)
     try:
         diff_text = diff.decode('utf-8')
     except UnicodeError:
@@ -306,7 +341,7 @@ def capture_document(document):
         if reviewed_names and git(root, *diff_args, '--', *reviewed_names) != diff:
             raise ContextError('input_changed')
     result = dict(document, baseline=baseline, head=head, diff=diff_text,
-                  diff_sha256=hashlib.sha256(diff).hexdigest(), files=files, unreviewed=omitted,
+                  diff_sha256=hashlib.sha256(diff).hexdigest(), fingerprint=fingerprint, files=files, unreviewed=omitted,
                   dirty={'staged': [name for name in staged if selected(name, document['scope'])],
                          'unstaged': [name for name in unstaged if selected(name, document['scope'])],
                          'untracked': [name for name in untracked if selected(name, document['scope'])]},

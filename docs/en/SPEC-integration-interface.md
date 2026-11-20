@@ -60,6 +60,7 @@ Placed at the plugin root, following agent-relay: a consumer finds the enabled d
 - If the file cannot be read or parsed, consumers should report "unknown", not "not installed". That is the consumer's probe rule; delegate only guarantees the file exists and is valid.
 - Since interface 1.1, `run` has the optional field `resume`, specified in [run-resume](SPEC-run-resume.md); the first version and the version rules on this page are unchanged.
 - Since interface 1.2, `"timeout"` is appended to `run.resume.statuses` and `run.timeout` is added, specified in [run-timeout](SPEC-run-timeout.md). `statuses` is an open set: a consumer meeting an unknown value must stop or treat it as failure, never as completion.
+- Since interface 1.4, `review.report` gains `fingerprint` and the report `scope` gains the optional field `fingerprint` (a patch fingerprint independent of git configuration and version that can be recomputed on another machine), specified in [review-fingerprint](SPEC-review-fingerprint.md); the report `schema_version` stays `1` and the meaning of the other fields in the report contract below is unchanged.
 
 ## Review report contract (`schemaVersion: 1`)
 
