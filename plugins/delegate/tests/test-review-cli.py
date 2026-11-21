@@ -214,5 +214,65 @@ class ReviewCLITests(unittest.TestCase):
         self.assertEqual(value['requested_limits'], {'max_turns': 3, 'max_budget_usd': '0.5'})
 
 
+
+class PreviousReportCLITests(unittest.TestCase):
+    setUp = fixture.BackendRoutingTests.setUp
+    run_entry = fixture.BackendRoutingTests.run_entry
+    recorded = fixture.BackendRoutingTests.recorded
+    prepare_review = ReviewCLITests.prepare_review
+    git = ReviewCLITests.git
+    preview = ReviewCLITests.preview
+
+    def previous(self, **values):
+        finding = {'title': 'PRIVATE_FINDING_TEXT', 'file': 'src/a.py', 'line': 1, 'trigger': 't', 'impact': 'i',
+                   'evidence': 'e', 'suggestion': 's', 'unverified': [], 'severity': 'blocking'}
+        report = {'schema_version': 1, 'execution_status': 'completed', 'review_outcome': 'findings',
+                  'scope': {'paths': {'include': ['src/a.py'], 'exclude': []},
+                            'baseline': {'mode': 'commits', 'from': self.old, 'to': self.old}, 'fingerprint': None},
+                  'findings': [finding, dict(finding, severity='suggestion')], 'recheck': None}
+        report.update(values)
+        path = self.root / ('PRIVATE_PREVIOUS_PATH_%d.json' % len(list(self.root.glob('PRIVATE_PREVIOUS_PATH_*'))))
+        path.write_text(json.dumps(report))
+        return str(path)
+
+    def test_preview_counts_previous_blocking_findings(self):
+        self.prepare_review()
+        value = self.preview('--base', self.old, '--previous-report', self.previous())
+        self.assertEqual(value['previous_findings_count'], 1)
+        self.assertNotIn('previous_findings', value)
+
+    def test_preview_without_option_has_no_count(self):
+        self.prepare_review()
+        self.assertNotIn('previous_findings_count', self.preview('--base', self.old))
+
+    def test_bad_previous_report_never_starts_executor(self):
+        self.prepare_review()
+        cases = [(str(self.root / 'missing.json'), 'previous_report_unreadable'),
+                 (self.previous(execution_status='failed'), 'previous_report_invalid'),
+                 (self.previous(scope={'paths': {'include': ['src'], 'exclude': []},
+                                       'baseline': {'mode': 'commits', 'from': self.old, 'to': self.old}}),
+                  'previous_report_scope_mismatch')]
+        for path, code in cases:
+            for options in [(), ('--dry-run',)]:
+                with self.subTest(code=code, options=options):
+                    result = self.run_entry('review', '--base', self.old, '--previous-report', path, *options)
+                    self.assertEqual(result.returncode, 127, result.stderr)
+                    report = json.loads(result.stdout)
+                    self.assertEqual(report['execution_status'], 'conditions_missing')
+                    self.assertFalse(report['backend_started'])
+                    self.assertIn(code, report['diagnostics'])
+                    self.assertIsNone(report.get('recheck'))
+                    self.assertEqual(self.recorded(), [])
+                    self.assertNotIn('PRIVATE_', result.stdout + result.stderr)
+
+    def test_previous_report_option_is_single_and_non_empty(self):
+        self.prepare_review()
+        path = self.previous()
+        for options in [('--previous-report', ''), ('--previous-report', path, '--previous-report', path)]:
+            with self.subTest(options=options):
+                result = self.run_entry('review', '--base', self.old, *options, '--dry-run')
+                self.assertEqual(result.returncode, 64, result.stderr)
+                self.assertEqual(self.recorded(), [])
+
 if __name__ == '__main__':
     unittest.main()

@@ -12,7 +12,7 @@ The Claude backend uses an existing local srt, resolved from PATH by default or 
 
 The main session handles requirements, design decisions, and final verification. The Codex backend accepts only ChatGPT authentication. It aims to reduce process context carried by the main session; usage is charged against the account signed into Codex, and lower total cost or token usage is not guaranteed.
 
-Repository: [haigeerlab/delegate-plugin](https://github.com/haigeerlab/delegate-plugin) · Current release: [v0.9.0](https://github.com/haigeerlab/delegate-plugin/releases/tag/v0.9.0) · [Documentation index](docs/en/README.md)
+Repository: [haigeerlab/delegate-plugin](https://github.com/haigeerlab/delegate-plugin) · Current release: [v0.10.0](https://github.com/haigeerlab/delegate-plugin/releases/tag/v0.10.0) · [Documentation index](docs/en/README.md)
 
 ## Contents
 
@@ -221,6 +221,15 @@ Resolve `claude`, `node` and `srt` from PATH, or specify existing absolute execu
 
 Common reports separate execution status from review outcome and include reviewed/unreviewed scope and locatable evidence. Empty/invalid output, denials, limits or partial coverage never mean no findings. Final reports and safe diagnostic logs are separate under private `${TMPDIR:-/tmp}/delegate-review/`, retaining at most 50 groups; normal returns exclude raw process output. Normal real reviews succeeded in both directions; menu-to-script execution and dry-run were verified. Active model Write/recursion, auth refresh, natural abnormal helpers and long-term stability remain unverified. Additional live acceptance requires separate authorization.
 
+### Automatic takeover: triage and re-review (v0.10.0)
+
+For callers that rework automatically from review findings (such as autopilot); usage and milestones are in the [usage draft](spec/usage/auto-takeover-review.md).
+
+1. **First review and triage.** Run `/delegate:review --backend codex --base <PR base> --head <PR head> "<task and acceptance criteria>"` and save the JSON report from standard output as `round1.report.json`. Read on only when `execution_status=completed` and the review has a conclusion; otherwise stop for a person and never fall back to Claude reviewing its own work. A finding whose `severity` is `blocking` (or missing, or unknown) goes back for rework; a `suggestion` is the caller's decision, recorded with a reason. The criteria are in [review-severity](docs/en/SPEC-review-severity.md).
+2. **Re-review after rework.** Use the same `--base`, the new `--head`, and add `--previous-report round1.report.json`. Each previous blocking finding goes into `recheck.items` marked `resolved` or `unresolved`, and `findings` holds only new issues; only an empty blocking set for this round means the review has no blocking findings. For a third round, pass in the second round's report; counting rounds and handing off to a person are the caller's decision. The contract is in [review-recheck](docs/en/SPEC-review-recheck.md).
+
+No blocking findings still does not mean the change may be merged; to check that the re-review covered the fixed patch, compare `recheck.previous_fingerprint` with this round's `scope.fingerprint`.
+
 ## Output and verification
 
 Success returns Codex's final answer, model/effort hints, the log path, and byte counts. Write mode also returns:
@@ -270,7 +279,7 @@ For development and evaluation, you can also explicitly load the source plugin d
 claude --plugin-dir /path/to/delegate-plugin/plugins/delegate
 ```
 
-If a marketplace with the same name is already registered, check its source first. Local loading and remote installation are alternatives; you do not need two installations. The `v0.9.0` tag fixes release source at one revision, while `main` continues to change.
+If a marketplace with the same name is already registered, check its source first. Local loading and remote installation are alternatives; you do not need two installations. The `v0.10.0` tag fixes release source at one revision, while `main` continues to change.
 
 ### Uninstall
 
@@ -311,6 +320,8 @@ Uninstalling does not roll back previous changes to your project. Temporary logs
 | Claude backend reports `system_trust_export_unavailable` (non-fatal) | Exporting the explicitly trusted system certificates failed (the `security` command failed or timed out, its output could not be parsed, or there were more than 64 certificates / 1 MiB). No certificate was added this time; the review still runs and the sandbox uses only the CLI's bundled public roots. Act only if `claude_api_tls_untrusted` follows: check that `/usr/bin/security trust-settings-export -d` runs normally |
 | review reports `repository_has_no_commits` (127, also with `--dry-run`) | The repository has no commits yet (no HEAD) and no model was started. `/delegate:review` requires an existing commit, and `--changes working-tree --include-untracked` does not get around it; `git add` the files to review and `git commit` once, then review again. v0.8.3 and earlier report `git_probe_failed` in the same case |
 | review reports `fingerprint_inputs_inconsistent` (127) | While reviewing the changes between two commits, the file entries git returned did not match the files to review; to avoid a partial fingerprint no model was started. This should not normally happen; check that both commits exist and the repository did not change during the review, then retry once. If it persists, report the command (without private paths) in Issues |
+| review reports `previous_report_unreadable`, `previous_report_invalid` or `previous_report_scope_mismatch` (127) | The previous report given to `--previous-report` cannot be read or is not JSON, has the wrong structure or no conclusion, or covers a different scope (`--paths`/`--exclude`, the baseline mode and, for `commits`, `--base` must match the previous round); no model was started. Use the JSON report saved from the previous `/delegate:review` standard output with the same scope options |
+| A re-review reports `recheck_invalid` | The model did not give exactly one verdict per previous blocking finding (missing, duplicate, wrong index or invalid status); the whole review is `failed` and does not count as a passed re-review; retrying is a human decision |
 | review reports `git_probe_failed` (127) | A Git query inside delegate failed and no model was started. Check that `--base`/`--head` name existing commits and that the repository itself is intact |
 | Review report is failed, inconclusive, or partially covered | Read the unreviewed scope and reasons in the report (permission denial, turn or budget limit, invalid output, and so on); none of these counts as a passing review |
 
@@ -328,7 +339,7 @@ doctor refreshes the temporary cache and does not modify project files. Its heur
 
 v0.5.0 does not register UserPromptSubmit or probe/remind on every prompt. SessionStart silently refreshes readiness; doctor reports it on demand. The cache lasts 8 hours and is bound to the CLI path, Codex home, plugin root, and version. Future timestamps, old formats, identity changes, and invalid files invalidate it. Cached readiness does not guarantee current authentication; execution always checks login again.
 
-See the [documentation index](docs/en/README.md) for reading order and language pairs. Read [Design](docs/en/DESIGN.md) for rationale and the [capability map](docs/en/capability-map.md) for module responsibilities. Exact contracts are in the [channel](docs/en/SPEC-channel.md), [detection](docs/en/SPEC-detection.md), and [routing](docs/en/SPEC-routing.md) specifications. Release changes are in [v0.9.0](docs/en/releases/v0.9.0.md), [v0.8.6](docs/en/releases/v0.8.6.md), [v0.8.5](docs/en/releases/v0.8.5.md), [v0.8.4](docs/en/releases/v0.8.4.md), [v0.8.3](docs/en/releases/v0.8.3.md), [v0.8.2](docs/en/releases/v0.8.2.md), [v0.8.1](docs/en/releases/v0.8.1.md), [v0.8.0](docs/en/releases/v0.8.0.md), [v0.7.1](docs/en/releases/v0.7.1.md), [v0.7.0](docs/en/releases/v0.7.0.md), [v0.6.0](docs/en/releases/v0.6.0.md), [v0.5.3](docs/en/releases/v0.5.3.md), [v0.5.2](docs/en/releases/v0.5.2.md), [v0.5.1](docs/en/releases/v0.5.1.md), and [v0.5.0](docs/en/releases/v0.5.0.md); subsequent changes are in [Unreleased](docs/en/releases/unreleased.md).
+See the [documentation index](docs/en/README.md) for reading order and language pairs. Read [Design](docs/en/DESIGN.md) for rationale and the [capability map](docs/en/capability-map.md) for module responsibilities. Exact contracts are in the [channel](docs/en/SPEC-channel.md), [detection](docs/en/SPEC-detection.md), and [routing](docs/en/SPEC-routing.md) specifications. Release changes are in [v0.10.0](docs/en/releases/v0.10.0.md), [v0.9.0](docs/en/releases/v0.9.0.md), [v0.8.6](docs/en/releases/v0.8.6.md), [v0.8.5](docs/en/releases/v0.8.5.md), [v0.8.4](docs/en/releases/v0.8.4.md), [v0.8.3](docs/en/releases/v0.8.3.md), [v0.8.2](docs/en/releases/v0.8.2.md), [v0.8.1](docs/en/releases/v0.8.1.md), [v0.8.0](docs/en/releases/v0.8.0.md), [v0.7.1](docs/en/releases/v0.7.1.md), [v0.7.0](docs/en/releases/v0.7.0.md), [v0.6.0](docs/en/releases/v0.6.0.md), [v0.5.3](docs/en/releases/v0.5.3.md), [v0.5.2](docs/en/releases/v0.5.2.md), [v0.5.1](docs/en/releases/v0.5.1.md), and [v0.5.0](docs/en/releases/v0.5.0.md); subsequent changes are in [Unreleased](docs/en/releases/unreleased.md).
 
 ## Development, contributions, and feedback
 
@@ -340,7 +351,7 @@ Run the free offline validation from the **repository root**:
 /bin/bash scripts/validate.sh
 ```
 
-The entry point covers syntax, manifest required fields, evaluator self-tests, three shell product suites, 27 loop-registered Python regression suites (`reap-fake-endpoint` is skipped when codex is not installed locally), the source-discovery regression and the isolation policy-only suite. v0.9.0 release validation passed 354 Python, 53 shell and 19 eval cases. Actual OS, host and live-model evidence is recorded separately, without labeling it as offline coverage. The free aggregate validation makes no model requests. Doctor rule tests now supply their own CLI stub, synthetic login state, and temporary log, without depending on an outer Codex installation or login. The [actual F8 fix verification in Chinese](docs/verification/2026-10-08-f8-applied.md) covers absent outer CLI and rejected outer login.
+The entry point covers syntax, manifest required fields, evaluator self-tests, three shell product suites, 28 loop-registered Python regression suites (`reap-fake-endpoint` is skipped when codex is not installed locally), the source-discovery regression and the isolation policy-only suite. v0.10.0 release validation passed 388 Python, 53 shell and 19 eval cases. Actual OS, host and live-model evidence is recorded separately, without labeling it as offline coverage. The free aggregate validation makes no model requests. Doctor rule tests now supply their own CLI stub, synthetic login state, and temporary log, without depending on an outer Codex installation or login. The [actual F8 fix verification in Chinese](docs/verification/2026-10-08-f8-applied.md) covers absent outer CLI and rejected outer login.
 
 See [Contributing](CONTRIBUTING.en.md) for development conventions, individual tests, paid live verification, and bilingual maintenance. Use [GitHub Issues](https://github.com/haigeerlab/delegate-plugin/issues) for problems and suggestions; follow the next section to report a bug.
 

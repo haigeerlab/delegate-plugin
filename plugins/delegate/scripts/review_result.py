@@ -5,16 +5,19 @@ import math
 import re
 
 from claude_review import unique_object
+from review_recheck import STATUSES as RECHECK_STATUSES
 
 CONTENT_FIELDS = {'schema_version', 'reviewed', 'unreviewed', 'findings'}
-FINDING_FIELDS = {'title', 'file', 'line', 'trigger', 'impact', 'evidence', 'suggestion', 'unverified'}
+FINDING_FIELDS = {'title', 'file', 'line', 'trigger', 'impact', 'evidence', 'suggestion', 'unverified', 'severity'}
+SEVERITY_VALUES = ['blocking', 'suggestion']
 CONTENT_SCHEMA = {'type': 'object', 'additionalProperties': False,
     'properties': {'schema_version': {'type': 'integer', 'const': 1}, 'reviewed': {'type': 'array', 'items': {'type': 'string'}},
         'unreviewed': {'type': 'array', 'items': {'type': 'object', 'additionalProperties': False,
             'properties': {'path': {'type': 'string'}, 'reason': {'type': 'string'}}, 'required': ['path', 'reason']}},
         'findings': {'type': 'array', 'items': {'type': 'object', 'additionalProperties': False,
-            'properties': {**{name: {'type': 'string'} for name in FINDING_FIELDS - {'line', 'unverified'}},
-                'line': {'type': ['integer', 'null']}, 'unverified': {'type': 'array', 'items': {'type': 'string'}}},
+            'properties': {**{name: {'type': 'string'} for name in FINDING_FIELDS - {'line', 'unverified', 'severity'}},
+                'line': {'type': ['integer', 'null']}, 'unverified': {'type': 'array', 'items': {'type': 'string'}},
+                'severity': {'type': 'string', 'enum': SEVERITY_VALUES}},
             'required': sorted(FINDING_FIELDS)}}}, 'required': sorted(CONTENT_FIELDS)}
 
 
@@ -34,6 +37,13 @@ def schema_for_context(context):
         properties['reviewed']['items']['enum'] = paths
         properties['unreviewed']['items']['properties']['path']['enum'] = paths
         properties['findings']['items']['properties']['file']['enum'] = paths
+    previous = context.get('previous_findings')
+    if previous:
+        schema['properties']['previous'] = {'type': 'array', 'items': {'type': 'object', 'additionalProperties': False,
+            'properties': {'index': {'type': 'integer', 'enum': [item['index'] for item in previous]},
+                'status': {'type': 'string', 'enum': RECHECK_STATUSES}, 'evidence': {'type': 'string'}},
+            'required': ['evidence', 'index', 'status']}}
+        schema['required'] = sorted(CONTENT_FIELDS | {'previous'})
     return schema
 
 
@@ -94,7 +104,8 @@ def read_init(stream, tools, *, complete=False):
 
 
 def content_result(content, context):
-    if (not isinstance(content, dict) or set(content) != CONTENT_FIELDS
+    previous = context.get('previous_findings') or []
+    if (not isinstance(content, dict) or set(content) != (CONTENT_FIELDS | {'previous'} if previous else CONTENT_FIELDS)
             or type(content['schema_version']) is not int or content['schema_version'] != 1):
         raise ResultError('structured_result_invalid')
     reviewed, unreviewed, findings = content['reviewed'], content['unreviewed'], content['findings']
@@ -127,7 +138,9 @@ def content_result(content, context):
     for item in findings:
         if not isinstance(item, dict) or set(item) != FINDING_FIELDS:
             raise ResultError('finding_invalid')
-        for key in FINDING_FIELDS - {'line', 'unverified'}:
+        if item['severity'] not in SEVERITY_VALUES:
+            raise ResultError('finding_invalid')
+        for key in FINDING_FIELDS - {'line', 'unverified', 'severity'}:
             if not isinstance(item[key], str) or not 1 <= len(item[key]) <= 4000:
                 raise ResultError('finding_invalid')
         if (not isinstance(item['unverified'], list) or len(item['unverified']) > 20
@@ -144,7 +157,47 @@ def content_result(content, context):
             value['unverified'].append('location_not_verified_in_snapshot')
             verified = False
         validated.append(value)
-    return {'reviewed': reviewed, 'unreviewed': omitted, 'findings': validated}, verified
+    result = {'reviewed': reviewed, 'unreviewed': omitted, 'findings': validated}
+    if previous:
+        result['recheck'] = dict(context['recheck_source'], items=recheck_items(content['previous'], previous))
+    return result, verified
+
+
+def recheck_items(answers, previous):
+    by_index = {item['index']: item for item in previous}
+    if not isinstance(answers, list) or len(answers) != len(by_index):
+        raise ResultError('recheck_invalid')
+    seen = {}
+    for answer in answers:
+        if (not isinstance(answer, dict) or set(answer) != {'index', 'status', 'evidence'}
+                or type(answer['index']) is not int or answer['index'] not in by_index or answer['index'] in seen
+                or answer['status'] not in RECHECK_STATUSES
+                or not isinstance(answer['evidence'], str) or not 1 <= len(answer['evidence']) <= 4000):
+            raise ResultError('recheck_invalid')
+        seen[answer['index']] = answer
+    return [{'index': index, 'status': seen[index]['status'], 'evidence': seen[index]['evidence'],
+             'finding': {key: value for key, value in by_index[index].items() if key != 'index'}}
+            for index in sorted(by_index)]
+
+
+def clear_recheck_items(report):
+    """A review without a conclusion keeps the previous report's sha and fingerprint but no verdicts."""
+    if report['execution_status'] != 'completed' and report.get('recheck'):
+        report['recheck']['items'] = []
+
+
+def conclude(report, verified):
+    """Shared outcome rule for both backends (spec/review-recheck.md A12)."""
+    if report['execution_status'] != 'completed':
+        clear_recheck_items(report)
+        return
+    if not verified or report['unreviewed']:
+        report['execution_status'] = 'failed'
+        report['diagnostics'].append('review_incomplete')
+        clear_recheck_items(report)
+        return
+    unresolved = any(item['status'] == 'unresolved' for item in (report.get('recheck') or {}).get('items', []))
+    report['review_outcome'] = 'findings' if report['findings'] or unresolved else 'no_findings_in_scope'
 
 
 def base_report(backend, execution, context, requested_model):
@@ -167,6 +220,7 @@ def base_report(backend, execution, context, requested_model):
         'reviewed': [], 'unreviewed': list(context['unreviewed']) + [
             {'path': name, 'reason': 'review_not_completed'} for name in context['files']],
         'findings': [], 'diagnostics': diagnostics,
+        'recheck': dict(context['recheck_source'], items=[]) if context.get('recheck_source') else None,
         'limitations': ['Structured format and verified locations do not prove findings true. Review does not authorize merge or delivery.']}
 
 
@@ -246,12 +300,7 @@ def claude_report(stream, execution, context, *, requested_model=None):
         report.update(content)
         if denials:
             raise ResultError('permission_denied')
-        if report['execution_status'] == 'completed':
-            if not verified or report['unreviewed']:
-                report['execution_status'] = 'failed'
-                report['diagnostics'].append('review_incomplete')
-            else:
-                report['review_outcome'] = 'findings' if report['findings'] else 'no_findings_in_scope'
+        conclude(report, verified)
     except (ValueError, UnicodeError, ResultError) as error:
         code = str(error) if isinstance(error, ResultError) else 'stream_invalid'
         if code.startswith('coverage_') and 'coverage_invalid' not in report['diagnostics']:
@@ -260,6 +309,7 @@ def claude_report(stream, execution, context, *, requested_model=None):
             report['diagnostics'].append(code)
         if report['execution_status'] == 'completed':
             report['execution_status'] = 'failed'
+    clear_recheck_items(report)
     return report
 
 
