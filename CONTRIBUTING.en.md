@@ -88,6 +88,44 @@ Keep Bash 3.2 compatibility: use `${VAR}`, guard empty arrays with `${ARR[@]+"${
 
 After editing documentation, check file links, heading anchors, and code fences, and run `git diff --check`. The [documentation index](docs/en/README.md) lists language pairs.
 
+## Releasing
+
+`scripts/release-prepare.sh` takes release preparation as far as "only your go-ahead is missing": one commit on a new local release branch, with no push, PR, tag or change to the local installation. The contract is in the [release-prepare specification](docs/en/SPEC-release-prepare.md).
+
+**1. Write the unreleased notes first.** Each change adds content after the "recorded in…" paragraph of `docs/en/releases/unreleased.md` and its Chinese page. Before a release both must contain:
+
+```text
+<!-- release-title: Title of this release -->
+
+(optional introduction)
+
+## This release's change sections (one or more)
+
+## Impact
+
+## Validation and known limitations
+```
+
+The Chinese page uses `## 影响面` and `## 验证与已知限制`. A missing title line, change section or either of those two sections stops the script with `release_notes_incomplete`. The motivation, impact and validation prose is written by a person or the calling session; the script only moves it.
+
+**2. Rehearse, then prepare.** Run `git fetch` first, then, in a clean worktree matching `origin/main`:
+
+```bash
+/bin/bash scripts/release-prepare.sh 0.11.0 --check
+```
+
+```bash
+/bin/bash scripts/release-prepare.sh 0.11.0
+```
+
+`--check` only checks and writes nothing. A real run cuts `release/v<version>`, bumps the version, generates both release notes, folds the unreleased notes, updates the current-release links and release validation numbers in the READMEs, documentation indexes and this guide, then runs full validation, both `claude plugin validate` runs, `git diff --check` and spec-guard's `verify-artifacts`, and commits once. Full validation takes about 5 minutes; in Claude Code, run it in the background.
+
+**3. Read the output.** Standard output is one JSON document (`schema` `delegate.release-prepare/v1`): only exit 0 with `status` `ready` means prepared; otherwise read `reason` (a fixed diagnostic) and which entry in `checks` failed with which exit code. When a check fails, the script deletes the release branch it created and returns to the original branch, leaving no commit; a rerun for the same version reuses the existing release commit, and a branch changed by someone else reports `release_branch_conflict`.
+
+**4. The seven human steps.** The JSON `human_steps` lists each command with its reason: push and open a PR, merge, create an annotated tag on the merge commit, `gh release create --verify-tag`, upgrade on the Claude Code side, change `ref` and upgrade on the Codex side, reopen sessions and quit/reopen with ⌘Q. delegate is a plugin the pipeline itself uses, so all seven need the user's consent.
+
+The script finds the sentences to rewrite by their exact wording (`anchors()` in `scripts/release_prepare.py`). When changing the current-release or release-validation sentences in the READMEs, documentation indexes or this guide, update that anchor table and `scripts/tests/test-release-prepare.py` too; on a mismatch the script stops with `release_docs_anchor_missing` instead of guessing.
+
 ## Submitting a pull request
 
 Use a separate branch and submit a focused PR. Describe the concrete problem, resulting behavior or reading flow, validation performed, and its limitations. Behavior changes, documentation synchronization, and necessary tests can be reviewed together; avoid unrelated refactoring.
