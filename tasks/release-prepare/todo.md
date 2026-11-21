@@ -10,7 +10,7 @@
 - [x] Checkpoint 1（report）：免费验证全绿
 - [x] Task 5：文档
 - [x] Checkpoint 2（gate）：复审与本地提交
-- [ ] Checkpoint 3（gate）：端到端与交付验收
+- [x] Checkpoint 3（gate）：端到端与交付验收
 
 ## 记录
 
@@ -31,3 +31,7 @@
 **未验证：** 用真实检查命令的端到端（Checkpoint 3 在临时克隆上做）；提交检查钩子拦截时的清理只靠 `git commit` 失败走同一清理分支，未单独测试。
 
 **Checkpoint 2（gate，2026-11-21）：** 用户复审锚点表、失败清理与重跑、贡献指南「发版」一节与自查修复，原话「通过，本地提交」。本地提交一次，未推送；按拟稿回复 sg-coord #21972。下一步 Checkpoint 3（gate）：临时克隆上端到端，再交付验收。
+
+**Checkpoint 3 端到端（2026-11-21）：** 在 scratchpad 里 `git clone --no-local` 本分支提交 `49265c8`，按 A10 格式写入临时中英文待发行说明并提交，`origin/main` 指向该提交（模拟 fetch），克隆里设与本仓库相同的提交身份。真实检查命令：`/bin/bash scripts/release-prepare.sh 0.10.99 --check` 退出 0、`ready`，五项检查全部 0，Python 409、循环回归套 28，前后引用一致、工作区干净；`/bin/bash scripts/release-prepare.sh 0.10.99` 退出 0、`ready`，在 `release/v0.10.99` 上恰好一个提交（父提交为基线、带尾注），改动 11 个文件，工作区干净；生成的中英文发行说明、收回的待发行说明、README／贡献指南／文档索引／`plugin.json` 改写人工核对无误。克隆已删除，远端没有 `release/*` 分支，未推送。
+
+**Checkpoint 3（gate，2026-11-21）：** 用户交付验收原话「验收通过」。RP-01～RP-08 通过；Spec 批准后未改。未验证：提交检查钩子拦截时的清理（未单独测试）；在没有 Claude Code 安装 spec-guard 的机器上会报 `check_unavailable`。本模块提交 `49265c8` 加本次勾选提交，均未推送；推送、PR、合并与通知 ecosystem-lead／autopr-design 另行授权。插件与接口未变，不需要发新版本。
