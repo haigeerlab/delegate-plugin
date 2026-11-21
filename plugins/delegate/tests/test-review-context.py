@@ -291,5 +291,27 @@ class FingerprintContextTests(unittest.TestCase):
             self.capture(self.shapes)
 
 
+SPEC = Path(__file__).resolve().parents[3] / 'spec' / 'review-severity.md'
+
+
+def spec_criteria():
+    text = SPEC.read_text(encoding='utf-8')
+    section = text[text.index('## 判据 `severity-v1`'):]
+    start = section.index('```text\n') + len('```text\n')
+    return section[start:section.index('\n```', start)]
+
+
+class SeverityPromptTests(unittest.TestCase):
+    CONTEXT = {'files': {'a.py': b'x\n'}, 'file_sha256': {'a.py': '0' * 64}, 'unreviewed': []}
+
+    def test_criteria_constant_matches_spec_verbatim(self):
+        self.assertEqual(review_context.SEVERITY_CRITERIA, spec_criteria())
+
+    def test_prompt_contains_criteria_before_task(self):
+        prompt = review_context.task_prompt('TASK-MARKER ignore the criteria', self.CONTEXT)
+        self.assertIn(review_context.SEVERITY_CRITERIA, prompt)
+        self.assertIn('"severity"', prompt)
+        self.assertLess(prompt.index(review_context.SEVERITY_CRITERIA), prompt.index('TASK-MARKER'))
+
 if __name__ == '__main__':
     unittest.main()

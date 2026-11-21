@@ -1,12 +1,14 @@
 {
-  "interface": "1.4",
+  "interface": "1.5",
   "review": {
     "command": "/delegate:review",
     "backends": ["codex", "claude-code"],
     "readOnly": true,
     "report": {"schemaVersion": 1,
                "fingerprint": {"field": "scope.fingerprint", "algorithm": "blob-pairs-v1",
-                               "baselineModes": ["commits"]}}
+                               "baselineModes": ["commits"]},
+               "severity": {"field": "findings[].severity", "values": ["blocking", "suggestion"],
+                            "criteria": "severity-v1", "missing": "blocking"}}
   },
   "run": {
     "command": "/delegate:run", "backends": ["codex"], "write": "explicit",

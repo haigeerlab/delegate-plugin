@@ -7,14 +7,16 @@ import re
 from claude_review import unique_object
 
 CONTENT_FIELDS = {'schema_version', 'reviewed', 'unreviewed', 'findings'}
-FINDING_FIELDS = {'title', 'file', 'line', 'trigger', 'impact', 'evidence', 'suggestion', 'unverified'}
+FINDING_FIELDS = {'title', 'file', 'line', 'trigger', 'impact', 'evidence', 'suggestion', 'unverified', 'severity'}
+SEVERITY_VALUES = ['blocking', 'suggestion']
 CONTENT_SCHEMA = {'type': 'object', 'additionalProperties': False,
     'properties': {'schema_version': {'type': 'integer', 'const': 1}, 'reviewed': {'type': 'array', 'items': {'type': 'string'}},
         'unreviewed': {'type': 'array', 'items': {'type': 'object', 'additionalProperties': False,
             'properties': {'path': {'type': 'string'}, 'reason': {'type': 'string'}}, 'required': ['path', 'reason']}},
         'findings': {'type': 'array', 'items': {'type': 'object', 'additionalProperties': False,
-            'properties': {**{name: {'type': 'string'} for name in FINDING_FIELDS - {'line', 'unverified'}},
-                'line': {'type': ['integer', 'null']}, 'unverified': {'type': 'array', 'items': {'type': 'string'}}},
+            'properties': {**{name: {'type': 'string'} for name in FINDING_FIELDS - {'line', 'unverified', 'severity'}},
+                'line': {'type': ['integer', 'null']}, 'unverified': {'type': 'array', 'items': {'type': 'string'}},
+                'severity': {'type': 'string', 'enum': SEVERITY_VALUES}},
             'required': sorted(FINDING_FIELDS)}}}, 'required': sorted(CONTENT_FIELDS)}
 
 
@@ -127,7 +129,9 @@ def content_result(content, context):
     for item in findings:
         if not isinstance(item, dict) or set(item) != FINDING_FIELDS:
             raise ResultError('finding_invalid')
-        for key in FINDING_FIELDS - {'line', 'unverified'}:
+        if item['severity'] not in SEVERITY_VALUES:
+            raise ResultError('finding_invalid')
+        for key in FINDING_FIELDS - {'line', 'unverified', 'severity'}:
             if not isinstance(item[key], str) or not 1 <= len(item[key]) <= 4000:
                 raise ResultError('finding_invalid')
         if (not isinstance(item['unverified'], list) or len(item['unverified']) > 20

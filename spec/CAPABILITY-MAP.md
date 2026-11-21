@@ -28,8 +28,10 @@
 | run-check | --check 在运行以 done 结束后按参数列表、不经 shell 执行使用方给的检查命令（运算符规则照抄 module-crew S30），结果写进结果文件；--authorized-by 记录事先写入授权的来源文件与 sha256，整链一致 | run-result |
 | run-rules | --rules-file 把本次委托专用的规则片段原样放在 delegate 前言之后，冲突时以片段为准（安全边界除外），路径与 sha256 写进结果文件；不读也不拼 AGENTS.md | run-result |
 | review-fingerprint | 审查报告新增与本机 git 配置和版本无关的补丁指纹 scope.fingerprint（被审文件 from/to 对象编号对的 sha256），只在 commits 模式输出，算法写进 interface.json 供使用方在别的机器复算；diff_sha256 不变；接口升 1.4 只增字段 | claude-review, integration-interface |
+| review-severity | 审查报告每条发现新增 severity（blocking 或 suggestion），由审查模型按写进提示词的判据标注，两个后端共用同一结构与校验；调用方缺字段或不认识的值按 blocking；接口升 1.5 只增字段 | claude-review, integration-interface |
+| review-recheck | --previous-report 接受 delegate 上一轮的审查报告，把其中 blocking 发现交给本轮模型，报告逐条给出已解决或未解决并另列新发现；两个后端都支持；范围对不上时报固定诊断码不做对照；两轮计数与交人由调用方判断 | review-severity |
 
-Build order: channel → detection → routing → claude-review → integration-interface → run-resume → run-timeout → write-trust → run-result → run-continue → run-longrun → run-check → run-rules → review-fingerprint
+Build order: channel → detection → routing → claude-review → integration-interface → run-resume → run-timeout → write-trust → run-result → run-continue → run-longrun → run-check → run-rules → review-fingerprint → review-severity → review-recheck
 
 channel 与 detection 共用 `backend.py`，该共享代码不是独立模块依赖。routing 按显式请求结合 detection 体检，授权后使用 channel；构建顺序保留既有实施顺序，不新增运行职责。
 

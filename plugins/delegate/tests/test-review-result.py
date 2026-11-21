@@ -40,7 +40,7 @@ class ResultTests(unittest.TestCase):
 
     def test_finding_is_not_an_execution_failure_or_merge_authorization(self):
         self.content['findings'] = [{'title': 'Regression', 'file': 'src/a.py', 'line': 2, 'trigger': 'specific input',
-            'impact': 'wrong output', 'evidence': 'second', 'suggestion': 'validate input', 'unverified': ['runtime not tested']}]
+            'impact': 'wrong output', 'evidence': 'second', 'suggestion': 'validate input', 'unverified': ['runtime not tested'], 'severity': 'blocking'}]
         result = self.report()
         self.assertEqual(result['review_outcome'], 'findings')
         self.assertEqual(result['execution_status'], 'completed')
@@ -50,7 +50,7 @@ class ResultTests(unittest.TestCase):
     def test_wrong_file_or_line_is_marked_unverified_and_inconclusive(self):
         for filename, line in [('src/a.py', 20), ('secret', 1)]:
             self.content['findings'] = [{'title': 'Claim', 'file': filename, 'line': line, 'trigger': 'input',
-                'impact': 'effect', 'evidence': 'claim', 'suggestion': 'check', 'unverified': []}]
+                'impact': 'effect', 'evidence': 'claim', 'suggestion': 'check', 'unverified': [], 'severity': 'blocking'}]
             result = self.report()
             self.assertEqual(result['review_outcome'], 'inconclusive')
             self.assertFalse(result['findings'][0]['location_verified'])
@@ -313,6 +313,44 @@ class ResultTests(unittest.TestCase):
         self.assertIn('permission_denied', result['diagnostics'])
         self.assertIn('coverage_reviewed_path_unknown', result['diagnostics'])
         self.assertNotIn('PRIVATE_CREDENTIAL_PATH', json.dumps(result))
+
+
+class SeverityTests(unittest.TestCase):
+    setUp = ResultTests.setUp
+    stream = ResultTests.stream
+    report = ResultTests.report
+
+    def finding(self, **values):
+        item = {'title': 'Regression', 'file': 'src/a.py', 'line': 2, 'trigger': 'input', 'impact': 'effect',
+                'evidence': 'second', 'suggestion': 'fix', 'unverified': [], 'severity': 'blocking'}
+        item.update(values)
+        return item
+
+    def test_valid_severity_values_pass_through(self):
+        for value in ('blocking', 'suggestion'):
+            self.content['findings'] = [self.finding(severity=value)]
+            result = self.report()
+            self.assertEqual(result['execution_status'], 'completed')
+            self.assertEqual(result['review_outcome'], 'findings')
+            self.assertEqual(result['findings'][0]['severity'], value)
+
+    def test_missing_or_invalid_severity_fails_the_review(self):
+        missing = self.finding()
+        del missing['severity']
+        for item in (missing, self.finding(severity='Blocking'), self.finding(severity=''),
+                     self.finding(severity='critical'), self.finding(severity=None), self.finding(severity=1)):
+            self.content['findings'] = [item]
+            result = self.report()
+            self.assertEqual(result['execution_status'], 'failed')
+            self.assertEqual(result['review_outcome'], 'inconclusive')
+            self.assertIn('finding_invalid', result['diagnostics'])
+
+    def test_schema_requires_severity_enum(self):
+        for schema in (review_result.CONTENT_SCHEMA, review_result.schema_for_context(self.context)):
+            item = schema['properties']['findings']['items']
+            self.assertEqual(item['properties']['severity'], {'type': 'string', 'enum': ['blocking', 'suggestion']})
+            self.assertIn('severity', item['required'])
+            self.assertIs(item['additionalProperties'], False)
 
 
 class FingerprintReportTests(unittest.TestCase):

@@ -50,7 +50,7 @@ except OSError:
 else:raise AssertionError('snapshot write unexpectedly permitted')
 assert path.read_text()=='first line\nsecond line\n'
 findings=[]
-if mode=='findings':findings=[{'title':'Synthetic fixture issue','file':'src/a.py','line':1,'trigger':'Fixed fixture input','impact':'Synthetic demonstration','evidence':'first line','suggestion':'Check the fixture','unverified':['No real bug claim']}]
+if mode=='findings':findings=[{'title':'Synthetic fixture issue','file':'src/a.py','line':1,'trigger':'Fixed fixture input','impact':'Synthetic demonstration','evidence':'first line','suggestion':'Check the fixture','unverified':['No real bug claim'],'severity':'suggestion'}]
 print(json.dumps({'type':'result','subtype':'success','is_error':False,'permission_denials':denials,
  'structured_output':{'schema_version':1,'reviewed':['src/a.py'],'unreviewed':[],'findings':findings}}),flush=True)
 '''

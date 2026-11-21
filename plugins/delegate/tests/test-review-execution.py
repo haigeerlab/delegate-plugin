@@ -50,7 +50,9 @@ if mode=='hang':
 content={'schema_version':1,'reviewed':['src/a.py'],'unreviewed':[],'findings':[]}
 if mode=='badcoverage':content['reviewed']=['PRIVATE_CREDENTIAL_PATH']
 if mode in ('nullline','line'):content['findings']=[{'title':'t','file':'src/a.py','line':None if mode=='nullline' else 1,
- 'trigger':'t','impact':'i','evidence':'e','suggestion':'s','unverified':[]}]
+ 'trigger':'t','impact':'i','evidence':'e','suggestion':'s','unverified':[],'severity':'blocking'}]
+if mode=='badseverity':content['findings']=[{'title':'t','file':'src/a.py','line':1,
+ 'trigger':'t','impact':'i','evidence':'e','suggestion':'s','unverified':[],'severity':'critical'}]
 Path(args[args.index('-o')+1]).write_text(json.dumps(content) if mode!='bad' else 'SECRET_CREDENTIAL')
 print(json.dumps({'type':'turn.completed','usage':{'input_tokens':3,'output_tokens':2}}))
 '''
@@ -213,6 +215,15 @@ class CommonExecutionTests(unittest.TestCase):
         report=json.loads(result.stdout)
         self.assertEqual(report['review_outcome'],'findings')
         self.assertTrue(report['findings'][0]['location_verified'])
+        self.assertEqual(report['findings'][0]['severity'],'blocking')
+
+    def test_codex_invalid_severity_fails_the_review(self):
+        result=self.run_review('badseverity')
+        self.assertEqual(result.returncode,1,result.stderr)
+        report=json.loads(result.stdout)
+        self.assertEqual(report['execution_status'],'failed')
+        self.assertEqual(report['review_outcome'],'inconclusive')
+        self.assertIn('finding_invalid',report['diagnostics'])
 
     def test_codex_line_numbers_match_snapshot_verification(self):
         from review_execution import codex_prompt
@@ -225,10 +236,18 @@ class CommonExecutionTests(unittest.TestCase):
         self.assertEqual([line.split('\t',1)[0].strip() for line in numbered if line],['1','2','3','4','5'])
         self.assertEqual(numbered[3],'     4\t')
         self.assertTrue(numbered[4].startswith('     5\tlast'))
-        finding={'title':'t','file':'doc.md','line':5,'trigger':'t','impact':'i','evidence':'e','suggestion':'s','unverified':[]}
+        finding={'title':'t','file':'doc.md','line':5,'trigger':'t','impact':'i','evidence':'e','suggestion':'s','unverified':[],'severity':'suggestion'}
         _,verified=content_result({'schema_version':1,'reviewed':['doc.md'],'unreviewed':[],'findings':[finding]},context)
         self.assertTrue(verified)
         self.assertNotIn('content',attached)
+
+    def test_codex_prompt_carries_severity_criteria_before_task(self):
+        from review_context import SEVERITY_CRITERIA
+        from review_execution import codex_prompt
+        context={'files':{'doc.md':b'x\n'},'file_sha256':{'doc.md':'0'*64},'unreviewed':[]}
+        prompt=codex_prompt('TASK-MARKER',context)
+        self.assertIn(SEVERITY_CRITERIA,prompt)
+        self.assertLess(prompt.index(SEVERITY_CRITERIA),prompt.index('TASK-MARKER'))
 
     def test_codex_input_limit_counts_line_number_prefixes(self):
         from review_context import ContextError
