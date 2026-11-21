@@ -113,6 +113,10 @@ if ! python3 -B "${ROOT_DIR}/scripts/tests/test-validation-discovery.py"; then
   fail "验证文件发现回归未通过"
 fi
 
+if ! python3 -B "${ROOT_DIR}/scripts/tests/test-release-prepare.py"; then
+  fail "发版准备回归未通过"
+fi
+
 for SUITE in channel detection routing; do
   if ! /bin/bash "${ROOT_DIR}/plugins/delegate/tests/test-${SUITE}.sh"; then
     fail "${SUITE} 产品测试未通过"

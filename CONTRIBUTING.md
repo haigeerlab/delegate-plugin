@@ -88,6 +88,44 @@ eval 显式用 `--plugin-dir` 加载源码；退出 0=PASS、1=FAIL、2=NORUN。
 
 修改文档后检查文件链接、章节锚点和代码块，执行 `git diff --check`。双语覆盖表在 [文档索引](docs/README.md)。
 
+## 发版
+
+发版准备由 `scripts/release-prepare.sh` 做到「只差你点头」：在本地新的发版分支上提交一次，不推送、不开 PR、不打标签、不动本机安装。合同见 [release-prepare 规格](spec/release-prepare.md)。
+
+**1. 先写待发行说明。** 平时每个改动在 `docs/releases/unreleased.md` 和英文页的「已归入……」那段之后追加内容。发版前这两份要有：
+
+```text
+<!-- release-title: 本次发版的标题 -->
+
+（可选导语）
+
+## 本次的变更小节（一个或多个）
+
+## 影响面
+
+## 验证与已知限制
+```
+
+英文页对应 `## Impact` 和 `## Validation and known limitations`。标题行、至少一个变更小节、这两个小节缺一项，脚本报 `release_notes_incomplete` 停下。起因、影响面、验证与限制这些文字由人或调用它的会话写，脚本只搬运。
+
+**2. 预演，再准备。** 先 `git fetch`，在与 `origin/main` 一致的干净工作区运行：
+
+```bash
+/bin/bash scripts/release-prepare.sh 0.11.0 --check
+```
+
+```bash
+/bin/bash scripts/release-prepare.sh 0.11.0
+```
+
+`--check` 只检查、不写任何东西。正式运行会切出 `release/v<版本>`，改版本号、生成中英文发行说明、收回待发行说明、更新 README／文档索引／本指南里的当前发行链接与发布验证数字，跑完总验证、两项 `claude plugin validate`、`git diff --check` 和 spec-guard 的 `verify-artifacts` 后提交一次。总验证约需 5 分钟，在 Claude Code 里请用后台方式运行。
+
+**3. 看输出。** 标准输出是一份 JSON（`schema` 为 `delegate.release-prepare/v1`）：退出 0 且 `status` 为 `ready` 才算备好；否则看 `reason`（固定诊断码）和 `checks` 里哪一项、退出码多少。检查失败时脚本会删除本次新建的发版分支、回到原分支，不留提交；同一版本重跑会复用已有的发版提交，分支被别人改过则报 `release_branch_conflict`。
+
+**4. 人来做的七步。** JSON 的 `human_steps` 逐条给出命令和原因：推送并开 PR、合并、在合并提交上打附注标签、`gh release create --verify-tag`、Claude Code 侧升级、Codex 侧改 `ref` 并升级、重开会话与 ⌘Q。delegate 是流水线自己用的插件，这七步都要用户同意。
+
+脚本按固定措辞找要改的句子（`scripts/release_prepare.py` 的 `anchors()`）。改 README、文档索引或本指南里的当前发行、发布验证句子时，同步改那张锚点表和 `scripts/tests/test-release-prepare.py`；措辞对不上时脚本报 `release_docs_anchor_missing` 停下，不会猜着改。
+
 ## 提交 Pull Request
 
 使用独立分支提交范围清晰的 PR。说明具体问题、修改后的行为或阅读路径，以及运行过的验证和限制。行为修改、文档同步与必要测试可以一起审查；避免混入无关重构。

@@ -30,8 +30,9 @@
 | review-fingerprint | 审查报告新增与本机 git 配置和版本无关的补丁指纹 scope.fingerprint（被审文件 from/to 对象编号对的 sha256），只在 commits 模式输出，算法写进 interface.json 供使用方在别的机器复算；diff_sha256 不变；接口升 1.4 只增字段 | claude-review, integration-interface |
 | review-severity | 审查报告每条发现新增 severity（blocking 或 suggestion），由审查模型按写进提示词的判据标注，两个后端共用同一结构与校验；调用方缺字段或不认识的值按 blocking；接口升 1.5 只增字段 | claude-review, integration-interface |
 | review-recheck | --previous-report 接受 delegate 上一轮的审查报告，把其中 blocking 发现交给本轮模型，报告逐条给出已解决或未解决并另列新发现；两个后端都支持；范围对不上时报固定诊断码不做对照；两轮计数与交人由调用方判断 | review-severity |
+| release-prepare | 仓库脚本 scripts/release-prepare.sh <版本> [--check] 无人值守地把发版准备做到本地发版分支上的一次提交：改版本号、从待发行说明生成发行说明、更新当前发行链接与测试数量、跑全部免费检查，输出带提交 SHA 的 JSON 汇总和必须由人执行的命令；不推送、不开 PR、不打标签、不动本机安装 | integration-interface |
 
-Build order: channel → detection → routing → claude-review → integration-interface → run-resume → run-timeout → write-trust → run-result → run-continue → run-longrun → run-check → run-rules → review-fingerprint → review-severity → review-recheck
+Build order: channel → detection → routing → claude-review → integration-interface → run-resume → run-timeout → write-trust → run-result → run-continue → run-longrun → run-check → run-rules → review-fingerprint → review-severity → review-recheck → release-prepare
 
 channel 与 detection 共用 `backend.py`，该共享代码不是独立模块依赖。routing 按显式请求结合 detection 体检，授权后使用 channel；构建顺序保留既有实施顺序，不新增运行职责。
 

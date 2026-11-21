@@ -39,6 +39,7 @@ class DiscoveryTests(unittest.TestCase):
         target = root / 'scripts/tests/test-validation-discovery.py'
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text('# prevent recursive fixture validation\n')
+        (root / 'scripts/tests/test-release-prepare.py').write_text('# fixture suite\n')
         return root
 
     def validate(self, root):
