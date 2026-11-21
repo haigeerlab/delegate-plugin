@@ -9,7 +9,7 @@
 - [x] Checkpoint 1（report）：免费验证全绿
 - [x] Task 4：文档同步
 - [x] Checkpoint 2（gate）：复审与本地提交
-- [ ] Checkpoint 3（gate）：交付验收
+- [x] Checkpoint 3（gate）：交付验收
 
 ## 记录
 
@@ -26,3 +26,5 @@
 **未验证：** `test-review-guest-integration.py` 要单独授权的一次性虚拟机，不在免费套件里，本次只补了夹具、未运行；模型按判据标注的准确度（试点观察）。
 
 **Checkpoint 2（gate，2026-11-21）：** 用户复审 integration-interface 1.5 指向句等改动，原话「通过，本地提交」。已重新记录 `spec/integration-interface.md` 批准标记，`verify-artifacts` 4 通过、0 警告。本地提交一次，未推送。下一步停在 Checkpoint 3（gate）交付验收。
+
+**Checkpoint 3（gate，2026-11-21）：** 用户交付验收原话「验收通过」。SV-01～SV-07 通过；未验证：`test-review-guest-integration.py`（要一次性虚拟机）、Codex 真实运行能否接受带 `enum` 的输出结构（建议发 v0.10.0 前付费实测一次）、模型标注准确度（试点观察）。本模块提交 `a09ab90` 加本次勾选提交，均未推送；推送、PR、v0.10.0 发版另行授权，发版等 review-recheck 完成。
