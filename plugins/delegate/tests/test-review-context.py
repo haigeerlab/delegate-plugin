@@ -313,5 +313,27 @@ class SeverityPromptTests(unittest.TestCase):
         self.assertIn('"severity"', prompt)
         self.assertLess(prompt.index(review_context.SEVERITY_CRITERIA), prompt.index('TASK-MARKER'))
 
+
+class RecheckPromptTests(unittest.TestCase):
+    CONTEXT = SeverityPromptTests.CONTEXT
+    PREVIOUS = [{'index': 1, 'title': 'OLD-FINDING', 'file': 'a.py', 'line': 1, 'trigger': 't', 'impact': 'i',
+                 'evidence': 'e', 'suggestion': 's', 'unverified': [], 'severity': 'blocking'}]
+    SOURCE = {'previous_report_sha256': 'e' * 64, 'previous_fingerprint': None}
+
+    def test_previous_findings_add_instruction_before_task_and_data(self):
+        context = dict(self.CONTEXT, previous_findings=self.PREVIOUS, recheck_source=self.SOURCE)
+        prompt = review_context.task_prompt('TASK-MARKER', context)
+        self.assertIn(review_context.RECHECK_INSTRUCTION, prompt)
+        self.assertLess(prompt.index(review_context.SEVERITY_CRITERIA), prompt.index(review_context.RECHECK_INSTRUCTION))
+        self.assertLess(prompt.index(review_context.RECHECK_INSTRUCTION), prompt.index('TASK-MARKER'))
+        self.assertIn('OLD-FINDING', prompt)
+        self.assertNotIn('e' * 64, prompt)
+
+    def test_empty_or_missing_set_leaves_prompt_unchanged(self):
+        plain = review_context.task_prompt('TASK-MARKER', self.CONTEXT)
+        empty = review_context.task_prompt('TASK-MARKER', dict(self.CONTEXT, previous_findings=[], recheck_source=self.SOURCE))
+        self.assertEqual(plain, empty)
+        self.assertNotIn(review_context.RECHECK_INSTRUCTION, plain)
+
 if __name__ == '__main__':
     unittest.main()

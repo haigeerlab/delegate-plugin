@@ -11,4 +11,11 @@ v0.6.0 之后的 run 超时保留进度（接口 1.2）与写模式不再写入 
 - 读报告的一方遇到缺字段（0.9.0 及以前的报告）或不认识的值，一律按 `blocking`；没有阻断发现不等于可以合并。
 - `interface.json` 升到 1.5，`review.report` 下新增 `severity` 说明；报告 `schema_version` 仍为 `1`，只增字段。
 
+## 复审对照上一轮（接口 1.5）
+
+- `/delegate:review` 新增 `--previous-report <上一轮报告>`：上一轮的阻断发现逐条进报告新字段 `recheck.items`，标 `resolved` 或 `unresolved` 并给证据；本轮 `findings` 只放新问题。合同见 [review-recheck 规格](../../spec/review-recheck.md)。
+- 上一轮报告必须是 delegate 产出、已有结论、范围相同（`commits` 下 `from` 也相同），否则报 `previous_report_unreadable`、`previous_report_invalid` 或 `previous_report_scope_mismatch`，退出 127、不启动模型；模型的逐条回答不完整报 `recheck_invalid`、整次审查 `failed`。
+- 可以连着复审：第三轮把第二轮报告交进来即可。轮次计数和是否交给人由调用方判断。
+- 不带该参数时 `recheck` 为 `null`，其余行为不变。
+
 历史验收记录保留其发生时的版本和状态，不追认历史批准。

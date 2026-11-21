@@ -1,6 +1,6 @@
 # 规格：integration-interface（对外接口说明与审查报告合同）
 
-<!-- spec-guard: review approved 57e6cadfc653 -->
+<!-- spec-guard: review approved 5609e34d2b56 -->
 
 简体中文 | [English](../docs/en/SPEC-integration-interface.md)
 
@@ -64,6 +64,7 @@ docs/releases/unreleased.md                → 记一条待发行说明
 - 接口 1.2 起 `run.resume.statuses` 追加 `"timeout"`、新增 `run.timeout`，合同见 [run-timeout](run-timeout.md)。`statuses` 是开放集合：使用方遇到不认识的值必须停下或当失败处理，不能当成完成。
 - 接口 1.4 起 `review.report` 下新增 `fingerprint`，报告 `scope` 下新增可选字段 `fingerprint`（与 git 配置和版本无关、可在别的机器复算的补丁指纹），合同见 [review-fingerprint](review-fingerprint.md)；报告 `schema_version` 仍为 `1`，下文报告合同里其余字段的含义不变。
 - 接口 1.5 起 `review.report` 下新增 `severity`，报告 `findings[]` 每项新增 `severity`（`blocking` 或 `suggestion`，审查模型按判据 `severity-v1` 标注；缺失或不认识按 `blocking`），合同见 [review-severity](review-severity.md)；报告 `schema_version` 仍为 `1`，下文报告合同里其余字段的含义不变。
+- 接口 1.5 起 `review` 下另新增 `recheck`，`/delegate:review` 新增 `--previous-report`，报告新增顶层字段 `recheck`（复审对照上一轮的阻断发现；不带该参数时为 `null`），合同见 [review-recheck](review-recheck.md)。
 
 ## 审查报告合同（`schemaVersion: 1`）
 

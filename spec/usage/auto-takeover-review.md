@@ -1,0 +1,43 @@
+# Usage draft: auto-takeover-review
+
+<!-- 2026-11-21 补写：S101 一次拆出 review-severity、review-recheck 两个模块，按 spec-guard「用法草案」规则应在第一个模块的 Spec 之前审完，当时漏写；
+     ecosystem-lead #21941 指出后补写，随 review-recheck 的 Checkpoint 2 一并交用户审。两个模块的已批准 Spec 不因本草案改动。 -->
+
+来源：生态总账 S101「自动接管」合并方案（plugin-ecosystem 仓 `research/2026-11-21-自动接管合并方案.md`，第 2 节 delegate 行）。调用方是 autopilot 的编排：用 Codex 审查一个 PR 的补丁，按阻断／建议处理意见，阻断返工后复审，两轮仍未解决交给人。
+
+## Entry points
+
+| Entry | Does | Module |
+|---|---|---|
+| `/delegate:review` 报告的 `findings[].severity` | 每条发现标 `blocking` 或 `suggestion`（判据 `severity-v1`，`--task` 改不了） | review-severity |
+| `interface.json` 的 `review.report.severity` | 声明字段、取值、判据名，以及缺失按 `blocking` | review-severity |
+| `/delegate:review --previous-report <上一轮报告>` | 复审：上一轮的阻断逐条标 `resolved`／`unresolved`，进报告 `recheck.items`；`findings` 只放新问题 | review-recheck |
+| `interface.json` 的 `review.recheck` | 声明参数名、报告字段名和两种状态 | review-recheck |
+
+## Typical usage
+
+### U1: 审查报告带严重程度，调用方据此分流
+
+编排对一个 PR 的补丁发起审查：
+
+```text
+/delegate:review --backend codex --base <PR 基准提交> --head <PR 头提交> "<任务与验收标准>"
+```
+
+标准输出是一份 JSON 报告，保存为 `round1.report.json`。只有 `execution_status=completed` 且 `review_outcome` 为 `findings` 或 `no_findings_in_scope` 时才往下看；否则当作「Codex 不可用或没有结论」，停下等人，不改用 Claude 后端自审。有结论时逐条看 `findings[].severity`：`blocking`（以及缺失或不认识的值）进入返工；`suggestion` 由 Claude 决定改不改，写一句理由留档。`unverified` 非空的阻断表示审查者拿不准、按判据从严标的。没有阻断发现也不等于可以合并。
+
+### U2: 返工后带上一轮报告复审
+
+返工提交后，用同样的范围参数（同一个 `--base`，`--head` 换成新的提交）复审，并把上一轮报告交进来：
+
+```text
+/delegate:review --backend codex --base <PR 基准提交> --head <新的头提交> --previous-report round1.report.json "<任务与验收标准>"
+```
+
+报告的 `recheck.items` 对上一轮每条阻断给出 `resolved` 或 `unresolved` 和证据，`findings` 只放这次新发现的问题。本轮阻断集合 = `unresolved` 的旧项 + `findings` 里按 `blocking` 处理的；为空就进入后续流程，不为空再返工。第三轮把第二轮报告交进来即可连着复审。「两轮仍未解决交给人」由编排自己数轮次。要核对复审的是修正后的补丁，比较 `recheck.previous_fingerprint` 与本轮 `scope.fingerprint`。上一轮报告读不到、没有结论或范围对不上时，报 `previous_report_*`、退出 127、模型不启动。
+
+## Milestones
+
+| Milestone | Usage | Modules |
+|---|---|---|
+| M1 | U1, U2 | review-severity, review-recheck |

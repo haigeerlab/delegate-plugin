@@ -1,6 +1,6 @@
 ---
 description: "通过 Codex 或 Claude Code 对明确范围执行只读审查"
-argument-hint: "[--backend codex|claude-code] (--paths <路径>|--base <提交>|--changes <模式>|--context <JSON>) [--dry-run] [任务]"
+argument-hint: "[--backend codex|claude-code] (--paths <路径>|--base <提交>|--changes <模式>|--context <JSON>) [--previous-report <上一轮报告>] [--dry-run] [任务]"
 allowed-tools: Bash
 ---
 
@@ -17,6 +17,8 @@ allowed-tools: Bash
 固定 diff 用 `--base <提交> [--head <提交>]`，head 默认 HEAD；不能与 changes 混用。没指定 paths 的 diff 只选该比较的变更文件，不扩大为全项目；空比较不启动模型。缺范围先报告，不自行添加 `.`、整个项目或未跟踪文件。
 
 高级 `--context <JSON>` 复用严格的范围合同，与所有快捷范围参数互斥。`--dry-run` 只做无模型输入预览：列出解析后的基准、文件摘要、排除/未审范围、未提交改动策略、权限和停止条件；不检查后端认证、不写审查产物，不代表审查通过。
+
+复审用 `--previous-report <上一轮报告 JSON>`：只接受 delegate 自己产出、已有结论、范围相同（`commits` 下 `from` 也相同）的报告，读不到、结构不对或范围对不上都报固定码、退出 127、不启动模型。报告的 `recheck.items` 逐条给出上一轮阻断发现的 `resolved`／`unresolved`，`findings` 只放新问题；轮次计数和是否交给人由调用方判断。
 
 模型用 `--model`，推理/限制参数按后端验证：Codex 支持 effort；Claude 首版拒绝 effort，支持 max-turns（默认 12）/max-budget-usd（客户端估算，非账单硬上限）。参数错误先失败，不重试。无可靠模型或宿主证据时输出 unknown。
 

@@ -9,6 +9,7 @@ import sys
 import delegate_backend as backend
 from delegate_capabilities import BACKENDS, describe
 from review_context import ContextError, STOPS, capture, capture_document, git, names, selected
+import review_recheck
 
 HELP = '''用法：delegate-exec.sh review|run [选项] [--] [任务]
 review：两个后端的只读审查，--backend 默认为 codex。
@@ -18,6 +19,7 @@ review 范围：--paths <仓库相对路径>（可重复），--module <名称>�
              --base <提交> [--head <提交，默认 HEAD>] 或 --changes staged|unstaged|working-tree。
              --exclude / --spec / --plan / --criterion 可重复；--repo <仓库>；
              --include-untracked 仅用于 working-tree；--dry-run 只预览，不调用模型。
+             --previous-report <上一轮报告 JSON> 复审时对照上一轮的阻断发现（两个后端都支持）。
 paths/module 默认读取 HEAD，工作区版本须显式 --changes；context 与快捷范围选项互斥。
 Codex review 直接附带已校验文件内容，序列化输入上限 1 MiB；超限不启动模型。
 能力（下方 --review-context 是旧 CLI 名称；review 使用 --context 或范围快捷参数）：
@@ -27,13 +29,14 @@ Codex review 直接附带已校验文件内容，序列化输入上限 1 MiB；�
 def review_arguments(options):
     bounded = options[:options.index('--')] if '--' in options else options
     for flag in ('--backend', '--model', '--effort', '--max-turns', '--max-budget-usd',
-                 '--context', '--repo', '--base', '--head', '--changes', '--module', '--dry-run', '--include-untracked'):
+                 '--context', '--repo', '--base', '--head', '--changes', '--module', '--dry-run', '--include-untracked',
+                 '--previous-report'):
         if sum(value == flag or value.startswith(flag + '=') for value in bounded) > 1:
             raise backend.ArgumentError('duplicate option: ' + flag)
     parser = backend.Parser(add_help=False, allow_abbrev=False)
     parser.add_argument('--backend', choices=tuple(BACKENDS), default='codex')
     for flag in ('--model', '--effort', '--max-turns', '--max-budget-usd', '--context',
-                 '--repo', '--base', '--head', '--changes', '--module'):
+                 '--repo', '--base', '--head', '--changes', '--module', '--previous-report'):
         parser.add_argument(flag)
     for flag in ('--paths', '--exclude', '--spec', '--plan', '--criterion'):
         parser.add_argument(flag, action='append', default=[])
@@ -42,7 +45,8 @@ def review_arguments(options):
     parser.add_argument('task', nargs='?', default='只读审查指定范围，报告有证据的问题、未审范围及未验证内容。')
     args = parser.parse_args(options)
     if any(getattr(args, name) == '' for name in ('model', 'effort', 'max_turns', 'max_budget_usd',
-                                                 'context', 'repo', 'base', 'head', 'changes', 'module')):
+                                                 'context', 'repo', 'base', 'head', 'changes', 'module',
+                                                 'previous_report')):
         raise backend.ArgumentError('option values must not be empty')
     if args.context and any((args.repo is not None, args.paths, args.exclude, args.spec, args.plan,
                              args.criterion, args.base is not None, args.head is not None,
@@ -111,6 +115,12 @@ def review(options):
     context = None
     try:
         context = capture(args.context) if args.context else capture_document(scope_document(args))
+        if args.previous_report is not None:
+            sha256, previous = review_recheck.load(args.previous_report)
+            findings = review_recheck.blocking_set(previous)
+            review_recheck.check_scope(previous, context)
+            context['previous_findings'] = findings
+            context['recheck_source'] = review_recheck.source(previous, sha256)
         if args.dry_run:
             from review_execution import CODEX_PROMPT_LIMIT, codex_prompt, deadline
             preview = {key: context[key] for key in ('repository', 'working_directory', 'review_type',
@@ -128,6 +138,8 @@ def review(options):
             if args.backend == 'codex':
                 preview['prompt_bytes'] = len(codex_prompt(args.task, context).encode('utf-8'))
                 preview['max_prompt_bytes'] = CODEX_PROMPT_LIMIT
+            if 'previous_findings' in context:
+                preview['previous_findings_count'] = len(context['previous_findings'])
             print(json.dumps(preview, ensure_ascii=False, indent=2))
             return 0
         if not any(selected(name, context['scope']) for name in context['files']):

@@ -11,4 +11,11 @@ Run-timeout progress keeping (interface 1.2) and write mode no longer writing Co
 - A reader treats a missing field (reports from 0.9.0 and earlier) or an unknown value as `blocking`; no blocking findings does not mean the change may be merged.
 - `interface.json` moves to 1.5 with a `severity` description under `review.report`; the report `schema_version` stays `1`, fields are only added.
 
+## Re-review against the previous round (interface 1.5)
+
+- `/delegate:review` gains `--previous-report <previous report>`: each blocking finding of the previous round goes into the new report field `recheck.items`, marked `resolved` or `unresolved` with evidence; this round's `findings` holds only new issues. The contract is in the [review-recheck spec](../SPEC-review-recheck.md).
+- The previous report must come from delegate, have a conclusion and the same scope (in `commits` also the same `from`); otherwise `previous_report_unreadable`, `previous_report_invalid` or `previous_report_scope_mismatch`, exit 127, no model started; an incomplete per-item answer from the model gives `recheck_invalid` and a `failed` review.
+- Rechecks can chain: pass the second round's report into the third. Round counting and hand-off to a person are the caller's decision.
+- Without the option, `recheck` is `null` and nothing else changes.
+
 Historical acceptance records retain their original version/status without retroactive approval.

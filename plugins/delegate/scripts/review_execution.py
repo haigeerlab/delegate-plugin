@@ -16,7 +16,7 @@ import uuid
 import backend
 from claude_review import unique_object
 from review_context import ContextError, task_prompt, write_snapshot
-from review_result import ResultError, base_report, content_result, render, schema_for_context
+from review_result import ResultError, base_report, conclude, content_result, render, schema_for_context
 
 SCRIPTS = Path(__file__).resolve().parent
 LIMIT = 1024 * 1024
@@ -212,11 +212,7 @@ def codex_review(args, context):
                     content, verified = content_result(json.loads(raw, object_pairs_hook=unique_object), context)
                     report = base_report('codex', execution, context, args.model)
                     report.update(content)
-                    if report['execution_status'] == 'completed':
-                        if report['unreviewed'] or not verified:
-                            report['execution_status'] = 'failed'; report['diagnostics'].append('review_incomplete')
-                        else:
-                            report['review_outcome'] = 'findings' if report['findings'] else 'no_findings_in_scope'
+                    conclude(report, verified)
                 except (OSError, ValueError, UnicodeError, ResultError) as error:
                     execution['diagnostics'].append('codex_result_invalid')
                     execution['diagnostics'] += codex_error_codes(events)

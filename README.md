@@ -311,6 +311,8 @@ claude plugin marketplace remove delegate-marketplace
 | Claude 后端报 `system_trust_export_unavailable`（不影响运行） | 导出系统明确信任的证书失败（`security` 命令失败、超时、输出无法解析，或超过 64 张 / 1 MiB），本次没有追加任何证书，审查照常进行，沙箱只用 CLI 自带的公共根证书。只有在随后还出现 `claude_api_tls_untrusted` 时才需要处理：检查 `/usr/bin/security trust-settings-export -d` 能否正常运行 |
 | review 报 `repository_has_no_commits`（127，`--dry-run` 也一样） | 仓库还没有任何提交（没有 HEAD），模型没有启动。`/delegate:review` 要求已有提交，加 `--changes working-tree --include-untracked` 也绕不过；先 `git add` 要审的文件并 `git commit` 一次再审。v0.8.3 及以前同一情况报 `git_probe_failed` |
 | review 报 `fingerprint_inputs_inconsistent`（127） | 审两个提交之间的改动时，git 给出的文件条目和要审的文件对不上，为了不输出半截指纹，这次审查没有启动模型。正常情况下不会出现；先确认两个提交都存在、审查期间没有改动仓库，再重试一次。还是这样，请把命令（不含私有路径）报到 Issues |
+| review 报 `previous_report_unreadable`、`previous_report_invalid` 或 `previous_report_scope_mismatch`（127） | `--previous-report` 给的上一轮报告读不到或不是 JSON、结构不对或上一轮没有结论、或与本轮范围不同（`--paths`／`--exclude`、基准模式、`commits` 下的 `--base` 要和上一轮一致），模型没有启动。换成上一轮 `/delegate:review` 标准输出保存的 JSON 报告，并用同样的范围参数 |
+| 复审报 `recheck_invalid` | 模型没有对上一轮的每条阻断发现恰好给一个结论（缺项、重复、编号不对或状态非法），整次审查 `failed`，不算复审通过；可人工决定重试 |
 | review 报 `git_probe_failed`（127） | delegate 内部的 git 查询失败，模型没有启动。核对 `--base`／`--head` 是否指向存在的提交，以及仓库本身是否完好 |
 | 审查报告为 failed、inconclusive 或部分覆盖 | 查看报告列出的未审范围与原因（权限拒绝、达到轮次或预算上限、输出无效等）；这些都不算审查通过 |
 

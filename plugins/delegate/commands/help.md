@@ -17,6 +17,7 @@ allowed-tools: Bash
 /delegate:review --paths src/payments --module payments --spec spec/payments.md --dry-run
 /delegate:review --changes working-tree --paths src/login --include-untracked
 /delegate:review --context /path/review.json
+/delegate:review --base main --head HEAD --previous-report /path/round1.report.json
 /delegate:run --write 按已确认方案修复空指针并运行相关测试
 /delegate:run --resume 20261024183015.12345 --write 用户答复：选 A
 /delegate:doctor --backend claude-code

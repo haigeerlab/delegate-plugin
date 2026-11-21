@@ -207,6 +207,8 @@ def main(arguments=None, *, review_context=None):
                 report['execution_status'] = 'failed'
                 report['review_outcome'] = 'inconclusive'
                 status = 1
+                from review_result import clear_recheck_items
+                clear_recheck_items(report)
         print('delegate: status=' + report['execution_status'] + ' backend=' + args.backend
               + ' started=' + str(report.get('backend_started', False)).lower()
               + ' reviewed=' + str(len(report['reviewed'])) + '/' + str(len(context['files']))

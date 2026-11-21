@@ -51,6 +51,7 @@ content={'schema_version':1,'reviewed':['src/a.py'],'unreviewed':[],'findings':[
 if mode=='badcoverage':content['reviewed']=['PRIVATE_CREDENTIAL_PATH']
 if mode in ('nullline','line'):content['findings']=[{'title':'t','file':'src/a.py','line':None if mode=='nullline' else 1,
  'trigger':'t','impact':'i','evidence':'e','suggestion':'s','unverified':[],'severity':'blocking'}]
+if mode=='recheck':content['previous']=[{'index':1,'status':'unresolved','evidence':'still there'}]
 if mode=='badseverity':content['findings']=[{'title':'t','file':'src/a.py','line':1,
  'trigger':'t','impact':'i','evidence':'e','suggestion':'s','unverified':[],'severity':'critical'}]
 Path(args[args.index('-o')+1]).write_text(json.dumps(content) if mode!='bad' else 'SECRET_CREDENTIAL')
@@ -87,6 +88,34 @@ class CommonExecutionTests(unittest.TestCase):
         return subprocess.run(['/bin/bash',str(SCRIPTS/'delegate-exec.sh'),'--backend','codex',
             '--review-context',str(self.context),'review fixture'],cwd=self.repo,
             env=dict(self.env,FIXTURE_MODE=mode,DELEGATE_TIMEOUT_SECONDS='1'),capture_output=True,text=True,timeout=timeout)
+
+    def run_recheck(self, mode):
+        head=subprocess.run(['git','-C',str(self.repo),'rev-parse','HEAD'],check=True,capture_output=True,text=True).stdout.strip()
+        previous={'schema_version':1,'execution_status':'completed','review_outcome':'findings',
+            'scope':{'paths':{'include':['src/a.py'],'exclude':[]},'baseline':{'mode':'commits','from':head,'to':head},'fingerprint':None},
+            'findings':[{'title':'OLD','file':'src/a.py','line':1,'trigger':'t','impact':'i','evidence':'e','suggestion':'s',
+                         'unverified':[],'severity':'blocking'}],'recheck':None}
+        path=self.root/'previous.json';path.write_text(json.dumps(previous))
+        return subprocess.run(['/bin/bash',str(SCRIPTS/'delegate-exec.sh'),'review','--context',str(self.context),
+            '--previous-report',str(path),'review fixture'],cwd=self.repo,
+            env=dict(self.env,FIXTURE_MODE=mode,DELEGATE_TIMEOUT_SECONDS='1'),capture_output=True,text=True,timeout=10)
+
+    def test_codex_recheck_reports_items_and_schema_requires_previous(self):
+        result=self.run_recheck('recheck')
+        self.assertEqual(result.returncode,0,result.stderr)
+        report=json.loads(result.stdout)
+        self.assertEqual(report['review_outcome'],'findings')
+        self.assertEqual([(item['index'],item['status']) for item in report['recheck']['items']],[(1,'unresolved')])
+        self.assertEqual(report['recheck']['items'][0]['finding']['title'],'OLD')
+        schema=json.loads((self.root/'schema').read_text())
+        self.assertIn('previous',schema['required'])
+
+    def test_codex_recheck_without_previous_answer_fails(self):
+        result=self.run_recheck('normal')
+        self.assertEqual(result.returncode,1,result.stderr)
+        report=json.loads(result.stdout)
+        self.assertEqual(report['execution_status'],'failed')
+        self.assertEqual(report['recheck']['items'],[])
 
     def test_codex_review_never_uses_a_configured_approver(self):
         result=self.run_review()
@@ -248,6 +277,16 @@ class CommonExecutionTests(unittest.TestCase):
         prompt=codex_prompt('TASK-MARKER',context)
         self.assertIn(SEVERITY_CRITERIA,prompt)
         self.assertLess(prompt.index(SEVERITY_CRITERIA),prompt.index('TASK-MARKER'))
+
+    def test_codex_prompt_carries_recheck_instruction_and_previous_findings(self):
+        from review_context import RECHECK_INSTRUCTION
+        from review_execution import codex_prompt
+        previous=[{'index':1,'title':'OLD-FINDING','file':'doc.md','line':1,'trigger':'t','impact':'i','evidence':'e',
+                   'suggestion':'s','unverified':[],'severity':'blocking'}]
+        context={'files':{'doc.md':b'x\n'},'file_sha256':{'doc.md':'0'*64},'unreviewed':[],'previous_findings':previous}
+        prompt=codex_prompt('TASK-MARKER',context)
+        self.assertLess(prompt.index(RECHECK_INSTRUCTION),prompt.index('TASK-MARKER'))
+        self.assertIn('OLD-FINDING',prompt)
 
     def test_codex_input_limit_counts_line_number_prefixes(self):
         from review_context import ContextError

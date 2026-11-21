@@ -353,6 +353,106 @@ class SeverityTests(unittest.TestCase):
             self.assertIs(item['additionalProperties'], False)
 
 
+class RecheckReportTests(unittest.TestCase):
+    stream = ResultTests.stream
+    report = ResultTests.report
+    finding = SeverityTests.finding
+    SOURCE = {'previous_report_sha256': 'e' * 64, 'previous_fingerprint': {'algorithm': 'blob-pairs-v1'}}
+
+    def setUp(self):
+        ResultTests.setUp(self)
+        self.previous = [dict(self.finding(title='old-%d' % number), index=number) for number in (1, 2)]
+        self.context.update(previous_findings=self.previous, recheck_source=self.SOURCE)
+
+    def answer(self, *entries):
+        self.content['previous'] = [{'index': index, 'status': status, 'evidence': 'why'} for index, status in entries]
+
+    def test_items_carry_status_evidence_and_original_finding(self):
+        self.answer((1, 'resolved'), (2, 'unresolved'))
+        result = self.report()
+        self.assertEqual(result['execution_status'], 'completed')
+        self.assertEqual(result['review_outcome'], 'findings')
+        recheck = result['recheck']
+        self.assertEqual({key: recheck[key] for key in self.SOURCE}, self.SOURCE)
+        self.assertEqual([(item['index'], item['status'], item['evidence']) for item in recheck['items']],
+                         [(1, 'resolved', 'why'), (2, 'unresolved', 'why')])
+        self.assertEqual(recheck['items'][1]['finding'], {key: value for key, value in self.previous[1].items() if key != 'index'})
+
+    def test_outcome_counts_unresolved_items_and_new_findings(self):
+        self.answer((1, 'resolved'), (2, 'resolved'))
+        self.assertEqual(self.report()['review_outcome'], 'no_findings_in_scope')
+        self.content['findings'] = [self.finding(severity='suggestion')]
+        self.assertEqual(self.report()['review_outcome'], 'findings')
+
+    def test_invalid_previous_answers_fail_with_recheck_invalid(self):
+        cases = [[(1, 'resolved')], [(1, 'resolved'), (1, 'unresolved'), (2, 'resolved')],
+                 [(1, 'resolved'), (2, 'resolved'), (9, 'resolved')], [(1, 'resolved'), (2, 'open')]]
+        for entries in cases:
+            self.answer(*entries)
+            result = self.report()
+            self.assertEqual(result['execution_status'], 'failed', entries)
+            self.assertIn('recheck_invalid', result['diagnostics'])
+            self.assertEqual(result['recheck']['items'], [])
+            self.assertEqual(result['recheck']['previous_report_sha256'], 'e' * 64)
+        self.answer((1, 'resolved'), (2, 'resolved'))
+        self.content['previous'][0]['evidence'] = ''
+        self.assertIn('recheck_invalid', self.report()['diagnostics'])
+        self.content['previous'][0].update(evidence='why', extra='x')
+        self.assertIn('recheck_invalid', self.report()['diagnostics'])
+        del self.content['previous']
+        self.assertEqual(self.report()['execution_status'], 'failed')
+
+    def test_failed_review_never_keeps_recheck_items(self):
+        self.answer((1, 'resolved'), (2, 'unresolved'))
+        self.terminal['permission_denials'] = [{'tool_name': 'Read', 'tool_input': {}}]
+        denied = self.report()
+        self.assertEqual(denied['execution_status'], 'failed')
+        self.assertEqual(denied['recheck']['items'], [])
+        self.terminal['permission_denials'] = []
+        self.content['reviewed'] = []
+        incomplete = self.report()
+        self.assertEqual(incomplete['execution_status'], 'failed')
+        self.assertIn('review_incomplete', incomplete['diagnostics'])
+        self.assertEqual(incomplete['recheck']['items'], [])
+        self.assertEqual(incomplete['recheck']['previous_report_sha256'], 'e' * 64)
+        self.content['reviewed'] = ['src/a.py']
+        report = review_result.base_report('codex', {'execution_status': 'timed_out'}, self.context, None)
+        content, verified = review_result.content_result(self.content, self.context)
+        report.update(content)
+        review_result.conclude(report, verified)
+        self.assertEqual(report['recheck']['items'], [])
+
+    def test_schema_requires_previous_only_with_a_set(self):
+        schema = review_result.schema_for_context(self.context)
+        self.assertIn('previous', schema['required'])
+        item = schema['properties']['previous']['items']
+        self.assertEqual(item['properties']['index'], {'type': 'integer', 'enum': [1, 2]})
+        self.assertEqual(item['properties']['status'], {'type': 'string', 'enum': ['resolved', 'unresolved']})
+        self.assertIs(item['additionalProperties'], False)
+        empty = dict(self.context, previous_findings=[])
+        absent = {key: value for key, value in self.context.items() if key not in ('previous_findings', 'recheck_source')}
+        for context in (empty, absent):
+            self.assertEqual(review_result.schema_for_context(context), review_result.schema_for_context(absent))
+            self.assertNotIn('previous', review_result.schema_for_context(context)['properties'])
+
+    def test_without_option_recheck_is_null_and_empty_set_has_no_items(self):
+        ResultTests.setUp(self)
+        self.assertIsNone(self.report()['recheck'])
+        self.context.update(previous_findings=[], recheck_source=self.SOURCE)
+        result = self.report()
+        self.assertEqual(result['recheck'], dict(self.SOURCE, items=[]))
+        self.assertEqual(result['review_outcome'], 'no_findings_in_scope')
+
+    def test_failure_before_context_reports_null_recheck(self):
+        import io, contextlib, delegate_backend
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            delegate_backend.context_failure('codex', None, 'scope_invalid')
+        report = json.loads(output.getvalue())
+        self.assertIn('recheck', report)
+        self.assertIsNone(report['recheck'])
+
+
 class FingerprintReportTests(unittest.TestCase):
     """scope.fingerprint is passed through unchanged, null when absent (S98)."""
     EMPTY = {'files': {}, 'unreviewed': [], 'scope': {}, 'baseline': {}, 'diff_sha256': 'd' * 64, 'file_sha256': {}}

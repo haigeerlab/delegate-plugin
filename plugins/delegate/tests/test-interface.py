@@ -15,7 +15,7 @@ import review_result
 EXECUTION_STATUS = {'completed', 'conditions_missing', 'failed', 'timed_out', 'cancelled'}
 REVIEW_OUTCOME = {'findings', 'no_findings_in_scope', 'inconclusive'}
 STABLE_FIELDS = {'schema_version', 'execution_status', 'review_outcome', 'backend', 'scope',
-                 'reviewed', 'unreviewed', 'findings', 'limitations'}
+                 'reviewed', 'unreviewed', 'findings', 'limitations', 'recheck'}
 SCOPE_FIELDS = {'paths', 'baseline', 'diff_sha256', 'fingerprint', 'files'}
 FINDING_FIELDS = {'title', 'file', 'line', 'trigger', 'impact', 'evidence', 'suggestion', 'unverified', 'severity'}
 
@@ -131,7 +131,7 @@ class InterfaceTests(unittest.TestCase):
 
     def test_interface_1_5_is_complete(self):
         # spec/run-rules.md, "1.3 完整形状", plus spec/review-fingerprint.md "接口 1.4"
-        # and spec/review-severity.md "接口 1.5"; nothing removed.
+        # and spec/review-severity.md / spec/review-recheck.md "接口 1.5"; nothing removed.
         expected = {
             'interface': '1.5',
             'review': {'command': '/delegate:review', 'backends': ['codex', 'claude-code'], 'readOnly': True,
@@ -139,7 +139,8 @@ class InterfaceTests(unittest.TestCase):
                                   'fingerprint': {'field': 'scope.fingerprint', 'algorithm': 'blob-pairs-v1',
                                                   'baselineModes': ['commits']},
                                   'severity': {'field': 'findings[].severity', 'values': ['blocking', 'suggestion'],
-                                               'criteria': 'severity-v1', 'missing': 'blocking'}}},
+                                               'criteria': 'severity-v1', 'missing': 'blocking'}},
+                       'recheck': {'option': '--previous-report', 'field': 'recheck', 'statuses': ['resolved', 'unresolved']}},
             'run': {
                 'command': '/delegate:run', 'backends': ['codex'], 'write': 'explicit',
                 'resume': {'optIn': '--resumable', 'option': '--resume', 'backends': ['codex'],
@@ -169,6 +170,7 @@ class InterfaceTests(unittest.TestCase):
         import review_fingerprint
         self.assertEqual(self.interface['review']['report']['fingerprint']['algorithm'], review_fingerprint.ALGORITHM)
         self.assertEqual(self.interface['review']['report']['severity']['values'], review_result.SEVERITY_VALUES)
+        self.assertEqual(self.interface['review']['recheck']['statuses'], review_result.RECHECK_STATUSES)
 
     def test_report_schema_version(self):
         self.assertEqual(self.interface['review']['report']['schemaVersion'], self.report['schema_version'])
