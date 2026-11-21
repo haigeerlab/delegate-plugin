@@ -11,7 +11,7 @@
 - [x] Checkpoint 1（report）：免费验证全绿
 - [x] Task 6：文档同步
 - [x] Checkpoint 2（gate）：复审与本地提交
-- [ ] Checkpoint 3（gate）：交付验收
+- [x] Checkpoint 3（gate）：交付验收
 
 ## 记录
 
@@ -36,3 +36,5 @@
 **用法草案（2026-11-21）：** ecosystem-lead #21941 指出 S101 拆出两个模块却没有用法草案（spec-guard「用法草案」规则要求在第一个模块 Spec 之前审完）。补写 `spec/usage/auto-takeover-review.md`：入口 4 个、U1／U2、里程碑 M1 = review-severity, review-recheck；拆分核对无遗漏、无多余；对外接口与两份已批准 Spec 一致，Spec 未改。`verify-artifacts` 报用法草案结构正确。
 
 **Checkpoint 2（gate，2026-11-21）：** 用户复审 review-recheck 改动、自查修复、integration-interface 指向句与补写的用法草案，原话「通过，本地提交」。已重新记录 `spec/integration-interface.md` 批准标记。本地提交一次，未推送；按拟稿回复 ecosystem-lead。下一步停在 Checkpoint 3（gate）交付验收。
+
+**Checkpoint 3（gate，2026-11-21）：** 用户交付验收原话「验收通过」。RC-01～RC-09 通过；Spec 批准后未改。未验证：两个后端真实运行能否接受新输出结构（`enum`、`previous`）、模型判断准确度、访客路径、`delegate_backend.py` 保存产物失败分支。本模块提交 `fbef3e0` 加本次勾选提交，均未推送；推送、PR、v0.10.0 发版、M1 停点实跑（付费）与通知 autopr-design 另行授权。
