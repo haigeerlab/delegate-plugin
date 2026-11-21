@@ -12,7 +12,7 @@ Claude 后端使用本机已有的 srt，默认从 PATH 解析，也可用 `DELE
 
 主会话负责需求澄清、方案判断与最终验收。Codex 后端只接受 ChatGPT 登录，目的是减少主会话携带的过程上下文；实际使用哪个账号的额度取决于 Codex 登录账号，不保证节省总费用或总 token。
 
-仓库：[haigeerlab/delegate-plugin](https://github.com/haigeerlab/delegate-plugin) · 当前发行：[v0.9.0](https://github.com/haigeerlab/delegate-plugin/releases/tag/v0.9.0) · [文档索引](docs/README.md)
+仓库：[haigeerlab/delegate-plugin](https://github.com/haigeerlab/delegate-plugin) · 当前发行：[v0.10.0](https://github.com/haigeerlab/delegate-plugin/releases/tag/v0.10.0) · [文档索引](docs/README.md)
 
 ## 目录
 
@@ -221,6 +221,15 @@ Claude 需明确范围，可用 review 的快捷参数或高级 context JSON，�
 
 共同报告区分执行状态和审查结论，列出已审/未审及可定位证据。空/坏结果、拒权、达限、部分覆盖均不当作无问题。最终报告与安全诊断日志分别保存到私有 `${TMPDIR:-/tmp}/delegate-review/`，保留最多 50 组；常规返回不包含原始过程。两方向普通真实审查已有成功记录，菜单到公共脚本的实际执行及 dry-run 已验收；主动模型写入/递归、认证刷新、自然异常 helper 和长期稳定性仍未验证。新增真实模型验收须单独授权。
 
+### 自动接管：分流与复审（v0.10.0）
+
+给按审查意见自动返工的调用方（如 autopilot）用，用法与里程碑见[用法草案](spec/usage/auto-takeover-review.md)。
+
+1. **第一轮审查并分流。** `/delegate:review --backend codex --base <PR 基准> --head <PR 头> "<任务与验收标准>"`，把标准输出的 JSON 报告存为 `round1.report.json`。只有 `execution_status=completed` 且有结论时才往下看，否则停下等人，不改用 Claude 自审。每条发现的 `severity` 为 `blocking`（以及缺失或不认识的值）就返工；`suggestion` 由调用方决定改不改并留档。判据见 [review-severity](spec/review-severity.md)。
+2. **返工后复审。** 同一个 `--base`、新的 `--head`，加 `--previous-report round1.report.json`。上一轮的阻断逐条进 `recheck.items` 标 `resolved` 或 `unresolved`，`findings` 只放新问题；本轮阻断集合为空才算审查没有阻断意见。第三轮把第二轮报告交进来即可，轮次计数和交给人由调用方判断。合同见 [review-recheck](spec/review-recheck.md)。
+
+没有阻断意见也不等于可以合并；要核对复审的是修正后的补丁，比较 `recheck.previous_fingerprint` 与本轮 `scope.fingerprint`。
+
 ## 输出与验收
 
 成功时返回 Codex 最终答复、模型/推理档提示、日志路径与字节数。写模式额外返回：
@@ -270,7 +279,7 @@ claude plugin install delegate@delegate-marketplace
 claude --plugin-dir /path/to/delegate-plugin/plugins/delegate
 ```
 
-已注册同名 marketplace 时，应先检查现有来源；本地加载与远程安装是替代方式，不需要同时安装两份。发行源码由 `v0.9.0` 标签固定，`main` 会继续变化。
+已注册同名 marketplace 时，应先检查现有来源；本地加载与远程安装是替代方式，不需要同时安装两份。发行源码由 `v0.10.0` 标签固定，`main` 会继续变化。
 
 ### 卸载
 
@@ -330,7 +339,7 @@ doctor 会刷新临时缓存，不修改业务文件。它只做部分中文全�
 
 v0.5.0 不注册UserPromptSubmit，不按每轮输入自动提醒或探测。SessionStart静默刷新基础条件，doctor按需报告；缓存有效期 8 小时，绑定 CLI 路径、Codex home、插件根目录与版本；未来时间、旧格式、身份变化和坏文件都会失效。缓存不保证当前认证有效，真正执行前总会重新检查登录。
 
-阅读顺序和两种语言的对应页见[文档索引](docs/README.md)。设计见 [DESIGN.md](DESIGN.md)，模块职责见[能力图](spec/CAPABILITY-MAP.md)，精确合同见[通道](spec/channel.md)、[探测](spec/detection.md)和[路由](spec/routing.md)规格。发行变化见 [v0.9.0](docs/releases/v0.9.0.md)、[v0.8.6](docs/releases/v0.8.6.md)、[v0.8.5](docs/releases/v0.8.5.md)、[v0.8.4](docs/releases/v0.8.4.md)、[v0.8.3](docs/releases/v0.8.3.md)、[v0.8.2](docs/releases/v0.8.2.md)、[v0.8.1](docs/releases/v0.8.1.md)、[v0.8.0](docs/releases/v0.8.0.md)、[v0.7.1](docs/releases/v0.7.1.md)、[v0.7.0](docs/releases/v0.7.0.md)、[v0.6.0](docs/releases/v0.6.0.md)、[v0.5.3](docs/releases/v0.5.3.md)、[v0.5.2](docs/releases/v0.5.2.md)、[v0.5.1](docs/releases/v0.5.1.md) 与 [v0.5.0](docs/releases/v0.5.0.md)，后续修改见[未发布记录](docs/releases/unreleased.md)。
+阅读顺序和两种语言的对应页见[文档索引](docs/README.md)。设计见 [DESIGN.md](DESIGN.md)，模块职责见[能力图](spec/CAPABILITY-MAP.md)，精确合同见[通道](spec/channel.md)、[探测](spec/detection.md)和[路由](spec/routing.md)规格。发行变化见 [v0.10.0](docs/releases/v0.10.0.md)、[v0.9.0](docs/releases/v0.9.0.md)、[v0.8.6](docs/releases/v0.8.6.md)、[v0.8.5](docs/releases/v0.8.5.md)、[v0.8.4](docs/releases/v0.8.4.md)、[v0.8.3](docs/releases/v0.8.3.md)、[v0.8.2](docs/releases/v0.8.2.md)、[v0.8.1](docs/releases/v0.8.1.md)、[v0.8.0](docs/releases/v0.8.0.md)、[v0.7.1](docs/releases/v0.7.1.md)、[v0.7.0](docs/releases/v0.7.0.md)、[v0.6.0](docs/releases/v0.6.0.md)、[v0.5.3](docs/releases/v0.5.3.md)、[v0.5.2](docs/releases/v0.5.2.md)、[v0.5.1](docs/releases/v0.5.1.md) 与 [v0.5.0](docs/releases/v0.5.0.md)，后续修改见[未发布记录](docs/releases/unreleased.md)。
 
 ## 开发、贡献与反馈
 
@@ -342,7 +351,7 @@ v0.5.0 不注册UserPromptSubmit，不按每轮输入自动提醒或探测。Ses
 /bin/bash scripts/validate.sh
 ```
 
-总入口包含语法、清单必填字段、判决器自检、3 个 shell 产品套、27 个循环注册的 Python 回归套（其中 `reap-fake-endpoint` 在本机没有 codex 时跳过），以及源码发现回归和隔离策略 policy-only 套。v0.9.0 发布验证为 354 项 Python、53 项 shell 和 19 项 eval；实际 OS、宿主与真实模型证据另列，不计作离线通过。免费总验证不发起模型请求；doctor 规则测试已自行配置 CLI 桩、合成登录状态和临时日志，不再依赖外层 Codex 的安装或登录。[F8 实际修复验证](docs/verification/2026-10-08-f8-applied.md)包含无外层 CLI 和外层拒绝登录的结果。
+总入口包含语法、清单必填字段、判决器自检、3 个 shell 产品套、28 个循环注册的 Python 回归套（其中 `reap-fake-endpoint` 在本机没有 codex 时跳过），以及源码发现回归和隔离策略 policy-only 套。v0.10.0 发布验证为 388 项 Python、53 项 shell 和 19 项 eval；实际 OS、宿主与真实模型证据另列，不计作离线通过。免费总验证不发起模型请求；doctor 规则测试已自行配置 CLI 桩、合成登录状态和临时日志，不再依赖外层 Codex 的安装或登录。[F8 实际修复验证](docs/verification/2026-10-08-f8-applied.md)包含无外层 CLI 和外层拒绝登录的结果。
 
 开发约定、单独测试入口、付费 live 验证和双语维护规则见 [贡献指南](CONTRIBUTING.md)。问题和建议统一通过 [GitHub Issues](https://github.com/haigeerlab/delegate-plugin/issues) 反馈，Bug 提交步骤见下节。
 
