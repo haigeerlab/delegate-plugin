@@ -1,9 +1,9 @@
 #!/bin/bash
 # repro.sh <name> <TERM|INT|HUP> <probe|product> <sleep_seconds> [signal_at]
-R=/Users/vilin/delegate-s38-rootcause-20261027141314; O=$R/out/$1; mkdir -p $O
+R=$HOME/delegate-s38-rootcause-20261027141314; O=$R/out/$1; mkdir -p $O
 SIG=$2; SL=$4; AT=${5:-15}; PORT=$((18800 + RANDOM % 100))
 # probe = patched copy of run_codex.py: faulthandler on SIGUSR1 + timestamped marks (see the record)
-case $3 in probe) RUNNER=$R/run_codex_probe.py ;; *) RUNNER=/Users/vilin/Documents/haigeerlab/delegate-plugin/.claude/worktrees/cool-einstein-2c2232/plugins/delegate/scripts/run_codex.py ;; esac
+case $3 in probe) RUNNER=$R/run_codex_probe.py ;; *) RUNNER=<repo>/.claude/worktrees/cool-einstein-2c2232/plugins/delegate/scripts/run_codex.py ;; esac
 FAKE_TOOL=exec_command FAKE_ARGS_TMPL='{"cmd":"__CMD__","yield_time_ms":30000}' python3 $R/fakeresp.py $PORT $O "${KIND:-call}:sleep $SL && echo slept" & SRV=$!
 sleep 1
 tree() { ps -axo pid,ppid,pgid,stat,command | awk -v r="$1" 'BEGIN{} {pid[$1]=$0; par[$1]=$2} END{ for (p in pid) { q=p; while (q!="" && q!=1 && q!=0) { if (q==r) { print substr(pid[p],1,150); break } q=par[q] } } }' | sort -n; }

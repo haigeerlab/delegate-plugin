@@ -24,7 +24,7 @@ class DiscoveryTests(unittest.TestCase):
         # or recursive invocation of this test is allowed in the fixture.
         for name in ('evals/_preflight.sh', 'evals/propose-not-auto.sh', 'evals/routing-fitness.sh',
                 'plugins/delegate/tests/test-channel.sh', 'plugins/delegate/tests/test-detection.sh',
-                'plugins/delegate/tests/test-routing.sh'):
+                'plugins/delegate/tests/test-routing.sh', 'scripts/check-local-paths.sh'):
             target = root / name
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text('#!/bin/bash\nexit 0\n')
@@ -40,6 +40,7 @@ class DiscoveryTests(unittest.TestCase):
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text('# prevent recursive fixture validation\n')
         (root / 'scripts/tests/test-release-prepare.py').write_text('# fixture suite\n')
+        (root / 'scripts/tests/test-local-paths.py').write_text('# fixture suite\n')
         return root
 
     def validate(self, root):

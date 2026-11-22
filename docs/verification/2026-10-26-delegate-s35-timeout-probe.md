@@ -107,7 +107,7 @@ codex exec resume <同上 -c 三项> -c sandbox_mode="read-only" -o <answer> -- 
 `~/.codex/config.toml` 在补测后 sha256 变为 `7af49cdc…bed2`。修改时间 `19:54:10`，正是 V1 写模式运行启动时；内容是 Codex 自己追加的：
 
 ```toml
-[projects."/Users/vilin/delegate-s35-probe2-20261026195358"]
+[projects."/Users/<用户名>/delegate-s35-probe2-20261026195358"]
 trust_level = "trusted"
 ```
 
