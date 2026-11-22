@@ -1,0 +1,6 @@
+{
+  "version": 1,
+  "takeover": {
+    "release": "auto-confirm"
+  }
+}
