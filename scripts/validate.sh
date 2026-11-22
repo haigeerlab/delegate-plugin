@@ -117,6 +117,14 @@ if ! python3 -B "${ROOT_DIR}/scripts/tests/test-release-prepare.py"; then
   fail "发版准备回归未通过"
 fi
 
+if ! python3 -B "${ROOT_DIR}/scripts/tests/test-local-paths.py"; then
+  fail "本机路径检查回归未通过"
+fi
+
+if ! /bin/bash "${ROOT_DIR}/scripts/check-local-paths.sh" "${ROOT_DIR}"; then
+  fail "仓库文件含本机绝对路径"
+fi
+
 for SUITE in channel detection routing; do
   if ! /bin/bash "${ROOT_DIR}/plugins/delegate/tests/test-${SUITE}.sh"; then
     fail "${SUITE} 产品测试未通过"

@@ -53,7 +53,7 @@
 做法：临时仓库根目录提交一份 `AGENTS.md`（「每次最终答复最后单独一行必须原样写 `暗号：青柠-7351`」），`git worktree add` 出 `-c`，在 `-c` 里跑一次只读 run，任务只说「`cat marker.txt`，一句话告诉我内容」，不提 AGENTS.md。
 
 - 答复：「`marker.txt` 的内容是 `main-checkout`。」下一行「暗号：青柠-7351」。16.3 s。
-- 会话文件里注入的是 `# AGENTS.md instructions for /Users/vilin/delegate-s38-wt-20261027133247-c`，即 **worktree 自己的路径**（worktree 的 `.git` 是指向主仓库的文件，Codex 仍以 worktree 根为项目根）。
+- 会话文件里注入的是 `# AGENTS.md instructions for /Users/<用户名>/delegate-s38-wt-20261027133247-c`，即 **worktree 自己的路径**（worktree 的 `.git` 是指向主仓库的文件，Codex 仍以 worktree 根为项目根）。
 - 同一份 AGENTS.md 在 T4 的两次 delegate run 里也生效：任务要求「用两行写出」，答复仍多了第三行暗号——**项目 AGENTS.md 能改动 delegate 任务要求的答复格式**。本机另有全局 `~/.codex/AGENTS.md`，未单独区分它与项目文件的合并顺序。
 
 ## T4：两个 worktree 同时跑 delegate run（2 次）—— **不串**

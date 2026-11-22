@@ -10,7 +10,7 @@ usage: probe.py <name> <outdir> <mode> <stop_after> <prompt_file> [session_id]
 """
 import json, os, signal, subprocess, sys, time
 
-RUN_CODEX = '/Users/vilin/Documents/haigeerlab/delegate-plugin/.claude/worktrees/serene-spence-a9b059/plugins/delegate/scripts/run_codex.py'
+RUN_CODEX = '<repo>/.claude/worktrees/serene-spence-a9b059/plugins/delegate/scripts/run_codex.py'
 
 name, outdir, mode, stop_after, prompt_file = sys.argv[1:6]
 session = sys.argv[6] if len(sys.argv) > 6 else None
