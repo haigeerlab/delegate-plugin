@@ -1,0 +1,2 @@
+# autopilot-hub 风险配置（T4）：套用 hub 的 plugin 模板。改这个文件算 T4，由人审后合并。
+extends: plugin

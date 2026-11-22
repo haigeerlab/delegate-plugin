@@ -1,0 +1,15 @@
+# autopilot-hub 接口层契约 v1（T4）：登记 plugin 模板调用的仓库入口。改这个文件算 T4，由人审后合并。
+version: 1
+entries:
+  impact:
+    run: |
+      tag=$(git describe --tags --abbrev=0) &&
+      echo "上一个标签：$tag" &&
+      git log --oneline "$tag"..HEAD &&
+      old=$(git show "$tag":plugins/delegate/interface.json | python3 -B -c 'import json,sys; print(json.load(sys.stdin)["interface"])') &&
+      new=$(python3 -B -c 'import json; print(json.load(open("plugins/delegate/interface.json"))["interface"])') &&
+      echo "接口版本：$old -> $new"
+  check:
+    run: "PYTHONDONTWRITEBYTECODE=1 /bin/bash scripts/validate.sh"
+  release_prepare:
+    run: 'scripts/release-prepare.sh "$AUTOPILOT_VERSION"'
