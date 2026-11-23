@@ -1,6 +1,6 @@
 ---
 description: "通过 Codex 或 Claude Code 对明确范围执行只读审查"
-argument-hint: "[--backend codex|claude-code] (--paths <路径>|--base <提交>|--changes <模式>|--context <JSON>) [--previous-report <上一轮报告>] [--dry-run] [任务]"
+argument-hint: "[--backend codex|claude-code] (--paths <路径>|--base <提交>|--changes <模式>|--context <JSON>) [--previous-report <上一轮报告>] [--profile design] [--dry-run] [任务]"
 allowed-tools: Bash
 ---
 

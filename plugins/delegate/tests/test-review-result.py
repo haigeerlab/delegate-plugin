@@ -481,5 +481,75 @@ class FingerprintReportTests(unittest.TestCase):
         self.assertIsNone(report['scope']['diff_sha256'])
 
 
+class DesignProfileTests(unittest.TestCase):
+    """spec/design-review-criteria.md DR-02..DR-05."""
+    stream = ResultTests.stream
+    report = ResultTests.report
+    finding = SeverityTests.finding
+
+    def setUp(self):
+        ResultTests.setUp(self)
+        # design.md is under review; code.py is a reference file passed with --spec.
+        self.context.update(files={'design.md': b'plan line\n', 'code.py': b'one\ntwo\nthree\n'},
+                            scope={'include': ['design.md'], 'exclude': []},
+                            file_sha256={'design.md': 'd' * 64, 'code.py': 'c' * 64},
+                            context_files=['code.py'], profile='design')
+        self.content['reviewed'] = ['design.md', 'code.py']
+
+    def findings(self):
+        return self.report()['findings']
+
+    def test_blocking_on_a_reference_line_stays_blocking(self):
+        self.content['findings'] = [self.finding(file='code.py', line=2)]
+        item = self.findings()[0]
+        self.assertEqual(item['severity'], 'blocking')
+        self.assertNotIn('downgraded', item)
+
+    def test_blocking_without_code_evidence_is_downgraded_unchanged(self):
+        cases = [dict(file='design.md', line=1), dict(file='code.py', line=99), dict(file='code.py', line=None)]
+        for values in cases:
+            with self.subTest(values=values):
+                original = self.finding(**values)
+                self.content['findings'] = [original]
+                result = self.report()
+                item = result['findings'][0]
+                self.assertEqual(item['severity'], 'suggestion')
+                self.assertEqual(item['downgraded'], 'no_code_evidence')
+                for key in ('title', 'file', 'trigger', 'impact', 'evidence', 'suggestion'):
+                    self.assertEqual(item[key], original[key])
+                self.assertEqual(result['execution_status'], 'completed', 'unlocated design findings must not fail the review')
+
+    def test_suggestions_are_left_alone(self):
+        self.content['findings'] = [self.finding(file='design.md', line=1, severity='suggestion')]
+        self.assertNotIn('downgraded', self.findings()[0])
+
+    def test_default_profile_still_fails_on_unlocated_findings(self):
+        del self.context['profile']
+        self.content['findings'] = [self.finding(file='code.py', line=99)]
+        result = self.report()
+        self.assertEqual(result['execution_status'], 'failed')
+        self.assertIn('review_incomplete', result['diagnostics'])
+        self.assertNotIn('downgraded', result['findings'][0])
+
+    def test_second_round_findings_are_suggestions(self):
+        previous = [dict(self.finding(title='old', file='code.py', line=1), index=1)]
+        self.context.update(previous_findings=previous,
+                            recheck_source={'previous_report_sha256': 'e' * 64, 'previous_fingerprint': None})
+        self.content['previous'] = [{'index': 1, 'status': 'unresolved', 'evidence': 'still'}]
+        self.content['findings'] = [self.finding(file='code.py', line=2), self.finding(file='design.md', line=1)]
+        result = self.report()
+        self.assertEqual([(item['severity'], item['downgraded']) for item in result['findings']],
+                         [('suggestion', 'second_round'), ('suggestion', 'second_round')])
+        self.assertEqual([item['status'] for item in result['recheck']['items']], ['unresolved'])
+
+    def test_report_carries_criteria(self):
+        self.assertEqual(self.report()['criteria'], 'design-v1')
+        del self.context['profile']
+        self.assertEqual(self.report()['criteria'], 'severity-v1')
+        placeholder = review_result.base_report('codex', {'execution_status': 'conditions_missing', 'backend_started': False,
+                                                          'cleanup': 'confirmed', 'diagnostics': []}, self.context, None)
+        self.assertEqual(placeholder['criteria'], 'severity-v1')
+
+
 if __name__ == '__main__':
     unittest.main()

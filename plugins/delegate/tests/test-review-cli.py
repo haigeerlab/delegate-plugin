@@ -241,6 +241,18 @@ class PreviousReportCLITests(unittest.TestCase):
         self.assertEqual(value['previous_findings_count'], 1)
         self.assertNotIn('previous_findings', value)
 
+    def test_profile_option_preview_and_errors(self):
+        self.prepare_review()
+        design = self.preview('--paths', 'src/a.py', '--profile', 'design')
+        self.assertEqual((design['profile'], design['criteria']), ('design', 'design-v1'))
+        plain = self.preview('--paths', 'src/a.py')
+        self.assertEqual((plain['profile'], plain['criteria']), ('default', 'severity-v1'))
+        for options in [('--profile', 'other'), ('--profile', 'design', '--profile', 'design'), ('--profile', '')]:
+            with self.subTest(options=options):
+                result = self.run_entry('review', '--paths', 'src/a.py', *options, '--dry-run')
+                self.assertEqual(result.returncode, 64, result.stderr)
+                self.assertEqual(self.recorded(), [])
+
     def test_preview_without_option_has_no_count(self):
         self.prepare_review()
         self.assertNotIn('previous_findings_count', self.preview('--base', self.old))
@@ -367,6 +379,57 @@ class SnapshotRecheckCLITests(unittest.TestCase):
                     self.assertFalse((self.root / 'prompt').exists())
                     self.assertNotIn('PRIVATE_', result.stdout + result.stderr)
                     self.assertNotIn('fatal', result.stdout + result.stderr)
+
+
+class DesignProfileCLITests(unittest.TestCase):
+    """spec/design-review-criteria.md DR-06/DR-09 through the public entry with a fake Codex."""
+    setUp = execution.CommonExecutionTests.setUp
+    git = SnapshotRecheckCLITests.git
+    review = SnapshotRecheckCLITests.review
+
+    def prepare(self):
+        (self.repo / 'design.md').write_text('step one\nstep two\n')
+        (self.repo / 'src/a.py').write_text('def f():\n    return 1\n')
+        self.git('add', '.')
+        self.git('commit', '-qm', 'design')
+
+    def fake_findings(self, findings):
+        # The fake Codex writes FIXTURE_CONTENT verbatim when set.
+        path = self.root / 'content.json'
+        path.write_text(json.dumps({'schema_version': 1, 'reviewed': ['design.md', 'src/a.py'], 'unreviewed': [],
+                                    'findings': findings}))
+        self.env['FIXTURE_CONTENT'] = str(path)
+
+    def finding(self, file, line):
+        return {'title': 'T-' + file, 'file': file, 'line': line, 'trigger': 't', 'impact': 'i', 'evidence': 'e',
+                'suggestion': 's', 'unverified': [], 'severity': 'blocking'}
+
+    def test_design_review_keeps_code_evidence_and_downgrades_the_rest(self):
+        self.prepare()
+        self.fake_findings([self.finding('src/a.py', 2), self.finding('design.md', 1)])
+        result = self.review('--profile', 'design', '--paths', 'design.md', '--spec', 'src/a.py')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        report = json.loads(result.stdout)
+        self.assertEqual(report['criteria'], 'design-v1')
+        self.assertEqual(report['execution_status'], 'completed')
+        self.assertEqual([(item['file'], item['severity'], item.get('downgraded')) for item in report['findings']],
+                         [('src/a.py', 'blocking', None), ('design.md', 'suggestion', 'no_code_evidence')])
+
+    def test_recheck_with_a_different_criteria_never_starts_the_executor(self):
+        self.prepare()
+        self.fake_findings([])
+        first = self.review('--paths', 'design.md', '--spec', 'src/a.py')
+        self.assertEqual(first.returncode, 0, first.stderr)
+        path = self.root / 'PRIVATE_DEFAULT_ROUND.json'
+        path.write_text(first.stdout)
+        result = self.review('--profile', 'design', '--paths', 'design.md', '--spec', 'src/a.py',
+                             '--previous-report', str(path))
+        self.assertEqual(result.returncode, 127, result.stderr)
+        report = json.loads(result.stdout)
+        self.assertIn('previous_report_scope_mismatch', report['diagnostics'])
+        self.assertFalse(report['backend_started'])
+        self.assertFalse((self.root / 'prompt').exists())
+        self.assertEqual(report['criteria'], 'design-v1')
 
 
 if __name__ == '__main__':

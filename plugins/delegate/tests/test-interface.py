@@ -15,7 +15,7 @@ import review_result
 EXECUTION_STATUS = {'completed', 'conditions_missing', 'failed', 'timed_out', 'cancelled'}
 REVIEW_OUTCOME = {'findings', 'no_findings_in_scope', 'inconclusive'}
 STABLE_FIELDS = {'schema_version', 'execution_status', 'review_outcome', 'backend', 'scope',
-                 'reviewed', 'unreviewed', 'findings', 'limitations', 'recheck'}
+                 'reviewed', 'unreviewed', 'findings', 'limitations', 'recheck', 'criteria'}
 SCOPE_FIELDS = {'paths', 'baseline', 'diff_sha256', 'fingerprint', 'files'}
 FINDING_FIELDS = {'title', 'file', 'line', 'trigger', 'impact', 'evidence', 'suggestion', 'unverified', 'severity'}
 
@@ -142,7 +142,11 @@ class InterfaceTests(unittest.TestCase):
                                   'severity': {'field': 'findings[].severity', 'values': ['blocking', 'suggestion'],
                                                'criteria': 'severity-v1', 'missing': 'blocking'}},
                        'recheck': {'option': '--previous-report', 'field': 'recheck', 'statuses': ['resolved', 'unresolved'],
-                                   'snapshot': True}},
+                                   'snapshot': True},
+                       # spec/design-review-criteria.md
+                       'profiles': {'default': {'criteria': 'severity-v1'},
+                                    'design': {'option': '--profile design', 'criteria': 'design-v1',
+                                               'downgraded': ['no_code_evidence', 'second_round']}}},
             'run': {
                 'command': '/delegate:run', 'backends': ['codex'], 'write': 'explicit',
                 'resume': {'optIn': '--resumable', 'option': '--resume', 'backends': ['codex'],

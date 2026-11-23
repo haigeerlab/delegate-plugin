@@ -159,6 +159,18 @@ class GuestPromptTests(unittest.TestCase):
         claude_review.execute('/opt/claude', args, rebuilt, invoke, timeout=30)
         self.assertLess(prompts[0].index(CONTEXT_FILES_INSTRUCTION), prompts[0].index('Task: TASK-MARKER'))
 
+    def test_design_profile_reaches_the_guest_prompt(self):
+        import sys
+        sys.path.insert(0, str(SCRIPTS))
+        import review_transport
+        from review_context import DESIGN_CRITERIA, task_prompt
+        context = {'files': {'src/a.py': b'x\n'}, 'file_sha256': {'src/a.py': 'b' * 64}, 'unreviewed': [],
+                   'profile': 'design'}
+        profile = {'guest_runtime_config': {}, 'guest_runtime_sha256': '0' * 64}
+        request = json.loads(review_transport.request_payload(context, {}, 'run', profile, 30))
+        self.assertEqual(request['context']['profile'], 'design')
+        self.assertIn(DESIGN_CRITERIA, task_prompt('TASK-MARKER', dict(request['context'], files=context['files'])))
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

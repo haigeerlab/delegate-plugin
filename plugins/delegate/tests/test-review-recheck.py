@@ -128,6 +128,18 @@ class ScopeTests(unittest.TestCase):
                 review_recheck.check_scope(previous, current)
             self.assertEqual(str(caught.exception), 'previous_report_scope_mismatch')
 
+    def test_criteria_must_match(self):
+        # spec/design-review-criteria.md D4: old reports without criteria read as severity-v1.
+        review_recheck.check_scope(report(), context())
+        review_recheck.check_scope(report(criteria='severity-v1'), context())
+        review_recheck.check_scope(report(criteria='design-v1'), dict(context(), profile='design'))
+        for previous, current in [(report(), dict(context(), profile='design')),
+                                  (report(criteria='design-v1'), context()),
+                                  (report(criteria='other'), context())]:
+            with self.assertRaises(ContextError) as caught:
+                review_recheck.check_scope(previous, current)
+            self.assertEqual(str(caught.exception), 'previous_report_scope_mismatch')
+
     def test_uncommitted_modes_compare_mode_only(self):
         previous = report()
         previous['scope']['baseline'] = {'mode': 'working-tree', 'head': FROM}

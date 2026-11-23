@@ -5,6 +5,7 @@ import math
 import re
 
 from claude_review import unique_object
+from review_context import criteria_name, selected
 from review_recheck import STATUSES as RECHECK_STATUSES
 
 CONTENT_FIELDS = {'schema_version', 'reviewed', 'unreviewed', 'findings'}
@@ -135,6 +136,7 @@ def content_result(content, context):
         if name not in reviewed and not any(entry['path'] == name for entry in omitted):
             omitted.append({'path': name, 'reason': 'coverage_not_reported'})
     validated, verified = [], True
+    design = context.get('profile') == 'design'
     for item in findings:
         if not isinstance(item, dict) or set(item) != FINDING_FIELDS:
             raise ResultError('finding_invalid')
@@ -155,12 +157,31 @@ def content_result(content, context):
         if not location:
             value['line'] = None
             value['unverified'].append('location_not_verified_in_snapshot')
-            verified = False
+            verified = verified and design
+        if design:
+            downgrade(value, location, context, previous)
         validated.append(value)
     result = {'reviewed': reviewed, 'unreviewed': omitted, 'findings': validated}
     if previous:
         result['recheck'] = dict(context['recheck_source'], items=recheck_items(content['previous'], previous))
     return result, verified
+
+
+def downgrade(value, location, context, previous):
+    """design-v1 (spec/design-review-criteria.md): only reference-file evidence keeps a finding blocking.
+
+    The model's text is kept; only severity changes and the reason is recorded.
+    """
+    if value['severity'] != 'blocking':
+        return
+    if previous:
+        reason = 'second_round'
+    elif not (location and not selected(value['file'], context['scope'])):
+        reason = 'no_code_evidence'
+    else:
+        return
+    value['severity'] = 'suggestion'
+    value['downgraded'] = reason
 
 
 def recheck_items(answers, previous):
@@ -211,7 +232,7 @@ def base_report(backend, execution, context, requested_model):
     diagnostics = [item for item in execution.get('diagnostics', [])
                    if isinstance(item, str) and re.fullmatch(r'[a-z][a-z0-9_]{0,79}', item)]
     return {'schema_version': 1, 'execution_status': state, 'review_outcome': 'inconclusive',
-        'host': 'unknown', 'backend': backend, 'backend_started': execution.get('backend_started', True),
+        'host': 'unknown', 'backend': backend, 'criteria': criteria_name(context), 'backend_started': execution.get('backend_started', True),
         'execution_environment': execution.get('execution_environment', 'unknown'),
         'cleanup': cleanup, 'requested_model': requested_model, 'observed_models': [],
         'scope': {'paths': context['scope'], 'baseline': context['baseline'],

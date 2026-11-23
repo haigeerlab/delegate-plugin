@@ -8,7 +8,7 @@ import sys
 
 import delegate_backend as backend
 from delegate_capabilities import BACKENDS, describe
-from review_context import ContextError, STOPS, capture, capture_document, git, names, selected
+from review_context import ContextError, STOPS, capture, capture_document, criteria_name, git, names, selected
 import review_recheck
 
 HELP = '''用法：delegate-exec.sh review|run [选项] [--] [任务]
@@ -30,7 +30,7 @@ def review_arguments(options):
     bounded = options[:options.index('--')] if '--' in options else options
     for flag in ('--backend', '--model', '--effort', '--max-turns', '--max-budget-usd',
                  '--context', '--repo', '--base', '--head', '--changes', '--module', '--dry-run', '--include-untracked',
-                 '--previous-report'):
+                 '--previous-report', '--profile'):
         if sum(value == flag or value.startswith(flag + '=') for value in bounded) > 1:
             raise backend.ArgumentError('duplicate option: ' + flag)
     parser = backend.Parser(add_help=False, allow_abbrev=False)
@@ -40,6 +40,7 @@ def review_arguments(options):
         parser.add_argument(flag)
     for flag in ('--paths', '--exclude', '--spec', '--plan', '--criterion'):
         parser.add_argument(flag, action='append', default=[])
+    parser.add_argument('--profile', choices=('default', 'design'), default='default')
     parser.add_argument('--dry-run', action='store_true')
     parser.add_argument('--include-untracked', action='store_true')
     parser.add_argument('task', nargs='?', default='只读审查指定范围，报告有证据的问题、未审范围及未验证内容。')
@@ -115,6 +116,8 @@ def review(options):
     context = None
     try:
         context = capture(args.context) if args.context else capture_document(scope_document(args))
+        if args.profile == 'design':
+            context['profile'] = 'design'
         if args.previous_report is not None:
             sha256, previous = review_recheck.load(args.previous_report)
             findings = review_recheck.blocking_set(previous)
@@ -138,6 +141,8 @@ def review(options):
             if args.backend == 'codex':
                 preview['prompt_bytes'] = len(codex_prompt(args.task, context).encode('utf-8'))
                 preview['max_prompt_bytes'] = CODEX_PROMPT_LIMIT
+            preview['profile'] = args.profile
+            preview['criteria'] = criteria_name(context)
             if 'previous_findings' in context:
                 preview['previous_findings_count'] = len(context['previous_findings'])
             print(json.dumps(preview, ensure_ascii=False, indent=2))

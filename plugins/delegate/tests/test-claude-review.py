@@ -112,6 +112,15 @@ class ClaudePreflightTests(unittest.TestCase):
         self.assertLess(prompt.index(CONTEXT_FILES_INSTRUCTION), prompt.index('Task: TASK-MARKER'))
         self.assertNotIn(CONTEXT_FILES_INSTRUCTION, self.launch_prompt(dict(context, context_files=[])))
 
+    def test_claude_prompt_uses_design_criteria_for_design_profile(self):
+        from review_context import DESIGN_CRITERIA, SEVERITY_CRITERIA
+        context = {'files': {'src/a.py': b'first\n'}, 'unreviewed': [], 'scope': {'include': ['src/a.py'], 'exclude': []},
+                   'baseline': {'mode': 'commits'}, 'diff_sha256': 'a' * 64, 'file_sha256': {'src/a.py': 'b' * 64},
+                   'allowed_tools': ['Read'], 'profile': 'design'}
+        prompt = self.launch_prompt(context)
+        self.assertLess(prompt.index(DESIGN_CRITERIA), prompt.index('Task: TASK-MARKER'))
+        self.assertNotIn(SEVERITY_CRITERIA, prompt)
+
     def test_review_launch_uses_claude_restrictions_and_common_task_data(self):
         from review_result import schema_for_context
         context = {'files': {'src/a.py': b'first\n'}, 'unreviewed': [],
