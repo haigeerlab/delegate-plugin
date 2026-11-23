@@ -10,7 +10,7 @@
 - [x] Checkpoint 1（report）：免费验证全绿
 - [x] Task 5：文档同步
 - [x] Checkpoint 2（gate）：复审（本地提交须另行明确同意）
-- [ ] Checkpoint 3（gate）：交付验收
+- [x] Checkpoint 3（gate）：交付验收
 
 ## 记录
 
@@ -33,3 +33,5 @@
 - `docs/releases/unreleased.md` 及英文页：写入 0.11.0 的标题行、变化、影响面、验证与已知限制；「暂无未发布变更」改为「的未发布变更见下」（发版脚本两种都认）。
 
 **Checkpoint 2（gate，2026-11-23）：** 用户复审实际 diff 后原话「通过，本地提交」。重新记录 `spec/integration-interface.md` 的批准标记，`verify-artifacts` 恢复 0 警告；在本分支本地提交一次（不推送）。
+
+**Checkpoint 3（gate，2026-11-23）：** 最终提交 `8c9689d` 上重跑：`validate: ok`、两项 plugin validate 通过、`git diff --check` 通过、工作区干净；`module_scope.py check --base cecad55` 越界 0。SR-01～SR-07 全部通过，未实测：真实模型是否遵守参考文件说明、访客路径。用户原话「通过，推送开 PR」。拟回告（mc-coord #22261、ecosystem-lead）待 0.11.0 发版后给用户看全文再发。
