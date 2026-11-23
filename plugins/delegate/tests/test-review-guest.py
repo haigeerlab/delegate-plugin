@@ -129,5 +129,36 @@ class GuestTests(unittest.TestCase):
         self.assertEqual(lease.path.read_text(), 'other owner')
 
 
+class GuestPromptTests(unittest.TestCase):
+    """spec/review-snapshot-recheck.md SR-04: the guest rebuilds the context from the request and uses the Claude prompt."""
+
+    def test_context_files_reach_the_guest_prompt(self):
+        import sys
+        from types import SimpleNamespace
+        sys.path.insert(0, str(SCRIPTS))
+        import claude_review
+        import review_transport
+        from review_context import CONTEXT_FILES_INSTRUCTION
+        context = {'files': {'src/a.py': b'first\n'}, 'unreviewed': [], 'scope': {'include': ['src/a.py'], 'exclude': []},
+                   'baseline': {'mode': 'commits'}, 'diff_sha256': 'a' * 64, 'file_sha256': {'src/a.py': 'b' * 64},
+                   'allowed_tools': ['Read'], 'context_files': ['spec/a.md']}
+        profile = {'guest_runtime_config': {}, 'guest_runtime_sha256': '0' * 64}
+        request = json.loads(review_transport.request_payload(context, {}, 'run', profile, 30))
+        rebuilt = dict(request['context'], files=context['files'])
+        self.assertEqual(rebuilt['context_files'], ['spec/a.md'])
+        prompts = []
+        def invoke(argv, *, deadline, stdin=None):
+            if '-p' in argv:
+                prompts.append(stdin.decode('utf-8'))
+                return {'execution_status': 'failed', 'cleanup': 'confirmed', 'diagnostics': [], 'stdout': b''}
+            raise OSError()
+        original = claude_review.preflight
+        self.addCleanup(setattr, claude_review, 'preflight', original)
+        claude_review.preflight = lambda executable, invoker: {'version': 'x', 'auth_method': 'm', 'provider': 'p'}
+        args = SimpleNamespace(model=None, max_turns=12, max_budget_usd=None, task='TASK-MARKER')
+        claude_review.execute('/opt/claude', args, rebuilt, invoke, timeout=30)
+        self.assertLess(prompts[0].index(CONTEXT_FILES_INSTRUCTION), prompts[0].index('Task: TASK-MARKER'))
+
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)

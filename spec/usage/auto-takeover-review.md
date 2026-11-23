@@ -13,6 +13,7 @@
 | `interface.json` 的 `review.report.severity` | 声明字段、取值、判据名，以及缺失按 `blocking` | review-severity |
 | `/delegate:review --previous-report <上一轮报告>` | 复审：上一轮的阻断逐条标 `resolved`／`unresolved`，进报告 `recheck.items`；`findings` 只放新问题 | review-recheck |
 | `interface.json` 的 `review.recheck` | 声明参数名、报告字段名和两种状态 | review-recheck |
+| 快照审查（`--paths`／`--spec`／`--plan`）带 `--previous-report` | 返工后复审 Plan 这类快照审查；`interface.json` 的 `review.recheck.snapshot` 为 `true` 表示支持 | review-snapshot-recheck |
 
 ## Typical usage
 
@@ -36,11 +37,28 @@
 
 报告的 `recheck.items` 对上一轮每条阻断给出 `resolved` 或 `unresolved` 和证据，`findings` 只放这次新发现的问题。本轮阻断集合 = `unresolved` 的旧项 + `findings` 里按 `blocking` 处理的；为空就进入后续流程，不为空再返工。第三轮把第二轮报告交进来即可连着复审。「两轮仍未解决交给人」由编排自己数轮次。要核对复审的是修正后的补丁，比较 `recheck.previous_fingerprint` 与本轮 `scope.fingerprint`。上一轮报告读不到、没有结论或范围对不上时，报 `previous_report_*`、退出 127、模型不启动。
 
+### U3: Plan 审查返工后复审（快照审查）
+
+编排审一份 Plan，用快照审查（不带 `--base`），Spec 作为参考文件带上：
+
+```text
+/delegate:review --backend codex --paths tasks/<模块>/plan.md --spec spec/<模块>.md "<任务与验收标准>"
+```
+
+报告保存为 `round1.report.json`，按 U1 分流。有阻断就返工 Plan 并提交，然后用同样的 `--paths` 复审：
+
+```text
+/delegate:review --backend codex --paths tasks/<模块>/plan.md --spec spec/<模块>.md --previous-report round1.report.json "<任务与验收标准>"
+```
+
+两轮都是快照、`paths` 相同、新提交在上一轮提交之后时可以复审，`recheck` 的读法与 U2 相同；`--spec` 带进来的文件只用来核实引用，不会对它本身提发现。要核对复审的是改过的 Plan，比较两轮报告 `scope.files` 里 Plan 的 sha256（快照没有补丁，指纹每轮相同）。新提交不在上一轮提交之后（例如换了分支）时，报 `previous_report_scope_mismatch`、退出 127。
+
 ## Milestones
 
 | Milestone | Usage | Modules |
 |---|---|---|
 | M1 | U1, U2 | review-severity, review-recheck |
+| M2 | U1, U2, U3 | review-snapshot-recheck |
 
 <!-- spec-guard: milestone M1 confirmed review-severity, review-recheck -->
 
