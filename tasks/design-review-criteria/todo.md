@@ -10,7 +10,7 @@
 - [x] Checkpoint 1（report）：免费验证全绿
 - [x] Task 5：文档同步
 - [x] Checkpoint 2（gate）：复审（本地提交须另行明确同意）
-- [ ] Checkpoint 3（gate）：交付验收
+- [x] Checkpoint 3（gate）：交付验收
 
 ## 记录
 
@@ -33,3 +33,5 @@
 - 中英文待发行说明：标题 `技术方案审查与第二审查者（接口 1.7）`、变化、影响面、验证与限制；「暂无未发布变更」改为「的未发布变更见下」。reviewer-selection 完成后补它的小节。
 
 **Checkpoint 2（gate，2026-11-24）：** 用户复审后原话「通过，本地提交」。重新记录 `spec/integration-interface.md` 的批准标记，`verify-artifacts` 恢复 0 警告；在本分支本地提交（含 S110 的能力图、用法草案、两个模块的 Spec 与 Plan；不推送）。
+
+**Checkpoint 3（gate，2026-11-24）：** 最终提交 `2255593` 上：`validate: ok`、两项 plugin validate 通过、`git diff --check` 通过、工作区干净。DR-01～DR-11 通过；未实测：真实模型按 design-v1 标注的准确度、访客路径。越界检查（`--base 07bdca5`）4 个：reviewer-selection 的 Spec 与 Plan（同批提交）、英文能力图（流程文件的英文页，边界漏列）。用户原话「通过」。推送与 PR 等 reviewer-selection 完成后一起。
