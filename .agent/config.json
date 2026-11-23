@@ -1,6 +1,7 @@
 {
   "version": 1,
   "takeover": {
+    "plan": "codex",
     "release": "auto-confirm"
   }
 }
