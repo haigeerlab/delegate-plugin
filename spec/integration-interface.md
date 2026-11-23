@@ -1,6 +1,6 @@
 # 规格：integration-interface（对外接口说明与审查报告合同）
 
-<!-- spec-guard: review approved 5609e34d2b56 -->
+<!-- spec-guard: review approved fc4b8a5230c4 -->
 
 简体中文 | [English](../docs/en/SPEC-integration-interface.md)
 
@@ -65,6 +65,7 @@ docs/releases/unreleased.md                → 记一条待发行说明
 - 接口 1.4 起 `review.report` 下新增 `fingerprint`，报告 `scope` 下新增可选字段 `fingerprint`（与 git 配置和版本无关、可在别的机器复算的补丁指纹），合同见 [review-fingerprint](review-fingerprint.md)；报告 `schema_version` 仍为 `1`，下文报告合同里其余字段的含义不变。
 - 接口 1.5 起 `review.report` 下新增 `severity`，报告 `findings[]` 每项新增 `severity`（`blocking` 或 `suggestion`，审查模型按判据 `severity-v1` 标注；缺失或不认识按 `blocking`），合同见 [review-severity](review-severity.md)；报告 `schema_version` 仍为 `1`，下文报告合同里其余字段的含义不变。
 - 接口 1.5 起 `review` 下另新增 `recheck`，`/delegate:review` 新增 `--previous-report`，报告新增顶层字段 `recheck`（复审对照上一轮的阻断发现；不带该参数时为 `null`），合同见 [review-recheck](review-recheck.md)。
+- 接口 1.6 起 `review.recheck` 新增 `"snapshot": true`：快照审查（`from == to`）也能带 `--previous-report` 复审，两轮基准可以前进但须在同一历史上，一轮快照一轮区间报 `previous_report_scope_mismatch`，合同见 [review-snapshot-recheck](review-snapshot-recheck.md)。调用方规则：快照复审要核对复审的是改过的文件，比较两轮报告 `scope.files` 里的 sha256，不比 `scope.fingerprint`（快照没有补丁，指纹每轮相同）。报告 `schema_version` 仍为 `1`，结构不变。
 
 ## 审查报告合同（`schemaVersion: 1`）
 

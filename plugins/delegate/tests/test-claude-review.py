@@ -92,6 +92,26 @@ class ClaudePreflightTests(unittest.TestCase):
         self.assertEqual(report['cleanup'], 'unverified')
         self.assertFalse(report['backend_started'])
 
+    def launch_prompt(self, context):
+        args = SimpleNamespace(model=None, max_turns=12, max_budget_usd=None, task='TASK-MARKER')
+        boundary, prompts = FakeBoundary(), []
+        def invoke(argv, *, deadline, stdin=None):
+            if '-p' not in argv:
+                return boundary(argv, deadline=deadline)
+            prompts.append(stdin.decode('utf-8'))
+            return {'execution_status': 'failed', 'cleanup': 'confirmed', 'diagnostics': [], 'stdout': b''}
+        claude_review.execute('/opt/claude', args, context, invoke, timeout=30)
+        return prompts[0]
+
+    def test_claude_prompt_explains_context_files_before_task(self):
+        from review_context import CONTEXT_FILES_INSTRUCTION
+        context = {'files': {'src/a.py': b'first\n'}, 'unreviewed': [], 'scope': {'include': ['src/a.py'], 'exclude': []},
+                   'baseline': {'mode': 'commits'}, 'diff_sha256': 'a' * 64, 'file_sha256': {'src/a.py': 'b' * 64},
+                   'allowed_tools': ['Read']}
+        prompt = self.launch_prompt(dict(context, context_files=['src/a.py']))
+        self.assertLess(prompt.index(CONTEXT_FILES_INSTRUCTION), prompt.index('Task: TASK-MARKER'))
+        self.assertNotIn(CONTEXT_FILES_INSTRUCTION, self.launch_prompt(dict(context, context_files=[])))
+
     def test_review_launch_uses_claude_restrictions_and_common_task_data(self):
         from review_result import schema_for_context
         context = {'files': {'src/a.py': b'first\n'}, 'unreviewed': [],

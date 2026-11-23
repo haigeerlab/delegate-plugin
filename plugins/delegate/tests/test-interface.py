@@ -76,7 +76,7 @@ class InterfaceTests(unittest.TestCase):
         self.assertIs(self.interface['review']['readOnly'], True)
 
     def test_resume_is_an_additive_minor_version(self):
-        self.assertEqual(self.interface['interface'], '1.5')
+        self.assertEqual(self.interface['interface'], '1.6')
         # spec-guard reads these two fields; they must never change within major version 1.
         self.assertEqual(self.interface['review']['command'], '/delegate:review')
         self.assertEqual(self.interface['doctor']['command'], '/delegate:doctor')
@@ -129,18 +129,20 @@ class InterfaceTests(unittest.TestCase):
         self.assertTrue(delegate_capabilities.BACKENDS['codex']['check'])
         self.assertTrue(delegate_capabilities.BACKENDS['codex']['writeAuthorization'])
 
-    def test_interface_1_5_is_complete(self):
+    def test_interface_1_6_is_complete(self):
         # spec/run-rules.md, "1.3 完整形状", plus spec/review-fingerprint.md "接口 1.4"
-        # and spec/review-severity.md / spec/review-recheck.md "接口 1.5"; nothing removed.
+        # spec/review-severity.md / spec/review-recheck.md "接口 1.5" and spec/review-snapshot-recheck.md
+        # "接口 1.6"; nothing removed.
         expected = {
-            'interface': '1.5',
+            'interface': '1.6',
             'review': {'command': '/delegate:review', 'backends': ['codex', 'claude-code'], 'readOnly': True,
                        'report': {'schemaVersion': 1,
                                   'fingerprint': {'field': 'scope.fingerprint', 'algorithm': 'blob-pairs-v1',
                                                   'baselineModes': ['commits']},
                                   'severity': {'field': 'findings[].severity', 'values': ['blocking', 'suggestion'],
                                                'criteria': 'severity-v1', 'missing': 'blocking'}},
-                       'recheck': {'option': '--previous-report', 'field': 'recheck', 'statuses': ['resolved', 'unresolved']}},
+                       'recheck': {'option': '--previous-report', 'field': 'recheck', 'statuses': ['resolved', 'unresolved'],
+                                   'snapshot': True}},
             'run': {
                 'command': '/delegate:run', 'backends': ['codex'], 'write': 'explicit',
                 'resume': {'optIn': '--resumable', 'option': '--resume', 'backends': ['codex'],

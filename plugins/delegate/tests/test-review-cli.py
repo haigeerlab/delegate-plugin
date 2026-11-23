@@ -228,7 +228,7 @@ class PreviousReportCLITests(unittest.TestCase):
                    'evidence': 'e', 'suggestion': 's', 'unverified': [], 'severity': 'blocking'}
         report = {'schema_version': 1, 'execution_status': 'completed', 'review_outcome': 'findings',
                   'scope': {'paths': {'include': ['src/a.py'], 'exclude': []},
-                            'baseline': {'mode': 'commits', 'from': self.old, 'to': self.old}, 'fingerprint': None},
+                            'baseline': {'mode': 'commits', 'from': self.old, 'to': self.new}, 'fingerprint': None},
                   'findings': [finding, dict(finding, severity='suggestion')], 'recheck': None}
         report.update(values)
         path = self.root / ('PRIVATE_PREVIOUS_PATH_%d.json' % len(list(self.root.glob('PRIVATE_PREVIOUS_PATH_*'))))
@@ -273,6 +273,101 @@ class PreviousReportCLITests(unittest.TestCase):
                 result = self.run_entry('review', '--base', self.old, *options, '--dry-run')
                 self.assertEqual(result.returncode, 64, result.stderr)
                 self.assertEqual(self.recorded(), [])
+
+
+execution_spec = importlib.util.spec_from_file_location('execution_fixture', TESTS / 'test-review-execution.py')
+execution = importlib.util.module_from_spec(execution_spec)
+execution_spec.loader.exec_module(execution)
+
+
+class SnapshotRecheckCLITests(unittest.TestCase):
+    """spec/review-snapshot-recheck.md SR-01/SR-02 through the public entry point with a fake Codex."""
+    setUp = execution.CommonExecutionTests.setUp
+
+    def git(self, *args):
+        return subprocess.run(['git', '-C', str(self.repo), *args], check=True, text=True,
+                              capture_output=True, stdin=subprocess.DEVNULL).stdout.strip()
+
+    def change(self, text, message):
+        (self.repo / 'src/a.py').write_text(text)
+        self.git('add', '.')
+        self.git('commit', '-qm', message)
+        return self.git('rev-parse', 'HEAD')
+
+    def review(self, *options, mode='normal'):
+        prompt = self.root / 'prompt'
+        if prompt.exists():
+            prompt.unlink()
+        return subprocess.run(['/bin/bash', str(SCRIPTS / 'delegate-exec.sh'), 'review', *options, 'snapshot fixture'],
+                              cwd=self.repo, env=dict(self.env, FIXTURE_MODE=mode, DELEGATE_TIMEOUT_SECONDS='1'),
+                              capture_output=True, text=True, timeout=20, stdin=subprocess.DEVNULL)
+
+    def first_round(self):
+        result = self.review('--paths', 'src/a.py', mode='line')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        report = json.loads(result.stdout)
+        self.assertEqual(report['execution_status'], 'completed')
+        baseline = report['scope']['baseline']
+        self.assertEqual(baseline['from'], baseline['to'])
+        path = self.root / 'PRIVATE_ROUND1.json'
+        path.write_text(result.stdout)
+        return path, report
+
+    def edited(self, report, **baseline):
+        value = json.loads(json.dumps(report))
+        value['scope']['baseline'].update(baseline)
+        path = self.root / ('PRIVATE_EDITED_%d.json' % len(list(self.root.glob('PRIVATE_EDITED_*'))))
+        path.write_text(json.dumps(value))
+        return path
+
+    def test_snapshot_recheck_after_rework_runs_and_reports_previous_items(self):
+        path, first = self.first_round()
+        self.change('reworked\n', 'rework')
+        result = self.review('--paths', 'src/a.py', '--previous-report', str(path), mode='recheck')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        report = json.loads(result.stdout)
+        self.assertTrue((self.root / 'prompt').exists(), 'the executor must start')
+        self.assertEqual(report['execution_status'], 'completed')
+        self.assertEqual(report['recheck']['previous_report_sha256'], hashlib.sha256(path.read_bytes()).hexdigest())
+        self.assertEqual([(item['index'], item['status']) for item in report['recheck']['items']], [(1, 'unresolved')])
+        self.assertEqual(report['recheck']['items'][0]['finding']['title'], first['findings'][0]['title'])
+        preview = self.review('--paths', 'src/a.py', '--previous-report', str(path), '--dry-run')
+        self.assertEqual(preview.returncode, 0, preview.stderr)
+        self.assertEqual(json.loads(preview.stdout)['previous_findings_count'], 1)
+        self.assertFalse((self.root / 'prompt').exists(), 'dry run must not start the executor')
+
+    def test_snapshot_recheck_rejections_never_start_the_executor(self):
+        path, first = self.first_round()
+        start = first['scope']['baseline']['to']
+        self.git('-c', 'user.name=t', '-c', 'user.email=t@example.invalid', 'tag', '-a', '-m', 'tag', 'v1', start)
+        tag_object = self.git('rev-parse', 'refs/tags/v1')
+        branch = self.git('symbolic-ref', '--short', 'HEAD')
+        self.git('checkout', '-q', '--orphan', 'other')
+        other = self.change('other\n', 'other history')
+        self.git('checkout', '-q', '-f', branch)
+        later = self.change('reworked\n', 'rework')
+        cases = {
+            'other history': (path, ['--paths', 'src/a.py', '--base', other, '--head', other]),
+            'missing commit': (self.edited(first, **{'from': '0' * 40, 'to': '0' * 40}), ['--paths', 'src/a.py']),
+            'tag object': (self.edited(first, **{'from': tag_object, 'to': tag_object}), ['--paths', 'src/a.py']),
+            'malformed id': (self.edited(first, **{'from': start[:12], 'to': start[:12]}), ['--paths', 'src/a.py']),
+            'different paths': (path, ['--paths', 'src']),
+            'snapshot then range': (path, ['--paths', 'src/a.py', '--base', start, '--head', later]),
+            'range then snapshot': (self.edited(first, to=later), ['--paths', 'src/a.py']),
+        }
+        for name, (previous, options) in cases.items():
+            for extra in [(), ('--dry-run',)]:
+                with self.subTest(case=name, options=extra):
+                    result = self.review(*options, '--previous-report', str(previous), *extra)
+                    self.assertEqual(result.returncode, 127, result.stderr)
+                    report = json.loads(result.stdout)
+                    self.assertEqual(report['execution_status'], 'conditions_missing')
+                    self.assertFalse(report['backend_started'])
+                    self.assertIn('previous_report_scope_mismatch', report['diagnostics'])
+                    self.assertFalse((self.root / 'prompt').exists())
+                    self.assertNotIn('PRIVATE_', result.stdout + result.stderr)
+                    self.assertNotIn('fatal', result.stdout + result.stderr)
+
 
 if __name__ == '__main__':
     unittest.main()

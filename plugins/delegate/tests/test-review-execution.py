@@ -288,6 +288,14 @@ class CommonExecutionTests(unittest.TestCase):
         self.assertLess(prompt.index(RECHECK_INSTRUCTION),prompt.index('TASK-MARKER'))
         self.assertIn('OLD-FINDING',prompt)
 
+    def test_codex_prompt_explains_context_files_before_task(self):
+        from review_context import CONTEXT_FILES_INSTRUCTION
+        from review_execution import codex_prompt
+        base={'files':{'doc.md':b'x\n'},'file_sha256':{'doc.md':'0'*64},'unreviewed':[]}
+        prompt=codex_prompt('TASK-MARKER',dict(base,context_files=['doc.md']))
+        self.assertLess(prompt.index(CONTEXT_FILES_INSTRUCTION),prompt.index('TASK-MARKER'))
+        self.assertNotIn(CONTEXT_FILES_INSTRUCTION,codex_prompt('TASK-MARKER',dict(base,context_files=[])))
+
     def test_codex_input_limit_counts_line_number_prefixes(self):
         from review_context import ContextError
         from review_execution import CODEX_PROMPT_LIMIT, codex_prompt

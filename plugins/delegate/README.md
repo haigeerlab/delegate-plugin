@@ -100,6 +100,7 @@ tests/                       离线桩测试与回归
 - **补丁指纹（接口 1.4 起）**：`review.report.fingerprint` 为 `{"field": "scope.fingerprint", "algorithm": "blob-pairs-v1", "baselineModes": ["commits"]}`，算法见[规格](../../spec/review-fingerprint.md)。只用两个提交树里每个被审文件的权限和对象编号算 sha256，与 git 配置、git 版本无关，可以在别的机器（如 GitHub Actions）复算；Actions 上浅克隆时要能取到 `from` 提交。
 - **发现的严重程度（接口 1.5 起）**：`review.report.severity` 为 `{"field": "findings[].severity", "values": ["blocking", "suggestion"], "criteria": "severity-v1", "missing": "blocking"}`。审查模型按固定判据 `severity-v1`（见[规格](../../spec/review-severity.md)）给每条发现标 `blocking`（阻断）或 `suggestion`（建议），`--task` 不能改判据；以后改判据只换新名字。
 - **复审对照上一轮（接口 1.5 起）**：`review.recheck` 为 `{"option": "--previous-report", "field": "recheck", "statuses": ["resolved", "unresolved"]}`，合同见[规格](../../spec/review-recheck.md)。把上一轮 delegate 报告交进来，上一轮的阻断发现逐条进 `recheck.items` 标已解决或未解决，本轮 `findings` 只放新问题；上一轮报告必须已有结论、范围相同。
+- **快照审查的复审（接口 1.6 起）**：`review.recheck.snapshot` 为 `true`，合同见[规格](../../spec/review-snapshot-recheck.md)。Plan 这类快照审查（`--paths` 不带 `--base`，基准 `from == to`）返工后也能带 `--previous-report`：两轮都是快照时只比 `paths` 与 `mode`，本轮提交须是上一轮提交本身或其后代（换了分支、提交不存在或是标签对象都报 `previous_report_scope_mismatch`）；一轮快照一轮区间也报这个码。`--spec`／`--plan` 带进来的参考文件，提示词会说明只用来核实引用、不对它们本身提发现。
 - **`statuses` 是开放集合**：以后的次版本可能追加新值。遇到不认识的值必须停下或当失败处理，不能当成完成；判断成功先看退出码为 0，再看 `status=done`。
 - **审查报告（`review.report.schemaVersion: 1`）**：`/delegate:review` 的标准输出是一份 JSON 报告（`--dry-run` 输出的是预览，不是报告）。标准错误中的私有副本路径不属于接口。稳定字段：
 
@@ -116,7 +117,7 @@ tests/                       离线桩测试与回归
 | `recheck`（接口 1.5 起） | 不带 `--previous-report` 时为 `null`；带时为 `{previous_report_sha256, previous_fingerprint, items}`，`items[]` 为 `{index, status, evidence, finding}`，`status` 为 `resolved` 或 `unresolved` |
 | `limitations` | 限制说明 |
 
-其他字段属于诊断信息，可能变化。只有 `execution_status=completed` 且 `review_outcome` 为 `findings` 或 `no_findings_in_scope` 才算有结论；`no_findings_in_scope` 不等于没有缺陷。报告是第三方参考意见，不是用户批准；引用时注明 delegate、后端与指纹。复算 `scope.fingerprint` 时：只证明审查看到的补丁就是 `paths` 从 `from` 到 `to` 的这些变化，PR 里有没有审查没看到的文件要自己对比 `paths`；指纹一致不等于有结论，更不等于可以合并；遇到不认识的 `algorithm` 按无法复算处理。读 `severity` 时：缺这个字段（0.9.0 及以前的报告）或值不认识，一律按 `blocking`；只在有结论时才看；`unverified` 非空的阻断发现是审查者拿不准、按判据从严标的；严重程度是模型的判断，没有阻断发现也不等于可以合并。复审时本轮的阻断集合 = `recheck.items` 里 `unresolved` 的 + `findings` 里按 `blocking` 处理的，只在有结论时才看；要核对复审的是修正后的补丁，比较 `recheck.previous_fingerprint` 和本轮 `scope.fingerprint`。
+其他字段属于诊断信息，可能变化。只有 `execution_status=completed` 且 `review_outcome` 为 `findings` 或 `no_findings_in_scope` 才算有结论；`no_findings_in_scope` 不等于没有缺陷。报告是第三方参考意见，不是用户批准；引用时注明 delegate、后端与指纹。复算 `scope.fingerprint` 时：只证明审查看到的补丁就是 `paths` 从 `from` 到 `to` 的这些变化，PR 里有没有审查没看到的文件要自己对比 `paths`；指纹一致不等于有结论，更不等于可以合并；遇到不认识的 `algorithm` 按无法复算处理。读 `severity` 时：缺这个字段（0.9.0 及以前的报告）或值不认识，一律按 `blocking`；只在有结论时才看；`unverified` 非空的阻断发现是审查者拿不准、按判据从严标的；严重程度是模型的判断，没有阻断发现也不等于可以合并。复审时本轮的阻断集合 = `recheck.items` 里 `unresolved` 的 + `findings` 里按 `blocking` 处理的，只在有结论时才看；要核对复审的是修正后的补丁，比较 `recheck.previous_fingerprint` 和本轮 `scope.fingerprint`；快照复审没有补丁、指纹每轮相同，改为比较两轮报告 `scope.files` 里的 sha256。
 
 ## 反馈与许可
 

@@ -1,5 +1,5 @@
 {
-  "interface": "1.5",
+  "interface": "1.6",
   "review": {
     "command": "/delegate:review",
     "backends": ["codex", "claude-code"],
@@ -9,7 +9,7 @@
                                "baselineModes": ["commits"]},
                "severity": {"field": "findings[].severity", "values": ["blocking", "suggestion"],
                             "criteria": "severity-v1", "missing": "blocking"}},
-    "recheck": {"option": "--previous-report", "field": "recheck", "statuses": ["resolved", "unresolved"]}
+    "recheck": {"option": "--previous-report", "field": "recheck", "statuses": ["resolved", "unresolved"], "snapshot": true}
   },
   "run": {
     "command": "/delegate:run", "backends": ["codex"], "write": "explicit",

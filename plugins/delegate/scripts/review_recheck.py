@@ -6,6 +6,9 @@ structure is checked and copied; errors are fixed codes, never its text or path.
 """
 import hashlib
 import json
+import os
+import re
+import subprocess
 
 from claude_review import unique_object
 from review_context import ContextError
@@ -82,11 +85,44 @@ def blocking_set(report):
     return [dict(item, index=number) for number, item in enumerate(chosen, 1)]
 
 
+OBJECT_ID = re.compile(r'(?:[0-9a-f]{40}|[0-9a-f]{64})\Z')
+GIT_TIMEOUT = 30
+
+
+def is_snapshot(baseline):
+    return baseline.get('from') == baseline.get('to')
+
+
+def git_succeeds(repository, *args, expect=None):
+    # No replace refs and no lazy fetch: decide on the original local history only.
+    env = dict(os.environ, GIT_NO_REPLACE_OBJECTS='1', GIT_NO_LAZY_FETCH='1', GIT_TERMINAL_PROMPT='0')
+    try:
+        result = subprocess.run(['git', '-C', repository, *args], stdin=subprocess.DEVNULL, capture_output=True,
+                                env=env, timeout=GIT_TIMEOUT)
+    except (OSError, subprocess.SubprocessError):
+        return False
+    return result.returncode == 0 and (expect is None or result.stdout.strip() == expect)
+
+
+def same_history(repository, previous, current):
+    """The previous snapshot commit is the current one or an ancestor of it (spec/review-snapshot-recheck.md)."""
+    if (not isinstance(previous, str) or not isinstance(current, str) or not OBJECT_ID.match(previous)
+            or len(previous) != len(current) or not isinstance(repository, str)):
+        return False
+    return (git_succeeds(repository, 'cat-file', '-t', '--end-of-options', previous, expect=b'commit')
+            and git_succeeds(repository, 'merge-base', '--is-ancestor', '--end-of-options', previous, current))
+
+
 def check_scope(report, context):
     previous, current = report['scope']['baseline'], context['baseline']
     same = report['scope']['paths'] == context['scope'] and previous.get('mode') == current.get('mode')
     if same and current.get('mode') == 'commits':
-        same = previous.get('from') == current.get('from')
+        if is_snapshot(previous) != is_snapshot(current):
+            same = False
+        elif is_snapshot(current):
+            same = same_history(context.get('repository'), previous.get('to'), current.get('to'))
+        else:
+            same = previous.get('from') == current.get('from')
     if not same:
         raise ContextError('previous_report_scope_mismatch')
 

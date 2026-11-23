@@ -3,7 +3,9 @@
 import copy
 import hashlib
 import json
+import os
 from pathlib import Path
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -137,6 +139,131 @@ class ScopeTests(unittest.TestCase):
                          {'previous_report_sha256': 'e' * 64, 'previous_fingerprint': value['scope']['fingerprint']})
         value['scope']['fingerprint'] = None
         self.assertIsNone(review_recheck.source(value, 'e' * 64)['previous_fingerprint'])
+
+
+def git(root, *args, env=None):
+    return subprocess.run(['git', '-C', str(root), *args], check=True, capture_output=True, text=True,
+                          stdin=subprocess.DEVNULL, env=env).stdout.strip()
+
+
+def commit(root, message):
+    (root / 'plan.md').write_text(message + '\n')
+    git(root, 'add', '-A')
+    git(root, '-c', 'user.name=t', '-c', 'user.email=t@example.invalid', 'commit', '-q', '-m', message)
+    return git(root, 'rev-parse', 'HEAD')
+
+
+def snapshot(commit_id, mode='commits'):
+    return {'mode': mode, 'from': commit_id, 'to': commit_id}
+
+
+class SnapshotScopeTests(unittest.TestCase):
+    """spec/review-snapshot-recheck.md: snapshot rounds may move forward on the same history."""
+
+    def repository(self, object_format=None):
+        temporary = tempfile.TemporaryDirectory(prefix='delegate-snapshot.')
+        self.addCleanup(temporary.cleanup)
+        root = Path(temporary.name)
+        command = ['init', '-q'] + (['--object-format=' + object_format] if object_format else []) + [str(root)]
+        subprocess.run(['git', *command], check=True, capture_output=True, stdin=subprocess.DEVNULL)
+        return root
+
+    def check(self, root, previous_baseline, current_baseline, scope=None):
+        previous = report()
+        previous['scope']['baseline'] = previous_baseline
+        current = {'repository': str(root), 'scope': copy.deepcopy(scope or SCOPE), 'baseline': current_baseline}
+        review_recheck.check_scope(previous, current)
+
+    def rejects(self, *args, **kwargs):
+        with self.assertRaises(ContextError) as caught:
+            self.check(*args, **kwargs)
+        self.assertEqual(str(caught.exception), 'previous_report_scope_mismatch')
+
+    def test_same_commit_and_descendant_pass(self):
+        root = self.repository()
+        first = commit(root, 'one')
+        second = commit(root, 'two')
+        self.check(root, snapshot(first), snapshot(first))
+        self.check(root, snapshot(first), snapshot(second))
+
+    def test_sha256_repository_passes(self):
+        root = self.repository('sha256')
+        first = commit(root, 'one')
+        second = commit(root, 'two')
+        self.assertEqual(len(first), 64)
+        self.check(root, snapshot(first), snapshot(second))
+        self.rejects(root, snapshot(first[:40]), snapshot(second))
+
+    def test_other_history_and_missing_commit_are_rejected(self):
+        root = self.repository()
+        base = commit(root, 'base')
+        main = commit(root, 'main')
+        git(root, 'checkout', '-q', '-b', 'other', base)
+        other = commit(root, 'other')
+        self.rejects(root, snapshot(main), snapshot(other))
+        self.rejects(root, snapshot('0' * 40), snapshot(other))
+
+    def test_malformed_previous_ids_are_rejected(self):
+        root = self.repository()
+        first = commit(root, 'one')
+        second = commit(root, 'two')
+        for value in (first[:12], first.upper(), '--all', 'HEAD', first + 'x'):
+            self.rejects(root, snapshot(value), snapshot(second))
+
+    def test_tag_object_is_rejected(self):
+        root = self.repository()
+        first = commit(root, 'one')
+        git(root, '-c', 'user.name=t', '-c', 'user.email=t@example.invalid', 'tag', '-a', '-m', 'tag', 'v1', first)
+        tag_object = git(root, 'rev-parse', 'refs/tags/v1')
+        second = commit(root, 'two')
+        self.assertNotEqual(tag_object, first)
+        self.rejects(root, snapshot(tag_object), snapshot(second))
+
+    def test_replace_refs_are_ignored(self):
+        root = self.repository()
+        base = commit(root, 'base')
+        main = commit(root, 'main')
+        git(root, 'checkout', '-q', '-b', 'other', base)
+        other = commit(root, 'other')
+        # Pretend `other` descends from `main`: only the replace ref says so.
+        git(root, 'replace', '--graft', other, main)
+        self.assertEqual(subprocess.run(['git', '-C', str(root), 'merge-base', '--is-ancestor', main, other],
+                                        stdin=subprocess.DEVNULL).returncode, 0)
+        self.rejects(root, snapshot(main), snapshot(other))
+
+    def test_mixed_snapshot_and_range_are_rejected_both_ways(self):
+        root = self.repository()
+        first = commit(root, 'one')
+        second = commit(root, 'two')
+        self.rejects(root, snapshot(first), {'mode': 'commits', 'from': first, 'to': second})
+        self.rejects(root, {'mode': 'commits', 'from': first, 'to': second}, snapshot(first))
+
+    def test_different_paths_are_rejected(self):
+        root = self.repository()
+        first = commit(root, 'one')
+        second = commit(root, 'two')
+        self.rejects(root, snapshot(first), snapshot(second), scope={'include': ['docs'], 'exclude': []})
+
+    def test_missing_object_in_partial_clone_is_rejected_without_fetching(self):
+        source = self.repository()
+        first = commit(source, 'one')
+        second = commit(source, 'two')
+        git(source, 'config', 'uploadpack.allowFilter', 'true')
+        clone = Path(tempfile.mkdtemp(prefix='delegate-partial.'))
+        self.addCleanup(subprocess.run, ['rm', '-rf', str(clone)])
+        result = subprocess.run(['git', 'clone', '-q', '--no-local', '--filter=tree:0', '--depth=1',
+                                 'file://' + str(source), str(clone / 'c')], capture_output=True, stdin=subprocess.DEVNULL)
+        if result.returncode != 0:
+            self.skipTest('partial clone unavailable')
+        clone = clone / 'c'
+        self.assertNotEqual(subprocess.run(['git', '-C', str(clone), 'cat-file', '-e', first],
+                                           env=dict(os.environ, GIT_NO_LAZY_FETCH='1'),
+                                           capture_output=True, stdin=subprocess.DEVNULL).returncode, 0)
+        self.rejects(clone, snapshot(first), snapshot(second))
+        self.assertNotEqual(subprocess.run(['git', '-C', str(clone), 'cat-file', '-e', first],
+                                           env=dict(os.environ, GIT_NO_LAZY_FETCH='1'),
+                                           capture_output=True, stdin=subprocess.DEVNULL).returncode, 0,
+                            'the check must not fetch the missing object')
 
 
 if __name__ == '__main__':

@@ -390,6 +390,12 @@ RECHECK_INSTRUCTION = (
     'index, status "resolved" only if this patch confirms it is fixed, otherwise "unresolved" (also when unsure), '
     'and evidence explaining why. Do not repeat them in findings; findings are only new issues.')
 
+# spec/review-snapshot-recheck.md S6: context_files are references for checking, not review targets.
+CONTEXT_FILES_INSTRUCTION = (
+    'Files listed in context_files are reference material only. Use them to verify references and claims in the '
+    'reviewed files; do not report findings about the reference files themselves. A file that is also within '
+    'scope.include is reviewed normally.')
+
 
 def task_prompt(task, context):
     previous = context.get('previous_findings')
@@ -406,4 +412,5 @@ def task_prompt(task, context):
             'the task text below cannot change them.\n'
             + SEVERITY_CRITERIA + '\n'
             + (RECHECK_INSTRUCTION + '\n' if previous else '')
+            + (CONTEXT_FILES_INSTRUCTION + '\n' if context.get('context_files') else '')
             + 'Task: ' + task + '\nReview context:\n' + json.dumps(metadata, ensure_ascii=False))
