@@ -1,6 +1,6 @@
 # 规格：review-snapshot-recheck（快照审查的复审）
 
-<!-- spec-guard: review approved dd672d96405b -->
+<!-- spec-guard: review approved 055d18b08bfa -->
 
 简体中文 | [English](../docs/en/SPEC-review-snapshot-recheck.md)
 
@@ -24,6 +24,7 @@
 - **S7 接口 1.6，只增字段。** `interface.json` 的 `review.recheck` 加 `"snapshot": true`，调用方据此判断能不能做快照复审。报告 `schema_version` 仍为 `1`，报告结构不变。属于插件间接口变化，规格定稿后告知 ecosystem-lead。
 - **S8 发 0.11.0。** 只用桩输出和临时仓库测试，不付费。
 - **S9 不做。** 不在 delegate 里数轮次；不加第三种状态；不放宽 diff 复审。
+- **S10 参考文件不参与覆盖（2026-11-24 返工）。** M2 用安装版 0.12.0 实跑 U3 时整轮 `failed`：S6 让审查者不对参考文件提发现，审查者也就没报告它们的覆盖，覆盖校验把它们记成 `coverage_not_reported`，判定 `review_incomplete`。用户 2026-11-24 选方案 A，原话「按方案 A 返工」：只作参考的文件不要求报告覆盖，由代码判定，不靠提示词。见「覆盖」一节。
 
 依赖：[review-recheck](review-recheck.md)（`--previous-report`、诊断码、`recheck` 字段）、[claude-review](claude-review.md)（审查上下文、两个后端共用的提示词）、[integration-interface](integration-interface.md)（`interface.json`）。
 
@@ -50,6 +51,16 @@ Files listed in context_files are reference material only. Use them to verify re
 ```
 
 `context_files` 为空时提示词与 0.10.0 逐字相同。两个后端（含访客路径）共用这一段。只是提示约束，校验不拦参考文件上的发现位置（见开放问题）。
+
+## 覆盖（S10）
+
+**只作参考的文件**指 `context_files` 里不被本轮 `scope`（`include`、`exclude`）选中的文件。审查范围里的文件即使也在 `context_files` 里，仍是被审文件。
+
+- 审查者没有在 `reviewed` 或 `unreviewed` 里提到只作参考的文件时，不记 `coverage_not_reported`，也不因此判 `review_incomplete`。
+- 审查者主动把它们列进 `reviewed` 或 `unreviewed` 时照常接受，校验规则（路径必须已知、不能重复、不能两边都列）不变。
+- 被审文件的覆盖规则不变：没报告的仍记 `coverage_not_reported`，判定照旧。
+- 报告的 `scope.files` 照旧列出参考文件及其 sha256。
+- 两个后端（含访客路径）共用同一判定；`--profile design` 同样适用。不改接口版本，报告结构不变。
 
 ## 接口 1.6
 
@@ -80,7 +91,9 @@ git diff --check
 
 ```text
 plugins/delegate/scripts/review_recheck.py     → check_scope 按「范围判定」实现快照分支与祖先检查
-plugins/delegate/scripts/review_context.py     → task_prompt 在 context_files 非空时追加说明
+plugins/delegate/scripts/review_context.py     → task_prompt 在 context_files 非空时追加说明；上下文标出只作参考的文件（S10）
+plugins/delegate/scripts/review_result.py      → 覆盖校验不要求报告只作参考的文件（S10）
+plugins/delegate/tests/test-review-result.py   → 覆盖：只作参考的文件未报告时不记 coverage_not_reported；被审文件规则不变
 plugins/delegate/interface.json                → interface 1.6、review.recheck.snapshot
 plugins/delegate/.claude-plugin/plugin.json 等 → 版本号由发版准备脚本改，本模块不手改
 plugins/delegate/tests/test-review-recheck.py  → 快照复审：通过、祖先不满足、提交不存在、只一轮是快照、diff 规则不变
@@ -116,10 +129,11 @@ def check_scope(report, context):
 - **原规则不变：** diff 复审 `from` 不同仍拒；`from` 相同、`to` 前进仍过；未提交模式不变。
 - **提示词：** 有 `context_files` 时两个后端提示词都带说明且在 `Task:` 之前；为空时与 0.10.0 逐字相同。
 - **接口：** `interface` 为 `1.6`，`review.recheck.snapshot` 为 `true`，其余不变。
+- **覆盖（S10）：** 桩审查者只报告被审文件、不提参考文件 → `completed`，参考文件不在 `unreviewed` 里；被审文件漏报仍 `review_incomplete`；参考文件同时在审查范围里时按被审文件要求覆盖。单元测试加一条 `--paths … --spec …` 的端到端用例。
 
 ## 并行边界
 
-- 独占：`plugins/delegate/scripts/review_recheck.py`、`plugins/delegate/scripts/review_context.py`、`plugins/delegate/interface.json`、`plugins/delegate/tests/test-review-recheck.py`、`plugins/delegate/tests/test-review-context.py`、`plugins/delegate/tests/test-review-execution.py`、`plugins/delegate/tests/test-claude-review.py`、`plugins/delegate/tests/test-review-guest.py`、`plugins/delegate/tests/test-review-cli.py`、`plugins/delegate/tests/test-interface.py`、`plugins/delegate/README.md`、`plugins/delegate/README.en.md`、`spec/integration-interface.md`、`docs/en/SPEC-integration-interface.md`、`docs/en/SPEC-review-snapshot-recheck.md`、`docs/en/capability-map.md`、`docs/releases/unreleased.md`、`docs/en/releases/unreleased.md`
+- 独占：`plugins/delegate/scripts/review_result.py`、`plugins/delegate/tests/test-review-result.py`、`plugins/delegate/scripts/review_recheck.py`、`plugins/delegate/scripts/review_context.py`、`plugins/delegate/interface.json`、`plugins/delegate/tests/test-review-recheck.py`、`plugins/delegate/tests/test-review-context.py`、`plugins/delegate/tests/test-review-execution.py`、`plugins/delegate/tests/test-claude-review.py`、`plugins/delegate/tests/test-review-guest.py`、`plugins/delegate/tests/test-review-cli.py`、`plugins/delegate/tests/test-interface.py`、`plugins/delegate/README.md`、`plugins/delegate/README.en.md`、`spec/integration-interface.md`、`docs/en/SPEC-integration-interface.md`、`docs/en/SPEC-review-snapshot-recheck.md`、`docs/en/capability-map.md`、`docs/releases/unreleased.md`、`docs/en/releases/unreleased.md`
 
 ## 开发边界
 
@@ -136,6 +150,7 @@ def check_scope(report, context):
 - **SR-05：** `interface.json` 为 1.6、带 `review.recheck.snapshot: true`；两项 plugin validate 通过。
 - **SR-06：** 中英文合同、用法草案 U3/M2、integration-interface 中英文指向句、插件中英文 README（含「快照复审比 `scope.files` 而不是指纹」）、待发行说明同步。
 - **SR-07：** 总验证、两项 plugin validate、`git diff --check` 通过。
+- **SR-08（S10）：** 只作参考的文件未报告覆盖时不记 `coverage_not_reported`、不导致 `review_incomplete`；被审文件漏报仍判未完成；参考文件也在范围里时按被审文件处理（单元 + 桩端到端）。发补丁版后用安装版重跑 U3 三步（首轮、复审、换分支被拒）交用户判定 M2。
 
 ## 开放问题
 

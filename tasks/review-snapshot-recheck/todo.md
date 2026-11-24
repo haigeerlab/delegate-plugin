@@ -35,3 +35,16 @@
 **Checkpoint 2（gate，2026-11-23）：** 用户复审实际 diff 后原话「通过，本地提交」。重新记录 `spec/integration-interface.md` 的批准标记，`verify-artifacts` 恢复 0 警告；在本分支本地提交一次（不推送）。
 
 **Checkpoint 3（gate，2026-11-23）：** 最终提交 `8c9689d` 上重跑：`validate: ok`、两项 plugin validate 通过、`git diff --check` 通过、工作区干净；`module_scope.py check --base cecad55` 越界 0。SR-01～SR-07 全部通过，未实测：真实模型是否遵守参考文件说明、访客路径。用户原话「通过，推送开 PR」。拟回告（mc-coord #22261、ecosystem-lead）待 0.11.0 发版后给用户看全文再发。
+
+## 返工：参考文件不参与覆盖（S10，2026-11-24）
+
+起因：M2 用安装版 0.12.0 实跑 U3，首轮 `failed`／`review_incomplete`，`spec/calc.md` 记为 `coverage_not_reported`。用户原话「按方案 A 返工」。Spec 加 S10 与 SR-08，修订交用户复审后才动代码。
+
+- [x] Checkpoint R0（gate）：Spec 修订（S10、覆盖一节、SR-08）用户复审 — 2026-11-24 用户原话「批准，开始实现」，已重新记录批准标记
+- [x] Task R1：先写测试并确认红（`test-review-result.py` 覆盖三例；`test-review-cli.py` 加 `--paths … --spec …` 桩端到端，桩只报告被审文件） — 红：结果校验 3 例失败、端到端两档 `failed`（reviewed=1/2）
+- [x] Task R2：实现（上下文标出只作参考的文件；`review_result` 覆盖校验跳过未报告的只作参考文件） — 在 `review_result.content_result` 用已有的 `context_files` 与 `scope` 判定，未新增上下文字段；两套测试转绿
+- [x] Task R3：文档同步（待发行说明中英文；插件 README 如有覆盖说明则补一句） — 待发行说明中英文各加一节；插件 README 中英文各补一句
+- [x] Checkpoint R1（report）：免费验证全绿 — 2026-11-24 `scripts/validate.sh` 退出 0；`claude plugin validate .` 与 `./plugins/delegate` 通过；`git diff --check` 无问题；verify-artifacts 6 通过 0 警告
+- [x] Checkpoint R2（gate）：复审与本地提交（须另行明确同意） — 2026-11-24 用户原话「通过，本地提交」
+- [ ] Checkpoint R3（gate）：交付验收，推送开 PR（须另行明确同意）
+- [ ] Task R4：发补丁版后用安装版重跑 U3 三步，交用户判定 M2

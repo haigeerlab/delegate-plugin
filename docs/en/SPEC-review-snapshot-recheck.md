@@ -22,6 +22,7 @@ Confirmed by the user on 2026-11-23:
 - **S7 Interface 1.6, additive.** `interface.json` `review.recheck` gains `"snapshot": true` so callers can detect support. Report `schema_version` stays `1` and the report shape is unchanged. This is a cross-plugin interface change; ecosystem-lead is told once the spec is final.
 - **S8 Release 0.11.0.** Tests use stubs and disposable repositories only; nothing paid.
 - **S9 Not in scope.** No round counting in delegate; no third status; no relaxing of diff rechecks.
+- **S10 Reference files do not count toward coverage (rework, 2026-11-24).** Running U3 of M2 with the installed 0.12.0 failed the whole round: S6 tells the reviewer not to report findings on reference files, so it also did not report their coverage, and the coverage check recorded them as `coverage_not_reported`, giving `review_incomplete`. On 2026-11-24 the user chose option A ("按方案 A 返工"): reference-only files need no coverage report, decided in code rather than by the prompt. See "Coverage".
 
 Depends on [review-recheck](SPEC-review-recheck.md), [claude-review](SPEC-claude-review.md) and [integration-interface](SPEC-integration-interface.md).
 
@@ -48,6 +49,16 @@ Files listed in context_files are reference material only. Use them to verify re
 ```
 
 With empty `context_files` the prompt is byte-identical to 0.10.0. Both backends (including the guest path) share it. It is a prompt constraint only; validation does not reject finding locations on reference files (see open questions).
+
+## Coverage (S10)
+
+A **reference-only file** is a file in `context_files` that this round's `scope` (`include`, `exclude`) does not select. A file under review that is also in `context_files` stays a reviewed file.
+
+- When the reviewer mentions a reference-only file in neither `reviewed` nor `unreviewed`, no `coverage_not_reported` is recorded and the round is not judged `review_incomplete` for it.
+- When the reviewer does list one in `reviewed` or `unreviewed`, it is accepted under the unchanged checks (known path, no duplicates, not on both sides).
+- Coverage rules for reviewed files do not change: an unreported one is still recorded as `coverage_not_reported`.
+- The report's `scope.files` still lists reference files with their sha256.
+- Both backends (including the guest path) share the rule, and it applies to `--profile design` too. The interface version and report structure do not change.
 
 ## Interface 1.6
 
@@ -76,7 +87,9 @@ git diff --check
 
 ```text
 plugins/delegate/scripts/review_recheck.py     → check_scope: snapshot branch and ancestry check
-plugins/delegate/scripts/review_context.py     → task_prompt: note when context_files is non-empty
+plugins/delegate/scripts/review_context.py     → task_prompt: note when context_files is non-empty; context marks reference-only files (S10)
+plugins/delegate/scripts/review_result.py      → coverage check does not require reference-only files (S10)
+plugins/delegate/tests/test-review-result.py   → coverage: unreported reference-only files are not coverage_not_reported; reviewed-file rules unchanged
 plugins/delegate/interface.json                → interface 1.6, review.recheck.snapshot
 plugins/delegate/tests/test-review-recheck.py  → snapshot pass, not a descendant, missing commit, only one snapshot, diff rules unchanged
 plugins/delegate/tests/test-review-context.py  → prompt note before Task:, unchanged when empty
@@ -101,10 +114,11 @@ Tests first and confirmed red, then implementation.
 - **Unchanged rules:** diff recheck with a different `from` still rejected; same `from` with a newer `to` still passes; uncommitted modes unchanged.
 - **Prompt:** both backends carry the note before `Task:` when `context_files` is non-empty; byte-identical to 0.10.0 when empty.
 - **Interface:** `interface` is `1.6`, `review.recheck.snapshot` is `true`, nothing else changes.
+- **Coverage (S10):** a stub reviewer that reports only reviewed files and omits reference files → `completed`, with reference files absent from `unreviewed`; an omitted reviewed file is still `review_incomplete`; a reference file that is also in scope needs coverage like any reviewed file. Add one end-to-end `--paths … --spec …` case.
 
 ## Concurrency boundary
 
-- Exclusive: `plugins/delegate/scripts/review_recheck.py`, `plugins/delegate/scripts/review_context.py`, `plugins/delegate/interface.json`, `plugins/delegate/tests/test-review-recheck.py`, `plugins/delegate/tests/test-review-context.py`, `plugins/delegate/tests/test-review-execution.py`, `plugins/delegate/tests/test-claude-review.py`, `plugins/delegate/tests/test-review-guest.py`, `plugins/delegate/tests/test-review-cli.py`, `plugins/delegate/tests/test-interface.py`, `plugins/delegate/README.md`, `plugins/delegate/README.en.md`, `spec/integration-interface.md`, `docs/en/SPEC-integration-interface.md`, `docs/en/SPEC-review-snapshot-recheck.md`, `docs/en/capability-map.md`, `docs/releases/unreleased.md`, `docs/en/releases/unreleased.md`
+- Exclusive: `plugins/delegate/scripts/review_result.py`, `plugins/delegate/tests/test-review-result.py`, `plugins/delegate/scripts/review_recheck.py`, `plugins/delegate/scripts/review_context.py`, `plugins/delegate/interface.json`, `plugins/delegate/tests/test-review-recheck.py`, `plugins/delegate/tests/test-review-context.py`, `plugins/delegate/tests/test-review-execution.py`, `plugins/delegate/tests/test-claude-review.py`, `plugins/delegate/tests/test-review-guest.py`, `plugins/delegate/tests/test-review-cli.py`, `plugins/delegate/tests/test-interface.py`, `plugins/delegate/README.md`, `plugins/delegate/README.en.md`, `spec/integration-interface.md`, `docs/en/SPEC-integration-interface.md`, `docs/en/SPEC-review-snapshot-recheck.md`, `docs/en/capability-map.md`, `docs/releases/unreleased.md`, `docs/en/releases/unreleased.md`
 
 ## Boundaries
 
@@ -121,6 +135,7 @@ Tests first and confirmed red, then implementation.
 - **SR-05:** `interface.json` is 1.6 with `review.recheck.snapshot: true`; both plugin validations pass.
 - **SR-06:** zh/en contracts, usage draft U3/M2, integration-interface zh/en pointer, plugin README zh/en (including "compare `scope.files`, not the fingerprint, for snapshots") and unreleased notes in sync.
 - **SR-07:** full validation, both plugin validations and `git diff --check` pass.
+- **SR-08 (S10):** unreported reference-only files are not recorded as `coverage_not_reported` and do not cause `review_incomplete`; an omitted reviewed file is still incomplete; a reference file that is also in scope is handled as a reviewed file (unit + stub end-to-end). After a patch release, rerun all three U3 steps (first round, recheck, rejection on another branch) with the installed version for the user to judge M2.
 
 ## Open questions
 
