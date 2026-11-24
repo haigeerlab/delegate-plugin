@@ -432,6 +432,29 @@ class DesignProfileCLITests(unittest.TestCase):
         self.assertEqual(report['criteria'], 'design-v1')
 
 
+class ReferenceCoverageCLITests(unittest.TestCase):
+    """spec/review-snapshot-recheck.md S10/SR-08: reference-only files need no coverage report."""
+    setUp = execution.CommonExecutionTests.setUp
+    git = SnapshotRecheckCLITests.git
+    review = SnapshotRecheckCLITests.review
+    prepare = DesignProfileCLITests.prepare
+
+    def test_reviewer_reporting_only_the_reviewed_file_completes(self):
+        self.prepare()
+        path = self.root / 'content.json'
+        path.write_text(json.dumps({'schema_version': 1, 'reviewed': ['design.md'], 'unreviewed': [], 'findings': []}))
+        self.env['FIXTURE_CONTENT'] = str(path)
+        for profile in ((), ('--profile', 'design')):
+            with self.subTest(profile=profile):
+                result = self.review(*profile, '--paths', 'design.md', '--spec', 'src/a.py')
+                self.assertEqual(result.returncode, 0, result.stderr)
+                report = json.loads(result.stdout)
+                self.assertEqual(report['execution_status'], 'completed')
+                self.assertEqual(report['review_outcome'], 'no_findings_in_scope')
+                self.assertEqual(report['unreviewed'], [])
+                self.assertEqual(sorted(report['scope']['files']), ['design.md', 'src/a.py'])
+
+
 class ReviewerSelectionCLITests(unittest.TestCase):
     """spec/reviewer-selection.md RS-03..RS-07 through the public entry with a fake Codex."""
     setUp = execution.CommonExecutionTests.setUp

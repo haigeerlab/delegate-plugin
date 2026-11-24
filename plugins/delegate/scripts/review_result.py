@@ -132,8 +132,12 @@ def content_result(content, context):
         if any(entry['path'] == item['path'] for entry in omitted):
             raise ResultError('coverage_unreviewed_duplicate')
         omitted.append(dict(item))
+    # spec/review-snapshot-recheck.md S10: a context file outside this round's scope is reference material
+    # (S6 tells the reviewer not to report on it), so leaving it unreported is not missing coverage.
+    reference_only = {name for name in context.get('context_files', ()) if not selected(name, context['scope'])}
     for name in context['files']:
-        if name not in reviewed and not any(entry['path'] == name for entry in omitted):
+        if (name not in reviewed and name not in reference_only
+                and not any(entry['path'] == name for entry in omitted)):
             omitted.append({'path': name, 'reason': 'coverage_not_reported'})
     validated, verified = [], True
     design = context.get('profile') == 'design'

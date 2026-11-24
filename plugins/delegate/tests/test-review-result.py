@@ -481,6 +481,48 @@ class FingerprintReportTests(unittest.TestCase):
         self.assertIsNone(report['scope']['diff_sha256'])
 
 
+class ReferenceCoverageTests(unittest.TestCase):
+    """spec/review-snapshot-recheck.md S10/SR-08: reference-only files need no coverage report."""
+    stream = ResultTests.stream
+    report = ResultTests.report
+
+    def setUp(self):
+        ResultTests.setUp(self)
+        self.context['files']['spec/a.md'] = b'contract\n'
+        self.context['file_sha256']['spec/a.md'] = 'c' * 64
+        self.context['context_files'] = ['spec/a.md']
+
+    def test_unreported_reference_only_file_does_not_make_review_incomplete(self):
+        result = self.report()
+        self.assertEqual(result['execution_status'], 'completed')
+        self.assertEqual(result['review_outcome'], 'no_findings_in_scope')
+        self.assertEqual(result['unreviewed'], [])
+        self.assertEqual(sorted(result['scope']['files']), ['spec/a.md', 'src/a.py'])
+
+    def test_reference_only_file_listed_by_reviewer_keeps_existing_rules(self):
+        self.content['reviewed'] = ['src/a.py', 'spec/a.md']
+        result = self.report()
+        self.assertEqual(result['execution_status'], 'completed')
+        self.assertEqual(result['reviewed'], ['src/a.py', 'spec/a.md'])
+        # An explicit unreviewed entry is kept and, as before S10, leaves the round incomplete.
+        self.content['reviewed'] = ['src/a.py']
+        self.content['unreviewed'] = [{'path': 'spec/a.md', 'reason': 'reference only'}]
+        result = self.report()
+        self.assertEqual(result['unreviewed'], [{'path': 'spec/a.md', 'reason': 'reference only'}])
+        self.assertIn('review_incomplete', result['diagnostics'])
+
+    def test_unreported_reviewed_file_still_reports_coverage_not_reported(self):
+        self.content['reviewed'] = []
+        result = self.report()
+        self.assertEqual(result['unreviewed'], [{'path': 'src/a.py', 'reason': 'coverage_not_reported'}])
+        self.assertNotEqual(result['review_outcome'], 'no_findings_in_scope')
+
+    def test_context_file_inside_review_scope_is_still_a_reviewed_file(self):
+        self.context['scope'] = {'include': ['src/a.py', 'spec/a.md'], 'exclude': []}
+        result = self.report()
+        self.assertEqual(result['unreviewed'], [{'path': 'spec/a.md', 'reason': 'coverage_not_reported'}])
+
+
 class DesignProfileTests(unittest.TestCase):
     """spec/design-review-criteria.md DR-02..DR-05."""
     stream = ResultTests.stream
