@@ -40,6 +40,8 @@ jobs:
         env:
           PYTHONDONTWRITEBYTECODE: "1"
         run: /bin/bash scripts/validate.sh
+      - name: Checks left the working tree unchanged
+        run: git diff --exit-code
 
   plugin:
     name: plugin manifests and frontmatter
@@ -60,8 +62,8 @@ jobs:
           claude --version
       - name: claude plugin validate
         run: |
-          claude plugin validate .
-          claude plugin validate ./plugins/delegate
+          claude plugin validate --strict .
+          claude plugin validate --strict ./plugins/delegate
       - name: Frontmatter of commands, skills and agents
         run: |
           python3 -m pip install --disable-pip-version-check pyyaml
