@@ -10,6 +10,14 @@ fail() {
   STATUS=1
 }
 
+# Tests must not change the working tree (C10). Compare against the state at
+# start so the check also works with uncommitted local edits; in a clean CI
+# checkout this is equivalent to `git diff --exit-code` plus untracked files.
+tree_state() {
+  { git -C "${ROOT_DIR}" diff HEAD --binary; git -C "${ROOT_DIR}" status --porcelain=v1 --untracked-files=all; } | cksum
+}
+TREE_BEFORE="$(tree_state)"
+
 check_json() {
   JSON_FILE="${1}"
   if ! python3 -m json.tool "${JSON_FILE}" >/dev/null 2>&1; then
@@ -140,6 +148,11 @@ if ! python3 -B "${ROOT_DIR}/plugins/delegate/tests/test-claude-isolation.py" --
 fi
 # Actual OS/SSH/live suites require a separately prepared and authorized guest.
 # Keep their red/actual evidence separate; never relabel them as offline passes.
+
+if [ "$(tree_state)" != "${TREE_BEFORE}" ]; then
+  git -C "${ROOT_DIR}" status --short >&2
+  fail "验证过程改动了工作区（见上面的 git status）"
+fi
 
 if [ "${STATUS}" -ne 0 ]; then
   exit 1
