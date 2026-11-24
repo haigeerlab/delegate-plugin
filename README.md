@@ -379,6 +379,6 @@ v0.5.0 不注册UserPromptSubmit，不按每轮输入自动提醒或探测。Ses
 
 ## 许可
 
-本项目源码及随附文档采用 [MIT 许可证](LICENSE)，版权声明为 `Copyright (c) 2026 haigeerlab and contributors`。允许商业使用、修改和分发，分发时须保留版权声明与许可声明；软件按原样提供，不作担保。此处为中文摘要，以 LICENSE 中的英文标准全文为准。
+本项目源码及随附文档采用 [MIT 许可证](LICENSE)，版权声明为 `Copyright (c) 2026 haigeerlab`。允许商业使用、修改和分发，分发时须保留版权声明与许可声明；软件按原样提供，不作担保。此处为中文摘要，以 LICENSE 中的英文标准全文为准。
 
 插件目录内附有同文 [LICENSE](plugins/delegate/LICENSE)，确保单独分发或安装插件时也携带许可。

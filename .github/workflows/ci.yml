@@ -1,0 +1,89 @@
+name: CI
+
+# Single workflow for checks that gate merges into main. Branch protection
+# requires only the "CI required" job below, so jobs can be added or renamed
+# without touching the protection rule. No path filters: a filtered-out run
+# never reports and the PR would wait for it forever.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions: {}
+
+jobs:
+  test:
+    name: test (${{ matrix.python }})
+    # The suites assume a macOS host (/private/tmp, the native review sandbox),
+    # which is the only supported host. setup-python ships 3.9 for macOS only
+    # as x64, so 3.9 runs on the Intel image and 3.13 on the default arm64 one.
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - python: "3.9"
+            os: macos-15-intel
+          - python: "3.13"
+            os: macos-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Run scripts/validate.sh
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: /bin/bash scripts/validate.sh
+      - name: Checks left the working tree unchanged
+        run: git diff --exit-code
+
+  plugin:
+    name: plugin manifests and frontmatter
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13"
+      - name: Install Claude Code
+        run: |
+          npm install -g @anthropic-ai/claude-code
+          claude --version
+      - name: claude plugin validate
+        run: |
+          claude plugin validate --strict .
+          claude plugin validate --strict ./plugins/delegate
+      - name: Frontmatter of commands, skills and agents
+        run: |
+          python3 -m pip install --disable-pip-version-check pyyaml
+          python3 -B scripts/check-frontmatter.py .
+
+  # Shared checks provided by the hub (for example zizmor) attach here as more
+  # jobs listed under `needs` below.
+
+  required:
+    name: CI required
+    if: ${{ always() }}
+    needs: [test, plugin]
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - name: Require every job to succeed
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "results: $RESULTS"
+          for result in $RESULTS; do
+            [ "$result" = success ] || exit 1
+          done
