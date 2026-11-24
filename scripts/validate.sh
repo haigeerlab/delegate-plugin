@@ -87,6 +87,10 @@ if ! python3 "${ROOT_DIR}/scripts/check-manifests.py" "${ROOT_DIR}"; then
   fail "清单必填字段校验未通过"
 fi
 
+if ! python3 -B "${ROOT_DIR}/scripts/check-shared-sections.py" "${ROOT_DIR}"; then
+  fail "CLAUDE.md 与 AGENTS.md 的共享段不一致"
+fi
+
 if ! /bin/bash "${ROOT_DIR}/evals/propose-not-auto.sh" --selftest; then
   fail "propose-not-auto 自检未通过"
 fi

@@ -41,6 +41,7 @@ class DiscoveryTests(unittest.TestCase):
         target.write_text('# prevent recursive fixture validation\n')
         (root / 'scripts/tests/test-release-prepare.py').write_text('# fixture suite\n')
         (root / 'scripts/tests/test-local-paths.py').write_text('# fixture suite\n')
+        (root / 'scripts/check-shared-sections.py').write_text('# fixture check\n')
         return root
 
     def validate(self, root):
