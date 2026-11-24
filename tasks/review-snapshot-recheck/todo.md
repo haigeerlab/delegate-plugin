@@ -46,5 +46,5 @@
 - [x] Task R3：文档同步（待发行说明中英文；插件 README 如有覆盖说明则补一句） — 待发行说明中英文各加一节；插件 README 中英文各补一句
 - [x] Checkpoint R1（report）：免费验证全绿 — 2026-11-24 `scripts/validate.sh` 退出 0；`claude plugin validate .` 与 `./plugins/delegate` 通过；`git diff --check` 无问题；verify-artifacts 6 通过 0 警告
 - [x] Checkpoint R2（gate）：复审与本地提交（须另行明确同意） — 2026-11-24 用户原话「通过，本地提交」
-- [ ] Checkpoint R3（gate）：交付验收，推送开 PR（须另行明确同意）
+- [x] Checkpoint R3（gate）：交付验收，推送开 PR（须另行明确同意） — 2026-11-24 用户原话「通过，推送开 PR」；PR #44 按 F3 经用户「合并」后合并，合并提交 b2dd808
 - [ ] Task R4：发补丁版后用安装版重跑 U3 三步，交用户判定 M2
