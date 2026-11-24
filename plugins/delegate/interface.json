@@ -1,5 +1,5 @@
 {
-  "interface": "1.6",
+  "interface": "1.7",
   "review": {
     "command": "/delegate:review",
     "backends": ["codex", "claude-code"],
@@ -12,7 +12,11 @@
     "recheck": {"option": "--previous-report", "field": "recheck", "statuses": ["resolved", "unresolved"], "snapshot": true},
     "profiles": {"default": {"criteria": "severity-v1"},
                  "design": {"option": "--profile design", "criteria": "design-v1",
-                            "downgraded": ["no_code_evidence", "second_round"]}}
+                            "downgraded": ["no_code_evidence", "second_round"]}},
+    "reviewer": {"option": "--backend auto", "authorOption": "--author-host", "field": "reviewer",
+                 "vendors": {"codex": "openai", "claude-code": "anthropic"},
+                 "selections": ["cross_vendor", "same_vendor_fallback", "explicit", "none"],
+                 "unreviewed": "no_reviewer_available"}
   },
   "run": {
     "command": "/delegate:run", "backends": ["codex"], "write": "explicit",
@@ -33,5 +37,6 @@
     "rules": {"option": "--rules-file", "maxBytes": 16384, "placement": "after-preamble",
               "projectInstructions": "codex-reads-agents-md"}
   },
-  "doctor": {"command": "/delegate:doctor"}
+  "doctor": {"command": "/delegate:doctor",
+             "reviewers": {"option": "--reviewers", "json": "delegate.reviewers/v1"}}
 }

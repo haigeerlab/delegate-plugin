@@ -15,13 +15,15 @@ def main():
         print('delegate: recursive delegation is not supported.', file=sys.stderr)
         return 64
     args = sys.argv[1:]
+    if args in (['--reviewers'], ['--reviewers', '--json']):
+        return reviewers(json_output=len(args) == 2)
     if args in ([], ['--backend', 'codex'], ['--backend', 'claude-code']):
         print('后端能力（非可用性结论）：\n' + describe(), flush=True)
     if args in ([], ['--backend', 'codex']):
         path = Path(__file__).resolve().parents[1] / 'hooks/doctor.sh'
         os.execv('/bin/bash', ['/bin/bash', str(path)])
     if args != ['--backend', 'claude-code']:
-        print('用法：review_doctor.py [--backend codex|claude-code]', file=sys.stderr)
+        print('用法：review_doctor.py [--backend codex|claude-code] | --reviewers [--json]', file=sys.stderr)
         return 64
     print('delegate: host=unknown backend=claude-code（无模型体检）')
     temporary = None
@@ -51,6 +53,32 @@ def main():
     finally:
         if temporary is not None and not retained:
             shutil.rmtree(temporary)
+    return 0
+
+
+def reviewers(*, json_output):
+    """spec/reviewer-selection.md E5: list usable second reviewers; never blocks, always exits 0."""
+    import json
+    import reviewer_select
+    checks = reviewer_select.real_checks()
+    rows = []
+    for name, vendor in reviewer_select.VENDORS.items():
+        problem = checks[name]()
+        rows.append({'backend': name, 'vendor': vendor, 'available': problem is None, 'diagnostic': problem})
+    usable = sum(row['available'] for row in rows)
+    hint = None if usable == len(rows) else 'add_second_vendor' if usable else 'no_reviewer_available'
+    if json_output:
+        print(json.dumps({'schema': 'delegate.reviewers/v1', 'reviewers': rows, 'hint': hint}, ensure_ascii=False))
+        return 0
+    print('delegate: 第二审查者（无模型检查，不发请求）')
+    for row in rows:
+        state = '可用' if row['available'] else '不可用（%s）' % row['diagnostic']
+        print('%s（%s）：%s' % (row['backend'], row['vendor'], state))
+    if hint == 'add_second_vendor':
+        print('只有一家可用：技术方案会由同厂商的独立会话审查。建议再开通一家，以便异厂商审查。')
+    elif hint == 'no_reviewer_available':
+        print('两家都不可用：技术方案审查会记为「未审」，由回归测试兜底。')
+    print('不阻止任何操作；模型、额度与真实审查未验证。')
     return 0
 
 

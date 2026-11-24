@@ -432,5 +432,69 @@ class DesignProfileCLITests(unittest.TestCase):
         self.assertEqual(report['criteria'], 'design-v1')
 
 
+class ReviewerSelectionCLITests(unittest.TestCase):
+    """spec/reviewer-selection.md RS-03..RS-07 through the public entry with a fake Codex."""
+    setUp = execution.CommonExecutionTests.setUp
+    review = SnapshotRecheckCLITests.review
+
+    def available(self, **checks):
+        # Test-only override of the model-free availability checks (see reviewer_select.real_checks).
+        self.env['DELEGATE_FIXTURE_REVIEWERS'] = json.dumps({key.replace('_', '-'): value for key, value in checks.items()})
+
+    def test_no_reviewer_gives_an_unreviewed_report(self):
+        self.available(codex='codex_not_logged_in', claude_code='claude_cli_missing')
+        result = self.review('--backend', 'auto', '--author-host', 'claude-code', '--paths', 'src/a.py')
+        self.assertEqual(result.returncode, 127, result.stderr)
+        report = json.loads(result.stdout)
+        self.assertEqual((report['execution_status'], report['review_outcome']), ('conditions_missing', 'inconclusive'))
+        self.assertEqual(report['diagnostics'], ['no_reviewer_available', 'codex_not_logged_in', 'claude_cli_missing'])
+        self.assertFalse(report['backend_started'])
+        self.assertIsNone(report['backend'])
+        self.assertEqual(report['reviewer'], {'vendor': None, 'backend': None, 'same_vendor': None, 'selection': 'none'})
+        self.assertFalse((self.root / 'prompt').exists())
+
+    def test_auto_picks_codex_and_reports_it(self):
+        self.available(codex=None, claude_code=None)
+        auto = self.review('--backend', 'auto', '--author-host', 'claude-code', '--paths', 'src/a.py')
+        self.assertEqual(auto.returncode, 0, auto.stderr)
+        report = json.loads(auto.stdout)
+        self.assertEqual(report['backend'], 'codex')
+        self.assertEqual(report['reviewer'], {'vendor': 'openai', 'backend': 'codex', 'same_vendor': False,
+                                              'selection': 'cross_vendor'})
+        self.assertTrue((self.root / 'prompt').exists())
+        explicit = json.loads(self.review('--backend', 'codex', '--paths', 'src/a.py').stdout)
+        for key in ('execution_status', 'review_outcome', 'scope', 'reviewed', 'findings', 'criteria'):
+            self.assertEqual(report[key], explicit[key], key)
+
+    def test_explicit_backend_is_labelled(self):
+        with_author = json.loads(self.review('--backend', 'codex', '--author-host', 'codex', '--paths', 'src/a.py').stdout)
+        self.assertEqual(with_author['reviewer'], {'vendor': 'openai', 'backend': 'codex', 'same_vendor': True,
+                                                   'selection': 'explicit'})
+        plain = json.loads(self.review('--paths', 'src/a.py').stdout)
+        self.assertEqual(plain['reviewer'], {'vendor': 'openai', 'backend': 'codex', 'same_vendor': None,
+                                             'selection': 'explicit'})
+
+    def test_argument_errors(self):
+        cases = [('--backend', 'auto'),
+                 ('--backend', 'auto', '--author-host', 'codex', '--model', 'm'),
+                 ('--backend', 'auto', '--author-host', 'codex', '--effort', 'low'),
+                 ('--backend', 'auto', '--author-host', 'codex', '--max-turns', '3'),
+                 ('--backend', 'auto', '--author-host', 'codex', '--max-budget-usd', '1'),
+                 ('--author-host', 'other'),
+                 ('--author-host', 'codex', '--author-host', 'codex')]
+        for options in cases:
+            with self.subTest(options=options):
+                result = self.review(*options, '--paths', 'src/a.py')
+                self.assertEqual(result.returncode, 64, result.stderr)
+                self.assertFalse((self.root / 'prompt').exists())
+
+    def test_failure_before_selection_still_has_reviewer(self):
+        self.available(codex=None, claude_code=None)
+        result = self.review('--backend', 'auto', '--author-host', 'codex', '--base', 'no-such-ref')
+        self.assertEqual(result.returncode, 127, result.stderr)
+        report = json.loads(result.stdout)
+        self.assertEqual(report['reviewer']['selection'], 'none')
+
+
 if __name__ == '__main__':
     unittest.main()

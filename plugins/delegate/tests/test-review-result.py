@@ -542,6 +542,14 @@ class DesignProfileTests(unittest.TestCase):
                          [('suggestion', 'second_round'), ('suggestion', 'second_round')])
         self.assertEqual([item['status'] for item in result['recheck']['items']], ['unresolved'])
 
+    def test_report_carries_reviewer(self):
+        # spec/reviewer-selection.md: explicit backend by default, the selection result when one was made.
+        self.assertEqual(self.report()['reviewer'], {'vendor': 'anthropic', 'backend': 'claude-code',
+                                                     'same_vendor': None, 'selection': 'explicit'})
+        chosen = {'vendor': 'anthropic', 'backend': 'claude-code', 'same_vendor': True, 'selection': 'same_vendor_fallback'}
+        self.context['reviewer'] = chosen
+        self.assertEqual(self.report()['reviewer'], chosen)
+
     def test_report_carries_criteria(self):
         self.assertEqual(self.report()['criteria'], 'design-v1')
         del self.context['profile']

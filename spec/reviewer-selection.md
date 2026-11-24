@@ -1,6 +1,6 @@
 # 规格：reviewer-selection（第二审查者的检测与选择）
 
-<!-- spec-guard: review approved f30a37af0de7 -->
+<!-- spec-guard: review approved ee564b3bc2d5 -->
 
 简体中文 | [English](../docs/en/SPEC-reviewer-selection.md)
 
@@ -24,6 +24,7 @@ S110 要求技术方案由第二审查者审：优先选与主开发不同厂商
 - **E1 厂商名。** `codex` → `openai`，`claude-code` → `anthropic`；`--author-host` 取值同后端名，按同一表换算厂商。
 - **E2 选择顺序。** 主开发 `claude-code`：先查 Codex，可用选它（`cross_vendor`）；否则查 Claude Code，可用选它（`same_vendor_fallback`）；都不可用 → 未审。主开发 `codex` 对称：先 Claude Code，再 Codex。
 - **E3 显式后端也标注。** 给了 `--backend codex|claude-code` 时 `selection="explicit"`；同时给了 `--author-host` 就算出 `same_vendor`，没给则 `same_vendor` 为 `null`（不知道主开发是谁）。不带 `auto` 时其余行为与 0.11.0 相同。
+- **E7「未审」报告的 `backend` 为 `null`。** 没有任何后端启动时，报告顶层 `backend` 为 `null`（`reviewer` 的 `vendor`、`backend`、`same_vendor` 同为 `null`、`selection` 为 `none`）。合同：只有 `reviewer.selection == "none"` 时 `backend` 才可能为 `null`，其余情况仍只取 `codex`／`claude-code`。实现中发现、规格原未覆盖，用户 2026-11-24 选定，原话「A：null」。
 - **E4 auto 时不接受只属于某一家的参数。** `--backend auto` 与 `--model`、`--effort`、`--max-turns`、`--max-budget-usd` 同时给 → 参数错误（事先不知道会选到哪家，这些参数没有确定含义）。
 - **E5 体检。** `/delegate:doctor --reviewers` 依次对两家做 P2 的无模型检查，逐家给出可用或不可用（附固定诊断码），只有一家可用时提示「建议再开通一家，以便异厂商审查」，两家都不可用时说明审查会记为「未审」；加 `--json` 输出 `{"schema": "delegate.reviewers/v1", "reviewers": [{"backend", "vendor", "available", "diagnostic"}], "hint"}` 供 spec-guard 读。都不阻止任何操作，退出 0。
 - **E6 接口 1.7。** 与 [design-review-criteria](design-review-criteria.md) 一起升 1.7，只增字段（见下节）。

@@ -167,5 +167,45 @@ class BackendRoutingTests(unittest.TestCase):
         self.assertEqual(self.recorded(), [])
 
 
+class ReviewerDoctorTests(unittest.TestCase):
+    """spec/reviewer-selection.md E5/RS-08: model-free reviewer listing."""
+
+    def doctor(self, pinned, *options):
+        env = dict(os.environ, DELEGATE_FIXTURE_REVIEWERS=json.dumps(pinned), PYTHONDONTWRITEBYTECODE='1')
+        return subprocess.run([sys.executable, '-B', str(SCRIPTS / 'review_doctor.py'), '--reviewers', *options],
+                              env=env, capture_output=True, text=True, timeout=30, stdin=subprocess.DEVNULL)
+
+    def test_json_lists_both_reviewers_and_hint(self):
+        cases = [({'codex': None, 'claude-code': None}, None),
+                 ({'codex': None, 'claude-code': 'claude_cli_missing'}, 'add_second_vendor'),
+                 ({'codex': 'codex_cli_missing', 'claude-code': 'claude_cli_missing'}, 'no_reviewer_available')]
+        for pinned, hint in cases:
+            with self.subTest(pinned=pinned):
+                result = self.doctor(pinned, '--json')
+                self.assertEqual(result.returncode, 0, result.stderr)
+                value = json.loads(result.stdout)
+                self.assertEqual(value['schema'], 'delegate.reviewers/v1')
+                self.assertEqual(value['reviewers'], [
+                    {'backend': 'codex', 'vendor': 'openai', 'available': pinned['codex'] is None,
+                     'diagnostic': pinned['codex']},
+                    {'backend': 'claude-code', 'vendor': 'anthropic', 'available': pinned['claude-code'] is None,
+                     'diagnostic': pinned['claude-code']}])
+                self.assertEqual(value['hint'], hint)
+
+    def test_text_output(self):
+        both = self.doctor({'codex': None, 'claude-code': None})
+        self.assertEqual(both.returncode, 0, both.stderr)
+        self.assertIn('codex（openai）：可用', both.stdout)
+        one = self.doctor({'codex': None, 'claude-code': 'claude_cli_missing'}).stdout
+        self.assertIn('claude-code（anthropic）：不可用（claude_cli_missing）', one)
+        self.assertIn('建议再开通一家', one)
+        none = self.doctor({'codex': 'codex_cli_missing', 'claude-code': 'claude_cli_missing'}).stdout
+        self.assertIn('未审', none)
+
+    def test_unknown_option_is_rejected(self):
+        result = self.doctor({}, '--other')
+        self.assertEqual(result.returncode, 64)
+
+
 if __name__ == '__main__':
     unittest.main()

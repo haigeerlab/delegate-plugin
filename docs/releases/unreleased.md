@@ -18,10 +18,18 @@ v0.6.0 之后的 run 超时保留进度（接口 1.2）与写模式不再写入 
 - 拿不出这样一行的阻断，由 delegate 改记为建议并标 `downgraded: "no_code_evidence"`，原文不改；带 `--previous-report` 的第二轮只核对上一轮，新发现一律记为建议（`downgraded: "second_round"`）；design 档里行号核不上的发现不让整轮失败。
 - 报告顶层新增 `criteria`（`severity-v1` 或 `design-v1`）；复审时两轮判据必须相同，老报告缺字段按 `severity-v1`。
 
+### 第二审查者的选择（`--backend auto`）
+
+- `/delegate:review` 新增 `--backend auto` 与 `--author-host codex|claude-code`：用无模型检查优先选另一家厂商，否则用同厂商的全新会话；都不可用时出「未审」报告（`conditions_missing`、诊断 `no_reviewer_available`、`backend` 为 `null`、退出 127），不启动模型。合同见 [reviewer-selection 规格](../../spec/reviewer-selection.md)。
+- 报告顶层新增 `reviewer: {vendor, backend, same_vendor, selection}`，写明审查者厂商、是否同厂商、怎么选出来的。
+- `/delegate:doctor --reviewers [--json]` 列出本机可用的审查者，只有一家时建议再开通一家，不阻止任何操作。
+- 审查总是新起会话，写代码的会话不会审自己的东西；文档里原先「Codex 不可用就停下、不改用 Claude 自审」的说法改为此条。
+
 ## 影响面
 
 - spec-guard 的技术方案审查（design-review）按 `--profile design` 调用，并用 `--spec` 带上影响面里的已有文件和需求文档。
 - 不带 `--profile` 时提示词、判据、校验与 v0.11.0 相同。
+- 读报告的一方：「未审」报告的 `backend` 为 `null`（只在 `reviewer.selection == "none"` 时）；`auto` 可能选中 `claude-code`，审查后端不再只有 codex。
 
 ## 验证与已知限制
 

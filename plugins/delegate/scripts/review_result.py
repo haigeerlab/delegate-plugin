@@ -221,6 +221,12 @@ def conclude(report, verified):
     report['review_outcome'] = 'findings' if report['findings'] or unresolved else 'no_findings_in_scope'
 
 
+def reviewer_default(backend):
+    """Before any selection: the requested backend counts as explicit (spec/reviewer-selection.md E3)."""
+    from reviewer_select import VENDORS, describe
+    return describe(backend, None, 'explicit') if backend in VENDORS else describe(None, None, 'none')
+
+
 def base_report(backend, execution, context, requested_model):
     state = execution.get('execution_status', 'failed')
     cleanup = execution.get('cleanup', 'unverified')
@@ -232,7 +238,8 @@ def base_report(backend, execution, context, requested_model):
     diagnostics = [item for item in execution.get('diagnostics', [])
                    if isinstance(item, str) and re.fullmatch(r'[a-z][a-z0-9_]{0,79}', item)]
     return {'schema_version': 1, 'execution_status': state, 'review_outcome': 'inconclusive',
-        'host': 'unknown', 'backend': backend, 'criteria': criteria_name(context), 'backend_started': execution.get('backend_started', True),
+        'host': 'unknown', 'backend': backend, 'criteria': criteria_name(context),
+        'reviewer': context.get('reviewer') or reviewer_default(backend), 'backend_started': execution.get('backend_started', True),
         'execution_environment': execution.get('execution_environment', 'unknown'),
         'cleanup': cleanup, 'requested_model': requested_model, 'observed_models': [],
         'scope': {'paths': context['scope'], 'baseline': context['baseline'],

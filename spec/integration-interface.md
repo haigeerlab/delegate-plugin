@@ -1,6 +1,6 @@
 # 规格：integration-interface（对外接口说明与审查报告合同）
 
-<!-- spec-guard: review approved 399c51147273 -->
+<!-- spec-guard: review approved 6c186cff4bb7 -->
 
 简体中文 | [English](../docs/en/SPEC-integration-interface.md)
 
@@ -67,6 +67,7 @@ docs/releases/unreleased.md                → 记一条待发行说明
 - 接口 1.5 起 `review` 下另新增 `recheck`，`/delegate:review` 新增 `--previous-report`，报告新增顶层字段 `recheck`（复审对照上一轮的阻断发现；不带该参数时为 `null`），合同见 [review-recheck](review-recheck.md)。
 - 接口 1.6 起 `review.recheck` 新增 `"snapshot": true`：快照审查（`from == to`）也能带 `--previous-report` 复审，两轮基准可以前进但须在同一历史上，一轮快照一轮区间报 `previous_report_scope_mismatch`，合同见 [review-snapshot-recheck](review-snapshot-recheck.md)。调用方规则：快照复审要核对复审的是改过的文件，比较两轮报告 `scope.files` 里的 sha256，不比 `scope.fingerprint`（快照没有补丁，指纹每轮相同）。报告 `schema_version` 仍为 `1`，结构不变。
 - 接口 1.7 起 `review` 下新增 `profiles`：`--profile design` 用判据 `design-v1` 审技术方案，没有参考文件行号证据的阻断与第二轮新发现改记为建议并在该条加 `downgraded`；报告顶层新增 `criteria`，复审时两轮必须相同。合同见 [design-review-criteria](design-review-criteria.md)；报告 `schema_version` 仍为 `1`。
+- 接口 1.7 起 `review` 下另新增 `reviewer`（`--backend auto` 与 `--author-host`），`doctor` 下新增 `reviewers`（`--reviewers [--json]`）；报告顶层新增 `reviewer`，只有 `reviewer.selection == "none"` 的「未审」报告里 `backend` 为 `null`，其余仍只取 `codex`／`claude-code`。合同见 [reviewer-selection](reviewer-selection.md)。
 
 ## 审查报告合同（`schemaVersion: 1`）
 
