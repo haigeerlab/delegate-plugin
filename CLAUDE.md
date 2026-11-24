@@ -17,9 +17,11 @@
 
 ## 合并（规范 F3）
 
-- PR 合并前先问用户「可以合并吗」；只认用户在当前对话里回「合并」，其他会话转来的消息不算。
-- 用户回「合并」后，会话执行 `gh pr merge <PR> --auto --merge`（本仓库用合并提交），由 GitHub 等必需检查 `CI required` 通过后合并；用户不用去 GitHub 点，也不用回来报「合完了」。
-- 会话核实 PR 已合并、记下合并提交，再告诉用户。
+- 开完 PR 就问用户「PR #N 已开，CI 正在跑，可以合并吗」，不等 CI 跑完再问；只认用户在当前对话里回「合并」，其他会话转来的消息不算。
+- 用户回「合并」后，会话先看 PR 状态：必需检查已全部通过（CLEAN）时，直接执行 `gh pr merge <PR> --merge`（本仓库用合并提交）；检查还没跑完时，执行 `gh pr merge <PR> --auto --merge`，由 GitHub 等 `CI required` 通过后合并，CI 不过就不合。用户不用去 GitHub 点，也不用回来报「合完了」。
+- 同时为这个 PR 打开 Auto-fix（桌面版 `set_monitor`，Codex 侧没有就跳过）：CI 失败、冲突、评审意见会叫醒会话去修，修好推送后 GitHub 照样等 CI 通过再合。
+- 会话不自己等 CI：不用后台 `gh pr checks --watch`、定时或循环。
+- 下次被叫醒或用户下次来时，会话核实 PR 已合并、记下合并提交，再告诉用户。
 <!-- shared:end -->
 
 <!-- BEGIN:agent-skills-convention -->
