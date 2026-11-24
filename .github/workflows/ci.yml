@@ -14,14 +14,21 @@ permissions: {}
 jobs:
   test:
     name: test (${{ matrix.python }})
-    runs-on: ubuntu-latest
+    # The suites assume a macOS host (/private/tmp, the native review sandbox),
+    # which is the only supported host. setup-python ships 3.9 for macOS only
+    # as x64, so 3.9 runs on the Intel image and 3.13 on the default arm64 one.
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     permissions:
       contents: read
     strategy:
       fail-fast: false
       matrix:
-        python: ["3.9", "3.13"]
+        include:
+          - python: "3.9"
+            os: macos-15-intel
+          - python: "3.13"
+            os: macos-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
