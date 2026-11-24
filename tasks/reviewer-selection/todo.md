@@ -10,7 +10,7 @@
 - [x] Checkpoint 1（report）：免费验证全绿
 - [x] Task 5：文档同步
 - [x] Checkpoint 2（gate）：复审（本地提交须另行明确同意）
-- [ ] Checkpoint 3（gate）：交付验收
+- [x] Checkpoint 3（gate）：交付验收
 
 ## 记录
 
@@ -34,3 +34,4 @@
 - `spec/integration-interface.md` 及英文页加 1.7 `reviewer`／`doctor.reviewers` 指向与 `backend` 可为 `null` 的条件，只加不改。
 - 中英文待发行说明加「第二审查者的选择」小节与读报告提示。
 - Checkpoint 2：用户 2026-11-24 原话「通过，本地提交」。复审前全量验证 `validate: ok`、两次 `claude plugin validate` 通过、`git diff --check` 通过；integration-interface 的 1.7 指向随复审一并重新记录批准。
+- Checkpoint 3：用户 2026-11-24 原话「通过，推送开 PR」。验收基于 848f8fe：`validate: ok`、两次 `claude plugin validate` 通过、`git diff --check 4bc497e HEAD` 通过、`module_scope.py check --base 4bc497e` 越界 0、`verify-artifacts` 7 通过 0 警告。未验证：两家真实 CLI 可用性下的实际选择，留到发版后实跑。
