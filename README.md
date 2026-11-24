@@ -225,7 +225,7 @@ Claude 需明确范围，可用 review 的快捷参数或高级 context JSON，�
 
 给按审查意见自动返工的调用方（如 autopilot）用，用法与里程碑见[用法草案](spec/usage/auto-takeover-review.md)。
 
-1. **第一轮审查并分流。** `/delegate:review --backend codex --base <PR 基准> --head <PR 头> "<任务与验收标准>"`，把标准输出的 JSON 报告存为 `round1.report.json`。只有 `execution_status=completed` 且有结论时才往下看，否则停下等人，不改用 Claude 自审。每条发现的 `severity` 为 `blocking`（以及缺失或不认识的值）就返工；`suggestion` 由调用方决定改不改并留档。判据见 [review-severity](spec/review-severity.md)。
+1. **第一轮审查并分流。** `/delegate:review --backend codex --base <PR 基准> --head <PR 头> "<任务与验收标准>"`，把标准输出的 JSON 报告存为 `round1.report.json`。只有 `execution_status=completed` 且有结论时才往下看，否则停下等人。写代码的会话绝不审自己的东西：delegate 的审查总是新起会话；需要自动挑审查者时用 `--backend auto --author-host <主开发>`，优先异厂商、否则同厂商独立会话，都不可用记为「未审」。每条发现的 `severity` 为 `blocking`（以及缺失或不认识的值）就返工；`suggestion` 由调用方决定改不改并留档。判据见 [review-severity](spec/review-severity.md)。
 2. **返工后复审。** 同一个 `--base`、新的 `--head`，加 `--previous-report round1.report.json`。上一轮的阻断逐条进 `recheck.items` 标 `resolved` 或 `unresolved`，`findings` 只放新问题；本轮阻断集合为空才算审查没有阻断意见。第三轮把第二轮报告交进来即可，轮次计数和交给人由调用方判断。合同见 [review-recheck](spec/review-recheck.md)。
 
 没有阻断意见也不等于可以合并；要核对复审的是修正后的补丁，比较 `recheck.previous_fingerprint` 与本轮 `scope.fingerprint`。

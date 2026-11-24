@@ -54,6 +54,7 @@ if mode in ('nullline','line'):content['findings']=[{'title':'t','file':'src/a.p
 if mode=='recheck':content['previous']=[{'index':1,'status':'unresolved','evidence':'still there'}]
 if mode=='badseverity':content['findings']=[{'title':'t','file':'src/a.py','line':1,
  'trigger':'t','impact':'i','evidence':'e','suggestion':'s','unverified':[],'severity':'critical'}]
+if os.environ.get('FIXTURE_CONTENT'):content=json.loads(Path(os.environ['FIXTURE_CONTENT']).read_text())
 Path(args[args.index('-o')+1]).write_text(json.dumps(content) if mode!='bad' else 'SECRET_CREDENTIAL')
 print(json.dumps({'type':'turn.completed','usage':{'input_tokens':3,'output_tokens':2}}))
 '''
@@ -295,6 +296,14 @@ class CommonExecutionTests(unittest.TestCase):
         prompt=codex_prompt('TASK-MARKER',dict(base,context_files=['doc.md']))
         self.assertLess(prompt.index(CONTEXT_FILES_INSTRUCTION),prompt.index('TASK-MARKER'))
         self.assertNotIn(CONTEXT_FILES_INSTRUCTION,codex_prompt('TASK-MARKER',dict(base,context_files=[])))
+
+    def test_codex_prompt_uses_design_criteria_for_design_profile(self):
+        from review_context import DESIGN_CRITERIA, SEVERITY_CRITERIA
+        from review_execution import codex_prompt
+        base={'files':{'doc.md':b'x\n'},'file_sha256':{'doc.md':'0'*64},'unreviewed':[]}
+        prompt=codex_prompt('TASK-MARKER',dict(base,profile='design'))
+        self.assertLess(prompt.index(DESIGN_CRITERIA),prompt.index('TASK-MARKER'))
+        self.assertNotIn(SEVERITY_CRITERIA,prompt)
 
     def test_codex_input_limit_counts_line_number_prefixes(self):
         from review_context import ContextError

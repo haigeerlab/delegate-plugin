@@ -8,8 +8,9 @@ import sys
 
 import delegate_backend as backend
 from delegate_capabilities import BACKENDS, describe
-from review_context import ContextError, STOPS, capture, capture_document, git, names, selected
+from review_context import ContextError, STOPS, capture, capture_document, criteria_name, git, names, selected
 import review_recheck
+import reviewer_select
 
 HELP = '''用法：delegate-exec.sh review|run [选项] [--] [任务]
 review：两个后端的只读审查，--backend 默认为 codex。
@@ -30,16 +31,18 @@ def review_arguments(options):
     bounded = options[:options.index('--')] if '--' in options else options
     for flag in ('--backend', '--model', '--effort', '--max-turns', '--max-budget-usd',
                  '--context', '--repo', '--base', '--head', '--changes', '--module', '--dry-run', '--include-untracked',
-                 '--previous-report'):
+                 '--previous-report', '--profile', '--author-host'):
         if sum(value == flag or value.startswith(flag + '=') for value in bounded) > 1:
             raise backend.ArgumentError('duplicate option: ' + flag)
     parser = backend.Parser(add_help=False, allow_abbrev=False)
-    parser.add_argument('--backend', choices=tuple(BACKENDS), default='codex')
+    parser.add_argument('--backend', choices=tuple(BACKENDS) + ('auto',), default='codex')
+    parser.add_argument('--author-host', dest='author_host', choices=tuple(BACKENDS))
     for flag in ('--model', '--effort', '--max-turns', '--max-budget-usd', '--context',
                  '--repo', '--base', '--head', '--changes', '--module', '--previous-report'):
         parser.add_argument(flag)
     for flag in ('--paths', '--exclude', '--spec', '--plan', '--criterion'):
         parser.add_argument(flag, action='append', default=[])
+    parser.add_argument('--profile', choices=('default', 'design'), default='default')
     parser.add_argument('--dry-run', action='store_true')
     parser.add_argument('--include-untracked', action='store_true')
     parser.add_argument('task', nargs='?', default='只读审查指定范围，报告有证据的问题、未审范围及未验证内容。')
@@ -65,7 +68,15 @@ def review_arguments(options):
             raise backend.ArgumentError('--include-untracked requires --changes working-tree')
         if not args.paths and args.base is None and args.changes is None:
             raise backend.ArgumentError('review requires --paths, --base, --changes or --context')
-    forwarded = ['--backend', args.backend, '--review-context', args.context or '(scope shortcuts)']
+    if args.backend == 'auto':
+        # spec/reviewer-selection.md P1/E4: the author must be named, and per-backend options have no meaning yet.
+        if args.author_host is None:
+            raise backend.ArgumentError('--backend auto requires --author-host')
+        if any(value is not None for value in (args.model, args.effort, args.max_turns, args.max_budget_usd)):
+            raise backend.ArgumentError('--backend auto cannot be combined with --model, --effort, --max-turns or --max-budget-usd')
+    # auto is resolved after the context is read; validate the rest against a backend with no required options.
+    forwarded = ['--backend', 'codex' if args.backend == 'auto' else args.backend,
+                 '--review-context', args.context or '(scope shortcuts)']
     for flag in ('--model', '--effort', '--max-turns', '--max-budget-usd'):
         value = getattr(args, flag[2:].replace('-', '_'))
         if value is not None:
@@ -110,17 +121,36 @@ def scope_document(args):
             'uncommitted_changes': flags, 'allowed_tools': ['Read'], 'stop_conditions': sorted(STOPS)}
 
 
+def unreviewed(args, context, problems):
+    """No reviewer is usable: a fixed-shape report, not an error (spec/reviewer-selection.md P3)."""
+    from review_result import base_report, render
+    report = base_report(None, {'execution_status': 'conditions_missing', 'backend_started': False,
+        'cleanup': 'confirmed', 'diagnostics': ['no_reviewer_available'] + problems}, context, None)
+    print(render(report), end='')
+    return 127
+
+
 def review(options):
     args, forwarded = review_arguments(options)
     context = None
     try:
         context = capture(args.context) if args.context else capture_document(scope_document(args))
+        if args.profile == 'design':
+            context['profile'] = 'design'
         if args.previous_report is not None:
             sha256, previous = review_recheck.load(args.previous_report)
             findings = review_recheck.blocking_set(previous)
             review_recheck.check_scope(previous, context)
             context['previous_findings'] = findings
             context['recheck_source'] = review_recheck.source(previous, sha256)
+        if args.backend == 'auto':
+            chosen, selection, problems = reviewer_select.choose(args.author_host, reviewer_select.real_checks())
+            context['reviewer'] = reviewer_select.describe(chosen, args.author_host, selection)
+            if chosen is None:
+                return unreviewed(args, context, problems)
+            args.backend = forwarded[1] = chosen
+        else:
+            context['reviewer'] = reviewer_select.describe(args.backend, args.author_host, 'explicit')
         if args.dry_run:
             from review_execution import CODEX_PROMPT_LIMIT, codex_prompt, deadline
             preview = {key: context[key] for key in ('repository', 'working_directory', 'review_type',
@@ -138,6 +168,8 @@ def review(options):
             if args.backend == 'codex':
                 preview['prompt_bytes'] = len(codex_prompt(args.task, context).encode('utf-8'))
                 preview['max_prompt_bytes'] = CODEX_PROMPT_LIMIT
+            preview['profile'] = args.profile
+            preview['criteria'] = criteria_name(context)
             if 'previous_findings' in context:
                 preview['previous_findings_count'] = len(context['previous_findings'])
             print(json.dumps(preview, ensure_ascii=False, indent=2))

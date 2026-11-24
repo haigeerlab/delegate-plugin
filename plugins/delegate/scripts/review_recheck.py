@@ -11,7 +11,7 @@ import re
 import subprocess
 
 from claude_review import unique_object
-from review_context import ContextError
+from review_context import ContextError, criteria_name
 
 LIMIT = 1024 * 1024
 MAX_ITEMS = 100
@@ -115,7 +115,8 @@ def same_history(repository, previous, current):
 
 def check_scope(report, context):
     previous, current = report['scope']['baseline'], context['baseline']
-    same = report['scope']['paths'] == context['scope'] and previous.get('mode') == current.get('mode')
+    same = (report['scope']['paths'] == context['scope'] and previous.get('mode') == current.get('mode')
+            and report.get('criteria', 'severity-v1') == criteria_name(context))
     if same and current.get('mode') == 'commits':
         if is_snapshot(previous) != is_snapshot(current):
             same = False

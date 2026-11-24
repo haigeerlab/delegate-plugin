@@ -241,6 +241,18 @@ class PreviousReportCLITests(unittest.TestCase):
         self.assertEqual(value['previous_findings_count'], 1)
         self.assertNotIn('previous_findings', value)
 
+    def test_profile_option_preview_and_errors(self):
+        self.prepare_review()
+        design = self.preview('--paths', 'src/a.py', '--profile', 'design')
+        self.assertEqual((design['profile'], design['criteria']), ('design', 'design-v1'))
+        plain = self.preview('--paths', 'src/a.py')
+        self.assertEqual((plain['profile'], plain['criteria']), ('default', 'severity-v1'))
+        for options in [('--profile', 'other'), ('--profile', 'design', '--profile', 'design'), ('--profile', '')]:
+            with self.subTest(options=options):
+                result = self.run_entry('review', '--paths', 'src/a.py', *options, '--dry-run')
+                self.assertEqual(result.returncode, 64, result.stderr)
+                self.assertEqual(self.recorded(), [])
+
     def test_preview_without_option_has_no_count(self):
         self.prepare_review()
         self.assertNotIn('previous_findings_count', self.preview('--base', self.old))
@@ -367,6 +379,121 @@ class SnapshotRecheckCLITests(unittest.TestCase):
                     self.assertFalse((self.root / 'prompt').exists())
                     self.assertNotIn('PRIVATE_', result.stdout + result.stderr)
                     self.assertNotIn('fatal', result.stdout + result.stderr)
+
+
+class DesignProfileCLITests(unittest.TestCase):
+    """spec/design-review-criteria.md DR-06/DR-09 through the public entry with a fake Codex."""
+    setUp = execution.CommonExecutionTests.setUp
+    git = SnapshotRecheckCLITests.git
+    review = SnapshotRecheckCLITests.review
+
+    def prepare(self):
+        (self.repo / 'design.md').write_text('step one\nstep two\n')
+        (self.repo / 'src/a.py').write_text('def f():\n    return 1\n')
+        self.git('add', '.')
+        self.git('commit', '-qm', 'design')
+
+    def fake_findings(self, findings):
+        # The fake Codex writes FIXTURE_CONTENT verbatim when set.
+        path = self.root / 'content.json'
+        path.write_text(json.dumps({'schema_version': 1, 'reviewed': ['design.md', 'src/a.py'], 'unreviewed': [],
+                                    'findings': findings}))
+        self.env['FIXTURE_CONTENT'] = str(path)
+
+    def finding(self, file, line):
+        return {'title': 'T-' + file, 'file': file, 'line': line, 'trigger': 't', 'impact': 'i', 'evidence': 'e',
+                'suggestion': 's', 'unverified': [], 'severity': 'blocking'}
+
+    def test_design_review_keeps_code_evidence_and_downgrades_the_rest(self):
+        self.prepare()
+        self.fake_findings([self.finding('src/a.py', 2), self.finding('design.md', 1)])
+        result = self.review('--profile', 'design', '--paths', 'design.md', '--spec', 'src/a.py')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        report = json.loads(result.stdout)
+        self.assertEqual(report['criteria'], 'design-v1')
+        self.assertEqual(report['execution_status'], 'completed')
+        self.assertEqual([(item['file'], item['severity'], item.get('downgraded')) for item in report['findings']],
+                         [('src/a.py', 'blocking', None), ('design.md', 'suggestion', 'no_code_evidence')])
+
+    def test_recheck_with_a_different_criteria_never_starts_the_executor(self):
+        self.prepare()
+        self.fake_findings([])
+        first = self.review('--paths', 'design.md', '--spec', 'src/a.py')
+        self.assertEqual(first.returncode, 0, first.stderr)
+        path = self.root / 'PRIVATE_DEFAULT_ROUND.json'
+        path.write_text(first.stdout)
+        result = self.review('--profile', 'design', '--paths', 'design.md', '--spec', 'src/a.py',
+                             '--previous-report', str(path))
+        self.assertEqual(result.returncode, 127, result.stderr)
+        report = json.loads(result.stdout)
+        self.assertIn('previous_report_scope_mismatch', report['diagnostics'])
+        self.assertFalse(report['backend_started'])
+        self.assertFalse((self.root / 'prompt').exists())
+        self.assertEqual(report['criteria'], 'design-v1')
+
+
+class ReviewerSelectionCLITests(unittest.TestCase):
+    """spec/reviewer-selection.md RS-03..RS-07 through the public entry with a fake Codex."""
+    setUp = execution.CommonExecutionTests.setUp
+    review = SnapshotRecheckCLITests.review
+
+    def available(self, **checks):
+        # Test-only override of the model-free availability checks (see reviewer_select.real_checks).
+        self.env['DELEGATE_FIXTURE_REVIEWERS'] = json.dumps({key.replace('_', '-'): value for key, value in checks.items()})
+
+    def test_no_reviewer_gives_an_unreviewed_report(self):
+        self.available(codex='codex_not_logged_in', claude_code='claude_cli_missing')
+        result = self.review('--backend', 'auto', '--author-host', 'claude-code', '--paths', 'src/a.py')
+        self.assertEqual(result.returncode, 127, result.stderr)
+        report = json.loads(result.stdout)
+        self.assertEqual((report['execution_status'], report['review_outcome']), ('conditions_missing', 'inconclusive'))
+        self.assertEqual(report['diagnostics'], ['no_reviewer_available', 'codex_not_logged_in', 'claude_cli_missing'])
+        self.assertFalse(report['backend_started'])
+        self.assertIsNone(report['backend'])
+        self.assertEqual(report['reviewer'], {'vendor': None, 'backend': None, 'same_vendor': None, 'selection': 'none'})
+        self.assertFalse((self.root / 'prompt').exists())
+
+    def test_auto_picks_codex_and_reports_it(self):
+        self.available(codex=None, claude_code=None)
+        auto = self.review('--backend', 'auto', '--author-host', 'claude-code', '--paths', 'src/a.py')
+        self.assertEqual(auto.returncode, 0, auto.stderr)
+        report = json.loads(auto.stdout)
+        self.assertEqual(report['backend'], 'codex')
+        self.assertEqual(report['reviewer'], {'vendor': 'openai', 'backend': 'codex', 'same_vendor': False,
+                                              'selection': 'cross_vendor'})
+        self.assertTrue((self.root / 'prompt').exists())
+        explicit = json.loads(self.review('--backend', 'codex', '--paths', 'src/a.py').stdout)
+        for key in ('execution_status', 'review_outcome', 'scope', 'reviewed', 'findings', 'criteria'):
+            self.assertEqual(report[key], explicit[key], key)
+
+    def test_explicit_backend_is_labelled(self):
+        with_author = json.loads(self.review('--backend', 'codex', '--author-host', 'codex', '--paths', 'src/a.py').stdout)
+        self.assertEqual(with_author['reviewer'], {'vendor': 'openai', 'backend': 'codex', 'same_vendor': True,
+                                                   'selection': 'explicit'})
+        plain = json.loads(self.review('--paths', 'src/a.py').stdout)
+        self.assertEqual(plain['reviewer'], {'vendor': 'openai', 'backend': 'codex', 'same_vendor': None,
+                                             'selection': 'explicit'})
+
+    def test_argument_errors(self):
+        cases = [('--backend', 'auto'),
+                 ('--backend', 'auto', '--author-host', 'codex', '--model', 'm'),
+                 ('--backend', 'auto', '--author-host', 'codex', '--effort', 'low'),
+                 ('--backend', 'auto', '--author-host', 'codex', '--max-turns', '3'),
+                 ('--backend', 'auto', '--author-host', 'codex', '--max-budget-usd', '1'),
+                 ('--author-host', 'other'),
+                 ('--author-host', 'codex', '--author-host', 'codex')]
+        for options in cases:
+            with self.subTest(options=options):
+                result = self.review(*options, '--paths', 'src/a.py')
+                self.assertEqual(result.returncode, 64, result.stderr)
+                self.assertFalse((self.root / 'prompt').exists())
+
+    def test_failure_before_selection_still_has_reviewer(self):
+        self.available(codex=None, claude_code=None)
+        result = self.review('--backend', 'auto', '--author-host', 'codex', '--base', 'no-such-ref')
+        self.assertEqual(result.returncode, 127, result.stderr)
+        report = json.loads(result.stdout)
+        self.assertEqual(report['reviewer']['selection'], 'none')
 
 
 if __name__ == '__main__':

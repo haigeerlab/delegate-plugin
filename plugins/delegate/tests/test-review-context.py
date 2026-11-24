@@ -371,5 +371,28 @@ class ContextFilesPromptTests(unittest.TestCase):
                         + json.dumps({key: value for key, value in context.items() if key != 'files'}, ensure_ascii=False))
             self.assertEqual(prompt, expected)
 
+
+class DesignPromptTests(unittest.TestCase):
+    """spec/design-review-criteria.md DR-01."""
+    CONTEXT = SeverityPromptTests.CONTEXT
+
+    def test_design_profile_swaps_criteria_and_adds_instruction_before_task(self):
+        prompt = review_context.task_prompt('TASK-MARKER', dict(self.CONTEXT, profile='design'))
+        self.assertIn(review_context.DESIGN_CRITERIA, prompt)
+        self.assertNotIn(review_context.SEVERITY_CRITERIA, prompt)
+        self.assertLess(prompt.index(review_context.DESIGN_CRITERIA), prompt.index(review_context.DESIGN_INSTRUCTION))
+        self.assertLess(prompt.index(review_context.DESIGN_INSTRUCTION), prompt.index('Task: TASK-MARKER'))
+
+    def test_design_criteria_text_matches_spec(self):
+        spec = (Path(__file__).resolve().parents[3] / 'spec' / 'design-review-criteria.md').read_text()
+        section = spec[spec.index('## design-v1 判据全文'):]
+        start = section.index('```text\n') + len('```text\n')
+        self.assertEqual(review_context.DESIGN_CRITERIA, section[start:section.index('\n```', start)])
+
+    def test_criteria_name(self):
+        self.assertEqual(review_context.criteria_name(self.CONTEXT), 'severity-v1')
+        self.assertEqual(review_context.criteria_name(dict(self.CONTEXT, profile='default')), 'severity-v1')
+        self.assertEqual(review_context.criteria_name(dict(self.CONTEXT, profile='design')), 'design-v1')
+
 if __name__ == '__main__':
     unittest.main()

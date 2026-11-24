@@ -31,9 +31,11 @@
 | review-severity | 审查报告每条发现新增 severity（blocking 或 suggestion），由审查模型按写进提示词的判据标注，两个后端共用同一结构与校验；调用方缺字段或不认识的值按 blocking；接口升 1.5 只增字段 | claude-review, integration-interface |
 | review-recheck | --previous-report 接受 delegate 上一轮的审查报告，把其中 blocking 发现交给本轮模型，报告逐条给出已解决或未解决并另列新发现；两个后端都支持；范围对不上时报固定诊断码不做对照；两轮计数与交人由调用方判断 | review-severity |
 | review-snapshot-recheck | 快照审查（--paths/--spec/--plan，from=to）返工后可带 --previous-report 复审：两轮都是快照时只比 paths 与 mode，基准可前进但须在同一历史上；提示词说明 context_files 只用于核实引用、不提发现；接口升 1.6 只增字段 | review-recheck |
+| design-review-criteria | review 新增 --profile design（判据 design-v1）审技术方案：阻断须指向快照里非技术方案文件的真实行号，否则降为建议并标 downgraded=no_code_evidence；带 --previous-report 的第二轮只核对上一轮，新发现一律为建议；不带该参数时行为与判据不变 | review-snapshot-recheck |
+| reviewer-selection | review 新增 --backend auto 与 --author-host：按本机无模型检查优先选异厂商审查者，不可用时回退同厂商全新会话，都不可用时出「未审」报告（no_reviewer_available）；报告新增顶层 reviewer {vendor, backend, same_vendor, selection}；doctor 列出可用审查者并在只有一家时提示；接口升 1.7 只增字段 | design-review-criteria, detection |
 | release-prepare | 仓库脚本 scripts/release-prepare.sh <版本> [--check] 无人值守地把发版准备做到本地发版分支上的一次提交：改版本号、从待发行说明生成发行说明、更新当前发行链接与测试数量、跑全部免费检查，输出带提交 SHA 的 JSON 汇总和必须由人执行的命令；不推送、不开 PR、不打标签、不动本机安装 | integration-interface |
 
-Build order: channel → detection → routing → claude-review → integration-interface → run-resume → run-timeout → write-trust → run-result → run-continue → run-longrun → run-check → run-rules → review-fingerprint → review-severity → review-recheck → review-snapshot-recheck → release-prepare
+Build order: channel → detection → routing → claude-review → integration-interface → run-resume → run-timeout → write-trust → run-result → run-continue → run-longrun → run-check → run-rules → review-fingerprint → review-severity → review-recheck → review-snapshot-recheck → design-review-criteria → reviewer-selection → release-prepare
 
 channel 与 detection 共用 `backend.py`，该共享代码不是独立模块依赖。routing 按显式请求结合 detection 体检，授权后使用 channel；构建顺序保留既有实施顺序，不新增运行职责。
 
