@@ -503,3 +503,18 @@ Task10交付接续：沿用此前明确提交/推送授权，17份文档修订�
 S88-1～3 结果（2026-11-18）：`review_trust.py` 与沙箱接入完成；`test-review-trust.py` 6 项、`test-review-native.py` 新增 4 项均先确认失败再实现通过；执行测试的假运行器补 `trust_diagnostics` 属性，发现回归的套件桩列表加入 `review-trust`。本机真实 `security` 手动导出 3 张、文件 0400（只读、不调用模型）。免费总验证结果见 v0.8.6 发行说明。S88-4、S88-5 未做。
 
 S88-5 与最终验收（2026-11-18）：CR-14 以生态总负责人 ecosystem-lead 的实跑为准（agent-relay #21173，本会话未复跑、未另用额度）：v0.8.6 发布副本（f282e37）在本机开着 Cloudflare WARP 时，Claude 后端 review `execution_status=completed`、`review_outcome=findings`、reviewed 1/1、diagnostics 为空；`review_doctor.py --backend claude-code` 显示「系统明确信任的证书：3 张，已加入沙箱」；Codex 后端同时复跑 completed。规格要求的对照组（关闭本功能复现原失败）未单独运行，以 v0.8.5 时同一网络下实测的 `claude_api_tls_untrusted`（#21135）作修复前对照。CR-11～CR-13 由免费测试覆盖，免费总验证 343 Python / 53 shell / 19 eval。规格内容在构建中未修改，仅状态行改为已批准并补当前发行行。用户「批准验收」。
+
+## 审查失败定位诊断（2026-11-25，规格已批准）
+
+- [x] D1（report）：探测阶段码 `probe_stage_*`；测试先写并确认失败，覆盖 CR-15。2026-11-25 Codex 写（run 20261125092535.29474），本会话核对 diff 并重跑 `test-claude-review.py` 14 项、`test-review-native.py` 通过。
+- [x] D2（report）：监督进程记 `stdout_bytes`、`stderr_bytes`，控制进程核对；测试覆盖 CR-16、CR-17 前半。 2026-11-25 Codex 写（run 20261125092826.57360），本会话核对 diff；新增纯函数与夹具测试在无 `--srt` 时 11 项通过。真实 Mac 夹具（`--srt`）在本会话沙箱里改动前后都是 14 项失败（srt 退出 71），属环境限制，待用户终端复跑。
+- [x] D3（report）：`execute` 追加 `stream_*`、`backend_*` 码；测试覆盖 CR-16、CR-17 后半。 2026-11-25 Codex 写（run 20261125093245.95838），本会话核对 diff 并重跑：`test-claude-review.py` 21 项、`test-review-macos.py` 11 项（14 项真实夹具需 `--srt` 跳过）、`test-review-native.py` 通过。
+- [x] D4（report）：待发行说明中英文；`scripts/validate.sh` 通过。 2026-11-25 本会话写待发行说明中英文；审查阻断修复后 `scripts/validate.sh` 退出 0（SUITE 与 `scripts/tests/test-validation-discovery.py` 桩清单都加入 `review-macos`），`git diff --check` 通过；`release-prepare.sh 0.12.2 --check` 因工作区未提交停在 `worktree_dirty`，属预期。
+- [ ] D5（gate）：提交、开 PR、合并、发版各经用户确认。
+
+审查失败定位诊断 · 代码审查（2026-11-25，同厂商审查（子代理），code-reviewer，只读；输入为 D1～D3 diff 与规格本节）：
+- 阻断 1：新离线测试未并入 `scripts/validate.sh`（SUITE 缺 `review-macos`）。本会话核实属实，已在 SUITE 加入 `review-macos`（不带 `--srt`，真实夹具仍跳过）。
+- 建议 2：超时、取消时子进程被清理，退出码为负，照样追加 `backend_exit_nonzero`，分不清「原版 CLI 报错」与「被中止」。用户 2026-11-25 原话「2、3 都按推荐改」：改为只在 `failed` 时追加，规格同步修订，测试先确认失败再通过。
+- 建议 3：阶段码实现另覆盖 `probe_unavailable`、`probe_cleanup_unverified`，未覆盖 `probe_output_invalid`，与规格做法 1 所列三码不一致。同一答复：`probe_output_invalid` 也带阶段码，规格列全六个探测失败码，测试先确认失败再通过。
+- 建议 4：anchor 在 Popen 之后抛异常时不记字节数，此时不出 `stream_*` 码。影响有限，记录不改。
+- 建议 5：退出码与字节数数值不外泄缺直接断言。已在 `test-claude-review.py` 的公共检查里补 `13579`、`24680` 不出现。

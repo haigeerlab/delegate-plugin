@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Actual, model-free Mac process-boundary tests; opt in explicitly."""
+"""Offline output checks and opt-in, model-free Mac process-boundary tests."""
 import argparse
 import json
 import os
@@ -10,18 +10,128 @@ import sys
 import tempfile
 import time
 import unittest
+from unittest.mock import patch
 import uuid
 
 parser = argparse.ArgumentParser(add_help=False)
-parser.add_argument('--srt', required=True)
+parser.add_argument('--srt')
 arguments, remaining = parser.parse_known_args()
 sys.argv = [sys.argv[0]] + remaining
 SCRIPTS = Path(__file__).resolve().parents[1] / 'scripts'
 sys.path.insert(0, str(SCRIPTS))
+import review_macos
 from review_macos import MacBoundary, Kernel
 from review_isolation import build_policy
 
 
+class AnchorRecordTests(unittest.TestCase):
+    def setUp(self):
+        self.temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temporary.cleanup)
+        self.control = Path(self.temporary.name).resolve()
+        (self.control / 'stdin').write_bytes(b'')
+        (self.control / 'start').write_text(json.dumps({'coalition': 77}))
+
+    def invoke(self, code):
+        (self.control / 'request').write_text(json.dumps({
+            'argv': [sys.executable, '-B', '-c', code], 'cwd': str(self.control),
+            'environment': {}, 'deadline': 2, 'expected_tools': None,
+            'target': 'fixture'}))
+        with patch('review_macos.Kernel') as kernel, \
+                patch('review_macos.subprocess.run'), patch('review_macos.time.sleep'):
+            kernel.return_value.coalition.return_value = 77
+            kernel.return_value.identity.return_value = {'generation': 1}
+            review_macos.anchor(self.control)
+        return json.loads((self.control / 'end').read_text())
+
+    def test_normal_exit_records_stdout_bytes(self):
+        end = self.invoke("import os; os.write(1, b'fixture completed\\n')")
+        self.assertEqual(end['execution_status'], 'completed')
+        self.assertEqual(type(end['stdout_bytes']), int)
+        self.assertEqual(end['stdout_bytes'], len(b'fixture completed\n'))
+        self.assertEqual(end['stderr_bytes'], 0)
+
+    def test_nonzero_exit_records_stderr_bytes(self):
+        end = self.invoke("import os; os.write(2, b'fixture error\\n'); raise SystemExit(7)")
+        self.assertEqual(end['execution_status'], 'failed')
+        self.assertEqual(type(end['stderr_bytes']), int)
+        self.assertGreater(end['stderr_bytes'], 0)
+        self.assertNotEqual(end['launcher_exit_code'], 0)
+
+    def test_failure_before_open_has_no_byte_counts(self):
+        (self.control / 'start').write_text(json.dumps({'coalition': 78}))
+        end = self.invoke('pass')
+        self.assertNotIn('stdout_bytes', end)
+        self.assertNotIn('stderr_bytes', end)
+
+
+class StdoutCheckTests(unittest.TestCase):
+    def test_missing_file(self):
+        self.assertEqual(review_macos.stdout_check(4, False, 0), 'missing')
+        self.assertEqual(review_macos.stdout_check(0, False, 0), 'missing')
+
+    def test_short_read(self):
+        self.assertEqual(review_macos.stdout_check(4, True, 3), 'short')
+        self.assertEqual(review_macos.stdout_check(4, True, 0), 'short')
+
+    def test_complete_read(self):
+        self.assertEqual(review_macos.stdout_check(4, True, 4), 'ok')
+        self.assertEqual(review_macos.stdout_check(4, True, 5), 'ok')
+
+    def test_empty_file(self):
+        self.assertEqual(review_macos.stdout_check(0, True, 0), 'ok')
+
+    def test_read_limit(self):
+        limit = review_macos.LIMIT
+        self.assertEqual(review_macos.stdout_check(limit + 2, True, limit + 1), 'ok')
+        self.assertEqual(review_macos.stdout_check(limit + 2, True, limit), 'short')
+
+    def test_missing_record(self):
+        self.assertIsNone(review_macos.stdout_check(None, False, 0))
+        self.assertIsNone(review_macos.stdout_check(None, True, 4))
+
+    def test_noninteger_record(self):
+        for recorded in ('4', 4.0, True):
+            with self.subTest(recorded=recorded):
+                self.assertIsNone(review_macos.stdout_check(recorded, True, 4))
+
+
+class ControllerRecordTests(unittest.TestCase):
+    def test_stdout_check_from_end_record(self):
+        cases = [(4, None, 'missing'), (4, b'abc', 'short'), (4, b'abcd', 'ok'),
+                 (0, b'', 'ok'), (None, b'abcd', None)]
+        for recorded, output, expected in cases:
+            with self.subTest(recorded=recorded, output=output), \
+                    tempfile.TemporaryDirectory() as temporary:
+                control = Path(temporary).resolve()
+                def launchctl(*arguments):
+                    if arguments[0] == 'bootstrap':
+                        (control / 'ready').write_text(json.dumps({'pid': 123, 'generation': 1}))
+                        end = {'execution_status': 'completed', 'diagnostics': []}
+                        if recorded is not None:
+                            end['stdout_bytes'] = recorded
+                        (control / 'end').write_text(json.dumps(end))
+                        if output is not None:
+                            (control / 'stdout').write_bytes(output)
+                    return 0
+                with patch('review_macos.Kernel') as kernel, \
+                        patch.object(MacBoundary, 'launchctl', side_effect=launchctl), \
+                        patch.object(MacBoundary, 'service_loaded', return_value=False):
+                    kernel.return_value.identity.return_value = {'generation': 1}
+                    kernel.return_value.coalition.side_effect = lambda pid: 77 if pid == 123 else 88
+                    kernel.return_value.count.side_effect = [1, 0]
+                    kernel.return_value.members.return_value = [{'pid': 123}]
+                    result = MacBoundary(control).run(['/usr/bin/true'], cwd=control,
+                        environment={}, deadline=1)
+                self.assertEqual(result['execution_status'], 'completed')
+                self.assertEqual(result['diagnostics'], [])
+                if expected is None:
+                    self.assertNotIn('stdout_check', result)
+                else:
+                    self.assertEqual(result['stdout_check'], expected)
+
+
+@unittest.skipUnless(arguments.srt, 'requires explicit --srt for Mac process fixtures')
 class MacBoundaryTests(unittest.TestCase):
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory(prefix='delegate-mac-test.', dir='/private/tmp')
@@ -94,9 +204,22 @@ class MacBoundaryTests(unittest.TestCase):
         result = self.invoke("print('fixture completed')")
         self.assert_clean(result, 'completed')
         self.assertEqual(result['stdout'], b'fixture completed\n')
+        end = json.loads((self.control / 'end').read_text())
+        self.assertEqual(type(end['stdout_bytes']), int)
+        self.assertEqual(end['stdout_bytes'], len(result['stdout']))
+        self.assertEqual(end['stderr_bytes'], 0)
+        self.assertEqual(result['stdout_check'], 'ok')
+        self.assertEqual(result['diagnostics'], [])
 
     def test_nonzero_exit(self):
-        self.assert_clean(self.invoke('raise SystemExit(7)'), 'failed')
+        result = self.invoke("import os; os.write(2, b'fixture error\\n'); raise SystemExit(7)")
+        self.assert_clean(result, 'failed')
+        end = json.loads((self.control / 'end').read_text())
+        self.assertEqual(type(end['stderr_bytes']), int)
+        self.assertGreater(end['stderr_bytes'], 0)
+        self.assertNotEqual(end['launcher_exit_code'], 0)
+        self.assertEqual(result['stdout_check'], 'ok')
+        self.assertEqual(result['diagnostics'], [])
 
     def test_reviewer_cannot_read_staged_supervisor_code(self):
         protected = str(self.control / 'anchor-code' / 'review_macos.py')
@@ -221,6 +344,7 @@ class MacBoundaryTests(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    if sys.platform != 'darwin' or not Path(arguments.srt).is_absolute() or not Path(arguments.srt).is_file():
+    if arguments.srt and (sys.platform != 'darwin' or not Path(arguments.srt).is_absolute()
+            or not Path(arguments.srt).is_file()):
         parser.error('requires macOS and an existing srt; never calls a model')
     unittest.main(verbosity=2)

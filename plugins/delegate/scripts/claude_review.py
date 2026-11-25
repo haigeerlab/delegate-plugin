@@ -24,6 +24,10 @@ SETTINGS = {'disableAllHooks': True, 'disableClaudeAiConnectors': True, 'enableA
 class PreflightError(Exception):
     """Fixed diagnostic code only; probe output is never echoed."""
 
+    def __init__(self, code, *, stage=None):
+        super().__init__(code)
+        self.stage = stage
+
 
 def unique_object(pairs):
     result = {}
@@ -34,13 +38,13 @@ def unique_object(pairs):
     return result
 
 
-def _probe(invoker, argv, *, authentication=False):
+def _probe(invoker, argv, *, stage, authentication=False):
     try:
         result = invoker(argv, deadline=5)
     except OSError:
-        raise PreflightError('probe_unavailable') from None
+        raise PreflightError('probe_unavailable', stage=stage) from None
     if not isinstance(result, dict) or result.get('cleanup') != 'confirmed':
-        raise PreflightError('probe_cleanup_unverified')
+        raise PreflightError('probe_cleanup_unverified', stage=stage)
     state = result.get('execution_status')
     if state != 'completed':
         # Original auth status exits nonzero when logged out. Only its bounded,
@@ -55,10 +59,10 @@ def _probe(invoker, argv, *, authentication=False):
             except (ValueError, UnicodeError):
                 pass
         code = {'timed_out': 'probe_timed_out', 'cancelled': 'probe_cancelled'}.get(state, 'probe_failed')
-        raise PreflightError(code)
+        raise PreflightError(code, stage=stage)
     output = result.get('stdout')
     if not isinstance(output, bytes) or len(output) > 65536:
-        raise PreflightError('probe_output_invalid')
+        raise PreflightError('probe_output_invalid', stage=stage)
     return output
 
 
@@ -68,17 +72,17 @@ def preflight(executable, invoker):
             or str(path) != executable or '..' in path.parts or '\0' in executable):
         raise PreflightError('cli_path_invalid')
     prefix = [executable, *SAFE_PREFIX]
-    version = _probe(invoker, prefix + ['--version'])
+    version = _probe(invoker, prefix + ['--version'], stage='probe_stage_version')
     match = re.fullmatch(rb'(\d+)\.(\d+)\.(\d+)(?: \(Claude Code\))?\s*', version)
     if not match or tuple(int(part) for part in match.groups()) < MINIMUM_VERSION:
         raise PreflightError('cli_version_unsupported')
-    help_text = _probe(invoker, prefix + ['--help'])
+    help_text = _probe(invoker, prefix + ['--help'], stage='probe_stage_help')
     flags = set(re.findall(rb'--[a-z][a-z-]*', help_text))
     # Hidden flags (notably --max-turns) use the documented fixed baseline.
     if not all(flag.encode() in flags for flag in VISIBLE_FLAGS):
         raise PreflightError('cli_capability_missing')
     try:
-        auth = json.loads(_probe(invoker, prefix + ['auth', 'status', '--json'], authentication=True), object_pairs_hook=unique_object)
+        auth = json.loads(_probe(invoker, prefix + ['auth', 'status', '--json'], stage='probe_stage_auth', authentication=True), object_pairs_hook=unique_object)
     except (ValueError, UnicodeError):
         raise PreflightError('authentication_output_invalid') from None
     if not isinstance(auth, dict) or type(auth.get('loggedIn')) is not bool:
@@ -109,9 +113,12 @@ def execute(executable, args, context, invoker, *, timeout):
         conditions = preflight(executable, invoker)
     except PreflightError as error:
         state = {'probe_timed_out': 'timed_out', 'probe_cancelled': 'cancelled'}.get(str(error), 'conditions_missing')
+        diagnostics = [str(error)]
+        if error.stage is not None:
+            diagnostics.append(error.stage)
         return base_report('claude-code', {'execution_status': state, 'backend_started': False,
             'cleanup': 'unverified' if str(error) in ('probe_cleanup_unverified', 'probe_unavailable') else 'confirmed',
-            'diagnostics': [str(error)]}, context, args.model)
+            'diagnostics': diagnostics}, context, args.model)
     command = [executable, *SAFE_PREFIX, '-p', '--permission-mode', 'dontAsk',
         '--permission-prompts', 'none', '--tools', ','.join(context['allowed_tools']),
         '--disallowedTools', 'Bash,PowerShell,REPL,Edit,Write,NotebookEdit,WebFetch,WebSearch,Agent,Skill,mcp__*',
@@ -129,6 +136,23 @@ def execute(executable, args, context, invoker, *, timeout):
         execution = {'execution_status': 'failed', 'cleanup': 'unverified', 'stdout': b'',
                      'diagnostics': ['claude_execution_unavailable']}
     report = claude_report(execution.get('stdout'), execution, context, requested_model=args.model)
+    diagnostics = []
+    if execution.get('stdout_check') == 'missing':
+        diagnostics.append('stream_file_missing')
+    elif execution.get('stdout_check') == 'short':
+        diagnostics.append('stream_read_short')
+    if report['execution_status'] != 'completed':
+        exit_code = execution.get('launcher_exit_code')
+        stderr_bytes = execution.get('stderr_bytes')
+        # Timed out or cancelled backends were reaped by us; their nonzero
+        # exit says nothing about the original CLI.
+        if report['execution_status'] == 'failed' and type(exit_code) is int and exit_code != 0:
+            diagnostics.append('backend_exit_nonzero')
+        if type(stderr_bytes) is int and stderr_bytes > 0:
+            diagnostics.append('backend_stderr_nonempty')
+    for code in diagnostics:
+        if code not in report['diagnostics']:
+            report['diagnostics'].append(code)
     report['cli_version'] = conditions['version']
     report['authentication'] = {'method': conditions['auth_method'], 'provider': conditions['provider']}
     return report
