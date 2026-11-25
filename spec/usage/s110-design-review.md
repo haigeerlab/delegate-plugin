@@ -44,3 +44,5 @@
 | Milestone | Usage | Modules |
 |---|---|---|
 | M1 | U1, U2, U3, U4 | design-review-criteria, reviewer-selection |
+
+<!-- spec-guard: milestone M1 confirmed design-review-criteria, reviewer-selection -->
