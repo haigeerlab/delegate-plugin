@@ -42,6 +42,18 @@ class ReviewCLITests(unittest.TestCase):
             self.assertIn('claude-code', result.stdout)
             self.assertEqual(self.recorded(), [])
 
+    def test_doctor_subcommand_forwards_to_model_free_doctor(self):
+        # Without the subcommand "doctor" became a Codex task text (a paid run) or a misleading
+        # "claude-code requires --review-context"; it must reach review_doctor.py instead.
+        for options in [('--bogus',), ('--backend', 'claude-code', 'extra'), ('--reviewers', '--json', 'x')]:
+            result = self.run_entry('doctor', *options)
+            self.assertEqual(result.returncode, 64, result.stderr)
+            self.assertIn('review_doctor.py [--backend codex|claude-code] | --reviewers [--json]', result.stderr)
+            self.assertNotIn('requires --review-context', result.stderr)
+            self.assertEqual(self.recorded(), [])
+        result = self.run_entry('--help')
+        self.assertIn('delegate-exec.sh doctor [--backend codex|claude-code]', result.stdout)
+
     def test_capabilities_are_used_for_backend_option_validation(self):
         from delegate_capabilities import BACKENDS
         from delegate_backend import ArgumentError, parse

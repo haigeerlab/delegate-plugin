@@ -533,3 +533,10 @@ S88-5 与最终验收（2026-11-18）：CR-14 以生态总负责人 ecosystem-le
 - 建议 1：访客清单漏了运行时延迟导入 `reviewer_select`（`review_result.reviewer_default` 内），模块级导入测试测不到。属规格做法第 2 项范围，本会话处理：`test-review-staging.py` 加静态扫描（含函数体内导入），先确认失败（Mac 报控制进程专用的两处、访客报 `reviewer_select`），再给 `GUEST_FILES` 补 `reviewer_select.py`；`claude_review.execute` 的两处导入（只在控制进程运行）与 `reviewer_select` 的本机探测导入列为带注释的豁免。
 - 建议 2：anchor 的 finally 只接 `BoundaryError`、`TimeoutExpired`，其他清理异常会让结束记录写不进去。原有行为、不在本次范围，记录不改。
 - 建议 3：`review_init.py` 末尾多余空行，已删。
+
+## `delegate-exec.sh doctor` 子命令（2026-11-26）
+
+来源：agent-relay-owner #23074 顺带报告「`delegate-exec.sh doctor --backend claude-code` 报 `claude-code requires --review-context`，与 /delegate:doctor 的说明对不上」。本会话核实：`delegate-exec.sh` 只认 `review`、`run`，`doctor` 落入旧版无子命令调用，被当成任务原文；不带 `--backend` 时会真的派一次 Codex 只读运行。用户选方案 A，原话「按 A 修」。
+
+- [x] F1（report）：`delegate_cli.main` 遇第一个参数 `doctor` 时原样转交 `review_doctor.py`；帮助文字列出该子命令；规格中英同步一句，待发行说明中英补一节。先加 `test_doctor_subcommand_forwards_to_model_free_doctor` 并确认失败（报 `unrecognized arguments: --bogus`），修复后 `test-review-cli.py` 通过；实跑 `delegate-exec.sh doctor --backend claude-code` 走到无模型体检。`validate.sh --quick` 选 14/35 个套件，退出 0，92 秒。
+- [ ] F2（gate）：提交、PR、合并各经用户确认；随下次发版交付。

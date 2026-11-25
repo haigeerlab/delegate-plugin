@@ -46,7 +46,7 @@
 
 ## 双后端命令接口（v0.5.0）
 
-本批接口设计经用户“继续”确认；新源斜杠入口为 `/delegate:review`、`/delegate:run`、`/delegate:doctor`、`/delegate:help`。review 两后端都只读；run 保留既有 Codex 自由文本及显式 write，Claude run 拒绝。旧 `/delegate:delegate` 源命令移除；旧 codex-exec.sh 和 delegate-exec.sh 无子命令调用继续有效。两宿主从同一源命令使用公共入口，宿主生成缓存不随源码自动更新，四入口显示与 S7 菜单实际公共脚本/dry-run 已验收；无差错自动 UI 输入仍未验证。
+本批接口设计经用户“继续”确认；新源斜杠入口为 `/delegate:review`、`/delegate:run`、`/delegate:doctor`、`/delegate:help`。review 两后端都只读；run 保留既有 Codex 自由文本及显式 write，Claude run 拒绝。旧 `/delegate:delegate` 源命令移除；旧 codex-exec.sh 和 delegate-exec.sh 无子命令调用继续有效。`delegate-exec.sh doctor [--backend codex|claude-code] | --reviewers [--json]` 原样转交 `review_doctor.py`，与 `/delegate:doctor` 相同、不调用模型；因此第一个参数恰好是 `doctor` 的调用不再当作旧版任务原文（2026-11-26 用户选定，原话「按 A 修」）。两宿主从同一源命令使用公共入口，宿主生成缓存不随源码自动更新，四入口显示与 S7 菜单实际公共脚本/dry-run 已验收；无差错自动 UI 输入仍未验证。
 
 以上斜杠写法属于 Claude Code。Codex 0.162.1 对应迁移 skill 为 `source-command-review/run/doctor/help`，通过宿主 skill 选择器调用并提供相同参数；显示名以加载列表为准，不能把 Codex 内置 `/review` 当成本插件入口。统一的是参数和脚本行为，不保证两宿主斜杠别名相同。四个 Codex 转换产物与 Claude CLI 本次源码初始化加载已核验，后续菜单到公共脚本与完整 dry-run 已核对，见[S7读回](../docs/verification/2026-10-14-delegate-s7-output-readback-result.md)；原自动输入失败保留。help/doctor/dry-run 不调用执行后端模型，不代表宿主解释这些命令不消耗主会话额度。
 

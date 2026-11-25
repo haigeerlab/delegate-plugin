@@ -13,6 +13,8 @@ import review_recheck
 import reviewer_select
 
 HELP = '''用法：delegate-exec.sh review|run [选项] [--] [任务]
+       delegate-exec.sh doctor [--backend codex|claude-code] | --reviewers [--json]
+doctor：无模型接入体检，与 /delegate:doctor 相同（转交 review_doctor.py），不调用模型。
 review：两个后端的只读审查，--backend 默认为 codex。
 run：既有 Codex 通用委托；写入须明确 --write。
 高级审查输入：review --context <JSON>；旧 CLI --review-context 保留。
@@ -190,6 +192,11 @@ def main(arguments=None):
     if arguments in (['--help'], ['-h']):
         print(HELP + '\n' + backend.HELP, end='')
         return 0
+    if arguments and arguments[0] == 'doctor':
+        # Same model-free check as /delegate:doctor; never a legacy task text.
+        doctor = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'review_doctor.py')
+        sys.stdout.flush()
+        os.execv(sys.executable, [sys.executable, '-B', doctor, *arguments[1:]])
     if not arguments or arguments[0] not in ('review', 'run'):
         return backend.main(arguments)
     command, options = arguments[0], arguments[1:]
