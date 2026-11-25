@@ -424,6 +424,81 @@ autopr-design 2026-11-24 在本机连续三次运行 `review --backend claude-co
 1. 已定（2026-11-25）：探测时限保持 5 秒，看到阶段码后再决定是否调整。
 2. 已定（2026-11-25，代码审查建议 2、3，用户原话「2、3 都按推荐改」）：`backend_exit_nonzero` 只在 `failed` 时追加；阶段码覆盖探测本身产生的全部六个失败码。
 
+## 监督代码暂存缺模块（2026-11-25，已批准）
+
+**状态：** 用户 2026-11-25 批准（原话「批准」），任务见 [plan](../tasks/claude-review/plan.md) 的「监督代码暂存缺模块」节。修复 claude-code 后端在 macOS 上自 v0.10.0 起必然失败的问题；不改沙箱边界、报告字段和接口版本（仍为 1.7）。
+
+### 问题
+
+macOS 原生路径的监督进程（`review_macos.py` 的 anchor）不从插件目录运行，而是从私有控制目录里暂存的三个文件运行：`review_macos.py`、`review_result.py`、`claude_review.py`（见上文「2026-10-13：本地安装目录与监督代码启动」）。
+
+监督进程第一次检查启动事件时会导入 `review_result`：
+- v0.10.0 起，`review_result.py` 顶部导入了 `review_recheck`；
+- v0.12.0 起，又导入了 `review_context`，后者还要导入 `review_fingerprint`、`review_guest`。
+
+这些模块都没有暂存，导入时报 `ModuleNotFoundError`。这个异常不在监督进程捕获的类型里，于是收尾段直接清理掉刚启动的原版 CLI：
+- 结果是 `execution_status=failed`，诊断里只有 `stream_empty_or_oversized`，加上 v0.12.2 起的 `backend_exit_nonzero`；
+- stdout 为空，审查 0 个文件。
+
+autopr-design 2026-11-24、25 的四次失败与此一致。只用这三个暂存文件在隔离目录里导入 `review_result`，本机复现了 `ModuleNotFoundError: No module named 'review_context'`。
+
+访客路径（`review_transport.py` 的 `GUEST_FILES`）也一样：清单里缺 `review_fingerprint.py`、`review_recheck.py`，导入 `review_result` 时同样报错。
+
+### 目标
+
+1. 暂存的监督代码能独立导入并运行，不依赖未暂存的模块。
+2. 以后再有人加导入，免费测试会直接失败，不会等到真实审查才暴露。
+3. 监督进程遇到意料之外的异常时，留下固定诊断码，不再是空诊断。
+
+### 做法
+
+1. **启动检查独立成模块**：
+   - 新建 `review_init.py`，只依赖标准库和已暂存的 `claude_review.unique_object`。
+   - 把 `ResultError`、`init_error`、`init_valid`、`read_init` 原样移进去。
+   - `review_result` 从 `review_init` 导入这四个名字，原有调用方式和异常类不变，所以 `review_result.ResultError` 仍是同一个类。
+   - 监督进程改为从 `review_init` 导入。
+   - 暂存清单改为 `review_macos.py`、`review_init.py`、`claude_review.py`，不再暂存 `review_result.py`。
+2. **访客清单补齐**：`GUEST_FILES` 加入 `review_fingerprint.py`、`review_recheck.py`，访客入口和 `review_service` 的导入闭包完整。
+3. **兜底诊断**：监督进程在启动原版 CLI 之后遇到意料之外的异常时：
+   - 记固定码 `anchor_internal_error`，状态按失败；
+   - 清理照常进行；
+   - 异常原文不进结束记录、报告或日志。
+4. **导入闭包回归测试**：
+   - 新测试把每份暂存清单（Mac 监督、访客）拷到隔离临时目录；
+   - 用 `python3 -I -B` 导入各自的入口模块和运行中会延迟导入的模块（Mac：`review_macos`、`review_init`；访客：`review_guest_entry`、`review_service`、`review_result`）；
+   - 任一导入失败，测试就失败。并入 `scripts/validate.sh`。
+
+### 边界
+
+**Always：**
+- 移动的函数逻辑不变，原有 `test-review-result.py` 全部通过；
+- 新测试先写，并确认它在当前代码上失败；
+- Codex 后端和 run 不受影响。
+
+**Ask first：**
+- 扩大暂存范围到插件目录以外；
+- 用 Claude 额度做真实验收（CR-21）。
+
+**Never：**
+- 让监督进程改为从插件安装目录导入代码（launchd 解释器可能读不了 Documents，见 2026-10-13 一节）；
+- 放宽 reviewer 对控制目录的读写禁止；
+- 把异常原文写进报告或日志。
+
+### 成功条件
+
+| 条款 | 成功标准与计划验证 |
+|---|---|
+| CR-18 | 导入闭包：在隔离目录里只放暂存清单的文件，Mac 监督与访客两份清单的入口及延迟导入模块都能导入；在修复前的代码上同一测试失败 |
+| CR-19 | 行为不变：`review_result` 仍导出 `ResultError`、`init_error`、`init_valid`、`read_init`，且与 `review_init` 中的是同一对象；原有结果与启动检查测试全部通过 |
+| CR-20 | 兜底诊断：MacBoundary 测试夹具让监督进程在启动子进程后抛出意料之外的异常，结束记录含 `anchor_internal_error`、状态为 failed、清理确认；记录里没有异常原文 |
+| CR-21 | 真实验收（另经授权）：发版后由 autopr-design 用安装版对同一范围复跑，`execution_status=completed` |
+
+免费部分用临时目录、假调用器和现有 MacBoundary 夹具，不调用模型。需要 `--srt` 的真实夹具由用户在终端里运行。
+
+### 待确认
+
+1. 访客路径本机没有现成的 Lima 环境可以实跑，这次只做导入闭包测试。
+
 ## 附录：历史接续记录（保留当时状态，不覆盖当前结论）
 
 **2026-10-14 S5/S6批次：** Task9l诊断修复已由S5同步两宿主，16项读回/48项安装结果回归通过；Task9n标准工作区免费157/53/19通过。S6诊断接续取得指定快照外Read工具拒权及精确目标归属，回收confirmed；审查1/4、failed/inconclusive，Task2/6/8完整条件仍未完成。S4及原S6认证失败根因未知，不追认修复。见[接续结果](../docs/verification/2026-10-14-delegate-s6-diagnostic-followup-result.md)。

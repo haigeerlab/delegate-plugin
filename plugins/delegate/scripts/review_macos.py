@@ -21,6 +21,7 @@ import time
 import uuid
 
 LIMIT = 1024 * 1024
+ANCHOR_FILES = ('review_macos.py', 'review_init.py', 'claude_review.py')
 
 
 class BoundaryError(Exception):
@@ -225,7 +226,7 @@ class MacBoundary:
         # existing private control tree, which remains denied to the reviewer.
         anchor_code = root / 'anchor-code'
         anchor_code.mkdir(mode=0o700)
-        for name in ('review_macos.py', 'review_result.py', 'claude_review.py'):
+        for name in ANCHOR_FILES:
             staged = anchor_code / name
             staged.write_bytes((Path(__file__).resolve().parent / name).read_bytes())
             staged.chmod(0o600)
@@ -347,7 +348,7 @@ def anchor(root):
             expires = time.monotonic() + request['deadline']
             checked = request['expected_tools'] is None
             def check_init():
-                from review_result import read_init, ResultError
+                from review_init import read_init, ResultError
                 data = os.pread(output.fileno(), 65537, 0)
                 try:
                     event = read_init(data, request['expected_tools'], complete=process.poll() is not None)
@@ -383,6 +384,10 @@ def anchor(root):
             end['stderr_bytes'] = os.fstat(errors.fileno()).st_size
     except (BoundaryError, OSError, ValueError, KeyError, TypeError) as error:
         end['diagnostics'].append(str(error) if isinstance(error, BoundaryError) else 'macos_execution_failed')
+    except Exception:
+        end['diagnostics'].append('anchor_internal_error')
+        if end['execution_status'] not in ('cancelled', 'timed_out'):
+            end['execution_status'] = 'failed'
     finally:
         try:
             kernel.clean(coalition, anchor=pid)

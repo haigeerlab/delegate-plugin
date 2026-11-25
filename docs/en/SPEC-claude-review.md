@@ -418,6 +418,81 @@ All free checks use fake invokers, temporary directories and the existing MacBou
 1. Decided (2026-11-25): the probe deadline stays at 5 seconds; revisit after the stage codes are seen.
 2. Decided (2026-11-25, code review suggestions 2 and 3, approved by the user): `backend_exit_nonzero` is appended only for `failed`; stage codes cover all six failure codes produced by the probe itself.
 
+## Missing modules in staged supervisor code (2026-11-25, approved)
+
+**Status:** Approved by the user on 2026-11-25; tasks are in the "Missing modules in staged supervisor code" section of the [plan](../../tasks/claude-review/plan.md). Fixes the claude-code backend failing on every macOS run since v0.10.0; the sandbox boundary, report fields and interface version (still 1.7) are unchanged.
+
+### Problem
+
+The macOS native supervisor (the anchor in `review_macos.py`) does not run from the plugin directory. It runs from three files staged in the private control directory: `review_macos.py`, `review_result.py` and `claude_review.py` (see "2026-10-13: local installation paths and supervisor startup" above).
+
+On its first init-event check the supervisor imports `review_result`:
+- since v0.10.0, `review_result.py` imports `review_recheck` at the top;
+- since v0.12.0 it also imports `review_context`, which in turn imports `review_fingerprint` and `review_guest`.
+
+None of these modules is staged, so the import raises `ModuleNotFoundError`. That exception is not among the types the supervisor catches, so its cleanup stops the original CLI it has just started:
+- the result is `execution_status=failed`, with diagnostics holding only `stream_empty_or_oversized`, plus `backend_exit_nonzero` since v0.12.2;
+- stdout is empty and 0 files are reviewed.
+
+autopr-design's four failures on 2026-11-24 and 25 match this. Importing `review_result` in an isolated directory holding only the three staged files reproduces `ModuleNotFoundError: No module named 'review_context'` on this Mac.
+
+The guest path (`GUEST_FILES` in `review_transport.py`) has the same problem: the list lacks `review_fingerprint.py` and `review_recheck.py`, so importing `review_result` fails there too.
+
+### Goal
+
+1. The staged supervisor code imports and runs on its own, without unstaged modules.
+2. A future import that breaks this fails a free test instead of a real review.
+3. An unexpected supervisor exception leaves a fixed diagnostic code instead of empty diagnostics.
+
+### Approach
+
+1. **Init check as its own module:**
+   - Add `review_init.py`, depending only on the standard library and the staged `claude_review.unique_object`.
+   - Move `ResultError`, `init_error`, `init_valid` and `read_init` into it unchanged.
+   - `review_result` imports these four names from `review_init`, so existing calls and the exception class are unchanged and `review_result.ResultError` stays the same class.
+   - The supervisor imports from `review_init`.
+   - The staged list becomes `review_macos.py`, `review_init.py`, `claude_review.py`; `review_result.py` is no longer staged.
+2. **Complete the guest list:** add `review_fingerprint.py` and `review_recheck.py` to `GUEST_FILES`, so the import closure of the guest entry and `review_service` is complete.
+3. **Fallback diagnostic:** when the supervisor hits an unexpected exception after starting the original CLI:
+   - it records the fixed code `anchor_internal_error` and the state is failed;
+   - cleanup proceeds as usual;
+   - the exception text never enters the end record, report or logs.
+4. **Import-closure regression test:**
+   - A new test copies each staged list (Mac supervisor, guest) into an isolated temporary directory.
+   - It imports, with `python3 -I -B`, each entry module and the modules imported lazily at run time (Mac: `review_macos`, `review_init`; guest: `review_guest_entry`, `review_service`, `review_result`).
+   - Any failed import fails the test. The test runs in `scripts/validate.sh`.
+
+### Boundaries
+
+**Always:**
+- The moved functions keep their logic and every existing `test-review-result.py` test passes.
+- New tests are written first and confirmed to fail on the current code.
+- The Codex backend and run are unaffected.
+
+**Ask first:**
+- Extending staging beyond the plugin directory.
+- Real acceptance with Claude quota (CR-21).
+
+**Never:**
+- Make the supervisor import code from the plugin install directory (the launchd interpreter may be unable to read Documents; see the 2026-10-13 section).
+- Relax the reviewer's read/write ban on the control directory.
+- Write exception text to the report or logs.
+
+### Success criteria
+
+| Clause | Success standard and planned verification |
+|---|---|
+| CR-18 | Import closure: in an isolated directory holding only a staged list's files, the entry and lazily imported modules of both the Mac supervisor list and the guest list import; the same test fails on the code before the fix |
+| CR-19 | Behavior unchanged: `review_result` still exports `ResultError`, `init_error`, `init_valid` and `read_init`, as the same objects as in `review_init`; existing result and init-check tests all pass |
+| CR-20 | Fallback diagnostic: the MacBoundary fixture makes the supervisor raise an unexpected exception after starting the child; the end record holds `anchor_internal_error`, the state is failed and cleanup is confirmed; no exception text appears in the record |
+| CR-21 | Real acceptance (separately authorized): after release, autopr-design reruns the same scope with the installed version and gets `execution_status=completed` |
+
+Free checks use temporary directories, fake invokers and the existing MacBoundary fixture, and call no model. The real fixtures that need `--srt` are run by the user in a terminal.
+
+### Open questions
+
+1. There is no ready Lima environment on this Mac to run the guest path for real, so this change only adds the import-closure test for it.
+
 ## Appendix: historical continuations (original status, not current conclusions)
 
 **S5/S6 batch, 2026-10-14:** S5 synchronized the Task9l diagnostic fix into both hosts, passing 16 checks and 48 installed result regressions; Task9n standard-workspace validation passed 157/53/19. The S6 diagnostic follow-up verified the specified out-of-snapshot Read tool denial and exact target attribution, with confirmed cleanup. Review coverage was 1/4, failed/inconclusive; complete Task2/6/8 conditions remain unfinished. The causes of S4 and the original S6 authentication failure remain unknown, without a retroactive fix claim. See the [follow-up result](../verification/2026-10-14-delegate-s6-diagnostic-followup-result.md) (Chinese).

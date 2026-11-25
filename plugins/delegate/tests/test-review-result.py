@@ -27,6 +27,14 @@ class ResultTests(unittest.TestCase):
         return review_result.claude_report(self.stream(self.init, self.terminal) if stream is None else stream,
                 execution or self.execution, self.context, requested_model='sonnet')
 
+    def test_startup_checks_reexport_the_same_objects(self):
+        import review_init
+
+        self.assertIs(review_result.ResultError, review_init.ResultError)
+        self.assertIs(review_result.init_error, review_init.init_error)
+        self.assertIs(review_result.init_valid, review_init.init_valid)
+        self.assertIs(review_result.read_init, review_init.read_init)
+
     def test_complete_scope_without_findings_and_backend_metadata(self):
         result = self.report()
         self.assertEqual(result['execution_status'], 'completed')
