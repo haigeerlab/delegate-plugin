@@ -64,6 +64,33 @@ class AnchorRecordTests(unittest.TestCase):
         self.assertNotIn('stdout_bytes', end)
         self.assertNotIn('stderr_bytes', end)
 
+    def test_unexpected_error_records_fixed_diagnostic_and_cleans(self):
+        (self.control / 'request').write_text(json.dumps({
+            'argv': ['/usr/bin/true'], 'cwd': str(self.control),
+            'environment': {}, 'deadline': 2, 'expected_tools': None,
+            'target': 'fixture'}))
+        with patch('review_macos.Kernel') as kernel, \
+                patch('review_macos.subprocess.Popen') as popen, \
+                patch('review_macos.subprocess.run') as run, \
+                patch('review_macos.time.sleep'), \
+                patch('review_macos.os.fstat', side_effect=RuntimeError('SECRET_TEXT')):
+            kernel.return_value.coalition.return_value = 77
+            kernel.return_value.identity.return_value = {'generation': 1}
+            popen.return_value.poll.return_value = 0
+            popen.return_value.returncode = 0
+            review_macos.anchor(self.control)
+        raw = (self.control / 'end').read_text()
+        end = json.loads(raw)
+        self.assertTrue(end['backend_started'])
+        self.assertIn('anchor_internal_error', end['diagnostics'])
+        self.assertEqual(end['execution_status'], 'failed')
+        self.assertEqual(end['cleanup'], 'confirmed')
+        self.assertNotIn('SECRET_TEXT', raw)
+        self.assertNotIn('RuntimeError', raw)
+        kernel.return_value.clean.assert_called_once_with(77, anchor=os.getpid())
+        popen.return_value.wait.assert_called_once_with(timeout=1)
+        self.assertEqual(run.call_args.args[0], ['/bin/launchctl', 'bootout', 'fixture'])
+
 
 class StdoutCheckTests(unittest.TestCase):
     def test_missing_file(self):

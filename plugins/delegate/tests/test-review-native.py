@@ -42,10 +42,11 @@ class NativeContracts(unittest.TestCase):
         self.assertEqual(anchor.parent.parent, control,
             'launchd must not reopen the plugin installation in Documents')
         self.assertEqual(anchor.parent.stat().st_mode & 0o777, 0o700)
-        for name in ('review_macos.py', 'review_result.py', 'claude_review.py'):
+        for name in ('review_macos.py', 'review_init.py', 'claude_review.py'):
             staged = anchor.parent / name
             self.assertEqual(staged.read_bytes(), (SCRIPTS / name).read_bytes())
             self.assertEqual(staged.stat().st_mode & 0o777, 0o600)
+        self.assertFalse((anchor.parent / 'review_result.py').exists())
 
     def test_public_claude_branch_selects_native_without_loading_guest(self):
         expected = ({'execution_status': 'failed', 'backend': 'claude-code', 'diagnostics': [],

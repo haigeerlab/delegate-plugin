@@ -19,7 +19,8 @@ from review_result import base_report
 
 SCRIPTS = Path(__file__).resolve().parent
 GUEST_FILES = ('review_guest.py', 'review_isolation.py', 'review_network.py', 'review_service.py',
-               'review_context.py', 'review_result.py', 'claude_review.py', 'review_guest_entry.py')
+               'review_context.py', 'review_result.py', 'claude_review.py', 'review_guest_entry.py',
+               'review_init.py', 'review_fingerprint.py', 'review_recheck.py', 'reviewer_select.py')
 PROFILE_FIELDS = {'schema_version', 'limactl', 'lima_home', 'guest', 'guest_scripts',
                   'guest_runtime_config', 'guest_runtime_sha256'}
 BOOTSTRAP = '''import hashlib,importlib.util,json,os,stat,sys

@@ -510,7 +510,7 @@ S88-5 与最终验收（2026-11-18）：CR-14 以生态总负责人 ecosystem-le
 - [x] D2（report）：监督进程记 `stdout_bytes`、`stderr_bytes`，控制进程核对；测试覆盖 CR-16、CR-17 前半。 2026-11-25 Codex 写（run 20261125092826.57360），本会话核对 diff；新增纯函数与夹具测试在无 `--srt` 时 11 项通过。真实 Mac 夹具（`--srt`）在本会话沙箱里改动前后都是 14 项失败（srt 退出 71），属环境限制，待用户终端复跑。
 - [x] D3（report）：`execute` 追加 `stream_*`、`backend_*` 码；测试覆盖 CR-16、CR-17 后半。 2026-11-25 Codex 写（run 20261125093245.95838），本会话核对 diff 并重跑：`test-claude-review.py` 21 项、`test-review-macos.py` 11 项（14 项真实夹具需 `--srt` 跳过）、`test-review-native.py` 通过。
 - [x] D4（report）：待发行说明中英文；`scripts/validate.sh` 通过。 2026-11-25 本会话写待发行说明中英文；审查阻断修复后 `scripts/validate.sh` 退出 0（SUITE 与 `scripts/tests/test-validation-discovery.py` 桩清单都加入 `review-macos`），`git diff --check` 通过；`release-prepare.sh 0.12.2 --check` 因工作区未提交停在 `worktree_dirty`，属预期。
-- [ ] D5（gate）：提交、开 PR、合并、发版各经用户确认。
+- [x] D5（gate）：提交、开 PR、合并、发版各经用户确认。2026-11-25 用户原话依次为「提交并推送开 PR」「合并」（PR #49，合并提交 a1108d2）、「发 0.12.2」「推送开 PR」「合并」（PR #50，合并提交 96e8256）、「打标签并推送」（tag v0.12.2）、「建 release」。复跑结果（autopr-design #22915）：仍 failed，诊断为 `stream_empty_or_oversized`、`backend_exit_nonzero`，据此定位到下一节的根因。
 
 审查失败定位诊断 · 代码审查（2026-11-25，同厂商审查（子代理），code-reviewer，只读；输入为 D1～D3 diff 与规格本节）：
 - 阻断 1：新离线测试未并入 `scripts/validate.sh`（SUITE 缺 `review-macos`）。本会话核实属实，已在 SUITE 加入 `review-macos`（不带 `--srt`，真实夹具仍跳过）。
@@ -518,3 +518,18 @@ S88-5 与最终验收（2026-11-18）：CR-14 以生态总负责人 ecosystem-le
 - 建议 3：阶段码实现另覆盖 `probe_unavailable`、`probe_cleanup_unverified`，未覆盖 `probe_output_invalid`，与规格做法 1 所列三码不一致。同一答复：`probe_output_invalid` 也带阶段码，规格列全六个探测失败码，测试先确认失败再通过。
 - 建议 4：anchor 在 Popen 之后抛异常时不记字节数，此时不出 `stream_*` 码。影响有限，记录不改。
 - 建议 5：退出码与字节数数值不外泄缺直接断言。已在 `test-claude-review.py` 的公共检查里补 `13579`、`24680` 不出现。
+
+## 监督代码暂存缺模块（2026-11-25，规格已批准）
+
+- [x] E1（report）：先写导入闭包测试（CR-18）并确认在当前代码上失败。 2026-11-25 Codex 写（run 20261125145830.17561），新增 `test-review-staging.py`，`review_macos.py` 抽出 `ANCHOR_FILES`（内容不变）；本会话重跑确认两份清单分别报 `review_context`、`review_fingerprint` 缺失。
+- [x] E2（report）：新建 `review_init.py`，`review_result` 改为从它导入，监督进程改用它，暂存清单改换；覆盖 CR-18 Mac 部分与 CR-19。2026-11-25 Codex 写（run 20261125150058.56316，到时限主动停，退出 124，代码已改完）；本会话补改 `test-review-native.py` 写死的暂存清单（并断言不再暂存 `review_result.py`），重跑 staging（Mac）、review-result、claude-review、review-macos、review-native、review-service 通过。
+- [x] E3（report）：访客清单补 `review_fingerprint.py`、`review_recheck.py`；覆盖 CR-18 访客部分。2026-11-25 一处元组改动，本会话直接写（未派 Codex，固定开销不值）；因 E2 后 `review_result` 依赖 `review_init`，访客清单同时补 `review_init.py`。staging 两条、review-transport、review-guest-entry、review-guest、review-artifacts 通过。
+- [x] E4（report）：监督进程兜底 `anchor_internal_error`；覆盖 CR-20。 2026-11-25 Codex 写（run 20261125150904.43683），新增 1 个离线测试（先失败后通过）；本会话核对 diff 并重跑相关测试通过。
+- [x] E5（report）：待发行说明中英文；`scripts/validate.sh` 通过。2026-11-25 本会话写；审查建议 1 修复后总验证一次退出 1（原因未查到，重跑未复现），随后单独重跑退出 0，另两次复验结果见提交后记录。
+- [ ] E6（gate）：提交、开 PR、合并、发版各经用户确认。
+- [ ] E7（gate）：CR-21 真实验收，由 autopr-design 用安装版复跑，另经用户授权发通知。
+
+监督代码暂存缺模块 · 代码审查（2026-11-25，同厂商审查（子代理），code-reviewer，只读；输入为 E1～E4 diff 与规格本节）：无阻断。
+- 建议 1：访客清单漏了运行时延迟导入 `reviewer_select`（`review_result.reviewer_default` 内），模块级导入测试测不到。属规格做法第 2 项范围，本会话处理：`test-review-staging.py` 加静态扫描（含函数体内导入），先确认失败（Mac 报控制进程专用的两处、访客报 `reviewer_select`），再给 `GUEST_FILES` 补 `reviewer_select.py`；`claude_review.execute` 的两处导入（只在控制进程运行）与 `reviewer_select` 的本机探测导入列为带注释的豁免。
+- 建议 2：anchor 的 finally 只接 `BoundaryError`、`TimeoutExpired`，其他清理异常会让结束记录写不进去。原有行为、不在本次范围，记录不改。
+- 建议 3：`review_init.py` 末尾多余空行，已删。

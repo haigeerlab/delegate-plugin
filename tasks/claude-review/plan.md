@@ -586,3 +586,20 @@ S5同步和Task9n标准总验证已通过，用户“继续”推进Task2/8的�
 执行方式：按 ecosystem-lead 临时规则（用户原话见 agent-relay #22674），D1～D3 一次一个用 `/delegate:run --write` 派给 Codex，本会话看验收块并自己重跑测试；代码审查派 Claude 子代理（同厂商审查）。D4 文档由本会话写。
 
 检查点：D1～D4 为 `report`；提交、开 PR、合并、发版为 `gate`，各经用户确认。不用 Claude 额度实跑。
+
+## 监督代码暂存缺模块（2026-11-25，规格已批准）
+
+依据：[规格「监督代码暂存缺模块」](../../spec/claude-review.md)，用户 2026-11-25 批准（原话「批准」）。本计划用户 2026-11-25 批准（原话「批准」，含 E1～E4 派给 Codex 写）。目标是修复 claude-code 后端在 macOS 上自 v0.10.0 起必然失败的问题，随下一个补丁版发布。
+
+顺序与风险：
+1. E1 导入闭包测试（CR-18）：新增 `plugins/delegate/tests/test-review-staging.py`，把 Mac 监督与访客两份暂存清单分别拷到临时目录，用 `python3 -I -B` 导入入口与延迟导入模块；先确认在当前代码上失败。并入 `scripts/validate.sh` 与 `scripts/tests/test-validation-discovery.py` 的桩清单。
+2. E2 `review_init.py`（CR-18 Mac、CR-19）：移出 `ResultError`、`init_error`、`init_valid`、`read_init`，`review_result` 重新导入；`review_macos.py` 改导入和暂存清单。风险：`ResultError` 变成两个类导致 except 漏接——缓解：测试断言 `review_result.ResultError is review_init.ResultError`，原有 `test-review-result.py` 全部回归。
+3. E3 访客清单（CR-18 访客）：`review_transport.py` 的 `GUEST_FILES` 补两个文件。风险：访客引导脚本按清单校验哈希——缓解：跑 `test-review-transport.py`、`test-review-guest-entry.py`。
+4. E4 兜底诊断（CR-20）：`review_macos.py` anchor 在启动子进程后捕获意料之外的异常记 `anchor_internal_error`，清理照常。测试在 `test-review-macos.py`（离线可测部分），真实夹具需 `--srt`，由用户终端运行。
+5. E5 文档：待发行说明中英文；免费总验证。
+
+涉及文件：`plugins/delegate/scripts/review_init.py`（新）、`review_result.py`、`review_macos.py`、`review_transport.py`，测试 `test-review-staging.py`（新）、`test-review-result.py`、`test-review-macos.py`，`scripts/validate.sh`、`scripts/tests/test-validation-discovery.py`，`docs/releases/unreleased.md` 与英文版。
+
+执行方式：按 ecosystem-lead 临时规则，E1～E4 一次一个用 `/delegate:run --write` 派给 Codex，本会话看验收块并自己重跑测试；代码审查派 Claude 子代理（同厂商审查）。E5 由本会话写。
+
+检查点：E1～E5 为 `report`；提交、开 PR、合并、发版为 `gate`；CR-21 真实验收为 `gate`。不用 Claude 额度实跑。
