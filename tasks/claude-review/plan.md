@@ -570,3 +570,19 @@ S5同步和Task9n标准总验证已通过，用户“继续”推进Task2/8的�
 4. 真实验收 CR-14 需用 Claude 额度，另经授权（gate）。
 
 检查点：任务 1、2、3 为 `report`；提交、发版与真实验收为 `gate`。
+
+## 审查失败定位诊断（2026-11-25，规格已批准）
+
+依据：[规格「审查失败定位诊断」](../../spec/claude-review.md)，用户 2026-11-25 批准（原话「批准」）。本计划用户 2026-11-25 批准（原话「批准」，含 D1～D3 派给 Codex 写）。目标是让 `stream_empty_or_oversized`、`probe_timed_out` 这类失败带上能定位原因的固定诊断码；不改行为、报告字段和接口版本（仍为 1.7），随下一个补丁版发布。
+
+顺序与风险：
+1. D1 探测阶段码（CR-15）：`claude_review.py` 的 `preflight`／`_probe` 在失败时追加 `probe_stage_*`，`execute` 的早退报告带上。测试在 `tests/test-claude-review.py`。风险：误改原有码或状态映射——缓解：测试同时断言原码、`execution_status`、`backend_started=false` 不变。
+2. D2 字节数与核对（CR-16、CR-17 前半）：`review_macos.py` 监督进程的结束记录加 `stdout_bytes`、`stderr_bytes`；控制进程读 stdout 后比较，结果以固定字段留在执行结果里。测试在 `tests/test-review-macos.py`。风险：动到监督进程会影响清理与诊断——缓解：只加字段，不改既有分支；现有 MacBoundary 用例全部回归。
+3. D3 报告追加码（CR-16、CR-17 后半）：`claude_review.execute` 在报告生成后追加 `stream_file_missing`、`stream_read_short`，未完成时追加 `backend_exit_nonzero`、`backend_stderr_nonempty`。测试在 `tests/test-claude-review.py`。风险：成功报告被改判——缓解：测试覆盖「完成但写了 stderr」不加码、状态不变。
+4. D4 文档：`docs/releases/unreleased.md` 与英文版写本次改动；`scripts/validate.sh` 免费总验证。
+
+涉及文件：`plugins/delegate/scripts/claude_review.py`、`plugins/delegate/scripts/review_macos.py`、`plugins/delegate/tests/test-claude-review.py`、`plugins/delegate/tests/test-review-macos.py`、`docs/releases/unreleased.md`、`docs/en/releases/unreleased.md`。
+
+执行方式：按 ecosystem-lead 临时规则（用户原话见 agent-relay #22674），D1～D3 一次一个用 `/delegate:run --write` 派给 Codex，本会话看验收块并自己重跑测试；代码审查派 Claude 子代理（同厂商审查）。D4 文档由本会话写。
+
+检查点：D1～D4 为 `report`；提交、开 PR、合并、发版为 `gate`，各经用户确认。不用 Claude 额度实跑。

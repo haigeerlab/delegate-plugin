@@ -77,6 +77,72 @@ class ClaudePreflightTests(unittest.TestCase):
             with self.subTest(code=code), self.assertRaisesRegex(claude_review.PreflightError, code):
                 self.run_probe(boundary)
 
+    def test_probe_failure_reports_append_stage_without_changing_execution(self):
+        args = SimpleNamespace(model=None, max_turns=12, max_budget_usd=None, task='review')
+        context = {'files': {}, 'scope': {}, 'baseline': {}, 'diff_sha256': '',
+                   'file_sha256': {}, 'unreviewed': []}
+        stages = [('--version', 'probe_stage_version'), ('--help', 'probe_stage_help'),
+                  ('--json', 'probe_stage_auth')]
+        faults = [('timed_out', 'confirmed', 'probe_timed_out', 'timed_out'),
+                  ('failed', 'confirmed', 'probe_failed', 'conditions_missing'),
+                  ('cancelled', 'confirmed', 'probe_cancelled', 'cancelled'),
+                  ('completed', 'unverified', 'probe_cleanup_unverified', 'conditions_missing'),
+                  ('unavailable', 'unverified', 'probe_unavailable', 'conditions_missing')]
+        for index, (suffix, stage) in enumerate(stages):
+            for state, cleanup, code, expected_state in faults:
+                with self.subTest(stage=stage, code=code):
+                    boundary = FakeBoundary()
+                    def invoke(argv, *, deadline):
+                        if argv[-1] == suffix:
+                            boundary.calls.append((argv, deadline))
+                            if state == 'unavailable':
+                                raise OSError('SECRET_KEY')
+                            return {'execution_status': state, 'cleanup': cleanup, 'stdout': b''}
+                        return boundary(argv, deadline=deadline)
+                    report = claude_review.execute('/opt/claude', args, context, invoke, timeout=30)
+                    self.assertEqual(report['diagnostics'], [code, stage])
+                    self.assertEqual(report['execution_status'], expected_state)
+                    self.assertFalse(report['backend_started'])
+                    self.assertEqual(report['cleanup'], cleanup)
+                    self.assertEqual([argv[-1] for argv, _ in boundary.calls],
+                                     [item[0] for item in stages[:index + 1]])
+                    self.assertTrue(all('-p' not in argv for argv, _ in boundary.calls))
+
+    def test_oversized_probe_output_reports_stage(self):
+        args = SimpleNamespace(model=None, max_turns=12, max_budget_usd=None, task='review')
+        context = {'files': {}, 'scope': {}, 'baseline': {}, 'diff_sha256': '',
+                   'file_sha256': {}, 'unreviewed': []}
+        cases = [(FakeBoundary(version=b'a' * 65537), 'probe_stage_version'),
+                 (FakeBoundary(help_text=b'a' * 65537), 'probe_stage_help'),
+                 (FakeBoundary(auth=b'a' * 65537), 'probe_stage_auth')]
+        for boundary, stage in cases:
+            with self.subTest(stage=stage):
+                report = claude_review.execute('/opt/claude', args, context, boundary, timeout=30)
+                self.assertEqual(report['diagnostics'], ['probe_output_invalid', stage])
+                self.assertEqual(report['execution_status'], 'conditions_missing')
+                self.assertFalse(report['backend_started'])
+
+    def test_non_probe_failure_reports_do_not_include_stage(self):
+        args = SimpleNamespace(model=None, max_turns=12, max_budget_usd=None, task='review')
+        context = {'files': {}, 'scope': {}, 'baseline': {}, 'diff_sha256': '',
+                   'file_sha256': {}, 'unreviewed': []}
+        cases = [(FakeBoundary(version=b'2.1.294'), 'cli_version_unsupported'),
+                 (FakeBoundary(help_text=b'--tools'), 'cli_capability_missing'),
+                 (FakeBoundary(auth=b'not JSON'), 'authentication_output_invalid'),
+                 (FakeBoundary(auth=b'{"loggedIn":false}'), 'authentication_missing'),
+                 (FakeBoundary(auth=b'{"loggedIn":true,"authMethod":"none","apiProvider":"firstParty"}'),
+                  'authentication_method_unverified'),
+                 (FakeBoundary(auth=b'{"loggedIn":true,"authMethod":"third_party","apiProvider":"bedrock"}'),
+                  'provider_unverified')]
+        for boundary, code in cases:
+            with self.subTest(code=code):
+                report = claude_review.execute('/opt/claude', args, context, boundary, timeout=30)
+                self.assertEqual(report['diagnostics'], [code])
+                self.assertFalse(any(item.startswith('probe_stage_') for item in report['diagnostics']))
+                self.assertEqual(report['execution_status'], 'conditions_missing')
+                self.assertFalse(report['backend_started'])
+                self.assertEqual(report['cleanup'], 'confirmed')
+
     def test_executable_must_be_trusted_absolute_and_no_raw_error_escapes(self):
         for name in ('claude', '/opt/../claude', '/opt/claude\0'):
             with self.subTest(name=name), self.assertRaises(claude_review.PreflightError):
@@ -187,6 +253,109 @@ class ClaudePreflightTests(unittest.TestCase):
                 self.assertFalse(report['backend_started'])
                 self.assertNotIn('SECRET_KEY', json.dumps(report))
                 self.assertTrue(all('-p' not in argv for argv, _ in boundary.calls))
+
+
+class ClaudeExecutionDiagnosticsTests(unittest.TestCase):
+    def setUp(self):
+        self.args = SimpleNamespace(model=None, max_turns=12, max_budget_usd=None, task='review')
+        self.context = {'files': {'src/a.py': b'first\n'}, 'unreviewed': [],
+            'scope': {'include': ['src/a.py'], 'exclude': []}, 'baseline': {'mode': 'commits'},
+            'diff_sha256': 'a' * 64, 'file_sha256': {'src/a.py': 'b' * 64}, 'allowed_tools': ['Read']}
+        events = [{'type': 'system', 'subtype': 'init', 'tools': ['Read'], 'mcp_servers': [],
+                   'model': 'claude-sonnet-fixture'},
+            {'type': 'result', 'subtype': 'success', 'is_error': False, 'permission_denials': [],
+             'structured_output': {'schema_version': 1, 'reviewed': ['src/a.py'],
+                                   'unreviewed': [], 'findings': []}}]
+        self.stream = b'\n'.join(json.dumps(event).encode() for event in events)
+
+    def run_execution(self, execution):
+        boundary = FakeBoundary()
+        def invoke(argv, *, deadline, stdin=None):
+            if '-p' not in argv:
+                return boundary(argv, deadline=deadline)
+            if isinstance(execution, OSError):
+                raise execution
+            return execution
+        report = claude_review.execute('/opt/claude', self.args, self.context, invoke, timeout=30)
+        serialized = json.dumps(report)
+        for field in ('stdout_bytes', 'stderr_bytes', 'launcher_exit_code', 'stdout_check'):
+            self.assertNotIn('"' + field + '"', serialized)
+        self.assertNotIn('SECRET_STDERR', serialized)
+        for value in ('13579', '24680'):
+            self.assertNotIn(value, serialized)
+        return report
+
+    def test_stdout_checks_append_specific_codes_and_preserve_empty_stream_diagnostic(self):
+        for check, code in [('missing', 'stream_file_missing'), ('short', 'stream_read_short'),
+                            ('ok', None), (None, None)]:
+            with self.subTest(check=check):
+                execution = {'execution_status': 'failed', 'cleanup': 'confirmed', 'stdout': b''}
+                if check is not None:
+                    execution['stdout_check'] = check
+                report = self.run_execution(execution)
+                expected = ['stream_empty_or_oversized'] + ([code] if code else [])
+                self.assertEqual(report['diagnostics'], expected)
+                self.assertEqual(report['execution_status'], 'failed')
+                self.assertEqual(report['review_outcome'], 'inconclusive')
+
+    def test_incomplete_reviews_append_backend_exit_and_stderr_codes(self):
+        # A stopped (timed out or cancelled) backend exits nonzero because we
+        # reaped it, so only a failed review reports backend_exit_nonzero.
+        expected = {'failed': ['stream_empty_or_oversized', 'backend_exit_nonzero', 'backend_stderr_nonempty'],
+                    'timed_out': ['stream_empty_or_oversized', 'backend_stderr_nonempty'],
+                    'cancelled': ['stream_empty_or_oversized', 'backend_stderr_nonempty']}
+        for state in ('failed', 'timed_out', 'cancelled'):
+            with self.subTest(state=state):
+                report = self.run_execution({'execution_status': state, 'cleanup': 'confirmed',
+                    'stdout': b'', 'stdout_bytes': 13579, 'stderr_bytes': 24680,
+                    'launcher_exit_code': -7, 'stderr': b'SECRET_STDERR'})
+                self.assertEqual(report['diagnostics'], expected[state])
+                self.assertEqual(report['execution_status'], state)
+                self.assertEqual(report['review_outcome'], 'inconclusive')
+
+    def test_zero_missing_and_noninteger_metadata_add_no_backend_codes(self):
+        values = [{}, {'launcher_exit_code': 0, 'stderr_bytes': 0},
+                  {'launcher_exit_code': True, 'stderr_bytes': True},
+                  {'launcher_exit_code': '7', 'stderr_bytes': '9'},
+                  {'launcher_exit_code': 7.0, 'stderr_bytes': 9.0},
+                  {'launcher_exit_code': None, 'stderr_bytes': -1}]
+        for metadata in values:
+            with self.subTest(metadata=metadata):
+                report = self.run_execution(dict(metadata, execution_status='failed',
+                    cleanup='confirmed', stdout=b''))
+                self.assertEqual(report['diagnostics'], ['stream_empty_or_oversized'])
+
+    def test_completed_review_with_stderr_keeps_success_without_backend_codes(self):
+        report = self.run_execution({'execution_status': 'completed', 'cleanup': 'confirmed',
+            'stdout': self.stream, 'stdout_check': 'ok', 'stdout_bytes': len(self.stream),
+            'stderr_bytes': 24680, 'launcher_exit_code': 7, 'stderr': b'SECRET_STDERR'})
+        self.assertEqual(report['diagnostics'], [])
+        self.assertEqual(report['execution_status'], 'completed')
+        self.assertEqual(report['review_outcome'], 'no_findings_in_scope')
+
+    def test_failed_report_after_completed_execution_gets_backend_codes(self):
+        report = self.run_execution({'execution_status': 'completed', 'cleanup': 'confirmed',
+            'stdout': b'', 'stderr_bytes': 9, 'launcher_exit_code': 7})
+        self.assertEqual(report['execution_status'], 'failed')
+        self.assertEqual(report['diagnostics'], ['stream_empty_or_oversized',
+            'backend_exit_nonzero', 'backend_stderr_nonempty'])
+
+    def test_existing_execution_diagnostic_codes_are_not_duplicated(self):
+        for check, code in [('missing', 'stream_file_missing'), ('short', 'stream_read_short')]:
+            with self.subTest(check=check):
+                codes = [code, 'backend_exit_nonzero', 'backend_stderr_nonempty']
+                report = self.run_execution({'execution_status': 'failed', 'cleanup': 'confirmed',
+                    'stdout': b'', 'stdout_check': check, 'launcher_exit_code': 7,
+                    'stderr_bytes': 9, 'diagnostics': codes})
+                self.assertEqual(report['diagnostics'], codes + ['stream_empty_or_oversized'])
+
+    def test_execution_oserror_preserves_existing_failure_diagnostics(self):
+        report = self.run_execution(OSError('SECRET_STDERR'))
+        self.assertEqual(report['diagnostics'], ['claude_execution_unavailable',
+                                                'stream_empty_or_oversized'])
+        self.assertEqual(report['execution_status'], 'failed')
+        self.assertEqual(report['review_outcome'], 'inconclusive')
+        self.assertEqual(report['cleanup'], 'unverified')
 
 
 if __name__ == '__main__':

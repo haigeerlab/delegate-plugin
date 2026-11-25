@@ -351,6 +351,73 @@ All free parts are tested with a fake `security` command and temporary directori
 1. Selected certificates are not checked for being CA certificates (basicConstraints); system trust settings decide, so a leaf certificate trusted on its own is also selected. I consider this acceptable because it is already trusted outside the sandbox.
 2. This Mac currently has three explicitly trusted certificates: the Cloudflare Gateway CA and two mkcert local development certificates; all three would be imported into the sandbox.
 
+## Review failure localization diagnostics (2026-11-25, approved)
+
+**Status:** Approved by the user on 2026-11-25; tasks are in the "Review failure localization diagnostics" section of the [plan](../../tasks/claude-review/plan.md). Adds fixed diagnostic codes only; review behavior, exit codes, report fields and the sandbox boundary are unchanged.
+
+### Problem
+
+On 2026-11-24 autopr-design ran `review --backend claude-code` three times on this Mac and all three failed. Cleanup was confirmed each time (`cleanup=confirmed`), but the existing codes cannot locate the cause:
+
+- **Run 1:** `timed_out` with `probe_timed_out`, `backend_started=false`. The three probes (`--version`, `--help`, `auth status`) share this code, so it does not say which one exceeded the 5-second limit.
+- **Runs 2 and 3:** `failed` with `stream_empty_or_oversized`, `backend_started=true`, exit code 1. The code implies two facts:
+  1. While the child ran, the supervisor read a valid init event from stdout; otherwise it records `initial_output_empty` or `tool_boundary_unverified`.
+  2. stdout did not exceed 1 MiB; otherwise it records `output_limit`.
+
+  Yet the controller then read the same stdout file as empty, and the original CLI exited non-zero. The current report cannot tell apart three cases: the file was missing, fewer bytes were read than were written, or the original CLI exited with its own error.
+
+### Goal
+
+When the same failure happens again, the fixed codes say which probe timed out, whether stdout was missing or read short, and whether the original CLI exited non-zero or wrote to stderr.
+
+### Approach
+
+1. **Probe stage code:** when a probe itself fails (`probe_timed_out`, `probe_cancelled`, `probe_failed`, `probe_unavailable`, `probe_cleanup_unverified`, `probe_output_invalid`), append a stage code `probe_stage_version`, `probe_stage_help` or `probe_stage_auth` after the original code. Failures judged after a successful probe (unsupported version, missing capability, authentication) get no stage code. Existing codes and state mapping are unchanged.
+2. **Supervisor byte counts:** the supervisor (the anchor in `review_macos.py`) adds two integers, `stdout_bytes` and `stderr_bytes`, taken from file sizes, to its end record. They stay inside the private control directory and never enter the report or logs.
+3. **Controller check:** after reading stdout the controller compares with the supervisor's counts:
+   - stdout file missing: record `stream_file_missing`;
+   - fewer bytes read than recorded (including zero): record `stream_read_short`.
+4. **Original CLI exit:** the supervisor already records `launcher_exit_code`, which the report does not carry. When the review did not complete (`execution_status` is not `completed`), append:
+   - `backend_exit_nonzero` only when `execution_status` is `failed` and the exit code is non-zero (on timeout or cancel delegate stops the child, so its exit code says nothing about the original CLI);
+   - `backend_stderr_nonempty` when `stderr_bytes` is greater than 0.
+
+   A completed review gets neither code, so normal CLI warnings do not clutter a successful report. Neither the exit code value nor stderr content enters the report or logs.
+
+`claude_review.execute` appends the codes from items 2–4 after the report is built, outside the supervisor's diagnostics list, so a completed review is never turned into a failure. All of these are additional codes. Existing codes such as `stream_empty_or_oversized` stay; `execution_status`, `review_outcome`, exit codes and report fields are unchanged. Per integration-interface, `diagnostics` is diagnostic information that consumers should not rely on, so the interface stays at 1.7.
+
+### Boundaries
+
+**Always:**
+- Diagnostics use fixed identifiers only.
+- Byte counts and exit codes are used only to decide which code to write.
+- New tests are written first and confirmed to fail.
+- The Codex backend and run are unaffected.
+
+**Ask first:**
+- Changing the probe deadline.
+- Reproducing with real Claude quota.
+- Exposing byte counts or exit codes as report fields (that needs an interface bump).
+
+**Never:**
+- Write stdout, stderr, prompts or authentication content to the report, logs or anywhere outside the control directory.
+- Relax the sandbox or network boundary.
+- Add retries or backend switching.
+
+### Success criteria
+
+| Clause | Success standard and planned verification |
+|---|---|
+| CR-15 | Probe stage codes: a fake invoker makes each of the three probes time out, fail, cancel, become unavailable, leave cleanup unverified or return oversized output; each report carries the matching `probe_stage_*`; failures judged after a successful probe carry none; existing code, `execution_status` and `backend_started=false` unchanged |
+| CR-16 | Stream loss localization: with fake end records and temporary directories, build three cases — stdout file missing, fewer bytes read than recorded, and bytes matching. The first two report `stream_file_missing` and `stream_read_short`; the third reports neither; `stream_empty_or_oversized` still appears as before |
+| CR-17 | Exit facts: the MacBoundary fixture runs a fake backend that writes stderr and exits non-zero; the end record has `stderr_bytes` > 0 and a non-zero `launcher_exit_code`. A fake invoker then shows a `failed` report carries `backend_exit_nonzero` and `backend_stderr_nonempty`, and a timed-out or cancelled one only the latter; neither appears for a clean exit without stderr, nor for a completed review that wrote stderr; no stderr text or exit code value appears in the report or logs |
+
+All free checks use fake invokers, temporary directories and the existing MacBoundary fixture, call no model, and run in `scripts/validate.sh`. A real reproduction is left to autopr-design after the patch release, on a voluntary basis; this spec does not require Claude quota.
+
+### Open questions
+
+1. Decided (2026-11-25): the probe deadline stays at 5 seconds; revisit after the stage codes are seen.
+2. Decided (2026-11-25, code review suggestions 2 and 3, approved by the user): `backend_exit_nonzero` is appended only for `failed`; stage codes cover all six failure codes produced by the probe itself.
+
 ## Appendix: historical continuations (original status, not current conclusions)
 
 **S5/S6 batch, 2026-10-14:** S5 synchronized the Task9l diagnostic fix into both hosts, passing 16 checks and 48 installed result regressions; Task9n standard-workspace validation passed 157/53/19. The S6 diagnostic follow-up verified the specified out-of-snapshot Read tool denial and exact target attribution, with confirmed cleanup. Review coverage was 1/4, failed/inconclusive; complete Task2/6/8 conditions remain unfinished. The causes of S4 and the original S6 authentication failure remain unknown, without a retroactive fix claim. See the [follow-up result](../verification/2026-10-14-delegate-s6-diagnostic-followup-result.md) (Chinese).

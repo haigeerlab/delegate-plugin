@@ -167,6 +167,14 @@ def read_json(path):
     return json.loads(raw)
 
 
+def stdout_check(recorded, path_exists, read_length):
+    if type(recorded) is not int:
+        return None
+    if not path_exists:
+        return 'missing'
+    return 'short' if read_length < min(recorded, LIMIT + 1) else 'ok'
+
+
 class MacBoundary:
     def __init__(self, control):
         self.control = Path(control)
@@ -303,9 +311,13 @@ class MacBoundary:
             for signum, handler in saved.items():
                 signal.signal(signum, handler)
         output = root / 'stdout'
-        if output.exists():
+        output_exists = output.exists()
+        if output_exists:
             with output.open('rb') as source:
                 result['stdout'] = source.read(LIMIT + 1)
+        check = stdout_check(result.get('stdout_bytes'), output_exists, len(result['stdout']))
+        if check is not None:
+            result['stdout_check'] = check
         return result
 
 
@@ -367,6 +379,8 @@ def anchor(root):
                         end['execution_status'] = 'failed'
             if any(os.fstat(stream.fileno()).st_size > LIMIT for stream in (output, errors)):
                 end['execution_status'] = 'failed'; end['diagnostics'].append('output_limit')
+            end['stdout_bytes'] = os.fstat(output.fileno()).st_size
+            end['stderr_bytes'] = os.fstat(errors.fileno()).st_size
     except (BoundaryError, OSError, ValueError, KeyError, TypeError) as error:
         end['diagnostics'].append(str(error) if isinstance(error, BoundaryError) else 'macos_execution_failed')
     finally:

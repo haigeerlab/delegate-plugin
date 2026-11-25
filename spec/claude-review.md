@@ -357,6 +357,73 @@ Claude 审查后端在沙箱内信任的根证书，与本机用户在沙箱外*
 1. 入选证书不检查是否为 CA 证书（basicConstraints），以系统信任设置为准；被单独设为信任的叶子证书也会入选。我认为可以接受，因为沙箱外本来就信任它们。
 2. 本机现有 3 张明确信任的证书：Cloudflare Gateway CA 和两张 mkcert 本地开发证书，都会被导入沙箱。
 
+## 审查失败定位诊断（2026-11-25，已批准）
+
+**状态：** 用户 2026-11-25 批准（原话「批准」），任务见 [plan](../tasks/claude-review/plan.md) 的「审查失败定位诊断」节。只加固定诊断码，不改审查行为、退出码、报告字段或沙箱边界。
+
+### 问题
+
+autopr-design 2026-11-24 在本机连续三次运行 `review --backend claude-code`，都失败了。三次都清理确认（`cleanup=confirmed`），但现有诊断码不足以找到原因：
+
+- **第 1 次**：`timed_out` 加 `probe_timed_out`，`backend_started=false`。三个探测（`--version`、`--help`、`auth status`）共用这一个码，看不出是哪一个超了 5 秒时限。
+- **第 2、3 次**：`failed` 加 `stream_empty_or_oversized`，`backend_started=true`，退出码 1。从代码可以推出两点：
+  1. 子进程运行期间，监督进程在 stdout 里读到过合法的启动事件。否则会记 `initial_output_empty` 或 `tool_boundary_unverified`。
+  2. stdout 没有超过 1 MiB。否则会记 `output_limit`。
+
+  但控制进程最后读同一个 stdout 文件，得到的是空。另外，原版 CLI 以非零码退出了。现有报告分不清三种情况：文件不见了、文件读到的比写入的少、原版 CLI 自己报错退出。
+
+### 目标
+
+下次再出同样的失败时，报告里的固定诊断码能直接指出：哪个探测超时；stdout 是没找到还是读少了；原版 CLI 是不是非零退出、有没有写 stderr。
+
+### 做法
+
+1. **探测阶段码**：探测本身失败时（`probe_timed_out`、`probe_cancelled`、`probe_failed`、`probe_unavailable`、`probe_cleanup_unverified`、`probe_output_invalid`），在原码之后追加一个阶段码：`probe_stage_version`、`probe_stage_help` 或 `probe_stage_auth`。版本不符、能力缺失、认证类等探测成功后的判定失败不加阶段码。现有码和状态映射都不变。
+2. **监督进程记录字节数**：监督进程（`review_macos.py` 的 anchor）写结束记录时，加两个整数，`stdout_bytes` 和 `stderr_bytes`，取自文件大小。这两个数只在私有控制目录内传递，不进报告，也不进日志。
+3. **控制进程核对**：控制进程读 stdout 后，与监督进程记录的字节数比较：
+   - stdout 文件不存在，记 `stream_file_missing`；
+   - 读到的字节数少于记录值（含读到 0），记 `stream_read_short`。
+4. **原版 CLI 退出情况**：监督进程已有 `launcher_exit_code`，现在不进报告。改为在审查未完成时（`execution_status` 不是 `completed`）追加：
+   - 仅当 `execution_status` 为 `failed` 且退出码非零时记固定码 `backend_exit_nonzero`（超时、取消时子进程由 delegate 中止，退出码不反映原版 CLI 自身情况）；
+   - `stderr_bytes` 大于 0 时记 `backend_stderr_nonempty`。
+
+   审查完成时不加这两个码，以免原版 CLI 正常写出的警告干扰成功报告。退出码数值和 stderr 内容都不进报告或日志。
+
+第 2～4 项的码由 `claude_review.execute` 在报告生成后追加，不经过监督进程的诊断列表，所以不会把完成的审查改判为失败。以上都是追加的诊断码。原有的 `stream_empty_or_oversized` 等码照旧保留；`execution_status`、`review_outcome`、退出码和报告字段都不变。按 integration-interface，`diagnostics` 属于诊断信息，使用方不应依赖，所以接口版本仍是 1.7。
+
+### 边界
+
+**Always：**
+- 诊断码只用固定标识符；
+- 字节数和退出码只用来判定写哪个码；
+- 新增测试先写，并确认它失败；
+- Codex 后端和 run 不受影响。
+
+**Ask first：**
+- 改探测时限；
+- 用 Claude 额度实跑复现；
+- 把字节数或退出码作为报告字段对外输出（这要升接口版本）。
+
+**Never：**
+- 把 stdout、stderr、提示词或认证内容写进报告、日志或控制目录以外的地方；
+- 放宽沙箱或网络边界；
+- 增加重试或后端切换。
+
+### 成功条件
+
+| 条款 | 成功标准与计划验证 |
+|---|---|
+| CR-15 | 探测阶段码：用假调用器让三个探测分别超时、失败、取消、不可用、清理未确认或输出超限，报告各带对应的 `probe_stage_*`；探测成功后的判定失败不带；原有码、`execution_status`、`backend_started=false` 不变 |
+| CR-16 | 流丢失定位：用假结束记录和临时目录，分别构造 stdout 文件缺失、读到的比记录少、读到的和记录一致三种情况。前两种分别报 `stream_file_missing`、`stream_read_short`，第三种不报；原有 `stream_empty_or_oversized` 照旧 |
+| CR-17 | 退出情况：MacBoundary 测试夹具跑一个写 stderr 并以非零码退出的假后端，结束记录里的 `stderr_bytes` 大于 0、`launcher_exit_code` 非零；再用假调用器验证 `failed` 时报告含 `backend_exit_nonzero` 和 `backend_stderr_nonempty`，超时、取消时只含后者；正常退出、不写 stderr 时两码都不出现；审查完成但写了 stderr 时也不出现；报告和日志里没有 stderr 原文或退出码数值 |
+
+免费部分全部用假调用器、临时目录和现有 MacBoundary 测试夹具，不调用模型，并入 `scripts/validate.sh`。真实复现由 autopr-design 在补丁版发布后自愿再跑；本规格不要求用 Claude 额度。
+
+### 待确认
+
+1. 已定（2026-11-25）：探测时限保持 5 秒，看到阶段码后再决定是否调整。
+2. 已定（2026-11-25，代码审查建议 2、3，用户原话「2、3 都按推荐改」）：`backend_exit_nonzero` 只在 `failed` 时追加；阶段码覆盖探测本身产生的全部六个失败码。
+
 ## 附录：历史接续记录（保留当时状态，不覆盖当前结论）
 
 **2026-10-14 S5/S6批次：** Task9l诊断修复已由S5同步两宿主，16项读回/48项安装结果回归通过；Task9n标准工作区免费157/53/19通过。S6诊断接续取得指定快照外Read工具拒权及精确目标归属，回收confirmed；审查1/4、failed/inconclusive，Task2/6/8完整条件仍未完成。S4及原S6认证失败根因未知，不追认修复。见[接续结果](../docs/verification/2026-10-14-delegate-s6-diagnostic-followup-result.md)。
