@@ -51,7 +51,7 @@
 - [x] Task 6.2（report）：auto 选择带阶段码（CR-23）。新增 `choose` 按序写入「主码 + 阶段码」、`ClaudeCheckTests`（探测失败返回两码、`authentication_missing` 只返回一码）、`doctor --reviewers` 只显示主码 4 处用例，先失败（3 + 1），改 `reviewer_select.choose`／`claude_check` 与 `review_doctor.reviewers` 后 `test-reviewer-select.py`、`test-review-backends.py`、`test-claude-review.py` 通过。
 - [x] Task 6.3（report）：文档。英文规格补同一节并在原 Q1 后注明已修订；中英待发行说明补「探测期限放宽到 15 秒」小节及影响面、验证段落。
 - [x] Checkpoint A（report）：快检查、全量与产物校验。2026-11-26：`validate.sh --quick` 选 23/35 个套件，退出 0，85 秒；全量退出 0，101 秒，`Ran` 合计 547（542 + doctor 子命令 1 + 本次新增 4）；`git diff --check`、共享段、本机路径通过；产物校验 7 项通过。
-- [ ] Checkpoint B（gate）：`/delegate:review --backend claude-code` 审查与提交
+- [x] Checkpoint B（gate）：`/delegate:review --backend claude-code` 审查与提交。用户回「审查」「提交并推送开 PR」「合并」：PR #57 合并（2193301），首轮 CI 的 `review-execution` 期限过紧另行修复后通过；随 0.12.4 发版。
 - [ ] Task 7（gate）：Task 6 发版后用安装版重跑 M1 的 U2（至少连续 3 次），交用户判定 M1。
 
 探测期限放宽 · 代码审查（2026-11-26，同厂商审查，`/delegate:review --backend claude-code`，安装版 0.12.3，模型 claude-opus-5-5；输入为工作区全部改动，排除本模块 plan、todo，依据 `spec/claude-review.md`；用户原话「审查」）：completed，审 10 个文件、未审 0，1 条阻断。
