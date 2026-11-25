@@ -39,6 +39,10 @@ claude plugin validate ./plugins/delegate
 git diff --check
 ```
 
+`validate.sh` runs the static checks serially, then the regression suites in parallel across CPU cores (`--jobs N` overrides, `--jobs 1` is serial). Each suite gets its own `TMPDIR`; output is printed whole in list order, and the five slowest suites are listed at the end.
+During day-to-day task work run the quick check `validate.sh --quick`: it runs only the suites related to this branch's changes (against the merge base with `origin/main`, including uncommitted and untracked files; a suite counts when its source names the changed file, loads a changed suite file, or globs the changed file's directory; indirect references between product scripts are followed; old names of renamed files and deleted files count too); changes only under `docs/`, `spec/`, `tasks/` and top-level Markdown run the static checks only; anything unmapped, or a change to `validate.sh`, `run_suites.py` or `.github/`, falls back to the full run. Keep the full run for before merging and for CI.
+If the full run takes more than 10 minutes locally, speed it up (parallelism, reused setup, no real waiting); never by deleting or skipping tests or trimming the CI matrix.
+
 Resolve the currently enabled Spec Guard installation before running `phase-guard.sh` and `verify-artifacts.sh`; do not hardcode a cached version.
 Aggregate source discovery excludes exactly `.git` and private `.agent/acceptance` artifacts. Do not grant executable permissions to installation backups or exclude all of `.agent` or product suites. Verify private batch evidence separately; isolated regressions guard the discovery boundary.
 Structural success, phase `DONE`, and stub-test success describe file layout, current checklists, and deterministic contracts respectively. They do not establish historical approvals, remote publication, or all real-model behavior.

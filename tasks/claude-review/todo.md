@@ -526,8 +526,8 @@ S88-5 与最终验收（2026-11-18）：CR-14 以生态总负责人 ecosystem-le
 - [x] E3（report）：访客清单补 `review_fingerprint.py`、`review_recheck.py`；覆盖 CR-18 访客部分。2026-11-25 一处元组改动，本会话直接写（未派 Codex，固定开销不值）；因 E2 后 `review_result` 依赖 `review_init`，访客清单同时补 `review_init.py`。staging 两条、review-transport、review-guest-entry、review-guest、review-artifacts 通过。
 - [x] E4（report）：监督进程兜底 `anchor_internal_error`；覆盖 CR-20。 2026-11-25 Codex 写（run 20261125150904.43683），新增 1 个离线测试（先失败后通过）；本会话核对 diff 并重跑相关测试通过。
 - [x] E5（report）：待发行说明中英文；`scripts/validate.sh` 通过。2026-11-25 本会话写；审查建议 1 修复后总验证一次退出 1（原因未查到，重跑未复现），随后单独重跑退出 0，另两次复验结果见提交后记录。
-- [ ] E6（gate）：提交、开 PR、合并、发版各经用户确认。
-- [ ] E7（gate）：CR-21 真实验收，由 autopr-design 用安装版复跑，另经用户授权发通知。
+- [x] E6（gate）：提交、开 PR、合并、发版各经用户确认。2026-11-25 用户逐步回「提交并推送开 PR」「合并」「发 0.12.3」「推送开 PR」「合并」「打标签并推送」「建 release」：修复 PR #51 合并（d2dbe5f），发版 PR #52 合并（941304c），标签 `v0.12.3` 指向 941304c，GitHub Release 已建；E5 那次未复现的退出 1 之后，提交后两次总验证均退出 0。
+- [x] E7（gate）：CR-21 真实验收，由 autopr-design 用安装版复跑，另经用户授权发通知。2026-11-25 用户回「发通知」后发出；autopr-design 用安装的 0.12.3 复跑（#22988）：`claude-code` 后端审查 completed，14/14，diagnostics 为空，CR-21 通过。
 
 监督代码暂存缺模块 · 代码审查（2026-11-25，同厂商审查（子代理），code-reviewer，只读；输入为 E1～E4 diff 与规格本节）：无阻断。
 - 建议 1：访客清单漏了运行时延迟导入 `reviewer_select`（`review_result.reviewer_default` 内），模块级导入测试测不到。属规格做法第 2 项范围，本会话处理：`test-review-staging.py` 加静态扫描（含函数体内导入），先确认失败（Mac 报控制进程专用的两处、访客报 `reviewer_select`），再给 `GUEST_FILES` 补 `reviewer_select.py`；`claude_review.execute` 的两处导入（只在控制进程运行）与 `reviewer_select` 的本机探测导入列为带注释的豁免。

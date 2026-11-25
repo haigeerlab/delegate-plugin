@@ -213,18 +213,18 @@ class RunTimeoutFlowTests(unittest.TestCase):
         self.assertEqual(len(self.exec_calls()), 1)
 
     def test_main_run_is_stopped_at_main_deadline(self):
-        output = self.run_delegate('--', '任务', DELEGATE_TIMEOUT_SECONDS='12', STUB_SLEEP='30')
+        output = self.run_delegate('--', '任务', DELEGATE_TIMEOUT_SECONDS='6', STUB_SLEEP='10')
         self.assertEqual(output.returncode, 124, output.stderr)
-        self.assertIn('超过 10 秒被中止', output.stderr)
-        self.assertLess(output.elapsed, 20)
+        self.assertIn('超过 5 秒被中止', output.stderr)
+        self.assertLess(output.elapsed, 6 + 8)
 
     WRAPUP_PROMPT = ('【收尾】本次运行已到期被中止。不要再执行任何命令，也不要继续做任务。只写进度：第一行以 `TIME_UP:` 开头，'
                      '后面写已完成的步骤及结果、做到一半的步骤（如有）、下一步应从哪里开始。')
 
     def stopped(self, *args, **env):
-        # T=7 gives W=1, M=6: the main run is stopped at 6 s and the wrap-up round gets 1 s.
-        env.setdefault('DELEGATE_TIMEOUT_SECONDS', '7')
-        env.setdefault('STUB_SLEEP', '30')
+        # T=6 is the minimum with W=1, M=5; callers skipping wrap-up can use T=1.
+        env.setdefault('DELEGATE_TIMEOUT_SECONDS', '6')
+        env.setdefault('STUB_SLEEP', '10')
         return self.run_delegate(*args, **env)
 
     def fallback_line(self, output):
@@ -236,8 +236,8 @@ class RunTimeoutFlowTests(unittest.TestCase):
         self.assertEqual((status, resumable), ('timeout', 'true'))
         self.assertIn('TIME_UP: 做完 1–3 步', output.stdout)
         self.assertIn('收尾：收尾轮', output.stdout)
-        self.assertIn('超过 6 秒被中止', output.stderr)
-        self.assertLess(output.elapsed, 7 + 5)
+        self.assertIn('超过 5 秒被中止', output.stderr)
+        self.assertLess(output.elapsed, 6 + 5)
         first, wrapup = self.exec_calls()
         self.assertEqual(wrapup, ['exec', 'resume', '-c', 'forced_login_method="chatgpt"', '-c', 'model_provider="openai"',
                                   '-c', 'approval_policy="never"', '-c', 'sandbox_mode="read-only"', '--json',
@@ -265,14 +265,14 @@ class RunTimeoutFlowTests(unittest.TestCase):
         self.assertEqual(len(self.exec_calls()), calls)
 
     def test_plain_run_goes_straight_to_fallback(self):
-        output = self.stopped('--', '任务')
+        output = self.stopped('--', '任务', DELEGATE_TIMEOUT_SECONDS='1')
         self.assert_fallback(output, '普通 run 不保留会话', None, False, 1)
         self.assertIn('只读运行，不列文件', output.stdout)
 
     def test_fallback_when_wrapup_times_out(self):
-        output = self.stopped('--resumable', '--', '任务', STUB_RESUME_SLEEP='30')
+        output = self.stopped('--resumable', '--', '任务', STUB_RESUME_SLEEP='2')
         self.assert_fallback(output, '收尾轮超时', SESSION, True, 2)
-        self.assertLess(output.elapsed, 7 + 5)
+        self.assertLess(output.elapsed, 6 + 5)
 
     def test_fallback_when_wrapup_fails(self):
         self.assert_fallback(self.stopped('--resumable', '--', '任务', STUB_RESUME_EXIT='2'),
@@ -283,11 +283,11 @@ class RunTimeoutFlowTests(unittest.TestCase):
                              '收尾轮答复为空', SESSION, True, 2)
 
     def test_fallback_without_session_id(self):
-        self.assert_fallback(self.stopped('--resumable', '--', '任务', STUB_SESSION=''),
+        self.assert_fallback(self.stopped('--resumable', '--', '任务', STUB_SESSION='', DELEGATE_TIMEOUT_SECONDS='1'),
                              '未取得会话 ID', None, False, 1)
 
     def test_zero_wrapup_budget_skips_the_round(self):
-        output = self.stopped('--resumable', '--', '任务', DELEGATE_TIMEOUT_SECONDS='2')
+        output = self.stopped('--resumable', '--', '任务', DELEGATE_TIMEOUT_SECONDS='1')
         self.assert_fallback(output, '收尾轮超时', SESSION, True, 1)
 
     def answer_lines(self, output):
@@ -296,7 +296,7 @@ class RunTimeoutFlowTests(unittest.TestCase):
 
     def test_write_fallback_lists_files_changed_during_the_run(self):
         (self.repo / 'a.txt').write_text('edited before the run\n', encoding='utf-8')
-        output = self.stopped('--write', '--', '任务', STUB_WRITE=str(self.repo / 'b.txt'))
+        output = self.stopped('--write', '--', '任务', STUB_WRITE=str(self.repo / 'b.txt'), DELEGATE_TIMEOUT_SECONDS='1')
         self.assert_fallback(output, '普通 run 不保留会话', None, False, 1)
         self.assertEqual(self.answer_lines(output), ['改动的文件（与运行前比较）：', '?? b.txt', ''])
         self.assertIn('git 验收', output.stderr)

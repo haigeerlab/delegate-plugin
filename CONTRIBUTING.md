@@ -118,7 +118,7 @@ eval 显式用 `--plugin-dir` 加载源码；退出 0=PASS、1=FAIL、2=NORUN。
 /bin/bash scripts/release-prepare.sh 0.11.0
 ```
 
-`--check` 只检查、不写任何东西。正式运行会切出 `release/v<版本>`，改版本号、生成中英文发行说明、收回待发行说明、更新 README／文档索引／本指南里的当前发行链接与发布验证数字，跑完总验证、两项 `claude plugin validate`、`git diff --check` 和 spec-guard 的 `verify-artifacts` 后提交一次。总验证约需 5 分钟，在 Claude Code 里请用后台方式运行。
+`--check` 只检查、不写任何东西。正式运行会切出 `release/v<版本>`，改版本号、生成中英文发行说明、收回待发行说明、更新 README／文档索引／本指南里的当前发行链接与发布验证数字，跑完总验证、两项 `claude plugin validate`、`git diff --check` 和 spec-guard 的 `verify-artifacts` 后提交一次。总验证在 8 核本机约 2 分钟（回归套件并行跑），在 Claude Code 里请用后台方式运行。
 
 **3. 看输出。** 标准输出是一份 JSON（`schema` 为 `delegate.release-prepare/v1`）：退出 0 且 `status` 为 `ready` 才算备好；否则看 `reason`（固定诊断码）和 `checks` 里哪一项、退出码多少。检查失败时脚本会删除本次新建的发版分支、回到原分支，不留提交；同一版本重跑会复用已有的发版提交，分支被别人改过则报 `release_branch_conflict`。
 

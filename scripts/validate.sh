@@ -2,7 +2,34 @@
 
 set -u
 
+usage() {
+  printf 'usage: %s [--quick] [--jobs N]\n' "${0}" >&2
+}
+
+RUNNER_ARGS=()
+while [ "${#}" -gt 0 ]; do
+  case "${1}" in
+    --quick)
+      RUNNER_ARGS+=(--quick)
+      shift
+      ;;
+    --jobs)
+      if [ "${#}" -lt 2 ] || [[ ! "${2}" =~ ^[0-9]+$ ]] || [[ ! "${2}" =~ [1-9] ]]; then
+        usage
+        exit 64
+      fi
+      RUNNER_ARGS+=(--jobs "${2}")
+      shift 2
+      ;;
+    *)
+      usage
+      exit 64
+      ;;
+  esac
+done
+
 ROOT_DIR="$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+RUNNER_ARGS+=(--root "${ROOT_DIR}")
 STATUS=0
 
 fail() {
@@ -121,6 +148,10 @@ if ! python3 -B "${ROOT_DIR}/scripts/tests/test-release-prepare.py"; then
   fail "发版准备回归未通过"
 fi
 
+if ! python3 -B "${ROOT_DIR}/scripts/tests/test-run-suites.py"; then
+  fail "套件执行器回归未通过"
+fi
+
 if ! python3 -B "${ROOT_DIR}/scripts/tests/test-local-paths.py"; then
   fail "本机路径检查回归未通过"
 fi
@@ -129,18 +160,23 @@ if ! /bin/bash "${ROOT_DIR}/scripts/check-local-paths.sh" "${ROOT_DIR}"; then
   fail "仓库文件含本机绝对路径"
 fi
 
+SUITE_FIELDS=()
+add_suite() {
+  local LABEL="${1}" FAILURE="${2}"
+  shift 2
+  SUITE_FIELDS+=("${LABEL}" "${FAILURE}" "${#}" "${@}")
+}
+
 for SUITE in channel detection routing; do
-  if ! /bin/bash "${ROOT_DIR}/plugins/delegate/tests/test-${SUITE}.sh"; then
-    fail "${SUITE} 产品测试未通过"
-  fi
+  add_suite "${SUITE}" "${SUITE} 产品测试未通过" /bin/bash "${ROOT_DIR}/plugins/delegate/tests/test-${SUITE}.sh"
 done
 for SUITE in backend channel-regressions command-migration review-backends review-cli claude-review review-context review-result review-execution review-native review-macos review-staging review-trust review-fingerprint review-recheck reviewer-select review-transport review-guest-entry review-artifacts review-service review-guest interface run-resume run-timeout write-trust reap-fake-endpoint run-result run-continue run-longrun run-check run-rules; do
-  if ! python3 -B "${ROOT_DIR}/plugins/delegate/tests/test-${SUITE}.py"; then
-    fail "${SUITE} 回归测试未通过"
-  fi
+  add_suite "${SUITE}" "${SUITE} 回归测试未通过" python3 -B "${ROOT_DIR}/plugins/delegate/tests/test-${SUITE}.py"
 done
-if ! python3 -B "${ROOT_DIR}/plugins/delegate/tests/test-claude-isolation.py" --policy-only; then
-  fail "Claude 隔离策略基础测试未通过"
+add_suite "claude-isolation-policy" "Claude 隔离策略基础测试未通过" python3 -B "${ROOT_DIR}/plugins/delegate/tests/test-claude-isolation.py" --policy-only
+if ! printf '%s\0' "${SUITE_FIELDS[@]+"${SUITE_FIELDS[@]}"}" |
+    python3 -B "${ROOT_DIR}/scripts/run_suites.py" "${RUNNER_ARGS[@]+"${RUNNER_ARGS[@]}"}"; then
+  STATUS=1
 fi
 # Actual OS/SSH/live suites require a separately prepared and authorized guest.
 # Keep their red/actual evidence separate; never relabel them as offline passes.
