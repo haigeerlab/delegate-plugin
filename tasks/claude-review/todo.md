@@ -539,4 +539,4 @@ S88-5 与最终验收（2026-11-18）：CR-14 以生态总负责人 ecosystem-le
 来源：agent-relay-owner #23074 顺带报告「`delegate-exec.sh doctor --backend claude-code` 报 `claude-code requires --review-context`，与 /delegate:doctor 的说明对不上」。本会话核实：`delegate-exec.sh` 只认 `review`、`run`，`doctor` 落入旧版无子命令调用，被当成任务原文；不带 `--backend` 时会真的派一次 Codex 只读运行。用户选方案 A，原话「按 A 修」。
 
 - [x] F1（report）：`delegate_cli.main` 遇第一个参数 `doctor` 时原样转交 `review_doctor.py`；帮助文字列出该子命令；规格中英同步一句，待发行说明中英补一节。先加 `test_doctor_subcommand_forwards_to_model_free_doctor` 并确认失败（报 `unrecognized arguments: --bogus`），修复后 `test-review-cli.py` 通过；实跑 `delegate-exec.sh doctor --backend claude-code` 走到无模型体检。`validate.sh --quick` 选 14/35 个套件，退出 0，92 秒。
-- [ ] F2（gate）：提交、PR、合并各经用户确认；随下次发版交付。
+- [x] F2（gate）：提交、PR、合并各经用户确认；随下次发版交付。2026-11-26 用户回「提交并推送开 PR」「合并」：PR #56 合并（308cb44，GitHub 故障期间合并请求曾返回空响应，最终核实只合并一次）；随 0.12.4 发版。
