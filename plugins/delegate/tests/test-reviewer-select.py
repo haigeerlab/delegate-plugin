@@ -45,6 +45,13 @@ class ChooseTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             reviewer_select.choose('other', injected)
 
+    def test_check_codes_and_probe_stage_are_kept_in_order(self):
+        # spec/claude-review.md CR-23: a probe failure carries its stage into the "unreviewed" report.
+        injected, _ = self.fixed({'codex': 'codex_not_logged_in',
+                                  'claude-code': ('probe_timed_out', 'probe_stage_help')})
+        self.assertEqual(reviewer_select.choose('claude-code', injected),
+                         (None, 'none', ['codex_not_logged_in', 'probe_timed_out', 'probe_stage_help']))
+
     def fixed(self, available):
         calls = []
 
@@ -55,6 +62,46 @@ class ChooseTests(unittest.TestCase):
                 return None if value is True else value
             return check
         return {name: make(name) for name in available}, calls
+
+
+class ClaudeCheckTests(unittest.TestCase):
+    """claude_check returns the probe stage after the main code (spec/claude-review.md CR-23)."""
+
+    def check_with(self, error):
+        from unittest import mock
+        import claude_review
+        import review_native
+
+        class Runner:
+            claude = '/opt/claude'
+
+            def __init__(self, *args):
+                pass
+
+            def runtime_preflight(self):
+                pass
+
+            def invoke(self, *args, **kwargs):
+                raise AssertionError('preflight is replaced in this test')
+
+        def fail(*args):
+            raise error
+        with mock.patch.object(review_native, 'NativeRunner', Runner), \
+                mock.patch.object(review_native, 'native_temporary', lambda *args: None), \
+                mock.patch.object(claude_review, 'preflight', fail):
+            return reviewer_select.claude_check()
+
+    def test_probe_failure_returns_code_and_stage(self):
+        import claude_review
+        for code, stage in [('probe_timed_out', 'probe_stage_version'),
+                            ('probe_cleanup_unverified', 'probe_stage_auth')]:
+            with self.subTest(code=code):
+                self.assertEqual(self.check_with(claude_review.PreflightError(code, stage=stage)), (code, stage))
+
+    def test_judgement_failure_returns_code_only(self):
+        import claude_review
+        self.assertEqual(self.check_with(claude_review.PreflightError('authentication_missing')),
+                         'authentication_missing')
 
 
 class DescribeTests(unittest.TestCase):

@@ -35,3 +35,25 @@
 - 中英文待发行说明加「第二审查者的选择」小节与读报告提示。
 - Checkpoint 2：用户 2026-11-24 原话「通过，本地提交」。复审前全量验证 `validate: ok`、两次 `claude plugin validate` 通过、`git diff --check` 通过；integration-interface 的 1.7 指向随复审一并重新记录批准。
 - Checkpoint 3：用户 2026-11-24 原话「通过，推送开 PR」。验收基于 848f8fe：`validate: ok`、两次 `claude plugin validate` 通过、`git diff --check 4bc497e HEAD` 通过、`module_scope.py check --base 4bc497e` 越界 0、`verify-artifacts` 7 通过 0 警告。未验证：两家真实 CLI 可用性下的实际选择，留到发版后实跑。
+
+## M1 实跑未通过：Claude Code 探测期限过短（2026-11-26）
+
+用户 2026-11-26 让本会话实跑 `spec/usage/s110-design-review.md` 的 M1（原话「跑 s110 的 M1」），用安装版 0.12.3 在临时克隆里审一份故意带缺陷的演示技术方案（`version` 分支放在 `delegate_cli.py:200` 旧版回退之后）。用户判定不通过，原话「不通过，补探测期限任务」；未调用 milestone-mark。
+
+- U1 一致：第一轮退出 0，`reviewer` 为 openai/codex/cross_vendor，判据 design-v1，1 条阻断指向 `delegate_cli.py:200`；改方案后第二轮 `recheck.items[1]` 为 resolved，新发现 1 条为 suggestion（`downgraded: second_round`）。本次未出现需降级为 `no_code_evidence` 的阻断，该路径未实际触发。
+- U2 不稳定：PATH 去掉 Codex 后同一命令跑 3 次，前 2 次退出 127（`no_reviewer_available` + `codex_cli_missing` + `probe_timed_out`／`probe_cleanup_unverified`），第 3 次退出 0（anthropic/claude-code/same_vendor_fallback，模型 claude-opus-5-5）。直接调 `reviewer_select.claude_check` 6 次耗时 4～19 秒，1 次 `probe_timed_out`。原因：`claude_review._probe` 每个探测阶段期限固定 5 秒（`deadline=5`），Claude CLI 在沙箱里启动慢时超时，被判为不可用。doctor `--reviewers` 用同一检查，同样会时好时坏。
+- U3 一致：退出 127，conditions_missing／inconclusive，`no_reviewer_available`，`selection=none`，`backend_started=false`。
+- U4 一致：两家都在、只剩一家、两家都没有三种情况的列表与提示均与草案相符，退出 0。
+- 本次实跑调用 Codex 3 次、Claude Code 1 次；演示仓库只在会话临时目录。
+
+- [x] Task 6.0（gate）：规格修订。`spec/claude-review.md`「Claude Code 探测期限放宽」节，用户 2026-11-26 批准，原话「批准；Q1 15 秒；Q2 不重试」。修订前分段计时 18 次：三个探测各 0.3～0.6 秒、整体约 2 秒，未复现慢启动。
+- [x] Task 6.1（report）：期限 15 秒（CR-22）。`test-claude-review.py` 原断言「三个探测期限都是 5」随规格修订改为 `[15, 15, 15]`，另断言 `PROBE_DEADLINE == 15`；先失败（`[5, 5, 5] != [15, 15, 15]`），加常量后通过。`review_native.py:157` 的运行时探测与 `review_guest_entry.py:186` 的访客探测仍为 5 秒，不属规格所说的三个 CLI 探测，实测超时码也都来自 CLI 探测，本次不改。
+- [x] Task 6.2（report）：auto 选择带阶段码（CR-23）。新增 `choose` 按序写入「主码 + 阶段码」、`ClaudeCheckTests`（探测失败返回两码、`authentication_missing` 只返回一码）、`doctor --reviewers` 只显示主码 4 处用例，先失败（3 + 1），改 `reviewer_select.choose`／`claude_check` 与 `review_doctor.reviewers` 后 `test-reviewer-select.py`、`test-review-backends.py`、`test-claude-review.py` 通过。
+- [x] Task 6.3（report）：文档。英文规格补同一节并在原 Q1 后注明已修订；中英待发行说明补「探测期限放宽到 15 秒」小节及影响面、验证段落。
+- [x] Checkpoint A（report）：快检查、全量与产物校验。2026-11-26：`validate.sh --quick` 选 23/35 个套件，退出 0，85 秒；全量退出 0，101 秒，`Ran` 合计 547（542 + doctor 子命令 1 + 本次新增 4）；`git diff --check`、共享段、本机路径通过；产物校验 7 项通过。
+- [ ] Checkpoint B（gate）：`/delegate:review --backend claude-code` 审查与提交
+- [ ] Task 7（gate）：Task 6 发版后用安装版重跑 M1 的 U2（至少连续 3 次），交用户判定 M1。
+
+探测期限放宽 · 代码审查（2026-11-26，同厂商审查，`/delegate:review --backend claude-code`，安装版 0.12.3，模型 claude-opus-5-5；输入为工作区全部改动，排除本模块 plan、todo，依据 `spec/claude-review.md`；用户原话「审查」）：completed，审 10 个文件、未审 0，1 条阻断。
+- 阻断 1：CR-23 只测了零件（`choose` 展开、`claude_check` 返回值、doctor 显示），没走 `--backend auto` 的「未审」报告端到端路径。属实，按建议在 `test-review-cli.py` 加 `test_unreviewed_report_names_the_failing_probe`：用测试开关让 Claude Code 返回「主码 + 阶段码」（探测超时、清理未确认两例），断言报告 `diagnostics` 依次为 `no_reviewer_available`、`codex_cli_missing`、主码、阶段码；另断言 `authentication_missing` 不带阶段码。实现已在，新用例直接通过；变异验证：临时把 `choose` 改成只追加主码，新用例两例都失败，随后还原（还原时 `cp` 带交互确认卡住一次，停掉后用 `/bin/cp -f` 还原并核对），`test-review-cli`、`test-reviewer-select`、`test-review-backends`、`test-claude-review` 全部通过。补测后全量退出 0，93 秒，`Ran` 合计 548。
+- PR #57 首轮 CI（2026-11-26）：`test (3.13)` 通过；`test (macos-system)` 失败，`test-review-execution.py` 的 `test_codex_review_never_uses_a_configured_approver` 返回 124。原因：该文件所有用例把 `DELEGATE_TIMEOUT_SECONDS` 固定为 1 秒，正常模式也要求假 Codex 1 秒内跑完；PR #54 起套件并行，CI 系统 Python 负载下偶尔超时。与本次改动无关，属并行暴露的既有计时过紧。修复：只有 `hang` 模式（验证超时分支）保留 1 秒，其他模式 8 秒；断言 108 条不变。两个 Python 版本单独跑通过，系统 Python 全量退出 0（100 秒，548 项）。

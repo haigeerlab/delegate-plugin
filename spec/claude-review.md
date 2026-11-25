@@ -1,5 +1,7 @@
 # 规格：claude-review（可选 Claude Code 审查后端）
 
+<!-- spec-guard: review approved 61ab62e83ca7 -->
+
 简体中文 | [English](../docs/en/SPEC-claude-review.md)
 
 **审批方式（2026-10-25）：** Codex 后端审查调用固定 `-c approval_policy="never"`，见 [run-resume](run-resume.md) 修订记录 R2；其余审查合同不变。
@@ -421,7 +423,7 @@ autopr-design 2026-11-24 在本机连续三次运行 `review --backend claude-co
 
 ### 待确认
 
-1. 已定（2026-11-25）：探测时限保持 5 秒，看到阶段码后再决定是否调整。
+1. 已定（2026-11-25）：探测时限保持 5 秒，看到阶段码后再决定是否调整。（2026-11-26 实跑发现 5 秒会偶发误判，修订见「Claude Code 探测期限放宽」一节。）
 2. 已定（2026-11-25，代码审查建议 2、3，用户原话「2、3 都按推荐改」）：`backend_exit_nonzero` 只在 `failed` 时追加；阶段码覆盖探测本身产生的全部六个失败码。
 
 ## 监督代码暂存缺模块（2026-11-25，已批准）
@@ -498,6 +500,64 @@ autopr-design 2026-11-24、25 的四次失败与此一致。只用这三个暂�
 ### 待确认
 
 1. 访客路径本机没有现成的 Lima 环境可以实跑，这次只做导入闭包测试。
+
+## Claude Code 探测期限放宽（2026-11-26，已批准）
+
+**状态：** 用户 2026-11-26 批准，原话「批准；Q1 15 秒；Q2 不重试」。来源：用户 2026-11-26 让本会话实跑 s110 用法草案 M1（原话「跑 s110 的 M1」），U2 不稳定，用户判定不通过并要求补任务（原话「不通过，补探测期限任务」）；记录见 [reviewer-selection todo](../tasks/reviewer-selection/todo.md) 的「M1 实跑未通过」节。本节修订上文「审查失败定位诊断」待确认第 1 条（探测时限保持 5 秒）。
+
+### 问题
+
+`--backend auto` 和 `review_doctor.py --reviewers` 判断 Claude Code 能不能用，靠的是 `reviewer_select.claude_check`：建临时目录、检查隔离运行时，再依次跑三个探测（`--version`、`--help`、`auth status`）。每个探测的期限写死为 5 秒（`claude_review._probe` 的 `deadline=5`）。
+
+2026-11-26 用安装版 0.12.3 实跑：
+- 去掉 Codex 后，同一条 `review --backend auto` 命令跑 3 次，前 2 次退出 127，诊断分别是 `probe_timed_out`、`probe_cleanup_unverified`，都被判成「两家都不可用」；第 3 次才回退到 Claude Code 跑完。
+- 直接调 `claude_check` 6 次，整体耗时在 4～19 秒之间，其中 1 次 `probe_timed_out`。
+- 之后分段计时 18 次都只要约 2 秒，每个探测 0.3～0.6 秒，没能复现慢的那几次。
+
+所以平时远低于 5 秒，但 Claude CLI 启动偶尔会被卡住几秒到十几秒，一碰到探测就超时。只装了 Claude Code 的用户会因此被误判为「未审」，doctor 列表也会时好时坏。另外，auto 选择的报告只给 `probe_timed_out`，不带上文第 1 项的 `probe_stage_*`，看不出是哪个探测慢。
+
+### 目标
+
+Claude CLI 偶发的慢启动不再让 Claude Code 被误判为不可用；探测仍然有期限，真卡住时照旧判为不可用；下次再出问题时，auto 选择的报告能指出是哪个探测。
+
+### 做法
+
+1. **期限放宽**：三个探测的期限都从 5 秒改为 15 秒（三个加起来最坏 45 秒）。到期后的清理（有界 TERM/KILL）、诊断码和状态映射都不变。审查本身的 540 秒和外层 600 秒期限不变。
+2. **不加重试**：维持上文边界里「增加重试」不做。探测超时一次就判为不可用。
+3. **auto 选择带阶段码**：`claude_check` 因探测本身失败而判为不可用时，`--backend auto` 的「未审」报告在 `claude_cli_*`／`probe_*` 码之后同样追加 `probe_stage_version`、`probe_stage_help` 或 `probe_stage_auth`，规则同上文第 1 项。`doctor --reviewers` 的列表仍只显示主码，不改输出格式。
+
+以上不改报告字段、退出码和接口版本（仍为 1.7）；`diagnostics` 只是追加固定码。
+
+### 边界
+
+**Always：**
+- 期限只改这一个常量，三个探测共用；
+- 新增测试先写，并确认它失败；
+- Codex 后端和 run 不受影响。
+
+**Ask first：**
+- 期限取 15 秒以外的值；
+- 用模型额度实跑（Task 7 发版后重跑 U2 已列为 gate）。
+
+**Never：**
+- 增加重试或后端切换；
+- 去掉期限或改成不限时；
+- 放宽沙箱或网络边界。
+
+### 成功条件
+
+| 条款 | 成功标准与计划验证 |
+|---|---|
+| CR-22 | 探测期限：用假调用器记录 `preflight` 传给三个探测的期限，都是 15；假调用器返回 `timed_out` 时仍报 `probe_timed_out` 加对应阶段码，`backend_started=false` |
+| CR-23 | auto 选择带阶段码：用假的 `claude_check` 失败（探测超时、清理未确认）走完 `--backend auto` 的「未审」路径，报告 `diagnostics` 含 `no_reviewer_available`、原码和对应的 `probe_stage_*`；探测成功后的判定失败（如 `authentication_missing`）不带阶段码 |
+| CR-24 | 真实复验：发版后用安装版去掉 Codex，同一条 `review --backend auto` 命令连续跑 3 次，都回退到 Claude Code 并完成（reviewer-selection Task 7，须用户授权额度） |
+
+CR-22、CR-23 用假调用器，不调用模型，并入 `scripts/validate.sh`。
+
+### 待确认
+
+1. 已定（2026-11-26）：15 秒。理由：实测平时约 0.5 秒，慢的那几次整个检查在 9～19 秒之间，15 秒能覆盖大多数偶发卡顿，又不会让真卡住时等太久（最坏 45 秒）。备选 10 秒（最坏 30 秒，覆盖面小一些）或 30 秒（最坏 90 秒，doctor 列表可能要等一分半）。
+2. 已定（2026-11-26）：不加重试，维持原边界。理由：重试会让真卡住时的等待翻倍，也会掩盖 CLI 的真实问题；放宽期限已经能覆盖偶发慢启动。
 
 ## 附录：历史接续记录（保留当时状态，不覆盖当前结论）
 

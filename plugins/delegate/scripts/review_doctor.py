@@ -64,6 +64,8 @@ def reviewers(*, json_output):
     rows = []
     for name, vendor in reviewer_select.VENDORS.items():
         problem = checks[name]()
+        if isinstance(problem, (tuple, list)):
+            problem = problem[0]  # the listing shows the main code only; stages stay in review reports
         rows.append({'backend': name, 'vendor': vendor, 'available': problem is None, 'diagnostic': problem})
     usable = sum(row['available'] for row in rows)
     hint = None if usable == len(rows) else 'add_second_vendor' if usable else 'no_reviewer_available'

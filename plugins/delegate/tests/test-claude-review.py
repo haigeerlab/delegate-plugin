@@ -37,7 +37,9 @@ class ClaudePreflightTests(unittest.TestCase):
         self.assertEqual(result, {'version': '2.1.295', 'auth_method': 'claude.ai', 'provider': 'firstParty'})
         self.assertNotIn('SECRET', json.dumps(result))
         self.assertEqual([call[0][-1] for call in boundary.calls], ['--version', '--help', '--json'])
-        self.assertTrue(all(call[1] == 5 for call in boundary.calls))
+        # spec/claude-review.md CR-22 (2026-11-26): every probe gets 15 s, raised from 5 s.
+        self.assertEqual([call[1] for call in boundary.calls], [15, 15, 15])
+        self.assertEqual(claude_review.PROBE_DEADLINE, 15)
         self.assertTrue(all('--safe-mode' in call[0] and '--restricted' in call[0] for call in boundary.calls))
         self.assertTrue(all('-p' not in call[0] for call in boundary.calls))
 
