@@ -118,7 +118,7 @@ The Chinese page uses `## 影响面` and `## 验证与已知限制`. A missing t
 /bin/bash scripts/release-prepare.sh 0.11.0
 ```
 
-`--check` only checks and writes nothing. A real run cuts `release/v<version>`, bumps the version, generates both release notes, folds the unreleased notes, updates the current-release links and release validation numbers in the READMEs, documentation indexes and this guide, then runs full validation, both `claude plugin validate` runs, `git diff --check` and spec-guard's `verify-artifacts`, and commits once. Full validation takes about 5 minutes; in Claude Code, run it in the background.
+`--check` only checks and writes nothing. A real run cuts `release/v<version>`, bumps the version, generates both release notes, folds the unreleased notes, updates the current-release links and release validation numbers in the READMEs, documentation indexes and this guide, then runs full validation, both `claude plugin validate` runs, `git diff --check` and spec-guard's `verify-artifacts`, and commits once. Full validation takes about 2 minutes on an 8-core machine (regression suites run in parallel); in Claude Code, run it in the background.
 
 **3. Read the output.** Standard output is one JSON document (`schema` `delegate.release-prepare/v1`): only exit 0 with `status` `ready` means prepared; otherwise read `reason` (a fixed diagnostic) and which entry in `checks` failed with which exit code. When a check fails, the script deletes the release branch it created and returns to the original branch, leaving no commit; a rerun for the same version reuses the existing release commit, and a branch changed by someone else reports `release_branch_conflict`.
 

@@ -15,7 +15,7 @@ class DiscoveryTests(unittest.TestCase):
         temporary = tempfile.TemporaryDirectory(prefix='delegate-validation.', dir='/private/tmp')
         self.addCleanup(temporary.cleanup)
         root = Path(temporary.name)
-        for name in ('scripts/validate.sh', 'scripts/check-manifests.py',
+        for name in ('scripts/validate.sh', 'scripts/run_suites.py', 'scripts/check-manifests.py',
                 '.claude-plugin/marketplace.json', 'plugins/delegate/.claude-plugin/plugin.json'):
             target = root / name
             target.parent.mkdir(parents=True, exist_ok=True)
@@ -40,15 +40,60 @@ class DiscoveryTests(unittest.TestCase):
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text('# prevent recursive fixture validation\n')
         (root / 'scripts/tests/test-release-prepare.py').write_text('# fixture suite\n')
+        (root / 'scripts/tests/test-run-suites.py').write_text('# fixture suite\n')
         (root / 'scripts/tests/test-local-paths.py').write_text('# fixture suite\n')
         (root / 'scripts/check-shared-sections.py').write_text('# fixture check\n')
         return root
 
-    def validate(self, root):
-        environment = {'PATH': str(Path(sys.executable).parent) + ':/usr/bin:/bin',
-            'HOME': str(root), 'TMPDIR': str(root), 'PYTHONDONTWRITEBYTECODE': '1'}
-        return subprocess.run(['/bin/bash', str(root / 'scripts/validate.sh')], cwd=root,
-            env=environment, capture_output=True, timeout=30)
+    def validate(self, root, *args, cwd=None):
+        # Tool caches in TMPDIR must not become untracked repository changes.
+        with tempfile.TemporaryDirectory(prefix='delegate-validation-tmp.', dir='/private/tmp') as directory:
+            environment = {'PATH': str(Path(sys.executable).parent) + ':/usr/bin:/bin',
+                'HOME': str(root), 'TMPDIR': directory, 'PYTHONDONTWRITEBYTECODE': '1'}
+            return subprocess.run(['/bin/bash', str(root / 'scripts/validate.sh'), *args], cwd=cwd or root,
+                env=environment, capture_output=True, timeout=30)
+
+    def test_invalid_arguments_fail_before_static_checks(self):
+        for args in (('--jobs',), ('--jobs', '0'), ('--jobs', '-1'), ('--jobs', 'bad'),
+                     ('--jobs', '1.5'), ('--unknown',), ('extra',)):
+            with self.subTest(args=args):
+                root = self.fixture()
+                result = self.validate(root, *args)
+                self.assertEqual(result.returncode, 64, result.stderr.decode())
+                self.assertIn(b'usage:', result.stderr)
+                self.assertEqual(result.stdout, b'')
+
+
+    def git_baseline(self, root):
+        for args in (('init',), ('add', '.'),
+                     ('-c', 'user.name=t', '-c', 'user.email=t@example.invalid',
+                      'commit', '-m', 'fixture'),
+                     ('update-ref', 'refs/remotes/origin/main', 'HEAD')):
+            result = subprocess.run(['git', '-C', str(root), *args],
+                                    capture_output=True, timeout=10)
+            self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_quick_accepts_either_jobs_order_and_passes_root(self):
+        root = self.fixture()
+        self.git_baseline(root)
+        (root / 'README.md').write_text('fixture docs\n')
+        for args in (('--quick', '--jobs', '2'), ('--jobs', '2', '--quick')):
+            with self.subTest(args=args):
+                result = self.validate(root, *args, cwd=PROJECT)
+                self.assertEqual(result.returncode, 0, result.stderr.decode())
+                self.assertIn(b'validate: quick: 0 of 35 suites\n', result.stderr)
+                self.assertIn(b'validate: ok', result.stdout)
+                self.assertNotIn(b'running all suites', result.stderr)
+
+    def test_quick_keeps_static_checks_for_doc_only_changes(self):
+        root = self.fixture()
+        self.git_baseline(root)
+        (root / 'docs').mkdir()
+        (root / 'docs/bad.py').write_text('if:\n')
+        result = self.validate(root, '--quick')
+        self.assertEqual(result.returncode, 1, result.stderr.decode())
+        self.assertIn('Python 语法校验未通过'.encode(), result.stderr)
+        self.assertIn(b'validate: quick: 0 of 35 suites\n', result.stderr)
 
     def test_private_acceptance_and_git_are_excluded_from_all_file_checks(self):
         root = self.fixture()

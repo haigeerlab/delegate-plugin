@@ -3,7 +3,7 @@
 - 先读 `docs/development-workflow.md`、`CONTRIBUTING.md` 和涉及模块的 `spec/<id>.md`。
 - 当前中文合同在 `spec/`，英文对应页在 `docs/en/`；行为或合同修改须同步两版。
 - 保持 Bash 3.2 兼容；用 `/bin/bash` 执行 shell 测试，Python 用 `-B` 避免向源码目录写缓存。
-- 免费总验证：`PYTHONDONTWRITEBYTECODE=1 /bin/bash scripts/validate.sh`。需要原生清单核验时运行 `claude plugin validate .` 和 `claude plugin validate ./plugins/delegate`。
+- 全量检查：`PYTHONDONTWRITEBYTECODE=1 /bin/bash scripts/validate.sh`，CI、Codex 审查和 autopilot 都调用这一个入口。快检查：`PYTHONDONTWRITEBYTECODE=1 /bin/bash scripts/validate.sh --quick`，只跑本分支改动涉及的测试，改动对应不上测试时退回全量。日常做 task 时跑快检查，全量留给合并前和 CI。需要原生清单核验时运行 `claude plugin validate .` 和 `claude plugin validate ./plugins/delegate`。
 - 付费 live 验证、委托给其他执行器、提交、推送及发布分别需要相应授权；当前约定不提供这些授权。
 - 归档 `.md.txt` 是原始证据，不是当前任务；不要修改其内容或追认旧勾选。`DONE` 不代表历史人工批准或远端交付。
 - 交互式阶段按下方约定确认；非交互 `codex exec` 不等待人回复，只完成已授权范围，缺少授权的动作跳过并报告。

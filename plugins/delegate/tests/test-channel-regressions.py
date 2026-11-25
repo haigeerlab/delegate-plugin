@@ -50,10 +50,16 @@ if mode == "hang_ignore":
     signal.signal(signal.SIGTERM, signal.SIG_IGN)
 if mode in ("timeout_child", "signal_child", "setsid_child"):
     marker = os.environ["STUB_MARKER"]
-    code = "import time; time.sleep(3); open(%r, 'w').write('late')" % marker
+    delay = float(os.environ.get("STUB_CHILD_DELAY", "3"))
+    code = """import os, time
+started = time.time()
+with open(%r, 'w') as f: f.write(str(started))
+with open(%r, 'w') as f: f.write(str(os.getpid()))
+time.sleep(max(0, started + %r - time.time()))
+with open(%r, 'w') as f: f.write('late')
+""" % (os.environ["STUB_CHILD_PID"] + ".started", os.environ["STUB_CHILD_PID"], delay, marker)
     # Like Codex shell commands: setsid_child runs in its own session and process group.
-    child = subprocess.Popen([sys.executable, "-c", code], start_new_session=(mode == "setsid_child"))
-    with open(os.environ["STUB_CHILD_PID"], "w") as f: f.write(str(child.pid))
+    subprocess.Popen([sys.executable, "-c", code], start_new_session=(mode == "setsid_child"))
 if mode in ("hang_ignore", "timeout_child", "signal_child", "setsid_child"):
     while True: time.sleep(.1)
 if answer and mode != "empty":
@@ -91,6 +97,7 @@ class ChannelRegressionTests(unittest.TestCase):
             "DELEGATE_TIMEOUT_SECONDS": "1",
             "STUB_CALL_LOG": str(self.base / "calls.log"),
             "STUB_MODE": "success",
+            "STUB_CHILD_DELAY": "3",
         })
 
         self.repo, self.tracked = self.make_git_repo("default")
@@ -142,6 +149,14 @@ class ChannelRegressionTests(unittest.TestCase):
             time.sleep(.025)
         return Path(path).exists()
 
+    def wait_for_child_write_deadline(self, child_pid_file, delay=3):
+        started = float(Path(str(child_pid_file) + ".started").read_text())
+        write_at = started + delay
+        # Wall clock: time.monotonic() is per process on macOS's system Python 3.9.
+        # Cleanup must finish before the child could write, even on a slow host.
+        self.assertLess(time.time(), write_at, "cleanup exceeded the child's write delay")
+        time.sleep(max(0, write_at + .5 - time.time()))
+
     def test_timeout_ignoring_sigterm_is_bounded_and_returns_124(self):
         status, _, stderr = self.run_wrapper("hang", env={"STUB_MODE": "hang_ignore"}, timeout=8)
         self.assertEqual(status, 124, stderr.decode("utf-8", "replace"))
@@ -154,8 +169,9 @@ class ChannelRegressionTests(unittest.TestCase):
         }, timeout=8)
         self.assertEqual(status, 124, stderr.decode("utf-8", "replace"))
         self.assertTrue(self.wait_for_path(child_pid), "fake codex did not record its child")
-        time.sleep(3.2)
+        self.wait_for_child_write_deadline(child_pid)
         self.assertFalse(marker.exists(), "descendant wrote after timeout termination")
+        self.assertFalse(self._alive(int(child_pid.read_text())), "descendant survived timeout termination")
 
     def test_wrapper_sigterm_reaps_codex_and_descendant(self):
         marker = self.base / "signal-marker"
@@ -163,7 +179,8 @@ class ChannelRegressionTests(unittest.TestCase):
         env = self.env.copy()
         env["DELEGATE_TIMEOUT_SECONDS"] = "20"
         env["STUB_VERSION_START"] = str(self.base / "version-start")
-        env.update({"STUB_MODE": "signal_child", "STUB_MARKER": str(marker), "STUB_CHILD_PID": str(child_pid_file), "STUB_EXEC_START": str(self.base / "exec-start")})
+        env.update({"STUB_MODE": "signal_child", "STUB_MARKER": str(marker), "STUB_CHILD_PID": str(child_pid_file), "STUB_EXEC_START": str(self.base / "exec-start"),
+                    "STUB_CHILD_DELAY": "2.5"})
         env = {str(k): str(v) for k, v in env.items()}
         proc = subprocess.Popen([str(self.script), "signal"], cwd=self.repo, env=env,
                                 stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
@@ -177,8 +194,9 @@ class ChannelRegressionTests(unittest.TestCase):
             except subprocess.TimeoutExpired:
                 self.fail("wrapper did not exit after SIGTERM")
             self.assertNotEqual(proc.returncode, 0, stderr.decode("utf-8", "replace"))
-            time.sleep(3.2)
+            self.wait_for_child_write_deadline(child_pid_file, delay=2.5)
             self.assertFalse(marker.exists(), "child survived wrapper SIGTERM and wrote marker")
+            self.assertFalse(self._alive(int(child_pid_file.read_text())), "child survived wrapper SIGTERM")
         finally:
             self._kill_group(proc.pid)
             if proc.poll() is None:
@@ -200,7 +218,7 @@ class ChannelRegressionTests(unittest.TestCase):
         state = subprocess.run(["ps", "-o", "stat=", "-p", str(pid)], text=True, capture_output=True).stdout.strip()
         return bool(state) and not state.startswith("Z")
 
-    def _assert_new_session_child_reaped(self, child_pid_file, marker, stderr):
+    def _assert_new_session_child_reaped(self, child_pid_file, marker, stderr, delay=3):
         diagnostic = stderr.decode("utf-8", "replace")
         child_pid = int(Path(child_pid_file).read_text())
         try:
@@ -208,7 +226,7 @@ class ChannelRegressionTests(unittest.TestCase):
             while self._alive(child_pid) and time.monotonic() < deadline:
                 time.sleep(.05)
             self.assertFalse(self._alive(child_pid), "new-session descendant survived cleanup")
-            time.sleep(3.2)
+            self.wait_for_child_write_deadline(child_pid_file, delay=delay)
             self.assertFalse(marker.exists(), "new-session descendant wrote after cleanup")
             self.assertIn("delegate: 清理：", diagnostic, diagnostic[-1200:])
             self.assertIn(str(child_pid), diagnostic, diagnostic[-1200:])
@@ -237,7 +255,8 @@ class ChannelRegressionTests(unittest.TestCase):
                 child_pid = self.base / f"setsid-{tag}.pid"
                 env = self.env.copy()
                 env.update({"DELEGATE_TIMEOUT_SECONDS": "20", "STUB_MODE": "setsid_child",
-                            "STUB_MARKER": str(marker), "STUB_CHILD_PID": str(child_pid)})
+                            "STUB_MARKER": str(marker), "STUB_CHILD_PID": str(child_pid),
+                            "STUB_CHILD_DELAY": "2.5"})
                 proc = subprocess.Popen([str(self.script), "signal"], cwd=self.repo, env=env,
                                         stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                         start_new_session=True)
@@ -250,7 +269,7 @@ class ChannelRegressionTests(unittest.TestCase):
                     except subprocess.TimeoutExpired:
                         self.fail("wrapper did not exit after %s" % signum.name)
                     self.assertEqual(proc.returncode, expected, stderr.decode("utf-8", "replace"))
-                    self._assert_new_session_child_reaped(child_pid, marker, stderr)
+                    self._assert_new_session_child_reaped(child_pid, marker, stderr, delay=2.5)
                 finally:
                     self._kill_group(proc.pid)
                     if proc.poll() is None:
@@ -381,7 +400,6 @@ class RunCodexEpermTests(unittest.TestCase):
     def test_stop_group_tolerates_eperm_and_reaps(self):
         from unittest import mock
         process = subprocess.Popen(["true"], start_new_session=True)
-        time.sleep(.2)
         with mock.patch.object(self.module.os, "killpg", side_effect=PermissionError(1, "Operation not permitted")):
             self.module.stop_group(process)
         self.assertEqual(process.returncode, 0)
