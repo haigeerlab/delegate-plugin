@@ -85,10 +85,16 @@ class CommonExecutionTests(unittest.TestCase):
             'FIXTURE_PID':str(self.root/'child.pid'),
             'PYTHONDONTWRITEBYTECODE':'1'}
 
+    @staticmethod
+    def deadline(mode):
+        # Only the hang fixture exercises the timeout path; a 1 s deadline for runs that should
+        # finish made them time out (124) under parallel load on CI's system Python.
+        return '1' if mode=='hang' else '8'
+
     def run_review(self, mode='normal', timeout=10):
         return subprocess.run(['/bin/bash',str(SCRIPTS/'delegate-exec.sh'),'--backend','codex',
             '--review-context',str(self.context),'review fixture'],cwd=self.repo,
-            env=dict(self.env,FIXTURE_MODE=mode,DELEGATE_TIMEOUT_SECONDS='1'),capture_output=True,text=True,timeout=timeout)
+            env=dict(self.env,FIXTURE_MODE=mode,DELEGATE_TIMEOUT_SECONDS=self.deadline(mode)),capture_output=True,text=True,timeout=timeout)
 
     def run_recheck(self, mode):
         head=subprocess.run(['git','-C',str(self.repo),'rev-parse','HEAD'],check=True,capture_output=True,text=True).stdout.strip()
@@ -99,7 +105,7 @@ class CommonExecutionTests(unittest.TestCase):
         path=self.root/'previous.json';path.write_text(json.dumps(previous))
         return subprocess.run(['/bin/bash',str(SCRIPTS/'delegate-exec.sh'),'review','--context',str(self.context),
             '--previous-report',str(path),'review fixture'],cwd=self.repo,
-            env=dict(self.env,FIXTURE_MODE=mode,DELEGATE_TIMEOUT_SECONDS='1'),capture_output=True,text=True,timeout=10)
+            env=dict(self.env,FIXTURE_MODE=mode,DELEGATE_TIMEOUT_SECONDS=self.deadline(mode)),capture_output=True,text=True,timeout=10)
 
     def test_codex_recheck_reports_items_and_schema_requires_previous(self):
         result=self.run_recheck('recheck')
