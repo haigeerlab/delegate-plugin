@@ -21,6 +21,10 @@ SETTINGS = {'disableAllHooks': True, 'disableClaudeAiConnectors': True, 'enableA
             'switchModelsOnFlag': False, 'fallbackModel': []}
 
 
+# Per-probe deadline (spec/claude-review.md, 2026-11-26): 5 s misjudged occasional slow CLI starts.
+PROBE_DEADLINE = 15
+
+
 class PreflightError(Exception):
     """Fixed diagnostic code only; probe output is never echoed."""
 
@@ -40,7 +44,7 @@ def unique_object(pairs):
 
 def _probe(invoker, argv, *, stage, authentication=False):
     try:
-        result = invoker(argv, deadline=5)
+        result = invoker(argv, deadline=PROBE_DEADLINE)
     except OSError:
         raise PreflightError('probe_unavailable', stage=stage) from None
     if not isinstance(result, dict) or result.get('cleanup') != 'confirmed':

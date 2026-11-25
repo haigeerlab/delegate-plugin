@@ -488,6 +488,22 @@ class ReviewerSelectionCLITests(unittest.TestCase):
         self.assertEqual(report['reviewer'], {'vendor': None, 'backend': None, 'same_vendor': None, 'selection': 'none'})
         self.assertFalse((self.root / 'prompt').exists())
 
+    def test_unreviewed_report_names_the_failing_probe(self):
+        # spec/claude-review.md CR-23: the probe stage reaches the auto "unreviewed" report.
+        for code, stage in [('probe_timed_out', 'probe_stage_help'), ('probe_cleanup_unverified', 'probe_stage_auth')]:
+            with self.subTest(code=code):
+                self.available(codex='codex_cli_missing', claude_code=[code, stage])
+                result = self.review('--backend', 'auto', '--author-host', 'claude-code', '--paths', 'src/a.py')
+                self.assertEqual(result.returncode, 127, result.stderr)
+                report = json.loads(result.stdout)
+                self.assertEqual(report['diagnostics'], ['no_reviewer_available', 'codex_cli_missing', code, stage])
+                self.assertEqual(report['reviewer']['selection'], 'none')
+                self.assertFalse(report['backend_started'])
+        # A judgement after a successful probe carries no stage.
+        self.available(codex='codex_cli_missing', claude_code='authentication_missing')
+        report = json.loads(self.review('--backend', 'auto', '--author-host', 'claude-code', '--paths', 'src/a.py').stdout)
+        self.assertEqual(report['diagnostics'], ['no_reviewer_available', 'codex_cli_missing', 'authentication_missing'])
+
     def test_auto_picks_codex_and_reports_it(self):
         self.available(codex=None, claude_code=None)
         auto = self.review('--backend', 'auto', '--author-host', 'claude-code', '--paths', 'src/a.py')

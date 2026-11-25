@@ -415,7 +415,7 @@ All free checks use fake invokers, temporary directories and the existing MacBou
 
 ### Open questions
 
-1. Decided (2026-11-25): the probe deadline stays at 5 seconds; revisit after the stage codes are seen.
+1. Decided (2026-11-25): the probe deadline stays at 5 seconds; revisit after the stage codes are seen. (Real runs on 2026-11-26 showed 5 seconds occasionally misjudges; see "Claude Code probe deadline raised".)
 2. Decided (2026-11-25, code review suggestions 2 and 3, approved by the user): `backend_exit_nonzero` is appended only for `failed`; stage codes cover all six failure codes produced by the probe itself.
 
 ## Missing modules in staged supervisor code (2026-11-25, approved)
@@ -492,6 +492,64 @@ Free checks use temporary directories, fake invokers and the existing MacBoundar
 ### Open questions
 
 1. There is no ready Lima environment on this Mac to run the guest path for real, so this change only adds the import-closure test for it.
+
+## Claude Code probe deadline raised (2026-11-26, approved)
+
+**Status:** Approved by the user on 2026-11-26: 「批准；Q1 15 秒；Q2 不重试」 — "Approved; Q1 15 seconds; Q2 no retry". Source: on 2026-11-26 the user asked this session to run milestone M1 of the s110 usage draft for real (「跑 s110 的 M1」 — "run s110's M1"); U2 was unstable, and the user judged it failed and asked for a task (「不通过，补探测期限任务」 — "failed; add a probe-deadline task"). The record is in the "M1 real run failed" section of the [reviewer-selection todo](../../tasks/reviewer-selection/todo.md). This section revises item 1 of "Open questions" in "Review failure localization diagnostics" above (keep the 5-second probe deadline).
+
+### Problem
+
+`--backend auto` and `review_doctor.py --reviewers` decide whether Claude Code is usable through `reviewer_select.claude_check`: create a temporary directory, check the isolated runtime, then run three probes (`--version`, `--help`, `auth status`). Each probe had a fixed 5-second deadline (`deadline=5` in `claude_review._probe`).
+
+Real runs with installed 0.12.3 on 2026-11-26:
+- With Codex removed, the same `review --backend auto` command ran three times. The first two exited 127 with `probe_timed_out` and `probe_cleanup_unverified` and were judged "no reviewer available"; only the third fell back to Claude Code and finished.
+- Calling `claude_check` directly six times took 4–19 seconds in total, once with `probe_timed_out`.
+- Eighteen later timed runs took about 2 seconds each, 0.3–0.6 seconds per probe; the slow cases did not reproduce.
+
+So probes are normally far below 5 seconds, but the Claude CLI occasionally stalls for several seconds at start-up, and a probe that hits it times out. Users with only Claude Code are then misjudged as "unreviewed", and the doctor listing flips. The auto-selection report also carried only `probe_timed_out`, without the `probe_stage_*` code of item 1 above.
+
+### Goal
+
+An occasional slow Claude CLI start no longer marks Claude Code unusable; probes stay bounded and a real hang is still unusable; next time the auto-selection report names the probe.
+
+### Approach
+
+1. **Deadline raised:** all three probes get 15 seconds instead of 5 (worst case 45 seconds in total). Bounded TERM/KILL cleanup after expiry, diagnostic codes and state mapping are unchanged. The review's 540-second and outer 600-second deadlines are unchanged.
+2. **No retry:** the boundary "never add retries" above stays. One probe timeout still means unusable.
+3. **Stage codes in auto selection:** when `claude_check` finds Claude Code unusable because a probe itself failed, the "unreviewed" report of `--backend auto` appends `probe_stage_version`, `probe_stage_help` or `probe_stage_auth` after the `claude_cli_*`/`probe_*` code, by the rule of item 1 above. `doctor --reviewers` still shows only the main code; its output format is unchanged.
+
+No report field, exit code or interface version (still 1.7) changes; `diagnostics` only gains fixed codes.
+
+### Boundaries
+
+**Always:**
+- change only this one constant, shared by the three probes;
+- write new tests first and confirm they fail;
+- leave the Codex backend and run unaffected.
+
+**Ask first:**
+- any deadline other than 15 seconds;
+- real runs that use model quota (rerunning U2 after release is reviewer-selection Task 7, a gate).
+
+**Never:**
+- add retries or backend switching;
+- remove the deadline or make it unbounded;
+- loosen sandbox or network boundaries.
+
+### Success criteria
+
+| Clause | Success criterion and planned verification |
+|---|---|
+| CR-22 | Probe deadline: a fake invoker records the deadline `preflight` passes to each of the three probes, all 15; a fake `timed_out` still reports `probe_timed_out` plus the stage code, `backend_started=false` |
+| CR-23 | Stage codes in auto selection: a fake `claude_check` failure (probe timeout, cleanup unverified) through the "unreviewed" path of `--backend auto` gives `diagnostics` with `no_reviewer_available`, the original code and the matching `probe_stage_*`; judgement failures after a successful probe (such as `authentication_missing`) carry no stage |
+| CR-24 | Real recheck: after release, with Codex removed, the same `review --backend auto` command runs three times in a row and each falls back to Claude Code and completes (reviewer-selection Task 7; needs the user's quota authorization) |
+
+CR-22 and CR-23 use fake invokers, call no model, and are part of `scripts/validate.sh`.
+
+### Open questions
+
+1. Decided (2026-11-26): 15 seconds. Probes normally take about 0.5 seconds and the slow whole checks took 9–19 seconds; 15 seconds covers most stalls while a real hang waits at most 45 seconds. Alternatives were 10 seconds (worst case 30, less coverage) and 30 seconds (worst case 90; the doctor listing could take a minute and a half).
+2. Decided (2026-11-26): no retry; the existing boundary stays. A retry doubles the wait on a real hang and hides real CLI problems; the longer deadline already covers occasional slow starts.
 
 ## Appendix: historical continuations (original status, not current conclusions)
 

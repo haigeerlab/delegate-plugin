@@ -3,7 +3,8 @@
 
 The choice is a pure function of the author host and model-free availability
 checks passed in by the caller; it never starts a model or reads files.
-A check returns None when its backend is usable, else a fixed diagnostic code.
+A check returns None when its backend is usable, else a fixed diagnostic code,
+or a tuple of fixed codes with the main code first (e.g. a probe failure and its stage).
 """
 
 VENDORS = {'codex': 'openai', 'claude-code': 'anthropic'}
@@ -23,7 +24,7 @@ def choose(author, checks):
         problem = checks[name]()
         if problem is None:
             return name, 'cross_vendor' if position == 0 else 'same_vendor_fallback', diagnostics
-        diagnostics.append(problem)
+        diagnostics.extend(problem if isinstance(problem, (tuple, list)) else [problem])
     return None, 'none', diagnostics
 
 
@@ -63,7 +64,11 @@ def claude_check():
     except (BoundaryError, PreflightError) as error:
         code = str(error)
         retained = code in ('runtime_cleanup_unverified', 'probe_cleanup_unverified')
-        return code if CODE.match(code) else 'claude_preflight_failed'
+        if not CODE.match(code):
+            return 'claude_preflight_failed'
+        # Probe failures name the probe, as in the claude-code report (spec/claude-review.md CR-23).
+        stage = getattr(error, 'stage', None)
+        return (code, stage) if stage and CODE.match(stage) else code
     except (ValueError, OSError):
         return 'native_environment_unavailable'
     finally:

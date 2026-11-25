@@ -94,3 +94,49 @@ Task 1 → Task 2 → Task 3 → Task 4 → Checkpoint 1（report）→ Task 5
 ## 开放问题
 
 - 无。
+
+## 修订：Claude Code 探测期限放宽（2026-11-26）
+
+**状态：** 用户 2026-11-26 批准本节，原话「批准，开始实现」。授权范围：本会话改代码、测试与文档并跑免费验证，做到 Checkpoint B 停下；审查用额度、提交、PR、合并、发版另行确认。
+
+规格：[spec/claude-review.md](../../spec/claude-review.md)「Claude Code 探测期限放宽」节（用户 2026-11-26 批准，原话「批准；Q1 15 秒；Q2 不重试」）。对应 todo 的 Task 6、Task 7。
+
+### 架构决定
+
+- **期限常量**：`claude_review.py` 新增 `PROBE_DEADLINE = 15`，`_probe` 改用它；三个探测共用，`review --backend claude-code` 的预检和 auto 选择都走这里。
+- **阶段码随检查结果带出**：检查函数的返回约定从「`None` 或一个固定码」扩为「`None`、一个固定码，或一组固定码（主码在前）」。`claude_check` 遇到带 `stage` 的 `PreflightError` 时返回 `(主码, 阶段码)`；`choose` 把一组码依次追加进诊断；`doctor --reviewers` 只显示主码，输出格式不变。
+- **执行方式**：两处改动都只有几行，本会话直接写，不派 Codex（固定开销不值）。审查按 #22991 用 `/delegate:review --backend claude-code`（同厂商审查），会用 Claude 额度。
+
+### 顺序
+
+```text
+Task 6.1 → Task 6.2 → Task 6.3 → Checkpoint A（report）→ Checkpoint B（gate：审查与提交）→ Task 7（gate，发版后）
+```
+
+### Task 6.1：期限 15 秒（CR-22）
+
+- **描述**：`test-claude-review.py` 加用例：假调用器记录三个探测拿到的期限，应为 `[15, 15, 15]`；返回 `timed_out` 时仍报 `probe_timed_out` 加阶段码、`backend_started=false`。先确认失败，再改常量。
+- **验证**：`python3 -B plugins/delegate/tests/test-claude-review.py`。
+- **文件**：`plugins/delegate/scripts/claude_review.py`、`plugins/delegate/tests/test-claude-review.py`。**规模**：XS。
+
+### Task 6.2：auto 选择带阶段码（CR-23）
+
+- **描述**：`test-reviewer-select.py` 加用例：检查返回 `(probe_timed_out, probe_stage_help)` 时，`choose` 的诊断依次含这两个码，`--backend auto` 的「未审」报告 `diagnostics` 为 `no_reviewer_available` 加这些码；`claude_check` 遇 `PreflightError('probe_cleanup_unverified', stage=...)` 返回两码、遇 `authentication_missing` 只返回一码；`doctor --reviewers` 的 `diagnostic` 只显示主码。先确认失败，再改 `reviewer_select.py`、`review_doctor.py`。
+- **验证**：`python3 -B plugins/delegate/tests/test-reviewer-select.py`、`python3 -B plugins/delegate/tests/test-review-backends.py`。
+- **文件**：`plugins/delegate/scripts/reviewer_select.py`、`plugins/delegate/scripts/review_doctor.py`、`plugins/delegate/tests/test-reviewer-select.py`（必要时 `test-review-backends.py`）。**规模**：S。
+
+### Task 6.3：文档
+
+- **描述**：英文规格 `docs/en/SPEC-claude-review.md` 补同一节；中英待发行说明补一节（变更、影响面、验证）；todo 记录。
+- **文件**：`docs/en/SPEC-claude-review.md`、`docs/releases/unreleased.md`、`docs/en/releases/unreleased.md`、`tasks/reviewer-selection/todo.md`。**规模**：XS。
+
+### Checkpoint A（report）：`validate.sh --quick` 与全量各跑一次，`git diff --check`、产物校验通过，记进 todo。
+
+### Checkpoint B（gate）：`/delegate:review --backend claude-code` 审全部 diff（用 Claude 额度），阻断先修；之后提交、PR、合并逐项经用户确认。
+
+### Task 7（gate）：发版后用安装版去掉 Codex 连续跑 3 次 U2（CR-24，用模型额度），再交用户判定 M1。
+
+### 风险
+
+- 期限放宽后真卡住时 auto 和 doctor 最多多等 30 秒：规格已接受（最坏 45 秒）。
+- 返回约定扩成「一组码」可能漏改调用方：调用方只有 `choose` 和 `doctor --reviewers` 两处（已 grep），各有用例覆盖。

@@ -192,6 +192,14 @@ class ReviewerDoctorTests(unittest.TestCase):
                      'diagnostic': pinned['claude-code']}])
                 self.assertEqual(value['hint'], hint)
 
+    def test_probe_stage_is_not_shown_in_the_listing(self):
+        # spec/claude-review.md: doctor --reviewers keeps showing the main code only.
+        pinned = {'codex': None, 'claude-code': ['probe_timed_out', 'probe_stage_help']}
+        value = json.loads(self.doctor(pinned, '--json').stdout)
+        self.assertEqual(value['reviewers'][1]['diagnostic'], 'probe_timed_out')
+        self.assertFalse(value['reviewers'][1]['available'])
+        self.assertIn('claude-code（anthropic）：不可用（probe_timed_out）', self.doctor(pinned).stdout)
+
     def test_text_output(self):
         both = self.doctor({'codex': None, 'claude-code': None})
         self.assertEqual(both.returncode, 0, both.stderr)
