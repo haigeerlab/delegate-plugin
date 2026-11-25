@@ -1,22 +1,30 @@
+# Whole CI for this repository, from autopilot-hub examples/caller-ci-standard.yml (plugin standard v1.5,
+# hub#69 4248dae) at hub baseline b34560f. Branch protection requires only "CI required", so jobs can be
+# added or renamed without touching the protection rule. No path filters: a filtered-out run never reports
+# and the PR would wait for it forever. The `uses:` ref and `hub_ref` must stay the same SHA; changing this
+# file or the pin is T4.
 name: CI
 
-# Single workflow for checks that gate merges into main. Branch protection
-# requires only the "CI required" job below, so jobs can be added or renamed
-# without touching the protection rule. No path filters: a filtered-out run
-# never reports and the PR would wait for it forever.
 on:
   pull_request:
+    # edited: a title or body change reruns the WHOLE CI. Never skip jobs on `edited`: `CI required` treats skipped
+    # as fine, so skipping tests there would let a title edit turn a failing PR green.
+    types: [opened, synchronize, reopened, edited]
   push:
     branches: [main]
+
+# One run per PR (or per push to main); a newer event cancels the older run.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 permissions: {}
 
 jobs:
   test:
-    name: test (${{ matrix.python }})
-    # The suites assume a macOS host (/private/tmp, the native review sandbox),
-    # which is the only supported host. setup-python ships 3.9 for macOS only
-    # as x64, so 3.9 runs on the Intel image and 3.13 on the default arm64 one.
+    name: test (${{ matrix.name }})
+    # Both rows run on macOS: the suites assume a macOS host (/private/tmp, the native review sandbox), which
+    # is the only supported host, so the template's ubuntu row for 3.13 is moved to macOS here.
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     permissions:
@@ -25,65 +33,96 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - python: "3.9"
-            os: macos-15-intel
-          - python: "3.13"
-            os: macos-latest
+          # C4: the macOS system Python users actually run (3.9), and a current one.
+          - {name: macos-system, os: macos-latest, python: ""}
+          - {name: "3.13", os: macos-latest, python: "3.13"}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        if: matrix.python != ''
         with:
           python-version: ${{ matrix.python }}
-      - name: Run scripts/validate.sh
-        env:
-          PYTHONDONTWRITEBYTECODE: "1"
-        run: /bin/bash scripts/validate.sh
-      - name: Checks left the working tree unchanged
+      - name: Full checks (C2)
+        run: |
+          # On the macOS job put the system /usr/bin/python3 (3.9) first, so validate.sh runs what users run.
+          if [ -z "${{ matrix.python }}" ]; then export PATH="/usr/bin:${PATH}"; fi
+          python3 --version
+          PYTHONDONTWRITEBYTECODE=1 /bin/bash scripts/validate.sh
+      - name: Working tree still clean (C10)
         run: git diff --exit-code
 
-  plugin:
-    name: plugin manifests and frontmatter
+  plugin-validate:
+    name: plugin validate (C7)
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     permissions:
       contents: read
+    env:
+      # One pinned CLI version for every repository, at least 7 days old; bump it here, across all repos at once.
+      CLAUDE_CODE_VERSION: "2.1.321"
+      DISABLE_AUTOUPDATER: "1"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+      - name: Check out autopilot-hub at the pinned SHA (scripts only)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          python-version: "3.13"
-      - name: Install Claude Code
+          repository: haigeerlab/autopilot-hub
+          ref: b34560f8d398cd946f2fc3f0cd7526d336f59a01
+          path: .hub
+          persist-credentials: false
+      - name: claude plugin validate --strict on an exported copy
         run: |
-          npm install -g @anthropic-ai/claude-code
-          claude --version
-      - name: claude plugin validate
-        run: |
+          # Validate a `git archive` export. When the plugin lives at the repository root, drop the root CLAUDE.md
+          # and AGENTS.md from the export: the official command treats them as errors there (standard C7, v1.4).
+          export_dir="${RUNNER_TEMP}/plugin-export"
+          mkdir -p "${export_dir}"
+          git archive HEAD | tar -x -C "${export_dir}"
+          if [ -f "${export_dir}/.claude-plugin/plugin.json" ]; then rm -f "${export_dir}/CLAUDE.md" "${export_dir}/AGENTS.md"; fi
+          cd "${export_dir}"
+          claude() { npx --yes "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}" "$@"; }
           claude plugin validate --strict .
-          claude plugin validate --strict ./plugins/delegate
-      - name: Frontmatter of commands, skills and agents
-        run: |
-          python3 -m pip install --disable-pip-version-check pyyaml
-          python3 -B scripts/check-frontmatter.py .
+          python3 - <<'PY' > "${RUNNER_TEMP}/plugin-dirs.txt"
+          import json, os
+          data = json.load(open(".claude-plugin/marketplace.json", encoding="utf-8"))
+          for entry in data.get("plugins") or []:
+              src = entry.get("source") if isinstance(entry, dict) else None
+              if isinstance(src, str) and os.path.normpath(src) not in (".", ""):
+                  print(os.path.normpath(src))
+          PY
+          while read -r dir; do claude plugin validate --strict "${dir}"; done < "${RUNNER_TEMP}/plugin-dirs.txt"
+      - name: Skill, command and agent frontmatter really parses (C7)
+        run: python3 -B .hub/rules/frontmatter.py --repo .
 
-  # Shared checks provided by the hub (for example zizmor) attach here as more
-  # jobs listed under `needs` below.
+  rules:
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: read
+    uses: haigeerlab/autopilot-hub/.github/workflows/rules.yml@b34560f8d398cd946f2fc3f0cd7526d336f59a01
+    with:
+      hub_ref: b34560f8d398cd946f2fc3f0cd7526d336f59a01
+      # report during the shadow run; switch to enforce once the user has seen the shadow-run results.
+      mode: report
 
-  required:
+  ci-required:
     name: CI required
-    if: ${{ always() }}
-    needs: [test, plugin]
+    if: always()
+    needs: [test, plugin-validate, rules]
     runs-on: ubuntu-latest
+    timeout-minutes: 2
     permissions: {}
     steps:
-      - name: Require every job to succeed
+      - name: Every CI job succeeded (skipped means "not run for this event", e.g. rules on push)
         env:
-          RESULTS: ${{ join(needs.*.result, ' ') }}
+          NEEDS: ${{ toJSON(needs) }}
         run: |
-          echo "results: $RESULTS"
-          for result in $RESULTS; do
-            [ "$result" = success ] || exit 1
-          done
+          printf '%s' "$NEEDS" | python3 -c '
+          import json, sys
+          bad = {job: r["result"] for job, r in json.load(sys.stdin).items() if r["result"] not in ("success", "skipped")}
+          print(bad or "all CI jobs succeeded")
+          sys.exit(1 if bad else 0)'
