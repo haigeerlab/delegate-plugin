@@ -11,7 +11,7 @@
 - [x] Checkpoint 1（report）：全量达标
 - [x] Task 5（report）：文档
 - [x] Checkpoint 2（gate）：审查与提交
-- [ ] Checkpoint 3（gate）：PR、合并与回报
+- [x] Checkpoint 3（gate）：PR、合并与回报
 
 ## 记录
 
@@ -122,3 +122,5 @@
 **Checkpoint 2（2026-11-25）：** 用户对规格修订与本地提交原话「批准修订，本地提交」。规格重新记为已批准，在 `claude/test-speed` 本地提交一次；推送、PR、合并与回报另行确认。
 
 **PR #54 首轮 CI（2026-11-25）：** `test (3.13)` 通过，3 分 50 秒（改前 8 分 48 秒）；`test (macos-system)` 失败：`channel-regressions` 的 6 处「cleanup exceeded the child's write delay」。原因是子进程和测试进程用 `time.monotonic()` 跨进程比较，macOS 自带的 Python 3.9 上这个时钟是按进程计的（本机实测父进程 0.026、子进程 0.004），审查时「可以跨进程比较」的判断不对。修复：两边都改用 `time.time()`。用 `/usr/bin/python3`（3.9.6）和 3.10 单独跑都通过（62、61 秒）；把 `/usr/bin` 放在 PATH 最前面跑全量：退出 0，138 秒，542 项。
+
+**PR #54 合并（2026-11-25）：** 修复后 CI 全部通过，`gh pr merge 54 --auto --merge` 在 `CI required` 通过后合并，合并提交 5e40323。CI 两行（VS-10）：`test (macos-system)` 5 分 17 秒（改前 12 分 3 秒），池 235.7 秒；`test (3.13)` 1 分 57 秒（改前 8 分 48 秒），池 90.8 秒。CI 上最慢：macos-system 为 review-cli 96.6、run-timeout 78.7、channel-regressions 72.4 秒；3.13 为 run-timeout 58.8、channel-regressions 51.9、review-cli 51.7 秒。用户回「发回复」后，答复作为 #22978 的回复发出（#23075），同时答复升钉请求 #22797；其中说明本次审查用的是 Claude 子代理，没有按 #22991 改回 `/delegate:review --backend claude-code`。
