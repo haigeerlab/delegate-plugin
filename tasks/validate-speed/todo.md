@@ -120,3 +120,5 @@
 **审查修复后最终复验（2026-11-25）：** 默认并发 2 次：退出 0，墙钟 109、98 秒，池墙钟 81.9、77.9 秒；`--jobs 1` 1 次：退出 0，墙钟 367 秒。三次 `Ran` 合计均为 542（538 + 执行器新增 4）。`git diff --check` 通过。最慢 run-timeout 约 64 秒、channel-regressions 约 57 秒。
 
 **Checkpoint 2（2026-11-25）：** 用户对规格修订与本地提交原话「批准修订，本地提交」。规格重新记为已批准，在 `claude/test-speed` 本地提交一次；推送、PR、合并与回报另行确认。
+
+**PR #54 首轮 CI（2026-11-25）：** `test (3.13)` 通过，3 分 50 秒（改前 8 分 48 秒）；`test (macos-system)` 失败：`channel-regressions` 的 6 处「cleanup exceeded the child's write delay」。原因是子进程和测试进程用 `time.monotonic()` 跨进程比较，macOS 自带的 Python 3.9 上这个时钟是按进程计的（本机实测父进程 0.026、子进程 0.004），审查时「可以跨进程比较」的判断不对。修复：两边都改用 `time.time()`。用 `/usr/bin/python3`（3.9.6）和 3.10 单独跑都通过（62、61 秒）；把 `/usr/bin` 放在 PATH 最前面跑全量：退出 0，138 秒，542 项。

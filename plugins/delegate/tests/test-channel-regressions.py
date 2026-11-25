@@ -52,10 +52,10 @@ if mode in ("timeout_child", "signal_child", "setsid_child"):
     marker = os.environ["STUB_MARKER"]
     delay = float(os.environ.get("STUB_CHILD_DELAY", "3"))
     code = """import os, time
-started = time.monotonic()
+started = time.time()
 with open(%r, 'w') as f: f.write(str(started))
 with open(%r, 'w') as f: f.write(str(os.getpid()))
-time.sleep(max(0, started + %r - time.monotonic()))
+time.sleep(max(0, started + %r - time.time()))
 with open(%r, 'w') as f: f.write('late')
 """ % (os.environ["STUB_CHILD_PID"] + ".started", os.environ["STUB_CHILD_PID"], delay, marker)
     # Like Codex shell commands: setsid_child runs in its own session and process group.
@@ -152,9 +152,10 @@ class ChannelRegressionTests(unittest.TestCase):
     def wait_for_child_write_deadline(self, child_pid_file, delay=3):
         started = float(Path(str(child_pid_file) + ".started").read_text())
         write_at = started + delay
+        # Wall clock: time.monotonic() is per process on macOS's system Python 3.9.
         # Cleanup must finish before the child could write, even on a slow host.
-        self.assertLess(time.monotonic(), write_at, "cleanup exceeded the child's write delay")
-        time.sleep(max(0, write_at + .5 - time.monotonic()))
+        self.assertLess(time.time(), write_at, "cleanup exceeded the child's write delay")
+        time.sleep(max(0, write_at + .5 - time.time()))
 
     def test_timeout_ignoring_sigterm_is_bounded_and_returns_124(self):
         status, _, stderr = self.run_wrapper("hang", env={"STUB_MODE": "hang_ignore"}, timeout=8)
