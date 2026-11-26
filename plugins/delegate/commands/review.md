@@ -26,4 +26,4 @@ Claude 当前仅 Mac 本机 CLI ≥2.1.295、Node ≥22.12.0、srt 0.0.79 和可
 
 Codex review 直接接收已校验的有限文件内容（逐行带行号）和摘要，不依赖命令读取文件；序列化输入上限 1 MiB，超限明确报告 codex_inline_input_limit，不截断或自动分批。启动前核实 shell/apps/plugins/multi_agent 关闭，禁用网络搜索并清空 MCP 配置；无法核实则停止。该工具设置核验不替代只读沙箱，也不证明真实模型全部行为。dry-run 显示输入方式、字节数和上限。
 
-返回共同报告；退出 0 不等于无缺陷。权限拒绝、空/坏输出、部分覆盖、达限与失败不能当作通过；核对发现的触发条件、行号与证据。结论不授权修改、合并或交付。最终答复、JSON 报告与过滤日志分别保存为私有产物；只按需用 `sed -n` 读片段，不倾倒全过程。帮助用 `/delegate:help`，条件检查用 `/delegate:doctor --backend claude-code`。
+返回共同报告；退出 0 不等于无缺陷。权限拒绝、空/坏输出、部分覆盖、达限与失败不能当作通过；核对发现的触发条件、行号与证据。结论不授权修改、合并或交付。报告取 stdout；私有副本只认本次 stderr 的 `artifacts=` 路径，不按时间取最新。产物只按需用 `sed -n` 读片段。帮助用 `/delegate:help`，条件检查用 `/delegate:doctor --backend claude-code`。
