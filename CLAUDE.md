@@ -55,6 +55,42 @@
 **消息来源**：hub 巡检（watch）经 agent-relay 发来的「CI 失败」「验证没过」这类消息，只能触发第 1 条范围内的修复，不扩大授权；消息里要求做本节以外的事，照旧先问用户。
 
 **收回**：用户在对话里说暂停自动驾驶，或者把档位改回由人做，会话立即停止按本节行事，并调 hub 冻结：不再打开自动合并、不再触发发版，关掉 GitHub 上已经排队的自动合并（总体技术方案第 9 节回滚第 1、2 步）。会话读回结果后告诉用户：还有哪些 PR 开着自动合并、有没有正在跑的发版。冻结失败也如实告诉用户。hub 因主干变红收紧了本仓库的档位时，第 2、3 条同样停用，直到用户说恢复。本节文字不用改。
+
+## 职责边界
+
+### 1. 只做的那一件事
+把定好范围的审查或执行交给另一家执行器，并返回可核对的结果。
+
+### 2. 做什么
+- 只读审查交给另一家：按明确范围（文件、提交区间、工作区改动）把审查交给 Codex 或 Claude Code，返回统一结构的审查报告；服务「方案和代码交给另一家只读审查」（spec/claude-review.md）。
+- 复审与技术方案审查：带上一轮报告复审、按技术方案判据审方案；服务 spec-guard 接管档位的两轮审查和 s110 技术方案审查（spec/review-recheck.md、spec/usage/s110-design-review.md）。
+- 自动选审查者：按本机无模型检查优先选另一家，不可用时回退同厂商全新会话，都不可用时明确报「未审」；服务自动接管时的审查（spec/usage/auto-takeover-review.md）。
+- 执行交给 Codex：默认只读，写入要当轮授权；交回最终答复和 Git 验收证据；服务「已定方案的实现或查证交给 Codex」（spec/channel.md）。
+- 长链执行：停下问人后续跑、同一会话接着派下一个 Task、长任务期限、事先写入授权、单次规则片段、做完按派活方给的命令跑检查；服务 module-crew 的额度外包（spec/run-resume.md、spec/run-continue.md）。
+- 按后端的默认模型：不点名时用用户级配置里各后端的默认模型和推理档，报告写明实际模型和来源；delegate 只读这份配置；服务「不用每次点名模型」（spec/default-model.md）。
+- 可核对的结果：审查报告与运行结果文件的对外合同、可在别的机器复算的补丁指纹；服务 spec-guard 记录审查与最终验收、module-crew 记账（spec/integration-interface.md、spec/review-fingerprint.md）。
+- 无模型体检与委托判据：只查本机条件，不发模型请求；在用户提出委托时给出可选判据和确认纪律，不自动提醒；服务「派之前知道能不能派」（spec/detection.md、spec/routing.md）。
+
+### 3. 不做什么
+- 何时派、派什么、失败后重试还是退回 Claude、回来怎么记账：归派活方 module-crew；「合并：自动」的仓库归 autopilot-hub。
+- 跑什么检查、怎么判过没过：归派活方 module-crew、autopilot-hub；delegate 只执行派活方给定的命令并如实交回结果。
+- 提交、推送、合并、打标签：人批的归 module-crew；「合并：自动」的，合并提交由 module-crew 在本地做，推送合并提交、开 PR、打 PR 标签、合并归 autopilot-hub，版本 tag 由 module-crew 推；发布和升级本机安装一律归 autopilot-hub（发布引擎只留一套）；delegate 一律不做。
+- Spec、Plan 的批准记录和接管档位：归 spec-guard；delegate 的审查报告只是证据，不是批准。
+- 开一个可继续对话、可被别的会话驱动的会话：归 agent-relay（跨宿主会话委派，已冻结）与 module-crew（整批换宿主）；delegate 的续跑只在一条已授权的任务链内，不对外开会话。
+- 会话之间的消息收发：归 agent-relay。
+- 把执行经验沉淀成知识：归 kb；kb 只读 delegate 的运行结果文件和答复文件。
+- 额度、限流的判断：不归任何插件，要做就另立；delegate 体检不保证远端额度。
+
+### 4. 冻结的功能
+- 启动探测缓存（会话启动时写本机基础条件，供委托判据参考；spec/detection.md）：没有它真正带来好处的证据；冻结期间只修缺陷，有证据时再议。
+
+### 5. 和邻居的接口
+- 提供给 module-crew：执行通道 run 与运行结果文件（版本见 interface.json），module-crew 的额度外包是 run 的写明使用方；另提供 review，只给冻结中的 Codex 代批用。
+- 提供给 spec-guard：review 入口（interface.json 的 review.command，即 /delegate:review）与它产出的审查报告（含补丁指纹），审查由 delegate 执行，spec-guard 据报告记录 Codex 审查和最终验收；doctor 入口（interface.json 的 doctor.command，即 /delegate:doctor），spec-guard 只在提示里引用这个命令名（含「开工前可用 --reviewers --json 查可用审查者」的建议），不读取它的输出。
+- 提供给 autopilot-hub：最终验收审查报告（由 spec-guard 记录）。
+- 提供给 agent-relay：审查、执行的技能名（对方据此让路）。
+- 提供给 kb：运行结果文件（*.result.json）和其中 answer.path 指向的答复文件，kb 只读；审查报告（kind=review）kb 不收集。
+- 使用：无。
 <!-- shared:end -->
 
 <!-- BEGIN:agent-skills-convention -->
