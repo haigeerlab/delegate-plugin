@@ -549,7 +549,7 @@ S88-5 与最终验收（2026-11-18）：CR-14 以生态总负责人 ecosystem-le
 - [x] G2（report）：英文规格、中英待发行说明。英文规格补同一节；中英待发行说明补「Claude 登录令牌过期时给出恢复提示」小节与影响面、验证，过渡句改为「v0.12.4 之后的未发布变更见下」。
 - [x] Checkpoint G-A（report）：全量、`git diff --check`、产物校验。2026-11-26 全量退出 0，93 秒，`Ran` 合计 551（548 + 新增 3）；共享段、本机路径、`git diff --check` 通过；产物校验 6 项通过。
 - [x] Checkpoint G-B（gate）：审查与提交、PR、合并；回 ecosystem-lead PR 号。2026-11-26 用户回「审查」「批准修订，提交开 PR」「合并」：PR #62 合并（2fabf94），PR 号已回 ecosystem-lead（#23150）；随 0.12.5 发版。
-- [ ] G3（gate）：发 0.12.5；CR-28 遇到时记录
+- [x] G3（gate）：发 0.12.5；CR-28 遇到时记录。2026-11-26 用户逐步回「发 0.12.5」「提交并开 PR」「合并」「推送开 PR」「合并」「打标签并推送」「建 release」「两侧升级；发通知」：标题 PR #63 合并（0eda381），发版 PR #64 合并（ddef6b1），标签 `v0.12.5` 指向 ddef6b1，GitHub Release 已建；Claude Code、Codex 两侧升级到 0.12.5 并核对安装目录（恢复码、提示常量、体检说明都在）；已通知 ecosystem-lead（#23159）。CR-28 尚未发生真实令牌过期，遇到时用安装版记录，不阻塞本任务。
 
 令牌过期恢复提示 · 代码审查（2026-11-26，同厂商审查，`/delegate:review --backend claude-code`，安装版 0.12.4，模型 claude-opus-5-5；输入为工作区改动，排除本模块 plan、todo 与 `.agent/state.json`，依据 `spec/claude-review.md`；用户原话「审查」）：审到 10 个文件、未审 0；报告 `execution_status=failed`、`review_incomplete`，原因是建议 2 没给行号（`line: null`），按现行合同位置核对不过即判未完成；发现内容可用。这次审查没碰上令牌过期。
 - 阻断 1：规格把体检说明写成固定原文「……按上面的提示刷新。」，代码与测试打印的是写全刷新步骤的句子，三者不一致（G1 派活时给 Codex 的文字与规格不一致所致）。属实；体检输出里没有「上面」，代码写法更合适，改中英规格为代码实际打印的原文并注明修订，脚本逐字核对规格、`review_doctor.py`、`CLAUDE_LOGIN_REFRESH_HINT` 一致。规格因此标回待复审。
