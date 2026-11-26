@@ -61,5 +61,6 @@
 | M2 | U1, U2, U3 | review-snapshot-recheck |
 
 <!-- spec-guard: milestone M1 confirmed review-severity, review-recheck -->
+<!-- spec-guard: milestone M2 confirmed review-snapshot-recheck -->
 
 M1 实跑（2026-11-21，用户判定原话「M1 通过」）：本机两侧升到 0.10.0 后，用安装版 `delegate-exec.sh` 在临时仓库实跑。U1：Codex 审 `--base/--head` 补丁，`completed`、`findings`，故意留的 `add` 减法缺陷标为 `blocking`。U2：修正后带 `--previous-report` 复审，`completed`、`no_findings_in_scope`，上一轮阻断标为 `resolved` 并给证据，`previous_report_sha256` 与上一轮文件一致，`previous_fingerprint` 与上一轮指纹一致且与本轮不同。另验范围不同时退出 127、`previous_report_scope_mismatch`、不启动模型。只跑了 Codex 后端；Claude 后端、访客路径与 `unresolved` 路径未实跑。
