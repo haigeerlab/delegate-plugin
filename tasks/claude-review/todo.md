@@ -548,7 +548,7 @@ S88-5 与最终验收（2026-11-18）：CR-14 以生态总负责人 ecosystem-le
 - [x] G1（report）：恢复码、stderr 提示、体检说明及测试（CR-25～27），派 Codex 写。2026-11-26 Codex 写（`/delegate:run --write`），改 `review_result.py`（常量 `CLAUDE_LOGIN_REFRESH_HINT`、认证失败后追加 `claude_login_refresh_required`）、`delegate_backend.py`（报告输出后有该码时 stderr 打印一次）、`review_doctor.py`（认证行后加说明行）；测试 `test-review-result.py`、`test-review-execution.py`（公开入口：显式 claude-code 与 auto 各测 authentication_failed／rate_limit／无错误）、`test-review-native.py`，Codex 称均先失败后通过。本会话核对 diff 与计划一致，本机重跑：result、native、backends、cli 通过；`test-review-execution.py` 首次单独运行有 1 例 rate_limit 子用例拿到 127（未复现），随后连跑 3 次均通过，记为待观察；`--quick` 选 24/35 退出 0。
 - [x] G2（report）：英文规格、中英待发行说明。英文规格补同一节；中英待发行说明补「Claude 登录令牌过期时给出恢复提示」小节与影响面、验证，过渡句改为「v0.12.4 之后的未发布变更见下」。
 - [x] Checkpoint G-A（report）：全量、`git diff --check`、产物校验。2026-11-26 全量退出 0，93 秒，`Ran` 合计 551（548 + 新增 3）；共享段、本机路径、`git diff --check` 通过；产物校验 6 项通过。
-- [ ] Checkpoint G-B（gate）：审查与提交、PR、合并；回 ecosystem-lead PR 号
+- [x] Checkpoint G-B（gate）：审查与提交、PR、合并；回 ecosystem-lead PR 号。2026-11-26 用户回「审查」「批准修订，提交开 PR」「合并」：PR #62 合并（2fabf94），PR 号已回 ecosystem-lead（#23150）；随 0.12.5 发版。
 - [ ] G3（gate）：发 0.12.5；CR-28 遇到时记录
 
 令牌过期恢复提示 · 代码审查（2026-11-26，同厂商审查，`/delegate:review --backend claude-code`，安装版 0.12.4，模型 claude-opus-5-5；输入为工作区改动，排除本模块 plan、todo 与 `.agent/state.json`，依据 `spec/claude-review.md`；用户原话「审查」）：审到 10 个文件、未审 0；报告 `execution_status=failed`、`review_incomplete`，原因是建议 2 没给行号（`line: null`），按现行合同位置核对不过即判未完成；发现内容可用。这次审查没碰上令牌过期。
