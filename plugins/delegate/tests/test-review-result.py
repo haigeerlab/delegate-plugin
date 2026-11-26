@@ -273,6 +273,22 @@ class ResultTests(unittest.TestCase):
                 self.assertIn('claude_api_' + error, result['diagnostics'])
                 self.assertEqual(result['execution_status'], 'failed')
                 self.assertNotIn('PRIVATE_', json.dumps(result))
+                if error == 'authentication_failed':
+                    index = result['diagnostics'].index('claude_api_authentication_failed')
+                    self.assertEqual(result['diagnostics'][index + 1:index + 2], ['claude_login_refresh_required'])
+                else:
+                    self.assertNotIn('claude_login_refresh_required', result['diagnostics'])
+
+    def test_authentication_recovery_code_is_not_duplicated_or_added_after_recovery(self):
+        assistant = {'type': 'assistant', 'error': 'authentication_failed', 'message': 'PRIVATE_CONTENT'}
+        terminal = dict(self.terminal, subtype='error_during_execution', is_error=True)
+        result = self.report(self.stream(self.init, assistant, assistant, terminal))
+        self.assertEqual(result['diagnostics'].count('claude_api_authentication_failed'), 1)
+        self.assertEqual(result['diagnostics'].count('claude_login_refresh_required'), 1)
+        self.assertNotIn('PRIVATE_', json.dumps(result))
+        recovered = self.report(self.stream(self.init, assistant, self.terminal))
+        self.assertEqual(recovered['execution_status'], 'completed')
+        self.assertNotIn('claude_login_refresh_required', recovered['diagnostics'])
 
     def test_untrusted_tls_certificate_gets_a_fixed_code_without_message_text(self):
         terminal = dict(self.terminal, subtype='error_during_execution', is_error=True)

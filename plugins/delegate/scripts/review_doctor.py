@@ -37,6 +37,9 @@ def main():
         facts = preflight(str(runner.claude), runner.invoke)
         print('本机 CLI、原有认证和进程边界预检通过：Claude ' + facts['version'])
         print('认证方式：' + facts['auth_method'] + '；提供者：' + facts['provider'])
+        print('已登录只说明本机存有凭据，不代表登录令牌仍然有效；审查若报 claude_api_authentication_failed，'
+              '请在沙箱外的终端运行一次 `claude`（例如 claude -p "ok"）刷新登录后重试；'
+              '仍失败时运行 claude /login 重新登录。')
         if runner.trust_diagnostics:
             print('系统证书导出：' + runner.trust_diagnostics[0] + '（不影响运行，沙箱只用 CLI 自带的公共根证书）')
         else:
