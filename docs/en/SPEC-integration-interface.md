@@ -66,6 +66,7 @@ Placed at the plugin root, following agent-relay: a consumer finds the enabled d
 - Since interface 1.6, `review.recheck` gains `"snapshot": true`: snapshot reviews (`from == to`) can also be rechecked with `--previous-report`; the commit may move forward on the same history, and one snapshot round with one range round reports `previous_report_scope_mismatch`; the contract is in [review-snapshot-recheck](SPEC-review-snapshot-recheck.md). Caller rule: to confirm a snapshot recheck reviewed changed files, compare the sha256 values in both reports' `scope.files`, not `scope.fingerprint` (a snapshot has no patch, so the fingerprint is the same every round). Report `schema_version` stays `1` and the shape is unchanged.
 - Since interface 1.7, `review` gains `profiles`: `--profile design` reviews a technical design against criteria `design-v1`; blocking findings without reference-file line evidence, and new findings in a second round, are recorded as suggestions with `downgraded` on that item; the report gains top-level `criteria`, which must match between rounds of a recheck. The contract is in [design-review-criteria](SPEC-design-review-criteria.md); report `schema_version` stays `1`.
 - Also since interface 1.7, `review` gains `reviewer` (`--backend auto` with `--author-host`) and `doctor` gains `reviewers` (`--reviewers [--json]`); the report gains top-level `reviewer`, and `backend` is `null` only in the "unreviewed" report where `reviewer.selection == "none"`, otherwise still `codex`/`claude-code`. The contract is in [reviewer-selection](SPEC-reviewer-selection.md).
+- Since interface 1.8 there is a top-level `defaults`: the user-level file `${XDG_CONFIG_HOME:-~/.config}/delegate/config.json` (`delegate.config/v1`) sets per-backend default model and effort, with precedence explicit > configuration > host default; the report gains the stable top-level field `model_source` (`explicit`/`config`/`host_default`) and the diagnostic field `requested_model` now means the model delegate actually passed to the backend; the run result file gains `modelSource` and `effortSource` (which may also be `resumed`). When the file exists but is invalid, review and run exit 64 with one stderr line `delegate: invalid config …`. The contract is in [default-model](SPEC-default-model.md); report `schema_version` and result-file `schema` stay `1`.
 
 ## Review report contract (`schemaVersion: 1`)
 
@@ -84,6 +85,7 @@ Placed at the plugin root, following agent-relay: a consumer finds the enabled d
 | `unreviewed[]` | `{path, reason}`, files not reviewed and why |
 | `findings[]` | `{title, file, line, trigger, impact, evidence, suggestion, unverified}`; `line` may be `null` |
 | `limitations` | Limitation statements |
+| `model_source` | Since interface 1.8: where this review's model came from, `explicit`/`config`/`host_default` |
 
 Other fields (such as `host`, `diagnostics`, `observed_models`, `cleanup`, `usage`) are still emitted but are diagnostics that may change between versions; consumers should not depend on them.
 

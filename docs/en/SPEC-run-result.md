@@ -202,6 +202,7 @@ Field notes:
 
   (The `lines` examples read "cleanup: 2 descendant processes of Codex before the abort: …" and "cleanup: nothing left after the abort".) `lines` are the original lines of the `.cleanup` file (the reports of both the main run and the wrap-up round are in it), plus the lines the wrapper prints in `stop_runner`. `leftoverPids` comes from the line 「中止后仍有残留，PID=…」 ("still left after the abort, PID=…"), `unreapedPid` from the line 「执行进程未能回收，PID=…」 ("execution process could not be reaped, PID=…"), and `wrapperForced` records that the line 「执行进程超时未退出，已强制结束」 ("execution process did not exit in time and was force-ended") appeared. When parsing finds nothing, the field is empty or `null` and `lines` is kept as is. Leftovers after KILL are only reported and do not change the exit code, as in 0.7.1.
 - Fields added by other modules: `authorization` and `check` (run-check), `rules` (run-rules), `timeoutSeconds` (run-longrun). A module's fields do not appear if that module is not used.
+- Since interface 1.8 ([default-model](SPEC-default-model.md)) every result file has `modelSource` and `effortSource` (`explicit`/`config`/`host_default`/`resumed`); `model` and `effort` are the values delegate actually passed to Codex, still `null` for the host default.
 
 ### State file
 

@@ -169,7 +169,10 @@ def run_suite(suite):
     started = time.monotonic()
     directory = tempfile.mkdtemp(prefix='delegate-suite.')
     try:
-        environment = dict(os.environ, TMPDIR=directory)
+        # An empty private config home keeps suites away from the user's ~/.config/delegate.
+        config_home = os.path.join(directory, 'config-home')
+        os.mkdir(config_home)
+        environment = dict(os.environ, TMPDIR=directory, XDG_CONFIG_HOME=config_home)
         try:
             result = subprocess.run(suite[2], stdin=subprocess.DEVNULL,
                                     capture_output=True, env=environment)

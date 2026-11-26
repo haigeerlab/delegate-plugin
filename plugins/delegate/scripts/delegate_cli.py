@@ -7,6 +7,7 @@ import re
 import sys
 
 import delegate_backend as backend
+import delegate_defaults
 from delegate_capabilities import BACKENDS, describe
 from review_context import ContextError, STOPS, capture, capture_document, criteria_name, git, names, selected
 import review_recheck
@@ -132,7 +133,7 @@ def unreviewed(args, context, problems):
     return 127
 
 
-def review(options):
+def review(options, defaults=None):
     args, forwarded = review_arguments(options)
     context = None
     try:
@@ -155,6 +156,9 @@ def review(options):
             context['reviewer'] = reviewer_select.describe(args.backend, args.author_host, 'explicit')
         if args.dry_run:
             from review_execution import CODEX_PROMPT_LIMIT, codex_prompt, deadline
+            # The backend is final here, so the preview shows what the run would pass (spec/default-model.md E6).
+            args.model, model_source, args.effort, _ = delegate_defaults.resolve(
+                args.backend, args.model, args.effort, defaults or {})
             preview = {key: context[key] for key in ('repository', 'working_directory', 'review_type',
                 'scope', 'baseline', 'context_files', 'acceptance_criteria', 'uncommitted_changes',
                 'allowed_tools', 'stop_conditions', 'head', 'diff_sha256', 'file_sha256', 'unreviewed',
@@ -163,6 +167,7 @@ def review(options):
                            host='unknown', requested_model=args.model, observed_models=[],
                            capabilities=BACKENDS[args.backend], permission='read-only',
                            timeout_seconds=deadline(), backend_preflight='not_performed')
+            preview['model_source'] = model_source
             preview['requested_effort'] = args.effort
             preview['requested_limits'] = ({'max_turns': args.max_turns, 'max_budget_usd': args.max_budget_usd}
                                            if args.backend == 'claude-code' else {})
@@ -181,7 +186,7 @@ def review(options):
     except (ContextError, ValueError, OSError, RuntimeError) as error:
         reason = str(error) if isinstance(error, ContextError) else 'review_environment_unavailable'
         return backend.context_failure(args.backend, args.model, reason, context)
-    return backend.main(forwarded, review_context=context)
+    return backend.main(forwarded, review_context=context, defaults=defaults)
 
 
 def main(arguments=None):
@@ -203,6 +208,13 @@ def main(arguments=None):
     if options in (['--help'], ['-h']):
         print(HELP, end='')
         return 0
+    # spec/default-model.md P5: a bad configuration stops every review and run, used or not.
+    path = delegate_defaults.config_path()
+    try:
+        defaults = delegate_defaults.load(path)
+    except delegate_defaults.ConfigError as error:
+        print(error.line(path), file=sys.stderr)
+        return 64
     try:
         if command == 'run':
             args = backend.parse(options)
@@ -210,8 +222,8 @@ def main(arguments=None):
                 raise backend.ArgumentError(args.backend + ' does not support run; use review')
             if args.review_context is not None:
                 raise backend.ArgumentError('run does not accept --review-context; use review --context')
-            return backend.main(options)
-        return review(options)
+            return backend.main(options, defaults=defaults)
+        return review(options, defaults)
     except backend.ArgumentError as error:
         print(backend.argument_message(error), file=sys.stderr)
         return 64

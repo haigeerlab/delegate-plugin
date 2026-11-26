@@ -33,7 +33,7 @@ class DiscoveryTests(unittest.TestCase):
             'review-cli', 'claude-review', 'review-context', 'review-result', 'review-execution',
             'review-native', 'review-macos', 'review-staging', 'review-trust', 'review-fingerprint', 'review-recheck', 'reviewer-select', 'review-transport', 'review-guest-entry', 'review-artifacts',
             'review-service', 'review-guest', 'interface', 'run-resume', 'run-timeout', 'write-trust', 'reap-fake-endpoint',
-            'run-result', 'run-continue', 'run-longrun', 'run-check', 'run-rules', 'claude-isolation')
+            'run-result', 'run-continue', 'run-longrun', 'run-check', 'run-rules', 'default-model', 'claude-isolation')
         for suite in suites:
             (root / ('plugins/delegate/tests/test-%s.py' % suite)).write_text('# fixture suite\n')
         target = root / 'scripts/tests/test-validation-discovery.py'
@@ -81,7 +81,7 @@ class DiscoveryTests(unittest.TestCase):
             with self.subTest(args=args):
                 result = self.validate(root, *args, cwd=PROJECT)
                 self.assertEqual(result.returncode, 0, result.stderr.decode())
-                self.assertIn(b'validate: quick: 0 of 35 suites\n', result.stderr)
+                self.assertIn(b'validate: quick: 0 of 36 suites\n', result.stderr)
                 self.assertIn(b'validate: ok', result.stdout)
                 self.assertNotIn(b'running all suites', result.stderr)
 
@@ -93,7 +93,7 @@ class DiscoveryTests(unittest.TestCase):
         result = self.validate(root, '--quick')
         self.assertEqual(result.returncode, 1, result.stderr.decode())
         self.assertIn('Python 语法校验未通过'.encode(), result.stderr)
-        self.assertIn(b'validate: quick: 0 of 35 suites\n', result.stderr)
+        self.assertIn(b'validate: quick: 0 of 36 suites\n', result.stderr)
 
     def test_private_acceptance_and_git_are_excluded_from_all_file_checks(self):
         root = self.fixture()

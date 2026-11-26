@@ -85,6 +85,26 @@ tests/                       离线桩测试与回归
 - 不读取 Codex 自己的会话文件，所以上下文占用、压缩和额度不在结果文件里。
 - 过程日志拆成两个文件：`<runId>.events.jsonl`（Codex 的 JSON 事件流）和 `<runId>.log`（stderr）。
 
+## 默认模型配置
+
+不想每次点名模型时，在 `~/.config/delegate/config.json` 按后端写好默认值（设了绝对路径的 `XDG_CONFIG_HOME` 就放在 `$XDG_CONFIG_HOME/delegate/config.json`）。delegate 只读这个文件，不创建、不修改它，也不改 Codex／Claude 的全局配置。
+
+```json
+{
+  "schema": "delegate.config/v1",
+  "defaults": {
+    "codex": {"model": "gpt-6.2-sol", "effort": "high"},
+    "claude-code": {"model": "claude-opus-5-5"}
+  }
+}
+```
+
+- 优先级：这次点名的 `--model`／`--effort` > 本文件 > 宿主默认（什么都不传，跟随 Codex／Claude 自己的配置）。模型和推理档分别取值。
+- `--backend auto` 选中哪家就用哪家的默认值；`--resume`、`--continue` 沿用原会话记下的模型和推理档，不取本文件里的值，但仍会校验本文件：文件有错时续跑同样退出 64。
+- 每个后端和字段都可以省略；`claude-code` 不支持 `effort`。多出来的键、拼错的名字、不合法的模型名或推理档都算配置错误：**文件存在但有错时，所有 review／run 退出 64**，stderr 只有一行 `delegate: invalid config <路径>: <原因码>[ at <字段>]`，不回显内容。改正或删掉文件即恢复；文件不存在不算错误。
+- 实际用的模型和来源：审查报告的 `requested_model`、`model_source`，结果文件的 `model`、`modelSource`、`effort`、`effortSource`，run 输出的「模型：… / 推理档：…」一行；`/delegate:doctor` 最前面列出当前生效的默认值。来源取值 `explicit`（点名）、`config`（本文件）、`host_default`（宿主默认）、`resumed`（沿用原会话）。
+- 只有 `/delegate:review`、`/delegate:run`（`delegate-exec.sh review|run`）读本文件；直接调用旧入口 `codex-exec.sh` 不读。从 Codex 里调 Claude Code 审查读的是同一份文件。合同见[规格](../../spec/default-model.md)。
+
 ## 对外接口
 
 供其他插件按版本对接，不读本插件内部文件。
@@ -120,6 +140,7 @@ tests/                       离线桩测试与回归
 | `limitations` | 限制说明 |
 
 其他字段属于诊断信息，可能变化。只有 `execution_status=completed` 且 `review_outcome` 为 `findings` 或 `no_findings_in_scope` 才算有结论；`no_findings_in_scope` 不等于没有缺陷。报告是第三方参考意见，不是用户批准；引用时注明 delegate、后端与指纹。复算 `scope.fingerprint` 时：只证明审查看到的补丁就是 `paths` 从 `from` 到 `to` 的这些变化，PR 里有没有审查没看到的文件要自己对比 `paths`；指纹一致不等于有结论，更不等于可以合并；遇到不认识的 `algorithm` 按无法复算处理。读 `severity` 时：缺这个字段（0.9.0 及以前的报告）或值不认识，一律按 `blocking`；只在有结论时才看；`unverified` 非空的阻断发现是审查者拿不准、按判据从严标的；严重程度是模型的判断，没有阻断发现也不等于可以合并。复审时本轮的阻断集合 = `recheck.items` 里 `unresolved` 的 + `findings` 里按 `blocking` 处理的，只在有结论时才看；要核对复审的是修正后的补丁，比较 `recheck.previous_fingerprint` 和本轮 `scope.fingerprint`；快照复审没有补丁、指纹每轮相同，改为比较两轮报告 `scope.files` 里的 sha256。
+- **默认模型（接口 1.8 起）**：顶层 `defaults` 声明配置文件位置、`delegate.config/v1` 和来源取值；审查报告新增稳定字段 `model_source`，结果文件新增 `modelSource`、`effortSource`。`requested_model` 现在是 delegate 实际传给后端的模型（点名或配置；宿主默认时为 `null`）。见上文「默认模型配置」与[规格](../../spec/default-model.md)。
 
 ## 反馈与许可
 

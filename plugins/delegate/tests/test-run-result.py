@@ -436,6 +436,115 @@ STRICT_PLAIN = ('【结束标记】最终答复的第一行必须以下列标记
                 '到了时间预算写 `TIME_UP:`。这一要求优先于项目 AGENTS.md 或其他文件里的格式要求。')
 
 
+class DefaultModelFlowTests(FlowBase):
+    """spec/default-model.md DM-03..DM-07, DM-10 on the run path."""
+    result_of = ResultFileFlowTests.result_of
+    CONFIG = {'schema': 'delegate.config/v1',
+              'defaults': {'codex': {'model': 'gpt-6.2-sol', 'effort': 'high'},
+                           'claude-code': {'model': 'claude-opus-5-5'}}}
+
+    def setUp(self):
+        super().setUp()
+        self.env['XDG_CONFIG_HOME'] = str(self.base / 'config-home')
+        self.config = self.base / 'config-home' / 'delegate' / 'config.json'
+        self.config.parent.mkdir(parents=True)
+
+    def configure(self, document):
+        self.config.write_text(json.dumps(document), encoding='utf-8')
+
+    def passed(self, call):
+        model = call[call.index('-m') + 1] if '-m' in call else None
+        efforts = [item for item in call if item.startswith('model_reasoning_effort=')]
+        return model, efforts
+
+    def test_configured_model_and_effort_reach_codex_and_the_result(self):
+        self.configure(self.CONFIG)
+        output = self.run_delegate('--', '任务')
+        self.assertEqual(output.returncode, 0, output.stderr)
+        self.assertEqual(self.passed(self.exec_calls()[-1]), ('gpt-6.2-sol', ['model_reasoning_effort="high"']))
+        result = self.result_of(output)
+        self.assertEqual({key: result[key] for key in ('model', 'modelSource', 'effort', 'effortSource')},
+                         {'model': 'gpt-6.2-sol', 'modelSource': 'config', 'effort': 'high', 'effortSource': 'config'})
+        self.assertIn('模型：gpt-6.2-sol（delegate 配置） / 推理档：high（delegate 配置）', output.stdout)
+
+    def test_explicit_model_overrides_only_the_model(self):
+        self.configure(self.CONFIG)
+        output = self.run_delegate('--model', 'gpt-5.4-mini', '--', '任务')
+        self.assertEqual(output.returncode, 0, output.stderr)
+        self.assertEqual(self.passed(self.exec_calls()[-1]), ('gpt-5.4-mini', ['model_reasoning_effort="high"']))
+        result = self.result_of(output)
+        self.assertEqual((result['modelSource'], result['effortSource']), ('explicit', 'config'))
+        self.assertIn('模型：gpt-5.4-mini（点名） / 推理档：high（delegate 配置）', output.stdout)
+
+    def test_no_configuration_is_host_default(self):
+        output = self.run_delegate('--', '任务')
+        self.assertEqual(self.passed(self.exec_calls()[-1]), (None, []))
+        result = self.result_of(output)
+        self.assertEqual((result['model'], result['modelSource'], result['effort'], result['effortSource']),
+                         (None, 'host_default', None, 'host_default'))
+        self.assertIn('模型：宿主默认 / 推理档：宿主默认', output.stdout)
+
+    def test_resume_and_continue_keep_the_original_session(self):
+        self.configure(self.CONFIG)
+        first = self.run_id(self.run_delegate('--resumable', '--', '任务', STUB_ANSWER='NEED_USER: 选哪个？'))
+        self.configure({'schema': 'delegate.config/v1', 'defaults': {'codex': {'model': 'gpt-5.4-mini', 'effort': 'low'}}})
+        resumed = self.run_delegate('--resume', first, '--', '选 A', STUB_RESUME_ANSWER='DONE: 好了')
+        self.assertEqual(resumed.returncode, 0, resumed.stderr)
+        self.assertEqual(self.passed(self.exec_calls()[-1]), ('gpt-6.2-sol', ['model_reasoning_effort="high"']))
+        result = self.result_of(resumed)
+        self.assertEqual((result['model'], result['modelSource'], result['effortSource']),
+                         ('gpt-6.2-sol', 'resumed', 'resumed'))
+        self.assertIn('（沿用原会话）', resumed.stdout)
+        following = self.run_delegate('--continue', self.run_id(resumed), '--', '下一个', STUB_RESUME_ANSWER='DONE: 也好了')
+        self.assertEqual(following.returncode, 0, following.stderr)
+        self.assertEqual(self.passed(self.exec_calls()[-1])[0], 'gpt-6.2-sol')
+        self.assertEqual(self.result_of(following)['modelSource'], 'resumed')
+
+    def test_bad_configuration_stops_every_run(self):
+        first = self.run_id(self.run_delegate('--resumable', '--', '任务', STUB_ANSWER='NEED_USER: 选哪个？'))
+        self.config.write_text('{"schema": "delegate.config/v1", "defaults": {"claude-code": {"effort": "high"}}}',
+                               encoding='utf-8')
+        calls = len(self.exec_calls())
+        for options in [('--', '任务'), ('--model', 'gpt-5.4-mini', '--', '任务'), ('--resume', first, '--', '选 A')]:
+            with self.subTest(options=options):
+                output = self.run_delegate(*options)
+                self.assertEqual(output.returncode, 64, output.stderr)
+                self.assertEqual(output.stderr, 'delegate: invalid config %s: effort_not_supported at '
+                                 'defaults.claude-code.effort\n' % self.config)
+                self.assertEqual(output.stdout, '')
+        self.assertEqual(len(self.exec_calls()), calls)
+
+    def test_legacy_codex_exec_entry_ignores_the_configuration(self):
+        self.configure(self.CONFIG)
+        output = self.subprocess.run(['/bin/bash', str(PLUGIN / 'scripts' / 'codex-exec.sh'), '--', '任务'],
+                                     cwd=self.repo, env=self.env, capture_output=True, text=True, timeout=90)
+        self.assertEqual(output.returncode, 0, output.stderr)
+        self.assertEqual(self.passed(self.exec_calls()[-1]), (None, []))
+        result = self.result_of(output)
+        self.assertEqual((result['modelSource'], result['effortSource']), ('host_default', 'host_default'))
+
+    def test_inherited_source_variables_are_ignored(self):
+        # review finding 4: a leftover DELEGATE_MODEL_SOURCE=config must not relabel an explicit --model.
+        output = self.subprocess.run(['/bin/bash', str(PLUGIN / 'scripts' / 'codex-exec.sh'), '--model', 'gpt-5.4-mini',
+                                      '--', '任务'], cwd=self.repo, capture_output=True, text=True, timeout=90,
+                                     env=dict(self.env, DELEGATE_MODEL_SOURCE='config', DELEGATE_EFFORT_SOURCE='config'))
+        self.assertEqual(output.returncode, 0, output.stderr)
+        result = self.result_of(output)
+        self.assertEqual((result['modelSource'], result['effortSource']), ('explicit', 'host_default'))
+
+    def test_internal_source_options(self):
+        # delegate-exec.sh forwards --model-source/--effort-source; "config" without a value cannot be true.
+        output = self.subprocess.run(['/bin/bash', str(PLUGIN / 'scripts' / 'codex-exec.sh'), '--model', 'gpt-5.4-mini',
+                                      '--model-source', 'config', '--effort-source', 'config', '--', '任务'],
+                                     cwd=self.repo, capture_output=True, text=True, timeout=90, env=self.env)
+        self.assertEqual(output.returncode, 0, output.stderr)
+        result = self.result_of(output)
+        self.assertEqual((result['modelSource'], result['effortSource']), ('config', 'host_default'))
+        bad = self.subprocess.run(['/bin/bash', str(PLUGIN / 'scripts' / 'codex-exec.sh'), '--model-source', 'bogus',
+                                   '--', '任务'], cwd=self.repo, capture_output=True, text=True, timeout=90, env=self.env)
+        self.assertEqual(bad.returncode, 64, bad.stderr)
+
+
 class StrictFlowTests(FlowBase):
     def prompt(self):
         return self.exec_calls()[-1][-1]

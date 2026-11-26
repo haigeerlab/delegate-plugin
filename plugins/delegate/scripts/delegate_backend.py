@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import sys
 from delegate_capabilities import BACKENDS
+from delegate_defaults import EFFORTS, resolve
 from delegate_model import model_error
 
 SCRIPTS = Path(__file__).resolve().parent
@@ -58,7 +59,7 @@ def parse(arguments):
     parser = Parser(add_help=False, allow_abbrev=False)
     parser.add_argument('--backend', choices=tuple(BACKENDS), default='codex')
     parser.add_argument('--model')
-    parser.add_argument('--effort', choices=('none', 'minimal', 'low', 'medium', 'high', 'xhigh'))
+    parser.add_argument('--effort', choices=EFFORTS)
     parser.add_argument('--write', action='store_true')
     parser.add_argument('--resumable', action='store_true')
     parser.add_argument('--strict', action='store_true')
@@ -129,18 +130,19 @@ def parse(arguments):
     return result
 
 
-def context_failure(backend, model, diagnostic, context=None):
+def context_failure(backend, model, diagnostic, context=None, model_source=None):
     from review_result import base_report, render
     if context is None:
         context = {'scope': {'state': 'unknown'}, 'baseline': {}, 'diff_sha256': None, 'fingerprint': None,
-                   'files': {}, 'file_sha256': {}, 'unreviewed': [{'path': 'unknown', 'reason': diagnostic}]}
+                   'files': {}, 'file_sha256': {}, 'unreviewed': [{'path': 'unknown', 'reason': diagnostic}],
+                   'model_source': model_source}
     report = base_report(backend, {'execution_status': 'conditions_missing',
         'backend_started': False, 'cleanup': 'confirmed', 'diagnostics': [diagnostic]}, context, model)
     print(render(report), end='')
     return 127
 
 
-def main(arguments=None, *, review_context=None):
+def main(arguments=None, *, review_context=None, defaults=None):
     arguments = sys.argv[1:] if arguments is None else arguments
     if os.environ.get('DELEGATE_REVIEW_DEPTH', '0') != '0':
         print('delegate: recursive delegation is not supported.', file=sys.stderr)
@@ -154,6 +156,12 @@ def main(arguments=None, *, review_context=None):
         print(argument_message(error), file=sys.stderr)
         return 64
     print('delegate: host=unknown backend=' + args.backend + ' model=unknown', file=sys.stderr)
+    # spec/default-model.md E1/P3: the backend is final here; resumes keep the original session's values.
+    if args.resume is not None or args.continue_from is not None:
+        model_source = effort_source = 'resumed'
+    else:
+        args.model, model_source, args.effort, effort_source = resolve(args.backend, args.model, args.effort,
+                                                                       defaults or {})
     if args.backend == 'codex' and args.review_context is None:
         forwarded = []
         if args.write:
@@ -177,6 +185,8 @@ def main(arguments=None, *, review_context=None):
         for flag, value in (('--model', args.model), ('--effort', args.effort)):
             if value is not None:
                 forwarded.extend((flag, value))
+        if args.resume is None and args.continue_from is None:
+            forwarded.extend(('--model-source', model_source, '--effort-source', effort_source))
         os.execv('/bin/bash', ['/bin/bash', str(SCRIPTS / 'codex-exec.sh'), *forwarded, '--', args.task])
     if args.review_context is not None:
         from review_context import ContextError, capture
@@ -184,9 +194,10 @@ def main(arguments=None, *, review_context=None):
         from review_result import CLAUDE_LOGIN_REFRESH_HINT, base_report, render
         try:
             context = capture(args.review_context) if review_context is None else review_context
+            context['model_source'] = model_source
         except (ContextError, ValueError, OSError) as error:
             diagnostic = str(error) if isinstance(error, ContextError) else 'review_environment_unavailable'
-            return context_failure(args.backend, args.model, diagnostic)
+            return context_failure(args.backend, args.model, diagnostic, model_source=model_source)
         try:
             if args.backend == 'codex':
                 report, status = codex_review(args, context)

@@ -18,6 +18,8 @@ TASK_COUNT=0
 OPTIONS_ENDED=0
 MODEL=''
 EFFORT=''
+MODEL_SOURCE=''
+EFFORT_SOURCE=''
 EXTRA=()
 WRITE_MODE=0
 RESUMABLE=0
@@ -141,6 +143,27 @@ while [ "$#" -gt 0 ]; do
         shift
         continue
         ;;
+      --model-source|--effort-source)
+        # Internal: delegate-exec.sh forwards where the value came from (spec/default-model.md E1).
+        if [ "$#" -eq 0 ]; then
+          usage
+          exit 64
+        fi
+        case "${1}" in
+          explicit|config|host_default) ;;
+          *)
+            printf 'delegate: invalid %s\n' "${ARG}" >&2
+            exit 64
+            ;;
+        esac
+        if [ "${ARG}" = '--model-source' ]; then
+          MODEL_SOURCE="${1}"
+        else
+          EFFORT_SOURCE="${1}"
+        fi
+        shift
+        continue
+        ;;
       -*)
         usage
         exit 64
@@ -200,6 +223,34 @@ if [ "${RESUME_GIVEN}" -eq 1 ]; then
   EFFORT="$(printf '%s\n' "${RESUME_STATE}" | sed -n 3p)"
   RESUMABLE=1
 fi
+# spec/default-model.md E1/E8: sources come only from delegate-exec.sh's internal options; direct callers
+# without them get the old inference, and nothing is read from the environment.
+source_of() {
+  # $1 value, $2 claimed source: a non-empty value is explicit or config; an empty one is the host default.
+  if [ -z "${1}" ]; then
+    printf 'host_default'
+  elif [ "${2}" = 'config' ]; then
+    printf 'config'
+  else
+    printf 'explicit'
+  fi
+}
+if [ "${RESUME_GIVEN}" -eq 1 ]; then
+  MODEL_SOURCE='resumed'
+  EFFORT_SOURCE='resumed'
+else
+  MODEL_SOURCE="$(source_of "${MODEL}" "${MODEL_SOURCE}")"
+  EFFORT_SOURCE="$(source_of "${EFFORT}" "${EFFORT_SOURCE}")"
+fi
+source_label() {
+  # $1 value, $2 source
+  case "${2}" in
+    host_default) printf '宿主默认' ;;
+    config) printf '%s（delegate 配置）' "${1}" ;;
+    resumed) printf '%s（沿用原会话）' "${1:-宿主默认}" ;;
+    *) printf '%s（点名）' "${1}" ;;
+  esac
+}
 python3 -B "${SCRIPT_DIR}/delegate_model.py" codex "${MODEL}" || exit "$?"
 BACKEND_OUTPUT="$(python3 -B "${SCRIPT_DIR}/backend.py")"
 BACKEND_STATUS=$?
@@ -403,7 +454,8 @@ write_result_file() {
     --exit-code "${EXIT_STATUS}" --started "${T0}" --answer "${ANSWER}" --events "${EVENTS}" --log "${LOG}" \
     --wrapup-events "${TMP_ROOT}/${RUN_ID}.wrapup.events.jsonl" --wrapup-mode "${WRAPUP_MODE}" \
     --wrapup-reason "${WRAPUP_REASON}" --baseline "${TMP_ROOT}/${RUN_ID}.baseline" --cleanup "${CLEANUP}" \
-    --model "${MODEL}" --effort "${EFFORT}" --write "${WRITE_MODE}" --resumable "${RESULT_RESUMABLE}" \
+    --model "${MODEL}" --effort "${EFFORT}" --model-source "${MODEL_SOURCE}" --effort-source "${EFFORT_SOURCE}" \
+    --write "${WRITE_MODE}" --resumable "${RESULT_RESUMABLE}" \
     --resumable-mode "${RESUMABLE}" --strict "${STRICT}" --timeout-seconds "${DELEGATE_TIMEOUT_SECONDS}" \
     ${CHECK_ARGS[@]+"${CHECK_ARGS[@]}"} --authorization-file "${AUTH_PATH}" --rules-file "${RULES_FILE}")"; then
     if [ -n "${RESULT_LINE}" ]; then
@@ -541,7 +593,7 @@ if [ "${CODEX_STATUS}" -eq 124 ]; then
   fi
   cat "${ANSWER}"
   printf '\n---\n'
-  printf '模型：%s / 推理档：%s\n' "${MODEL:-配置默认}" "${EFFORT:-配置默认}"
+  printf '模型：%s / 推理档：%s\n' "$(source_label "${MODEL}" "${MODEL_SOURCE}")" "$(source_label "${EFFORT}" "${EFFORT_SOURCE}")"
   printf '过程日志（未进入本会话上下文）：%s（%s 字节）\n' "${LOG}" "$(wc -c < "${LOG}" | tr -d ' ')"
   if [ -n "${FALLBACK_REASON}" ]; then
     printf '收尾：兜底（%s）\n' "${FALLBACK_REASON}"
@@ -593,7 +645,7 @@ if [ "${CHECK_GIVEN}" -eq 1 ]; then
 fi
 cat "${ANSWER}"
 printf '\n---\n'
-printf '模型：%s / 推理档：%s\n' "${MODEL:-配置默认}" "${EFFORT:-配置默认}"
+printf '模型：%s / 推理档：%s\n' "$(source_label "${MODEL}" "${MODEL_SOURCE}")" "$(source_label "${EFFORT}" "${EFFORT_SOURCE}")"
 printf '过程日志（未进入本会话上下文）：%s（%s 字节；最终答复 %s 字节）\n' "${LOG}" "${LOG_BYTES}" "${ANSWER_BYTES}"
 if [ -n "${CHECK_LINE}" ]; then
   printf '%s\n' "${CHECK_LINE}"

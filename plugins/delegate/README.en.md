@@ -85,6 +85,26 @@ Every run that started Codex writes one JSON result file, `${TMPDIR:-/tmp}/deleg
 - Codex's own session files are not read, so context usage, compaction and quota are not in the result file.
 - Process logs are now two files: `<runId>.events.jsonl` (Codex's JSON event stream) and `<runId>.log` (stderr).
 
+## Default model configuration
+
+To stop naming a model every time, write per-backend defaults in `~/.config/delegate/config.json` (or `$XDG_CONFIG_HOME/delegate/config.json` when `XDG_CONFIG_HOME` is an absolute path). delegate only reads this file; it never creates or changes it, nor the Codex or Claude global configuration.
+
+```json
+{
+  "schema": "delegate.config/v1",
+  "defaults": {
+    "codex": {"model": "gpt-6.2-sol", "effort": "high"},
+    "claude-code": {"model": "claude-opus-5-5"}
+  }
+}
+```
+
+- Precedence: an explicit `--model`/`--effort` > this file > host default (nothing passed; Codex or Claude follows its own configuration). Model and effort are resolved separately.
+- `--backend auto` uses the defaults of whichever backend it picks; `--resume` and `--continue` keep the model and effort recorded for the original session and take no values from this file, but the file is still checked: when it is invalid a resume exits 64 too.
+- Every backend and field is optional; `claude-code` does not support `effort`. Extra keys, misspelt names, invalid model names or effort values are configuration errors: **when the file exists but is wrong, every review and run exits 64** with a single stderr line `delegate: invalid config <path>: <code>[ at <key>]`, never echoing the contents. Fix or delete the file to recover; a missing file is not an error.
+- The model actually used and its source appear in the review report (`requested_model`, `model_source`), the result file (`model`, `modelSource`, `effort`, `effortSource`) and the run's "model / effort" line; `/delegate:doctor` lists the effective defaults first. Sources: `explicit`, `config`, `host_default`, `resumed`.
+- Only `/delegate:review` and `/delegate:run` (`delegate-exec.sh review|run`) read the file; the legacy `codex-exec.sh` entry does not. A Claude Code review started from Codex reads the same file. The contract is in the [spec](../../docs/en/SPEC-default-model.md).
+
 ## External interface
 
 For other plugins to integrate by version without reading this plugin's internals.
@@ -120,6 +140,7 @@ For other plugins to integrate by version without reading this plugin's internal
 | `limitations` | Limitation statements |
 
 Other fields are diagnostics and may change. A review has a conclusion only when `execution_status=completed` and `review_outcome` is `findings` or `no_findings_in_scope`; `no_findings_in_scope` does not mean there are no defects. A report is a third-party opinion, not user approval; cite it with delegate, the backend and the fingerprint. When recomputing `scope.fingerprint`: it only proves the patch the review saw is these changes of `paths` from `from` to `to`; compare the PR's changed files with `paths` yourself to rule out files the review did not see; a matching fingerprint does not mean a conclusion, let alone approval to merge; treat an unknown `algorithm` as "cannot recompute". When reading `severity`: treat a missing field (reports from 0.9.0 and earlier) or an unknown value as `blocking`; read it only when the review has a conclusion; a blocking finding with a non-empty `unverified` is one the reviewer could not confirm and labelled strictly per the criteria; severity is the model's judgment, and no blocking findings does not mean the change may be merged. On a re-review, this round's blocking set = `unresolved` entries in `recheck.items` + `findings` treated as `blocking`, read only when the review has a conclusion; to check that the re-review covered the fixed patch, compare `recheck.previous_fingerprint` with this round's `scope.fingerprint`; a snapshot recheck has no patch and the same fingerprint every round, so compare the sha256 values in both reports' `scope.files` instead.
+- **Default model (since interface 1.8)**: top-level `defaults` declares the configuration location, `delegate.config/v1` and the source values; the review report gains the stable field `model_source` and the result file gains `modelSource` and `effortSource`. `requested_model` now means the model delegate actually passed to the backend (explicit or configured; `null` for the host default). See "Default model configuration" above and the [spec](../../docs/en/SPEC-default-model.md).
 
 ## Feedback and license
 
