@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 """Fixed scope, safe Git and snapshots in disposable repositories."""
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 import review_context
@@ -135,6 +137,36 @@ class ReviewContextTests(unittest.TestCase):
             self.assertTrue(result['dirty']['staged'])
             self.assertTrue(result['dirty']['unstaged'])
             self.assertTrue(result['dirty']['untracked'])
+
+    def test_untracked_honours_default_global_ignore_but_not_global_config(self):
+        home, xdg = self.root / 'home', self.root / 'xdg'
+        (home / '.config/git').mkdir(parents=True)
+        (home / '.config/git/ignore').write_text('**/.claude/settings.local.json\n')
+        (xdg / 'git').mkdir(parents=True)
+        (xdg / 'git/ignore').write_text('*.xdg-local\n')
+        # Global config stays disabled: a setting that would change the patch must not apply.
+        (home / '.gitconfig').write_text('[diff]\n\tnoprefix = true\n')
+        (xdg / 'git/config').write_text('[diff]\n\tnoprefix = true\n')
+        (self.repo / 'src/a.py').write_text('changed\n')
+        (self.repo / 'src/.claude').mkdir()
+        (self.repo / 'src/.claude/settings.local.json').write_text('{"permissions": "local"}\n')
+        (self.repo / 'src/notes.xdg-local').write_text('xdg local\n')
+        (self.repo / 'src/new.py').write_text('new\n')
+        doc = dict(self.document, baseline={'mode': 'working-tree'},
+            uncommitted_changes={'staged': True, 'unstaged': True, 'untracked': True})
+        for environment, hidden, visible in [
+                ({'HOME': str(home)}, 'src/.claude/settings.local.json', 'src/notes.xdg-local'),
+                ({'HOME': str(home), 'XDG_CONFIG_HOME': str(xdg)}, 'src/notes.xdg-local', None)]:
+            with self.subTest(environment=sorted(environment)), mock.patch.dict(os.environ, environment):
+                if 'XDG_CONFIG_HOME' not in environment:
+                    os.environ.pop('XDG_CONFIG_HOME', None)
+                result = self.capture(doc)
+                self.assertIn('src/new.py', result['files'])
+                self.assertIn('--- a/src/a.py', result['diff'])
+                self.assertNotIn(hidden, result['files'])
+                self.assertNotIn(hidden, result['dirty']['untracked'])
+                if visible:
+                    self.assertIn(visible, result['files'])
 
     def test_git_helpers_never_execute_and_index_is_unchanged(self):
         sentinel = self.root / 'executed'

@@ -149,6 +149,18 @@ class ReviewCLITests(unittest.TestCase):
         self.assertEqual(value['scope']['module'], 'pricing')
         self.assertIn('src/new.py', value['file_sha256'])
 
+    def test_include_untracked_preview_omits_files_ignored_only_globally(self):
+        self.prepare_review()
+        (self.root / '.config/git').mkdir(parents=True)
+        (self.root / '.config/git/ignore').write_text('**/.claude/settings.local.json\n')
+        (self.repo / '.claude').mkdir()
+        (self.repo / '.claude/settings.local.json').write_text('LOCAL_PERMISSION_ALLOWLIST\n')
+        (self.repo / 'src/new.py').write_text('untracked\n')
+        value = self.preview('--changes', 'working-tree', '--include-untracked')
+        self.assertIn('src/new.py', value['file_sha256'])
+        self.assertNotIn('.claude/settings.local.json', value['file_sha256'])
+        self.assertNotIn('.claude/settings.local.json', json.dumps(value))
+
     def test_invalid_scope_combinations_never_start_executor(self):
         self.prepare_review()
         cases = [(), ('--head', 'HEAD'), ('--module', 'pricing'), ('--include-untracked', '--paths', 'src'),

@@ -1,6 +1,6 @@
 # 规格：claude-review（可选 Claude Code 审查后端）
 
-<!-- spec-guard: review approved c6e5439262ec -->
+<!-- spec-guard: review approved dbfa8c162069 -->
 
 简体中文 | [English](../docs/en/SPEC-claude-review.md)
 
@@ -272,7 +272,7 @@ Linux 的 srt 根 denyRead 保留 kernel 目录，因此必须额外掩蔽 `/sys
 }
 ```
 
-`module` 需要在 scope 添加 `module` 字符串并给文件边界；`paths` 直接给有限包含/排除路径。`commits` 固定两端 SHA，三种未提交标志都 false；快照取目标提交 blob，不用当前工作文件代替。`staged` 比较 HEAD→index，标志 true/false/false，快照取 index；`unstaged` 比较 index→工作区，标志 false/true/false，index 中既有变更仅是比较基准，不在 diff 中审查；`working-tree` 比较 HEAD→工作区，staged/unstaged 都 true，untracked 显式 true/false。三种非提交 baseline 只含 `mode`。所有模式记录实际 dirty 状态；不因省略选项纳入未跟踪文件。共同模式要求已有 HEAD，旧 Codex 自由文本仍支持未提交的初始仓库。
+`module` 需要在 scope 添加 `module` 字符串并给文件边界；`paths` 直接给有限包含/排除路径。`commits` 固定两端 SHA，三种未提交标志都 false；快照取目标提交 blob，不用当前工作文件代替。`staged` 比较 HEAD→index，标志 true/false/false，快照取 index；`unstaged` 比较 index→工作区，标志 false/true/false，index 中既有变更仅是比较基准，不在 diff 中审查；`working-tree` 比较 HEAD→工作区，staged/unstaged 都 true，untracked 显式 true/false。三种非提交 baseline 只含 `mode`。所有模式记录实际 dirty 状态；不因省略选项纳入未跟踪文件。未跟踪文件按 git 的标准忽略规则取，含仓库内 `.gitignore`、`.git/info/exclude` 和默认全局忽略文件（`$XDG_CONFIG_HOME/git/ignore`，未设置时为 `~/.config/git/ignore`）；Git 探测仍不读全局配置，全局配置里自定义的 `core.excludesFile` 不生效。共同模式要求已有 HEAD，旧 Codex 自由文本仍支持未提交的初始仓库。
 
 快照最多 256 普通文件、单文件 2 MiB、总 8 MiB；diff 最多 1 MiB，输入 JSON 64 KiB，任务最多 65536 字符。范围超过文件上限在启动前失败；二进制、链接、删除目标、读取失败记为未审。当前定位核验只支持目标快照行，不虚构已删除文件的旧侧行号。实际文件置于 `snapshot/data/<原路径>`，schema/控制/日志不进入源项目，两后端使用相同映射。初始工具事件最多 64 KiB，执行 stdout/stderr 有界 1 MiB；实际进程输出允许监测间隔内有限超量后终止，不能承诺瞬时磁盘硬配额。
 
