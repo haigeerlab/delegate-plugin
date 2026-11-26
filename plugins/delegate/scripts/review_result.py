@@ -9,6 +9,9 @@ from review_context import criteria_name, selected
 from review_init import ResultError, init_error, init_valid, read_init
 from review_recheck import STATUSES as RECHECK_STATUSES
 
+CLAUDE_LOGIN_REFRESH_HINT = ('delegate: Claude 登录令牌可能已过期：请在沙箱外的终端运行一次 `claude`'
+    '（例如 claude -p "ok"）刷新登录后重试；仍失败时运行 claude /login 重新登录。')
+
 CONTENT_FIELDS = {'schema_version', 'reviewed', 'unreviewed', 'findings'}
 FINDING_FIELDS = {'title', 'file', 'line', 'trigger', 'impact', 'evidence', 'suggestion', 'unverified', 'severity'}
 SEVERITY_VALUES = ['blocking', 'suggestion']
@@ -262,6 +265,8 @@ def claude_report(stream, execution, context, *, requested_model=None):
                     code = 'claude_api_' + error
                     if code not in report['diagnostics']:
                         report['diagnostics'].append(code)
+                    if error == 'authentication_failed' and 'claude_login_refresh_required' not in report['diagnostics']:
+                        report['diagnostics'].append('claude_login_refresh_required')
                     # Node TLS codes only map to a fixed code; the text stays out.
                     if (any(marker in json.dumps(event) for marker in TLS_UNTRUSTED_MARKERS)
                             and 'claude_api_tls_untrusted' not in report['diagnostics']):

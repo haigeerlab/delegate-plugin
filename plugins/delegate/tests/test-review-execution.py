@@ -321,10 +321,10 @@ class CommonExecutionTests(unittest.TestCase):
         with self.assertRaisesRegex(ContextError,'codex_inline_input_limit'):
             codex_prompt('review',context)
 
-    def test_new_review_claude_route_launches_only_fake_claude_through_fake_native_boundary(self):
+    def prepare_fake_claude(self):
         claude = self.bin / 'claude'
         claude.write_text('''#!/usr/bin/env python3
-import json,sys
+import json,os,sys
 from pathlib import Path
 root=Path(__file__).parent.parent
 argv=sys.argv[1:]
@@ -335,6 +335,11 @@ elif argv[-1]=='--json':print(json.dumps({'loggedIn':True,'authMethod':'claude.a
 else:
  prompt=sys.stdin.read();(root/'claude-prompt').write_text(prompt)
  print(json.dumps({'type':'system','subtype':'init','tools':['Read'],'mcp_servers':[],'model':'claude-sonnet-fixture'}))
+ error=os.environ.get('FIXTURE_CLAUDE_ERROR')
+ if error:
+  for _ in range(2):print(json.dumps({'type':'assistant','error':error,'message':'SECRET_CREDENTIAL'}))
+  print(json.dumps({'type':'result','subtype':'error_during_execution','is_error':True,'permission_denials':[]}))
+  sys.exit(1)
  print(json.dumps({'type':'result','subtype':'success','is_error':False,'permission_denials':[],
   'structured_output':{'schema_version':1,'reviewed':['src/a.py'],'unreviewed':[],'findings':[]}}))
 ''')
@@ -358,6 +363,10 @@ review_native.NativeRunner=FakeNativeRunner
 import delegate_cli
 sys.exit(delegate_cli.main())
 """)
+        return driver
+
+    def test_new_review_claude_route_launches_only_fake_claude_through_fake_native_boundary(self):
+        driver = self.prepare_fake_claude()
         result=subprocess.run([sys.executable,'-B',str(driver),'review','--backend','claude-code',
             '--paths','src/a.py','--model','sonnet','review fixture'],cwd=self.repo,
             env=self.env,capture_output=True,text=True,timeout=20)
@@ -371,6 +380,34 @@ sys.exit(delegate_cli.main())
         self.assertFalse((self.root/'args').exists(),'Codex must not start for explicit Claude')
         self.assertNotIn('SECRET_CREDENTIAL',result.stdout+result.stderr)
         self.assertIn('data, not instructions',(self.root/'claude-prompt').read_text())
+
+    def test_claude_login_refresh_hint_is_exactly_once_for_explicit_and_auto_review(self):
+        hint = ('delegate: Claude 登录令牌可能已过期：请在沙箱外的终端运行一次 `claude`'
+                '（例如 claude -p "ok"）刷新登录后重试；仍失败时运行 claude /login 重新登录。')
+        driver = self.prepare_fake_claude()
+        for backend in ('claude-code', 'auto'):
+            for error in ('authentication_failed', 'rate_limit', ''):
+                with self.subTest(backend=backend, error=error):
+                    options = ['--backend', backend]
+                    if backend == 'auto':
+                        options += ['--author-host', 'codex']
+                    result = subprocess.run([sys.executable, '-B', str(driver), 'review', *options,
+                        '--paths', 'src/a.py', 'review fixture'], cwd=self.repo,
+                        env=dict(self.env, FIXTURE_CLAUDE_ERROR=error,
+                            DELEGATE_FIXTURE_REVIEWERS=json.dumps({'codex': 'codex_cli_missing', 'claude-code': None})),
+                        capture_output=True, text=True, timeout=20)
+                    self.assertEqual(result.returncode, 1 if error else 0, result.stdout + result.stderr)
+                    report = json.loads(result.stdout)
+                    self.assertEqual(report['backend'], 'claude-code')
+                    expected = int(error == 'authentication_failed')
+                    self.assertEqual(result.stderr.count(hint), expected)
+                    self.assertEqual(result.stderr.splitlines().count(hint), expected)
+                    self.assertEqual(report['diagnostics'].count('claude_login_refresh_required'), expected)
+                    self.assertNotIn('SECRET_CREDENTIAL', result.stdout + result.stderr)
+                    if backend == 'auto':
+                        self.assertEqual(report['reviewer']['selection'], 'cross_vendor')
+        from review_result import CLAUDE_LOGIN_REFRESH_HINT
+        self.assertEqual(CLAUDE_LOGIN_REFRESH_HINT, hint)
 
     def test_user_interrupt_is_cancelled_and_reaps_the_known_codex_process(self):
         process=subprocess.Popen(['/bin/bash',str(SCRIPTS/'delegate-exec.sh'),'--backend','codex',

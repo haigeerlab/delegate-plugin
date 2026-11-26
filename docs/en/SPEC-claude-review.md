@@ -551,6 +551,73 @@ CR-22 and CR-23 use fake invokers, call no model, and are part of `scripts/valid
 1. Decided (2026-11-26): 15 seconds. Probes normally take about 0.5 seconds and the slow whole checks took 9–19 seconds; 15 seconds covers most stalls while a real hang waits at most 45 seconds. Alternatives were 10 seconds (worst case 30, less coverage) and 30 seconds (worst case 90; the doctor listing could take a minute and a half).
 2. Decided (2026-11-26): no retry; the existing boundary stays. A retry doubles the wait on a real hang and hides real CLI problems; the longer deadline already covers occasional slow starts.
 
+## Recovery hint for an expired Claude login token (2026-11-26, approved)
+
+**Status:** Approved by the user on 2026-11-26: 「批准；Q1 A；Q2 A」 — "Approved; Q1 A; Q2 A"; the post-review revision of the check note was re-approved the same day: 「批准修订，提交开 PR」 — "Revision approved, commit and open a PR". Source: ecosystem-lead #23145, stating the user's words 「先让 delegate 修令牌过期的问题」 — "have delegate fix the token-expiry problem first"; this is defect 1 in section 4 and gap 1 in section 6 of the delegate inventory (2026-11-26). The reproduction record follows.
+
+### Problem
+
+After the Claude login token expires, `review --backend claude-code` always fails, and the failure carries only fixed codes, so callers do not know how to recover and fall back to a subagent:
+
+- autopilot-hub failed twice on 11-26 (#23130) after five successes earlier in the same session.
+- This session reproduced it at 02:28 (UTC) on 11-26 with installed 0.12.4: exit 1, `failed`, diagnostics `claude_api_authentication_failed`, `backend_result_error`, `backend_exit_nonzero`, `backend_started=true` (the CLI started; the API rejected the credential).
+- After running `claude -p "ok"` once outside the sandbox at 02:30, the same command succeeded at 02:31 (`completed`).
+
+The checks cannot see it:
+- `review_doctor.py --backend claude-code` and `claude auth status` reported logged in (claude.ai/firstParty) before and after the failure.
+- The only expiry-related field in `claude auth status --json` is `loginExpiresAt`. Measured, it is the expiry of the whole login (2026-12-17) and did not change after the 02:30 refresh, so it does not show whether the short-lived access token is valid.
+- None of the three preflight probes (`--version`, `--help`, `auth status`) reaches the API.
+
+Cause (inferred, not directly proven): during review the sandbox mounts `~/.claude`, `~/.claude.json` and `~/Library/Keychains` read-only and denies writes to the user's home (`review_native.py`, `review_isolation.py`). After the access token expires, the CLI inside the sandbox cannot write back a refresh and uses the old token. delegate does not read the keychain, so the token state cannot be proven locally.
+
+### Goal
+
+When the token has expired, callers get one actionable sentence they can pass to the user, from both the report and stderr; the check no longer suggests that "logged in" means a review will work.
+
+### Approach
+
+1. **Recovery code and hint:** when the review report's `diagnostics` contains `claude_api_authentication_failed`, append the fixed code `claude_login_refresh_required`, and print one fixed line to stderr:
+
+   ```text
+   delegate: Claude 登录令牌可能已过期：请在沙箱外的终端运行一次 `claude`（例如 claude -p "ok"）刷新登录后重试；仍失败时运行 claude /login 重新登录。
+   ```
+
+   ("The Claude login token may have expired: run `claude` once in a terminal outside the sandbox (for example claude -p "ok") to refresh the login, then retry; if it still fails, run claude /login to log in again.") The line is printed only with this code and contains no credential, account or raw error text. It also applies when `--backend auto` selects Claude Code and fails.
+2. **Check note:** when the authentication check passes, `review_doctor.py --backend claude-code` adds one fixed line (revised after review on 2026-11-26: it first said "refresh as above", which has nothing above it in the check output, so it now spells out the refresh steps, word for word as in the code and tests):
+
+   ```text
+   已登录只说明本机存有凭据，不代表登录令牌仍然有效；审查若报 claude_api_authentication_failed，请在沙箱外的终端运行一次 `claude`（例如 claude -p "ok"）刷新登录后重试；仍失败时运行 claude /login 重新登录。
+   ```
+
+   ("Logged in only means credentials are stored locally, not that the login token is still valid; if a review reports claude_api_authentication_failed, run `claude` once in a terminal outside the sandbox … then retry; if it still fails, run claude /login.") The `doctor --reviewers` listing and JSON are unchanged.
+3. **No token validation:** the check does not try to validate the token. Measured evidence: `auth status` cannot show the access-token state (above); every way to prove a token valid calls the API (uses quota) or reads credentials (out of bounds), and this spec does neither.
+
+Report fields, exit codes and the interface version (1.7) are unchanged; `diagnostics` only gains a fixed code.
+
+### Boundaries
+
+**Always:** fixed hint text, checked verbatim by tests; write new tests first and confirm they fail; the Codex backend and run are unaffected.
+
+**Ask first:** any real call in the check that uses quota; changing the sandbox's read/write or network boundaries (for example letting the CLI write back a refreshed token).
+
+**Never:** refresh tokens for the user, read or write credential files or the keychain, or change global configuration; write raw authentication errors, accounts or emails to the report, logs or stderr.
+
+### Success criteria
+
+| Clause | Success criterion and planned verification |
+|---|---|
+| CR-25 | Recovery code: a fake invoker emits an assistant event with `error: authentication_failed`; `diagnostics` contains `claude_api_authentication_failed` followed by `claude_login_refresh_required`; other `claude_api_*` errors (such as `rate_limit`) do not add it |
+| CR-26 | stderr hint: through the public entry, stderr contains the fixed hint line exactly once for that failure and not at all without the code; stdout still holds only the report JSON |
+| CR-27 | Check note: `review_doctor.py --backend claude-code` prints the fixed note when authentication passes; `--reviewers` text and JSON are unchanged |
+| CR-28 | Real recheck: after release, when a token really expires, one run with the installed version shows the hint in the report and stderr and recovers after following it (expiry cannot be produced on demand; recorded when it happens; does not block merging) |
+
+CR-25 to CR-27 use fake invokers and existing fixtures, call no model, and are part of `scripts/validate.sh`.
+
+### Open questions
+
+1. Decided (2026-11-26): the recovery code is `claude_login_refresh_required`; it names what to do, so callers can branch on it. The alternative was `claude_token_possibly_expired` (naming the likely cause).
+2. Decided (2026-11-26): the hint goes only to stderr and the fixed code, not into `limitations`; `limitations` holds a fixed capability statement, and mixing a one-off failure hint into it would break "report fields unchanged"; callers can already branch on the fixed code.
+
 ## Appendix: historical continuations (original status, not current conclusions)
 
 **S5/S6 batch, 2026-10-14:** S5 synchronized the Task9l diagnostic fix into both hosts, passing 16 checks and 48 installed result regressions; Task9n standard-workspace validation passed 157/53/19. The S6 diagnostic follow-up verified the specified out-of-snapshot Read tool denial and exact target attribution, with confirmed cleanup. Review coverage was 1/4, failed/inconclusive; complete Task2/6/8 conditions remain unfinished. The causes of S4 and the original S6 authentication failure remain unknown, without a retroactive fix claim. See the [follow-up result](../verification/2026-10-14-delegate-s6-diagnostic-followup-result.md) (Chinese).

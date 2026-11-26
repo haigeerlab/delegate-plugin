@@ -1,6 +1,6 @@
 # 规格：claude-review（可选 Claude Code 审查后端）
 
-<!-- spec-guard: review approved 61ab62e83ca7 -->
+<!-- spec-guard: review approved c6e5439262ec -->
 
 简体中文 | [English](../docs/en/SPEC-claude-review.md)
 
@@ -558,6 +558,80 @@ CR-22、CR-23 用假调用器，不调用模型，并入 `scripts/validate.sh`�
 
 1. 已定（2026-11-26）：15 秒。理由：实测平时约 0.5 秒，慢的那几次整个检查在 9～19 秒之间，15 秒能覆盖大多数偶发卡顿，又不会让真卡住时等太久（最坏 45 秒）。备选 10 秒（最坏 30 秒，覆盖面小一些）或 30 秒（最坏 90 秒，doctor 列表可能要等一分半）。
 2. 已定（2026-11-26）：不加重试，维持原边界。理由：重试会让真卡住时的等待翻倍，也会掩盖 CLI 的真实问题；放宽期限已经能覆盖偶发慢启动。
+
+## Claude 登录令牌过期的恢复提示（2026-11-26，已批准）
+
+**状态：** 用户 2026-11-26 批准，原话「批准；Q1 A；Q2 A」；审查后体检说明原文的修订同日经用户复审，原话「批准修订，提交开 PR」。来源：ecosystem-lead #23145，称用户原话「先让 delegate 修令牌过期的问题」；即 delegate 盘点（2026-11-26）第四节缺陷 1、第六节缺口 1。复现记录见下。
+
+### 问题
+
+`review --backend claude-code` 在 Claude 登录令牌过期后必然失败，失败时只给固定码，使用方不知道怎么恢复，只能退回子代理：
+
+- autopilot-hub 11-26 两次失败（#23130），同一会话早些时候成功过 5 次。
+- 本会话 11-26 02:28（UTC）用安装版 0.12.4 复现：退出 1，`failed`，诊断 `claude_api_authentication_failed`、`backend_result_error`、`backend_exit_nonzero`，`backend_started=true`（CLI 已启动，是 API 拒绝了凭据）。
+- 02:30 在沙箱外运行一次 `claude -p "ok"`，02:31 同一条命令复验成功（`completed`）。
+
+体检看不出来：
+- `review_doctor.py --backend claude-code` 和 `claude auth status` 在失败前后都显示已登录（claude.ai／firstParty）。
+- `claude auth status --json` 里唯一和过期有关的是 `loginExpiresAt`。实测它是整个登录的过期时间（2026-12-17），02:30 刷新后没有变，所以不代表短期访问令牌是否有效。
+- 三个预检探测（`--version`、`--help`、`auth status`）都不访问 API。
+
+原因（推断，未直接证实）：审查时沙箱只读挂载 `~/.claude`、`~/.claude.json`、`~/Library/Keychains`，用户家目录禁止写入（`review_native.py`、`review_isolation.py`）。访问令牌过期后，沙箱里的 CLI 无法把刷新结果写回，只能用旧令牌请求。delegate 不读钥匙串，所以无法从本机直接证实令牌状态。
+
+### 目标
+
+令牌过期时，调用方从报告和 stderr 都能拿到一句可执行、可原样转告用户的恢复提示；体检不再让人误以为「已登录」就等于审查能用。
+
+### 做法
+
+1. **恢复码与提示**：审查报告的 `diagnostics` 含 `claude_api_authentication_failed` 时，再追加固定码 `claude_login_refresh_required`；同时在 stderr 打一行固定的话：
+
+   ```text
+   delegate: Claude 登录令牌可能已过期：请在沙箱外的终端运行一次 `claude`（例如 claude -p "ok"）刷新登录后重试；仍失败时运行 claude /login 重新登录。
+   ```
+
+   这行只在出现这个码时打印，不含任何凭据、账号或错误原文。`--backend auto` 选中 Claude Code 后失败时同样适用。
+2. **体检说明**：`review_doctor.py --backend claude-code` 在认证检查通过时，加一行固定说明（2026-11-26 审查后修订：原写「按上面的提示刷新」，体检输出里没有上文，改为写全刷新步骤，与代码、测试逐字一致）：
+
+   ```text
+   已登录只说明本机存有凭据，不代表登录令牌仍然有效；审查若报 claude_api_authentication_failed，请在沙箱外的终端运行一次 `claude`（例如 claude -p "ok"）刷新登录后重试；仍失败时运行 claude /login 重新登录。
+   ```
+
+   `doctor --reviewers` 的列表和 JSON 不改。
+3. **不验证令牌**：体检不尝试验证令牌有效性。实测证据：`auth status` 给不出访问令牌状态（见上）；能证明令牌有效的办法都要调用 API（花额度）或读凭据（越界），本规格都不做。
+
+报告字段、退出码和接口版本（1.7）不变；`diagnostics` 只是追加固定码。
+
+### 边界
+
+**Always：**
+- 提示文字固定，测试逐字核对；
+- 新增测试先写，并确认它失败；
+- Codex 后端和 run 不受影响。
+
+**Ask first：**
+- 体检里加任何会花额度的真实调用；
+- 改动沙箱的读写或网络边界（例如让 CLI 能写回刷新后的令牌）。
+
+**Never：**
+- 替用户刷新令牌、读写凭据文件或钥匙串、改全局配置；
+- 把认证错误原文、账号、邮箱写进报告、日志或 stderr。
+
+### 成功条件
+
+| 条款 | 成功标准与计划验证 |
+|---|---|
+| CR-25 | 恢复码：用假调用器构造带 `error: authentication_failed` 的 assistant 事件，报告 `diagnostics` 依次含 `claude_api_authentication_failed`、`claude_login_refresh_required`；其他 `claude_api_*` 错误（如 `rate_limit`）不追加该码 |
+| CR-26 | stderr 提示：公开入口跑上述失败时，stderr 恰好出现一次固定提示行；无该码时不出现；stdout 仍只有报告 JSON |
+| CR-27 | 体检说明：`review_doctor.py --backend claude-code` 认证通过时输出固定说明行；`--reviewers` 的文字和 JSON 不变 |
+| CR-28 | 真实复验：发版后在令牌确实过期时用安装版跑一次，报告与 stderr 出现提示，照提示刷新后恢复（无法按需制造过期，遇到时记录；本条不阻塞合并） |
+
+CR-25～27 用假调用器和现有夹具，不调用模型，并入 `scripts/validate.sh`。
+
+### 待确认
+
+1. 已定（2026-11-26）：恢复码名用 `claude_login_refresh_required`。理由：说的是该做什么，调用方可以按码分支。备选 `claude_token_possibly_expired`（说的是可能的原因）。
+2. 已定（2026-11-26）：提示只放 stderr 和固定码，不写进 `limitations`。理由：它目前是固定的能力限制说明，混进单次失败的提示会让「报告字段不变」不成立；调用方已有固定码可判。
 
 ## 附录：历史接续记录（保留当时状态，不覆盖当前结论）
 

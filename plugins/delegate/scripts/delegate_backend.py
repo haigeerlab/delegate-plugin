@@ -181,7 +181,7 @@ def main(arguments=None, *, review_context=None):
     if args.review_context is not None:
         from review_context import ContextError, capture
         from review_execution import codex_review, save_artifacts
-        from review_result import base_report, render
+        from review_result import CLAUDE_LOGIN_REFRESH_HINT, base_report, render
         try:
             context = capture(args.review_context) if review_context is None else review_context
         except (ContextError, ValueError, OSError) as error:
@@ -215,6 +215,8 @@ def main(arguments=None, *, review_context=None):
               + ' unreviewed=' + str(len(report['unreviewed']))
               + ' usage=' + ('reported' if 'usage' in report else 'unknown'), file=sys.stderr)
         print(render(report), end='')
+        if 'claude_login_refresh_required' in report['diagnostics']:
+            print(CLAUDE_LOGIN_REFRESH_HINT, file=sys.stderr)
         return status
     return 64
 

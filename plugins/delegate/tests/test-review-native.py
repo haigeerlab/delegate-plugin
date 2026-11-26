@@ -292,6 +292,39 @@ class SandboxTrustTests(unittest.TestCase):
                 self.assertIn(line, output.getvalue())
                 self.assertNotIn('PRIVATE_', output.getvalue())
                 self.assertNotIn('trusted.pem', output.getvalue())
+                note = ('已登录只说明本机存有凭据，不代表登录令牌仍然有效；审查若报 claude_api_authentication_failed，'
+                        '请在沙箱外的终端运行一次 `claude`（例如 claude -p "ok"）刷新登录后重试；'
+                        '仍失败时运行 claude /login 重新登录。')
+                lines = output.getvalue().splitlines()
+                auth_index = lines.index('认证方式：claude.ai；提供者：firstParty')
+                self.assertEqual(lines[auth_index + 1], note)
+                self.assertEqual(lines.count(note), 1)
+
+    def test_reviewers_text_and_json_do_not_include_login_refresh_note(self):
+        import contextlib, io, review_doctor
+        expected = {'schema': 'delegate.reviewers/v1', 'reviewers': [
+            {'backend': 'codex', 'vendor': 'openai', 'available': True, 'diagnostic': None},
+            {'backend': 'claude-code', 'vendor': 'anthropic', 'available': True, 'diagnostic': None}], 'hint': None}
+        for json_output in (False, True):
+            with self.subTest(json_output=json_output):
+                output = io.StringIO()
+                args = ['review_doctor.py', '--reviewers'] + (['--json'] if json_output else [])
+                with patch('sys.argv', args), \
+                        patch('reviewer_select.real_checks', return_value={'codex': lambda: None, 'claude-code': lambda: None}), \
+                        patch.dict('os.environ', {'DELEGATE_REVIEW_DEPTH': '0'}), \
+                        patch.object(review_doctor, 'preflight') as preflight, \
+                        contextlib.redirect_stdout(output):
+                    self.assertEqual(review_doctor.main(), 0)
+                preflight.assert_not_called()
+                self.assertNotIn('已登录只说明', output.getvalue())
+                self.assertNotIn('claude_login_refresh_required', output.getvalue())
+                self.assertNotIn('claude /login', output.getvalue())
+                if json_output:
+                    self.assertEqual(json.loads(output.getvalue()), expected)
+                else:
+                    self.assertEqual(output.getvalue(), 'delegate: 第二审查者（无模型检查，不发请求）\n'
+                        'codex（openai）：可用\nclaude-code（anthropic）：可用\n'
+                        '不阻止任何操作；模型、额度与真实审查未验证。\n')
 
 
 if __name__ == '__main__':

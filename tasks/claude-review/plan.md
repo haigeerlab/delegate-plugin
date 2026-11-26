@@ -603,3 +603,24 @@ S5同步和Task9n标准总验证已通过，用户“继续”推进Task2/8的�
 执行方式：按 ecosystem-lead 临时规则，E1～E4 一次一个用 `/delegate:run --write` 派给 Codex，本会话看验收块并自己重跑测试；代码审查派 Claude 子代理（同厂商审查）。E5 由本会话写。
 
 检查点：E1～E5 为 `report`；提交、开 PR、合并、发版为 `gate`；CR-21 真实验收为 `gate`。不用 Claude 额度实跑。
+
+## Claude 登录令牌过期的恢复提示（2026-11-26）
+
+**状态：** 用户 2026-11-26 批准本节，原话「批准，开始实现」；授权到 Checkpoint G-B 停下。规格：[spec/claude-review.md](../../spec/claude-review.md)「Claude 登录令牌过期的恢复提示」节（用户 2026-11-26 批准，原话「批准；Q1 A；Q2 A」）。来源 ecosystem-lead #23145。
+
+架构决定：
+- **恢复码在出码处追加**：`review_result.claude_report` 现在遇到 assistant 事件 `error: authentication_failed` 时写 `claude_api_authentication_failed`；紧接着追加 `claude_login_refresh_required`。只看这一个错误类型，其余 `claude_api_*` 不动。
+- **stderr 提示在公开入口打印一次**：`delegate_backend.main` 输出报告之后，若报告 `diagnostics` 含 `claude_login_refresh_required`，往 stderr 打固定提示行。`--backend auto` 选中 Claude Code 时走同一入口，不另写。提示文字定义成一个常量，测试逐字核对。
+- **体检说明**：`review_doctor.py --backend claude-code` 在打印认证方式那一行之后加固定说明行；`--reviewers` 不经过这里。
+- **执行方式**：G1 用 `/delegate:run --write` 派给 Codex，一次做完三处代码和测试（改动小、文件相邻，拆三次派不值）；本会话看验收块、重跑测试。G2 文档由本会话写。审查按 #23145 用 `/delegate:review --backend claude-code`（同厂商）；若又碰上令牌过期，退回 Claude 子代理审查，并把那次失败记为修复前的复现证据。
+
+任务：
+- **G1（report）**：CR-25～27。先写测试并确认失败：`test-review-result.py`（或 `test-claude-review.py`）构造认证失败事件，断言两码顺序、`rate_limit` 不追加；公开入口用例断言 stderr 恰好一次固定行、无码时不出现、stdout 只有 JSON；`review_doctor` 用例断言说明行，`--reviewers` 输出不变。再改 `review_result.py`、`delegate_backend.py`、`review_doctor.py`。验证：相关测试文件单独跑通过，`validate.sh --quick` 退出 0。
+- **G2（report）**：英文规格页同步；中英待发行说明补一节（变更、影响面、验证）；todo 记录。
+- **Checkpoint G-A（report）**：全量 `validate.sh`、`git diff --check`、产物校验通过，记入 todo。
+- **Checkpoint G-B（gate）**：审查（会用额度）；提交、PR、合并逐项经用户确认；开 PR 后把 PR 号回 ecosystem-lead。
+- **G3（gate）**：发补丁版 0.12.5（经用户确认）；CR-28 真实复验遇到令牌过期时记录，不阻塞。
+
+风险：
+- 提示文字以后改动会让调用方转告的话变化：文字只在常量里，测试逐字核对，改动须修订规格。
+- 公开入口的测试要能造出认证失败的报告：用现有假调用器与夹具，不调用模型。

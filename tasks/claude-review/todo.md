@@ -540,3 +540,19 @@ S88-5 与最终验收（2026-11-18）：CR-14 以生态总负责人 ecosystem-le
 
 - [x] F1（report）：`delegate_cli.main` 遇第一个参数 `doctor` 时原样转交 `review_doctor.py`；帮助文字列出该子命令；规格中英同步一句，待发行说明中英补一节。先加 `test_doctor_subcommand_forwards_to_model_free_doctor` 并确认失败（报 `unrecognized arguments: --bogus`），修复后 `test-review-cli.py` 通过；实跑 `delegate-exec.sh doctor --backend claude-code` 走到无模型体检。`validate.sh --quick` 选 14/35 个套件，退出 0，92 秒。
 - [x] F2（gate）：提交、PR、合并各经用户确认；随下次发版交付。2026-11-26 用户回「提交并推送开 PR」「合并」：PR #56 合并（308cb44，GitHub 故障期间合并请求曾返回空响应，最终核实只合并一次）；随 0.12.4 发版。
+
+## Claude 登录令牌过期的恢复提示（2026-11-26）
+
+规格已批准（「批准；Q1 A；Q2 A」）；计划见 plan.md 同名节，用户 2026-11-26 批准（「批准，开始实现」），授权到 Checkpoint G-B 停下。
+
+- [x] G1（report）：恢复码、stderr 提示、体检说明及测试（CR-25～27），派 Codex 写。2026-11-26 Codex 写（`/delegate:run --write`），改 `review_result.py`（常量 `CLAUDE_LOGIN_REFRESH_HINT`、认证失败后追加 `claude_login_refresh_required`）、`delegate_backend.py`（报告输出后有该码时 stderr 打印一次）、`review_doctor.py`（认证行后加说明行）；测试 `test-review-result.py`、`test-review-execution.py`（公开入口：显式 claude-code 与 auto 各测 authentication_failed／rate_limit／无错误）、`test-review-native.py`，Codex 称均先失败后通过。本会话核对 diff 与计划一致，本机重跑：result、native、backends、cli 通过；`test-review-execution.py` 首次单独运行有 1 例 rate_limit 子用例拿到 127（未复现），随后连跑 3 次均通过，记为待观察；`--quick` 选 24/35 退出 0。
+- [x] G2（report）：英文规格、中英待发行说明。英文规格补同一节；中英待发行说明补「Claude 登录令牌过期时给出恢复提示」小节与影响面、验证，过渡句改为「v0.12.4 之后的未发布变更见下」。
+- [x] Checkpoint G-A（report）：全量、`git diff --check`、产物校验。2026-11-26 全量退出 0，93 秒，`Ran` 合计 551（548 + 新增 3）；共享段、本机路径、`git diff --check` 通过；产物校验 6 项通过。
+- [ ] Checkpoint G-B（gate）：审查与提交、PR、合并；回 ecosystem-lead PR 号
+- [ ] G3（gate）：发 0.12.5；CR-28 遇到时记录
+
+令牌过期恢复提示 · 代码审查（2026-11-26，同厂商审查，`/delegate:review --backend claude-code`，安装版 0.12.4，模型 claude-opus-5-5；输入为工作区改动，排除本模块 plan、todo 与 `.agent/state.json`，依据 `spec/claude-review.md`；用户原话「审查」）：审到 10 个文件、未审 0；报告 `execution_status=failed`、`review_incomplete`，原因是建议 2 没给行号（`line: null`），按现行合同位置核对不过即判未完成；发现内容可用。这次审查没碰上令牌过期。
+- 阻断 1：规格把体检说明写成固定原文「……按上面的提示刷新。」，代码与测试打印的是写全刷新步骤的句子，三者不一致（G1 派活时给 Codex 的文字与规格不一致所致）。属实；体检输出里没有「上面」，代码写法更合适，改中英规格为代码实际打印的原文并注明修订，脚本逐字核对规格、`review_doctor.py`、`CLAUDE_LOGIN_REFRESH_HINT` 一致。规格因此标回待复审。
+- 建议 2：英文规格漏了「复现记录见下」、备选码名、「调用方已有固定码可判」。已补。
+- 审查未对 `test_claude_login_refresh_hint_is_exactly_once_for_explicit_and_auto_review` 的偶发 127 给出结论，仍记为待观察。
+- 用户复审规格修订，原话「批准修订，提交开 PR」；规格重新记为已批准后提交、开 PR。
