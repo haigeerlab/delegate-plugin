@@ -100,6 +100,11 @@ def git(repository, *arguments):
                    'GIT_CONFIG_GLOBAL': '/dev/null', 'GIT_CONFIG_SYSTEM': '/dev/null',
                    'GIT_ATTR_NOSYSTEM': '1', 'GIT_LITERAL_PATHSPECS': '1',
                    'GIT_TERMINAL_PROMPT': '0'}
+    # Global config stays disabled, but git's default excludes file
+    # ($XDG_CONFIG_HOME/git/ignore or ~/.config/git/ignore) must still apply.
+    for name in ('HOME', 'XDG_CONFIG_HOME'):
+        if os.environ.get(name):
+            environment[name] = os.environ[name]
     command = ['/usr/bin/git', '--no-pager', '-C', str(repository),
                '-c', 'core.fsmonitor=false', '-c', 'core.hooksPath=/dev/null',
                '-c', 'core.attributesFile=/dev/null', '-c', 'diff.external=',
