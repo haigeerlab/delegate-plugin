@@ -47,4 +47,4 @@
 - [x] Checkpoint R1（report）：免费验证全绿 — 2026-11-24 `scripts/validate.sh` 退出 0；`claude plugin validate .` 与 `./plugins/delegate` 通过；`git diff --check` 无问题；verify-artifacts 6 通过 0 警告
 - [x] Checkpoint R2（gate）：复审与本地提交（须另行明确同意） — 2026-11-24 用户原话「通过，本地提交」
 - [x] Checkpoint R3（gate）：交付验收，推送开 PR（须另行明确同意） — 2026-11-24 用户原话「通过，推送开 PR」；PR #44 按 F3 经用户「合并」后合并，合并提交 b2dd808
-- [ ] Task R4：发补丁版后用安装版重跑 U3 三步，交用户判定 M2
+- [x] Task R4：发补丁版后用安装版重跑 U3 三步，交用户判定 M2 — 2026-11-26 用户回「跑 R4」「补跑 U1、U2」：用安装版 0.12.4 在临时克隆（基于 main 2eb8420）实跑。U3：Plan 快照审查第一轮 3 条阻断（含埋下的两处缺陷），`reviewed` 只有 Plan、参考的 Spec 未被提发现；返工后第二轮 `recheck` 3 条 resolved，Plan sha256 两轮不同、快照指纹相同；换到不含上一轮提交的分支报 `previous_report_scope_mismatch`、退出 127、未启动模型。U1：提交范围审查 2 条 blocking（`unverified` 非空）指向真实代码行；U2：同一 `--base`、新 `--head` 加 `--previous-report`，`recheck` 2 条 resolved，`previous_fingerprint` 与本轮 `scope.fingerprint` 不同，`findings` 只放新问题。共调用 Codex 4 次。未实跑：上一轮报告读不到或无结论时的 `previous_report_*`；`severity` 缺失按阻断只有离线测试。用户判定 M2 通过，原话「M2 通过」；预览 milestone-mark 后用户回「确认写入」，已在 `spec/usage/auto-takeover-review.md` 记下 M2 确认。
