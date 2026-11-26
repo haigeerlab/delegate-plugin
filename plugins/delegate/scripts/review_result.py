@@ -190,6 +190,8 @@ def base_report(backend, execution, context, requested_model):
         'reviewer': context.get('reviewer') or reviewer_default(backend), 'backend_started': execution.get('backend_started', True),
         'execution_environment': execution.get('execution_environment', 'unknown'),
         'cleanup': cleanup, 'requested_model': requested_model, 'observed_models': [],
+        # spec/default-model.md E4; reports built before the backend is final fall back to the request alone.
+        'model_source': context.get('model_source') or ('explicit' if requested_model else 'host_default'),
         'scope': {'paths': context['scope'], 'baseline': context['baseline'],
                   'diff_sha256': context['diff_sha256'], 'fingerprint': context.get('fingerprint'),
                   'files': context['file_sha256']},

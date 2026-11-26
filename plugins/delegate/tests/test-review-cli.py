@@ -547,5 +547,155 @@ class ReviewerSelectionCLITests(unittest.TestCase):
         self.assertEqual(report['reviewer']['selection'], 'none')
 
 
+
+class DefaultModelCLITests(unittest.TestCase):
+    """spec/default-model.md DM-03, DM-04, DM-08, DM-09, DM-15 through the review entry."""
+    setUp = execution.CommonExecutionTests.setUp
+    review = SnapshotRecheckCLITests.review
+    CONFIG = {'schema': 'delegate.config/v1',
+              'defaults': {'codex': {'model': 'gpt-6.2-sol', 'effort': 'high'},
+                           'claude-code': {'model': 'claude-opus-5-5'}}}
+
+    def configure(self, document):
+        path = self.root / '.config/delegate/config.json'
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(document if isinstance(document, str) else json.dumps(document))
+        return path
+
+    def codex_argv(self):
+        return json.loads((self.root / 'args').read_text())
+
+    def test_codex_review_uses_the_configured_model_and_effort(self):
+        self.configure(self.CONFIG)
+        result = self.review('--paths', 'src/a.py')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        report = json.loads(result.stdout)
+        self.assertEqual((report['requested_model'], report['model_source']), ('gpt-6.2-sol', 'config'))
+        argv = self.codex_argv()
+        self.assertEqual(argv[argv.index('-m') + 1], 'gpt-6.2-sol')
+        self.assertIn('model_reasoning_effort="high"', argv)
+
+    def test_explicit_model_wins_and_no_config_is_host_default(self):
+        self.configure(self.CONFIG)
+        report = json.loads(self.review('--model', 'gpt-5.4-mini', '--paths', 'src/a.py').stdout)
+        self.assertEqual((report['requested_model'], report['model_source']), ('gpt-5.4-mini', 'explicit'))
+        (self.root / '.config/delegate/config.json').unlink()
+        report = json.loads(self.review('--paths', 'src/a.py').stdout)
+        self.assertEqual((report['requested_model'], report['model_source']), (None, 'host_default'))
+        self.assertNotIn('-m', self.codex_argv())
+
+    def test_auto_choosing_codex_uses_its_defaults(self):
+        self.configure(self.CONFIG)
+        self.env['DELEGATE_FIXTURE_REVIEWERS'] = json.dumps({'codex': None, 'claude-code': None})
+        result = self.review('--backend', 'auto', '--author-host', 'claude-code', '--paths', 'src/a.py')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        report = json.loads(result.stdout)
+        self.assertEqual((report['backend'], report['model_source']), ('codex', 'config'))
+        self.assertEqual(self.codex_argv()[self.codex_argv().index('-m') + 1], 'gpt-6.2-sol')
+
+    def test_preview_shows_the_resolved_model(self):
+        self.configure(self.CONFIG)
+        result = self.review('--dry-run', '--paths', 'src/a.py')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        preview = json.loads(result.stdout)
+        self.assertEqual((preview['requested_model'], preview['model_source'], preview['requested_effort']),
+                         ('gpt-6.2-sol', 'config', 'high'))
+
+    def test_bad_configuration_stops_review_with_one_line(self):
+        path = self.configure({'schema': 'delegate.config/v1', 'defaults': {'claude-code': {'effort': 'high'}}})
+        for options in [('--paths', 'src/a.py'), ('--backend', 'codex', '--model', 'gpt-5.4-mini', '--paths', 'src/a.py')]:
+            with self.subTest(options=options):
+                result = self.review(*options)
+                self.assertEqual(result.returncode, 64, result.stderr)
+                self.assertEqual(result.stderr, 'delegate: invalid config %s: effort_not_supported at '
+                                 'defaults.claude-code.effort\n' % path)
+                self.assertEqual(result.stdout, '')
+                self.assertFalse((self.root / 'prompt').exists())
+
+    def test_placeholder_reports_keep_the_resolved_source(self):
+        import contextlib
+        import io
+        import delegate_backend
+        for model, source, expected in [('gpt-6.2-sol', 'config', 'config'), ('m', None, 'explicit'),
+                                        (None, None, 'host_default')]:
+            with self.subTest(source=source), contextlib.redirect_stdout(io.StringIO()) as stdout:
+                self.assertEqual(delegate_backend.context_failure('codex', model, 'review_environment_unavailable',
+                                                                  model_source=source), 127)
+            report = json.loads(stdout.getvalue())
+            self.assertEqual((report['requested_model'], report['model_source']), (model, expected))
+
+    def claude_review(self, *options, environ=None):
+        # The Mac boundary cannot run here: skip only the sandbox runner and the probes, keep
+        # claude_review.execute() building the real Claude CLI argv, and record that argv (review finding 6).
+        import contextlib
+        import io
+        import os
+        from unittest import mock
+        import claude_review
+        import delegate_cli
+        import review_native
+        from review_result import base_report
+        seen = {}
+
+        def invoker(command, **_):
+            seen['argv'] = list(command)
+            return {'execution_status': 'failed', 'cleanup': 'confirmed', 'stdout': b''}
+
+        def fake(args, context):
+            seen['model'] = args.model
+            with mock.patch.object(claude_review, 'preflight', return_value={}):
+                try:
+                    claude_review.execute('/fixture/claude', args, context, invoker, timeout=60)
+                except Exception:  # only the argv matters here; result parsing of the empty stream is not
+                    pass
+            return base_report('claude-code', {'execution_status': 'completed', 'cleanup': 'confirmed'},
+                               context, args.model), 0
+
+        stdout, stderr = io.StringIO(), io.StringIO()
+        environment = dict(environ if environ is not None else self.env)
+        with mock.patch.dict(os.environ, environment, clear=True), \
+                mock.patch.object(review_native, 'native_review', fake), \
+                mock.patch('review_execution.save_artifacts', return_value={'report': 'fixture'}), \
+                contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+            status = delegate_cli.main(['review', *options, '--repo', str(self.repo), '--paths', 'src/a.py', 'fixture'])
+        return status, seen, stdout.getvalue(), stderr.getvalue()
+
+    def cli_model(self, seen):
+        argv = seen['argv']
+        return argv[argv.index('--model') + 1] if '--model' in argv else None
+
+    def test_claude_review_uses_the_configured_model(self):
+        self.configure(self.CONFIG)
+        status, seen, stdout, stderr = self.claude_review('--backend', 'claude-code')
+        self.assertEqual(status, 0, stderr)
+        self.assertEqual((seen['model'], self.cli_model(seen)), ('claude-opus-5-5', 'claude-opus-5-5'))
+        self.assertEqual(json.loads(stdout)['model_source'], 'config')
+        status, seen, stdout, _ = self.claude_review('--backend', 'claude-code', '--model', 'sonnet')
+        self.assertEqual((self.cli_model(seen), json.loads(stdout)['model_source']), ('sonnet', 'explicit'))
+        (self.root / '.config/delegate/config.json').unlink()
+        status, seen, stdout, _ = self.claude_review('--backend', 'claude-code')
+        self.assertEqual((self.cli_model(seen), json.loads(stdout)['model_source']), (None, 'host_default'))
+
+    def test_auto_choosing_claude_code_uses_its_defaults(self):
+        self.configure(self.CONFIG)
+        environ = dict(self.env, DELEGATE_FIXTURE_REVIEWERS=json.dumps({'codex': 'codex_cli_missing', 'claude-code': None}))
+        status, seen, stdout, stderr = self.claude_review('--backend', 'auto', '--author-host', 'claude-code',
+                                                          environ=environ)
+        self.assertEqual(status, 0, stderr)
+        self.assertEqual(self.cli_model(seen), 'claude-opus-5-5')
+        self.assertEqual(json.loads(stdout)['reviewer']['selection'], 'same_vendor_fallback')
+
+    def test_codex_host_reads_the_same_configuration(self):
+        # DM-15: from a Codex session (CODEX_THREAD_ID set, no CLAUDE_* variables) Claude Code review still
+        # finds the same user-level file.
+        self.configure(self.CONFIG)
+        environ = {key: value for key, value in self.env.items() if not key.startswith('CLAUDE')}
+        environ['CODEX_THREAD_ID'] = 'fixture-thread'
+        status, seen, stdout, stderr = self.claude_review('--backend', 'claude-code', environ=environ)
+        self.assertEqual(status, 0, stderr)
+        self.assertEqual(self.cli_model(seen), 'claude-opus-5-5')
+        self.assertEqual(json.loads(stdout)['model_source'], 'config')
+
+
 if __name__ == '__main__':
     unittest.main()

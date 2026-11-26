@@ -273,6 +273,22 @@ raise SystemExit(int(sys.argv[1]))
         for path in paths:
             self.assertFalse(Path(path).exists(), path)
 
+    def test_each_suite_gets_an_empty_private_config_home(self):
+        # spec/default-model.md: suites must never read the user's real ~/.config/delegate.
+        suites = [self.suite(str(index), '''import os
+from pathlib import Path
+home = Path(os.environ['XDG_CONFIG_HOME'])
+assert home.is_absolute() and home.is_dir() and not any(home.iterdir())
+assert home != Path('/should/not/leak')
+print(home)
+''') for index in range(3)]
+        from unittest.mock import patch
+        with patch.dict(os.environ, {'XDG_CONFIG_HOME': '/should/not/leak'}):
+            result = self.run_suites(suites, '--jobs', '3')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        paths = result.stdout.decode().splitlines()
+        self.assertEqual(len(set(paths)), 3)
+
     def test_concurrent_large_binary_output_is_replayed_in_list_order(self):
         suites = []
         for label in ('first', 'second'):

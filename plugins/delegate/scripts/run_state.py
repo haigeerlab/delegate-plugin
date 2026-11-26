@@ -150,6 +150,9 @@ def build_result(options):
         'chainRoot': (state or {}).get('chainRoot') or (origin or {}).get('chainRoot') or parent or run_id,
         'backend': 'codex', 'repository': os.path.realpath(options.repository), 'write': options.write,
         'strict': options.strict, 'model': options.model or None, 'effort': options.effort or None,
+        # spec/default-model.md E5: where model and effort came from.
+        'modelSource': _source(options.model, options.model_source),
+        'effortSource': _source(options.effort, options.effort_source),
         'status': options.status, 'exitCode': options.exit_code, 'resumable': options.resumable,
         'startedAt': _iso(options.started), 'endedAt': _iso(ended),
         'durationSeconds': round(max(0.0, ended - options.started), 1),
@@ -163,11 +166,17 @@ def build_result(options):
     }
 
 
+def _source(value, claimed):
+    if claimed in ('explicit', 'config', 'host_default', 'resumed'):
+        return claimed
+    return 'explicit' if value else 'host_default'
+
+
 def result_main(arguments):
     parser = argparse.ArgumentParser(prog='run_state.py result', add_help=False)
     for name in ('directory', 'run_id', 'kind', 'repository', 'status', 'answer', 'events', 'log'):
         parser.add_argument('--' + name.replace('_', '-'), dest=name, required=True)
-    for name in ('parent', 'model', 'effort', 'wrapup_events', 'wrapup_mode', 'wrapup_reason', 'baseline', 'cleanup'):
+    for name in ('parent', 'model', 'effort', 'model_source', 'effort_source', 'wrapup_events', 'wrapup_mode', 'wrapup_reason', 'baseline', 'cleanup'):
         parser.add_argument('--' + name.replace('_', '-'), dest=name, default='')
     parser.add_argument('--exit-code', dest='exit_code', type=int, required=True)
     parser.add_argument('--started', type=float, required=True)

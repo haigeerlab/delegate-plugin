@@ -15,7 +15,8 @@ import review_result
 EXECUTION_STATUS = {'completed', 'conditions_missing', 'failed', 'timed_out', 'cancelled'}
 REVIEW_OUTCOME = {'findings', 'no_findings_in_scope', 'inconclusive'}
 STABLE_FIELDS = {'schema_version', 'execution_status', 'review_outcome', 'backend', 'scope',
-                 'reviewed', 'unreviewed', 'findings', 'limitations', 'recheck', 'criteria', 'reviewer'}
+                 'reviewed', 'unreviewed', 'findings', 'limitations', 'recheck', 'criteria', 'reviewer',
+                 'model_source'}
 SCOPE_FIELDS = {'paths', 'baseline', 'diff_sha256', 'fingerprint', 'files'}
 FINDING_FIELDS = {'title', 'file', 'line', 'trigger', 'impact', 'evidence', 'suggestion', 'unverified', 'severity'}
 
@@ -76,7 +77,7 @@ class InterfaceTests(unittest.TestCase):
         self.assertIs(self.interface['review']['readOnly'], True)
 
     def test_resume_is_an_additive_minor_version(self):
-        self.assertEqual(self.interface['interface'], '1.7')
+        self.assertEqual(self.interface['interface'], '1.8')
         # spec-guard reads these two fields; they must never change within major version 1.
         self.assertEqual(self.interface['review']['command'], '/delegate:review')
         self.assertEqual(self.interface['doctor']['command'], '/delegate:doctor')
@@ -129,12 +130,12 @@ class InterfaceTests(unittest.TestCase):
         self.assertTrue(delegate_capabilities.BACKENDS['codex']['check'])
         self.assertTrue(delegate_capabilities.BACKENDS['codex']['writeAuthorization'])
 
-    def test_interface_1_7_is_complete(self):
+    def test_interface_1_8_is_complete(self):
         # spec/run-rules.md, "1.3 完整形状", plus spec/review-fingerprint.md "接口 1.4"
         # spec/review-severity.md / spec/review-recheck.md "接口 1.5" and spec/review-snapshot-recheck.md
-        # "接口 1.6"; nothing removed.
+        # "接口 1.6", spec/default-model.md E9 "接口 1.8"; nothing removed.
         expected = {
-            'interface': '1.7',
+            'interface': '1.8',
             'review': {'command': '/delegate:review', 'backends': ['codex', 'claude-code'], 'readOnly': True,
                        'report': {'schemaVersion': 1,
                                   'fingerprint': {'field': 'scope.fingerprint', 'algorithm': 'blob-pairs-v1',
@@ -174,6 +175,10 @@ class InterfaceTests(unittest.TestCase):
             },
             'doctor': {'command': '/delegate:doctor',
                        'reviewers': {'option': '--reviewers', 'json': 'delegate.reviewers/v1'}},
+            # spec/default-model.md
+            'defaults': {'config': '${XDG_CONFIG_HOME:-~/.config}/delegate/config.json', 'schema': 'delegate.config/v1',
+                         'sources': ['explicit', 'config', 'host_default', 'resumed'], 'reportField': 'model_source',
+                         'resultFields': ['modelSource', 'effortSource']},
         }
         self.assertEqual(self.interface, expected)
         import run_rules
@@ -185,6 +190,9 @@ class InterfaceTests(unittest.TestCase):
         self.assertEqual(self.interface['review']['recheck']['statuses'], review_result.RECHECK_STATUSES)
         import reviewer_select
         self.assertEqual(self.interface['review']['reviewer']['vendors'], reviewer_select.VENDORS)
+        import delegate_defaults
+        self.assertEqual(tuple(self.interface['defaults']['sources']), delegate_defaults.SOURCES)
+        self.assertEqual(self.interface['defaults']['schema'], delegate_defaults.SCHEMA)
 
     def test_report_schema_version(self):
         self.assertEqual(self.interface['review']['report']['schemaVersion'], self.report['schema_version'])

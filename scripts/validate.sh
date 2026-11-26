@@ -170,7 +170,7 @@ add_suite() {
 for SUITE in channel detection routing; do
   add_suite "${SUITE}" "${SUITE} 产品测试未通过" /bin/bash "${ROOT_DIR}/plugins/delegate/tests/test-${SUITE}.sh"
 done
-for SUITE in backend channel-regressions command-migration review-backends review-cli claude-review review-context review-result review-execution review-native review-macos review-staging review-trust review-fingerprint review-recheck reviewer-select review-transport review-guest-entry review-artifacts review-service review-guest interface run-resume run-timeout write-trust reap-fake-endpoint run-result run-continue run-longrun run-check run-rules; do
+for SUITE in backend channel-regressions command-migration review-backends review-cli claude-review review-context review-result review-execution review-native review-macos review-staging review-trust review-fingerprint review-recheck reviewer-select review-transport review-guest-entry review-artifacts review-service review-guest interface run-resume run-timeout write-trust reap-fake-endpoint run-result run-continue run-longrun run-check run-rules default-model; do
   add_suite "${SUITE}" "${SUITE} 回归测试未通过" python3 -B "${ROOT_DIR}/plugins/delegate/tests/test-${SUITE}.py"
 done
 add_suite "claude-isolation-policy" "Claude 隔离策略基础测试未通过" python3 -B "${ROOT_DIR}/plugins/delegate/tests/test-claude-isolation.py" --policy-only

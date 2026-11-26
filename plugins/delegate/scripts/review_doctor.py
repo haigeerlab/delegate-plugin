@@ -3,11 +3,33 @@
 import os
 from pathlib import Path
 import shutil
+import subprocess
 import sys
 from claude_review import PreflightError, preflight
 from review_macos import BoundaryError
 from review_native import NativeRunner, native_temporary
 from delegate_capabilities import describe
+import delegate_defaults
+
+
+def defaults_section():
+    """spec/default-model.md E7: the default model each backend would get; True when the file is usable."""
+    path = delegate_defaults.config_path()
+    error, config = None, {}
+    try:
+        config = delegate_defaults.load(path)
+    except delegate_defaults.ConfigError as problem:
+        error = problem
+    print('默认模型：配置文件 %s（%s）' % (path, '存在' if os.path.lexists(str(path)) else '不存在'))
+    for name in ('codex', 'claude-code'):
+        model, model_source, effort, effort_source = delegate_defaults.resolve(name, None, None, config)
+        labels = [value + '（delegate 配置）' if source == 'config' else '宿主默认'
+                  for value, source in ((model, model_source), (effort, effort_source))]
+        print('  %s：模型 %s；推理档 %s' % (name, labels[0], labels[1] if name == 'codex' else '不支持'))
+    if error is not None:
+        print('配置无效：' + error.line(path) + '；review／run 会退出 64，改正或删掉该文件后恢复。', flush=True)
+    sys.stdout.flush()
+    return error is None
 
 
 def main():
@@ -17,11 +39,17 @@ def main():
     args = sys.argv[1:]
     if args in (['--reviewers'], ['--reviewers', '--json']):
         return reviewers(json_output=len(args) == 2)
+    usable = True
     if args in ([], ['--backend', 'codex'], ['--backend', 'claude-code']):
+        usable = defaults_section()
         print('后端能力（非可用性结论）：\n' + describe(), flush=True)
     if args in ([], ['--backend', 'codex']):
         path = Path(__file__).resolve().parents[1] / 'hooks/doctor.sh'
-        os.execv('/bin/bash', ['/bin/bash', str(path)])
+        if usable:
+            os.execv('/bin/bash', ['/bin/bash', str(path)])
+        # A bad configuration: finish the other checks, then report it through the exit status.
+        subprocess.run(['/bin/bash', str(path)], stdin=subprocess.DEVNULL)
+        return 1
     if args != ['--backend', 'claude-code']:
         print('用法：review_doctor.py [--backend codex|claude-code] | --reviewers [--json]', file=sys.stderr)
         return 64
@@ -56,7 +84,7 @@ def main():
     finally:
         if temporary is not None and not retained:
             shutil.rmtree(temporary)
-    return 0
+    return 0 if usable else 1
 
 
 def reviewers(*, json_output):

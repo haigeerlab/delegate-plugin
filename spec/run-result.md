@@ -1,6 +1,6 @@
 # 规格：run-result（结构化结果文件、`--strict` 与成本数据）
 
-<!-- spec-guard: review approved 43d83f5ab434 -->
+<!-- spec-guard: review approved f5ac6385352a -->
 
 简体中文 | [English](../docs/en/SPEC-run-result.md)
 
@@ -204,6 +204,7 @@ python3 -B run_codex.py --report "${CLEANUP}" "${MAIN_SECONDS}" env … codex "$
 
   `lines` 是 `.cleanup` 文件的原文行（主运行与收尾轮各自的报告都在里面），再加上 wrapper 在 `stop_runner` 里打印的行。`leftoverPids` 取自「中止后仍有残留，PID=…」行，`unreapedPid` 取自「执行进程未能回收，PID=…」行，`wrapperForced` 表示出现了「执行进程超时未退出，已强制结束」行。解析不到时字段为空或 `null`，`lines` 原样保留。KILL 后仍有残留只报告、不改退出码，这一点照 0.7.1。
 - 其他模块追加的字段：`authorization`、`check`（run-check），`rules`（run-rules），`timeoutSeconds`（run-longrun）。没有用到的模块字段不出现。
+- 接口 1.8 起（[default-model](default-model.md)）每份结果文件都有 `modelSource`、`effortSource`（`explicit`／`config`／`host_default`／`resumed`）；`model`、`effort` 是 delegate 实际传给 Codex 的值，宿主默认时仍为 `null`。
 
 ### 状态文件
 

@@ -1,6 +1,6 @@
 # 规格：integration-interface（对外接口说明与审查报告合同）
 
-<!-- spec-guard: review approved 6c186cff4bb7 -->
+<!-- spec-guard: review approved 2cc0501a4702 -->
 
 简体中文 | [English](../docs/en/SPEC-integration-interface.md)
 
@@ -68,6 +68,7 @@ docs/releases/unreleased.md                → 记一条待发行说明
 - 接口 1.6 起 `review.recheck` 新增 `"snapshot": true`：快照审查（`from == to`）也能带 `--previous-report` 复审，两轮基准可以前进但须在同一历史上，一轮快照一轮区间报 `previous_report_scope_mismatch`，合同见 [review-snapshot-recheck](review-snapshot-recheck.md)。调用方规则：快照复审要核对复审的是改过的文件，比较两轮报告 `scope.files` 里的 sha256，不比 `scope.fingerprint`（快照没有补丁，指纹每轮相同）。报告 `schema_version` 仍为 `1`，结构不变。
 - 接口 1.7 起 `review` 下新增 `profiles`：`--profile design` 用判据 `design-v1` 审技术方案，没有参考文件行号证据的阻断与第二轮新发现改记为建议并在该条加 `downgraded`；报告顶层新增 `criteria`，复审时两轮必须相同。合同见 [design-review-criteria](design-review-criteria.md)；报告 `schema_version` 仍为 `1`。
 - 接口 1.7 起 `review` 下另新增 `reviewer`（`--backend auto` 与 `--author-host`），`doctor` 下新增 `reviewers`（`--reviewers [--json]`）；报告顶层新增 `reviewer`，只有 `reviewer.selection == "none"` 的「未审」报告里 `backend` 为 `null`，其余仍只取 `codex`／`claude-code`。合同见 [reviewer-selection](reviewer-selection.md)。
+- 接口 1.8 起顶层新增 `defaults`：用户级配置 `${XDG_CONFIG_HOME:-~/.config}/delegate/config.json`（`delegate.config/v1`）按后端给默认模型与推理档，优先级为点名 > 配置 > 宿主默认；报告顶层新增稳定字段 `model_source`（`explicit`／`config`／`host_default`），诊断字段 `requested_model` 改为 delegate 实际传给后端的模型；run 结果文件新增 `modelSource`、`effortSource`（另有 `resumed`）。配置文件存在但无效时 review／run 退出 64，stderr 为一行 `delegate: invalid config …`。合同见 [default-model](default-model.md)；报告 `schema_version` 与结果文件 `schema` 仍为 `1`。
 
 ## 审查报告合同（`schemaVersion: 1`）
 
@@ -86,6 +87,7 @@ docs/releases/unreleased.md                → 记一条待发行说明
 | `unreviewed[]` | `{path, reason}`，未审文件及原因 |
 | `findings[]` | `{title, file, line, trigger, impact, evidence, suggestion, unverified}`，`line` 可为 `null` |
 | `limitations` | 限制说明文本 |
+| `model_source` | 接口 1.8 起：本次模型的来源，`explicit`／`config`／`host_default` |
 
 其他字段（如 `host`、`diagnostics`、`observed_models`、`cleanup`、`usage`）照常输出，但属于诊断信息，可能随版本变化，使用方不应依赖。
 

@@ -1,5 +1,5 @@
 {
-  "interface": "1.7",
+  "interface": "1.8",
   "review": {
     "command": "/delegate:review",
     "backends": ["codex", "claude-code"],
@@ -38,5 +38,8 @@
               "projectInstructions": "codex-reads-agents-md"}
   },
   "doctor": {"command": "/delegate:doctor",
-             "reviewers": {"option": "--reviewers", "json": "delegate.reviewers/v1"}}
+             "reviewers": {"option": "--reviewers", "json": "delegate.reviewers/v1"}},
+  "defaults": {"config": "${XDG_CONFIG_HOME:-~/.config}/delegate/config.json", "schema": "delegate.config/v1",
+               "sources": ["explicit", "config", "host_default", "resumed"], "reportField": "model_source",
+               "resultFields": ["modelSource", "effortSource"]}
 }
