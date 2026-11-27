@@ -2,6 +2,8 @@
 
 简体中文 | [English](README.en.md)
 
+delegate 只做一件事：把定好范围的审查或执行交给另一家执行器（Codex 或 Claude Code），并返回可核对的结果。它能把审查交给另一家并给出统一的审查报告，把已定方案的执行交给 Codex 并交回 Git 改动证据，支持停下问人后续跑和长任务，不点名时按用户配置的默认模型派。
+
 Claude Code / Codex 共享的审查与委托插件：**只读审查**可选 Codex 或 Claude Code 后端，**通用执行**只走 Codex；默认后端仍为 Codex。接口 1.3（v0.8.0 起）给 Codex 执行加了可续跑与续接、长任务、结果文件、完成后检查、事先写入授权和规则片段；这些执行能力只在 Codex 后端，Claude Code 后端只做只读审查。主会话收到最终答复，过程日志留在本机。
 
 四个入口按职责划分：`/delegate:review` 做限定范围的只读审查，`/delegate:run` 执行 Codex 通用任务，`/delegate:doctor` 检查接入条件，`/delegate:help` 说明能力与迁移。Codex 使用对应的 `source-command-*` 技能入口。
