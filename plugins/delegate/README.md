@@ -64,7 +64,7 @@ tests/                       离线桩测试与回归
 ## 检查与事先写入授权
 
 - `/delegate:run --check "<命令>"`（接口 1.3 起）：运行以 `done` 结束后，由 delegate 在仓库根按参数列表执行检查命令（不经 shell，期限 600 秒），结果写进结果文件的 `check`，不改变运行本身的状态。命令里有 shell 运算符时拒绝，规则与 module-crew 相同。检查在沙箱外以你的权限执行，所以命令只能来自项目配置里你批过的检查命令。
-- `/delegate:run --write --authorized-by <文件>`（接口 1.3 起）：使用方（module-crew）把你打开外包开关时的原话记录成文件，在 Spec 和 Plan 已批、Task 在已批 Plan 内、同一模块同一 worktree 时，可以不必每个 Task 都等你点头。delegate 只记录文件的路径和 sha256，并要求整条链用同一个文件；它核实不了文件内容。
+- `/delegate:run --write --authorized-by <文件>`（接口 1.3 起）：使用方（module-crew）把你打开外包开关时的原话记录成文件，在 Spec 和 Plan 已批、Task 在已批 Plan 内、同一模块同一 worktree 时，可以不必每个 Task 都等你点头。autopilot-hub 也是认可的使用方：它把你打开某个仓库自动路时的原话记录成文件，合并前验证里执行方式为 ai-operate 的用例，每条在新的一次性克隆里只跑一轮。delegate 只记录文件的路径和 sha256，并要求整条链用同一个文件；它核实不了文件内容。
 
 ## 规则片段
 
