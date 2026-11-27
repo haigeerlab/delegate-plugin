@@ -126,14 +126,23 @@ delegate neither reads nor interprets the content of the authorization file; it 
 
 ### Authorization discipline (written into `run.md`; the routing skill gets one sentence pointing here)
 
-When all four conditions below hold, the caller need not wait for the user to speak in the current turn and may pass `--write --authorized-by <file>`:
+There are only two accepted consumers. When all four conditions for a consumer hold, it need not wait for the user to speak in the current turn and may pass `--write --authorized-by <file>`.
+
+module-crew (quota offloading):
 
 1. The user's own words from when the outsourcing switch was turned on have been recorded as this file by the consumer (module-crew);
 2. This module's Spec and Plan are approved, and the dispatched Task is within the approved Plan;
 3. The same module and the same worktree;
 4. delegate writes the authorization source into every result, that is, the `authorization` field above, and the caller must not delete or rewrite it.
 
-If any condition fails, fall back to the original rule: add `--write` only when the user explicitly asks in the current turn. delegate can only check the repository part of condition 3 and that the file is consistent; the rest is up to the caller. This is discipline at the command-instruction level, not a technical lock.
+autopilot-hub (cases whose execution method is ai-operate in pre-merge verification; added by the 2026-11-27 revision, from ecosystem-lead #23450 and autopr-design #23454):
+
+1. The user's own words from when the automatic path was switched on for this repository have been recorded as this file by the consumer (autopilot-hub);
+2. The case comes from the regression test document of an approved module, and the dispatched task is only that case's steps, expectations and evidence requirements;
+3. Each case gets a fresh throwaway clone and runs only one plain run, without `--resumable`, `--resume` or `--continue`;
+4. delegate writes the authorization source into every result, that is, the `authorization` field above, and the caller keeps it unchanged in the result and in its own verification report and must not delete or rewrite it.
+
+If the caller is not one of these two consumers, or any of its four conditions fails, fall back to the original rule: add `--write` only when the user explicitly asks in the current turn. delegate can only check that the file is usable, that the whole chain uses the same file and that the repository matches; the rest is up to the caller. This is discipline at the command-instruction level, not a technical lock. The content and fields of the authorization file are up to the consumer; delegate neither reads nor validates them.
 
 The `--check` command may only be taken from a checkCommand or quickCheckCommand in the project configuration that the user approved, and may not be written on the fly by Codex, the calling model or a module session. delegate cannot verify the source, so this too is discipline.
 

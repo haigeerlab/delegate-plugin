@@ -64,7 +64,7 @@ tests/                       Offline stub tests and regressions
 ## Checks and pre-granted write authorization
 
 - `/delegate:run --check "<command>"` (since interface 1.3): after a run ends `done`, delegate runs the check command as an argument list in the repository root (no shell, 600-second limit) and records it under `check` in the result file without changing the run's own status. Commands with shell operators are refused with the same rule as module-crew. The check runs outside the sandbox with your permissions, so the command may only come from check commands you approved in the project configuration.
-- `/delegate:run --write --authorized-by <file>` (since interface 1.3): the consumer (module-crew) records the words you used to switch offloading on in a file; when the Spec and Plan are approved, the Task is inside the approved Plan and it is the same module in the same worktree, it need not wait for your nod on every Task. delegate only records the file's path and sha256 and requires the same file across the chain; it cannot verify the content.
+- `/delegate:run --write --authorized-by <file>` (since interface 1.3): the consumer (module-crew) records the words you used to switch offloading on in a file; when the Spec and Plan are approved, the Task is inside the approved Plan and it is the same module in the same worktree, it need not wait for your nod on every Task. autopilot-hub is also an accepted consumer: it records the words you used to switch a repository onto the automatic path in a file, and each ai-operate case in its pre-merge verification runs once, in a fresh throwaway clone. delegate only records the file's path and sha256 and requires the same file across the chain; it cannot verify the content.
 
 ## Rules section
 

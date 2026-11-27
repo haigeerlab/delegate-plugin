@@ -32,3 +32,9 @@
 **Checkpoint 2（report，2026-10-27）：** 总验证 `validate: ok`；两项 plugin validate 通过；`verify-artifacts` 4 通过；本地提交一次，未推送；`activeModule` 切到 `run-rules`。
 
 **事后发现（2026-10-27，run-rules Task 2 时）：** 本模块 Task 5 在 `run.md` 的 argument-hint 里写了 `--check "<命令>"`，嵌套双引号使 YAML frontmatter 解析失败（运行时该命令的 frontmatter 会被整体丢弃）；本模块 Checkpoint 2 只跑了 `claude plugin validate .`，漏跑 `claude plugin validate ./plugins/delegate`，所以没发现，问题随 `33a54ca` 提交。已在 run-rules 的改动里改为 `--check <命令>`，两项 plugin validate 都通过。之后每个检查点两项 validate 都跑。
+
+## 修订（2026-11-27）：写入授权认可 autopilot-hub
+
+- [x] Task 6：认可的使用方加 autopilot-hub（来源 ecosystem-lead #23450、autopr-design #23454/#23457）
+
+**Task 6（2026-11-27）：** 用户当轮原话「批准」，批的是 run.md 与规格改动稿、delegate 与 hub 两侧边界句。改 `references/run.md`、`spec/run-check.md`（重新记批准）与英文页、`commands/run.md` 与 `delegate-routing` 指向句、插件中英文 README、共享段「提供给 autopilot-hub」、中英文待发行说明；不改代码与接口。`spec/routing.md` 的「所列四个条件」仍指向 run-check，未改（改它要另批）。总账两处由 ecosystem-lead 提交，hub 仓库那句由 autopr-design 开 PR。

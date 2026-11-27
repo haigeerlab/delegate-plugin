@@ -90,7 +90,7 @@
 ### 5. 和邻居的接口
 - 提供给 module-crew：执行通道 run 与运行结果文件（版本见 interface.json），module-crew 的额度外包是 run 的写明使用方；另提供 review，只给冻结中的 Codex 代批用。
 - 提供给 spec-guard：review 入口（interface.json 的 review.command，即 /delegate:review）与它产出的审查报告（含补丁指纹），审查由 delegate 执行，spec-guard 据报告记录 Codex 审查和最终验收；doctor 入口（interface.json 的 doctor.command，即 /delegate:doctor），spec-guard 只在提示里引用这个命令名（含「开工前可用 --reviewers --json 查可用审查者」的建议），不读取它的输出。
-- 提供给 autopilot-hub：最终验收审查报告（由 spec-guard 记录）。
+- 提供给 autopilot-hub：最终验收审查报告（由 spec-guard 记录）；执行通道 run（`--write --authorized-by`，授权文件由 hub 记录用户打开该仓库自动路时的原话），只用于合并前验证里执行方式为 ai-operate 的用例。
 - 提供给 agent-relay：审查、执行的技能名（对方据此让路）。
 - 提供给 kb：运行结果文件（*.result.json）和其中 answer.path 指向的答复文件，kb 只读；审查报告（kind=review）kb 不收集。
 - 使用：无。

@@ -1,6 +1,6 @@
 # 规格：run-check（`--check` 跑完检查与 `--authorized-by` 事先写入授权）
 
-<!-- spec-guard: review approved 845bd3397b4f -->
+<!-- spec-guard: review approved 125ba0e61c31 -->
 
 简体中文 | [English](../docs/en/SPEC-run-check.md)
 
@@ -128,14 +128,23 @@ delegate 不读也不解释授权文件的内容，只计算 sha256。核对「�
 
 ### 授权纪律（写进 `run.md`，routing skill 加一句指向）
 
-下面四条同时满足时，调用方可以不等用户在当轮开口，就带 `--write --authorized-by <文件>`：
+认可的使用方只有下面两个。某个使用方的四条同时满足时，它可以不等用户在当轮开口，就带 `--write --authorized-by <文件>`。
+
+module-crew（额度外包）：
 
 1. 用户打开外包开关时的原话，已经由使用方（module-crew）记录成这个文件；
 2. 这个模块的 Spec 和 Plan 已批准，派出的 Task 在已批 Plan 之内；
 3. 同一个模块、同一个 worktree；
 4. 授权来源由 delegate 写进每次的结果，即上面的 `authorization` 字段，调用方不得删除或改写。
 
-任何一条不满足，就回到原规则：只有用户当轮明确要求才加 `--write`。delegate 只能核对第 3 条的仓库部分和文件是否一致，其余由调用方负责，这是命令指令层面的纪律，不是技术锁。
+autopilot-hub（合并前验证里执行方式为 ai-operate 的用例；2026-11-27 修订加入，来源 ecosystem-lead #23450、autopr-design #23454）：
+
+1. 用户打开这个仓库自动路时的原话，已经由使用方（autopilot-hub）记录成这个文件；
+2. 用例取自已批模块的回归测试文档，派出的任务只是这条用例的步骤、预期和证据要求；
+3. 每条用例一个新的一次性克隆，只跑一轮普通 run，不用 `--resumable`、`--resume`、`--continue`；
+4. 授权来源由 delegate 写进每次的结果，即上面的 `authorization` 字段，调用方原样留在结果和自己的验证报告里，不得删除或改写。
+
+不是这两个使用方，或对应的四条有任何一条不满足，就回到原规则：只有用户当轮明确要求才加 `--write`。delegate 只能核对文件是否可用、整条链是否同一文件、仓库是否一致，其余由调用方负责，这是命令指令层面的纪律，不是技术锁。授权文件的内容和字段由使用方自己定，delegate 不读、不校验。
 
 `--check` 的命令只能取自项目配置里用户批过的 checkCommand 或 quickCheckCommand，不能由 Codex、调用方模型或模块会话临时拼写。delegate 无法核实来源，同样是纪律。
 

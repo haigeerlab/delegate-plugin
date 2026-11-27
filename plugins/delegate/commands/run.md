@@ -12,7 +12,7 @@ allowed-tools: Bash
 
 任务作为一个完整参数安全引用；Bash timeout 设为 600000。在业务 Git 工作区执行。run 当前只支持 codex，默认只读；`--backend claude-code` 明确拒绝，Claude 仅通过 `/delegate:review` 提供只读审查。run 不接受 review-context 或范围快捷参数。
 
-`--write` 须用户在该轮明确要求；唯一例外：references/run.md 写入授权四条件全部满足并带 `--authorized-by`，任一条不满足就回到当轮要求。不自行升级权限。写入返回后无论成功、失败、超时或空答复，都核对 Git 验收块和真实 diff；失败不自动回滚，不能只相信执行器自述。所有 run 固定 `approval_policy="never"`：越出沙箱的命令（如 worktree 里 `git commit`、网络访问）直接被拒，提交靠前缀放行规则或由调用方完成。沿用 Codex 原有认证、沙箱、期限和日志合同，不自动重试、切后端或切模型，不提交、推送或发布；模型缺省见 README。
+`--write` 须用户在该轮明确要求；唯一例外：references/run.md 所列使用方满足各自四条件并带 `--authorized-by`，任一条不满足就回到当轮要求。不自行升级权限。写入返回后无论成功、失败、超时或空答复，都核对 Git 验收块和真实 diff；失败不自动回滚，不能只相信执行器自述。所有 run 固定 `approval_policy="never"`：越出沙箱的命令（如 worktree 里 `git commit`、网络访问）直接被拒，提交靠前缀放行规则或由调用方完成。沿用 Codex 原有认证、沙箱、期限和日志合同，不自动重试、切后端或切模型，不提交、推送或发布；模型缺省见 README。
 
 期限默认 540 秒，`--timeout` 可放大到 541～7200 秒（超过 540 必须用宿主后台模式）；中止时冻结 Codex 并回收它的全部后代进程组（含换组、换会话的命令），清理结果与残留 PID 输出到 stderr；执行进程未能回收时退出 125。过程日志与结果文件在 `${TMPDIR:-/tmp}/delegate/`，最终答复分开返回；只按需用 `sed -n` 读取必要片段，不 `cat` 整个日志。递归调用 delegate 被拒绝。实际宿主/模型无法核实时标 unknown。
 
